@@ -1,0 +1,11 @@
+node_modules/
+frontend/node_modules/
+.env
+uploads/
+database/backups/*.sql
+scratch_*.js
+*.log
+
+.vercel
+.env*
+.vscode/

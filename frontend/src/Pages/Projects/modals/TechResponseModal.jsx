@@ -1,0 +1,78 @@
+import React from 'react';
+
+export default function TechResponseModal({
+  project,
+  onClose,
+  techResponseNote,
+  setTechResponseNote,
+  onRespond,
+}) {
+  if (!project) return null;
+
+  const totalCompensation =
+    Number(project.setup_charge || 0) +
+    Number(project.conveyance_cost || 0) +
+    Number(project.meal_allowance || 0);
+
+  return (
+    <div className="fixed inset-0 bg-slate-900/70 backdrop-blur-xs z-50 flex items-center justify-center p-4">
+      <div className="bg-white rounded-xl w-full max-w-lg p-6 shadow-2xl border border-slate-100 animate-in fade-in zoom-in duration-150">
+        <h3 className="text-base font-extrabold text-slate-900 mb-2 flex items-center gap-2">
+          <span>📲</span>
+          <span>টেকনিশিয়ান একসেপ্ট প্রম্পট (Technician Job Notification)</span>
+        </h3>
+
+        <div className="bg-slate-50 p-3.5 rounded-lg border border-slate-200 mb-4 text-xs space-y-1">
+          <div>
+            <span className="text-slate-500">কাজ:</span>{' '}
+            <strong className="text-slate-900">{project.title}</strong>
+          </div>
+          <div>
+            <span className="text-slate-500">সাইট ঠিকানা:</span>{' '}
+            <strong className="text-slate-900">{project.site_address || 'Not specified'}</strong>
+          </div>
+          <div className="mt-1.5 pt-1.5 border-t border-slate-200 text-blue-600 font-bold">
+            পারিশ্রমিক: সেটাপ ৳{project.setup_charge} + যাতায়াত ৳{project.conveyance_cost} + মিল ৳{project.meal_allowance} = ৳{totalCompensation.toLocaleString('en-IN')}
+          </div>
+        </div>
+
+        <div className="mb-5">
+          <label className="block text-xs font-semibold text-slate-700 mb-1.5">
+            টেকনিশিয়ানের রিপ্লাই নোট (ঐচ্ছিক):
+          </label>
+          <input
+            type="text"
+            placeholder="যেমন: কাল সকাল ১০টায় সাইটে আসব..."
+            value={techResponseNote}
+            onChange={(e) => setTechResponseNote(e.target.value)}
+            className="w-full px-3 py-2 rounded-lg border border-slate-300 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
+          />
+        </div>
+
+        <div className="flex justify-end gap-2">
+          <button
+            type="button"
+            onClick={onClose}
+            className="px-3.5 py-2 rounded-lg border border-slate-300 bg-white text-slate-700 text-xs font-medium hover:bg-slate-50 transition-colors"
+          >
+            বাতিল
+          </button>
+          <button
+            type="button"
+            onClick={() => onRespond('decline')}
+            className="px-3.5 py-2 rounded-lg border border-rose-200 bg-rose-50 text-rose-700 text-xs font-semibold hover:bg-rose-100 transition-colors"
+          >
+            প্রত্যাখ্যান (Decline)
+          </button>
+          <button
+            type="button"
+            onClick={() => onRespond('accept')}
+            className="px-4 py-2 rounded-lg bg-emerald-600 text-white text-xs font-bold hover:bg-emerald-700 shadow-sm transition-colors"
+          >
+            ✓ গ্রহণ করুন (Accept Job)
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}

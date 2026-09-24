@@ -1,0 +1,270 @@
+export const DEFAULT_SETTINGS = {
+  shop_code: 'SHB-001',
+  shop_name: 'Sheba Technology & Networking',
+  shop_title: 'CCTV, IT & Networking Solution',
+  branch_name: '',
+  phone: '',
+  alt_phone: '',
+  email: '',
+  website: '',
+  address: '',
+  trade_license: '',
+  bin_tin: '',
+  currency_symbol: '৳',
+  timezone: 'Asia/Dhaka',
+  logo_url: '',
+  banner_url: '',
+  theme_mode: 'light',
+  invoice_template: 'thermal_80mm',
+  invoice_color_scheme: 'slate',
+  invoice_footer_note: 'Thank you for your business! Goods once sold can be exchanged within 3 days (conditions apply).',
+  invoice_terms: '1. Warranty claims require presenting the original invoice.\n2. Damage caused by electrical surges or burns is not covered under warranty.\n3. Cut cables and optical fibers cannot be returned.',
+  show_logo_on_invoice: true,
+  warranty_policy: '',
+  return_refund_policy: '',
+  return_policy_text: '',
+  warranty_disclaimer_text: '',
+  thermal_tc_clause: '',
+  footer_greeting: '',
+  secondary_logo_url: '',
+  sister_concern_name: 'A Sister Concern Of Sheba Group',
+  show_sister_concern: true,
+  watermark_logo_url: '',
+  watermark_opacity: 6,
+  enable_watermark: true,
+  invoice_brand_logos: [],
+  show_qr_on_invoice: true,
+  show_signature_on_invoice: true,
+  default_invoice_format: 'thermal_80mm',
+  barcode_scanner_auto_submit: true,
+  sound_effects_enabled: true,
+  low_stock_threshold: 5,
+  negative_stock_allowed: false,
+  loyalty_enabled: true,
+  loyalty_rate: 1.00,
+  app_language: 'en',
+  number_format: 'lakh',
+  sms_provider: '',
+  sms_api_key: '',
+  sms_sender_id: '',
+  sms_sales_enabled: true,
+  sms_warranty_enabled: true,
+  sms_low_stock_enabled: false,
+  auto_backup_enabled: true,
+  auto_backup_time: '02:00',
+  session_timeout_minutes: 30,
+  security_pin: '1234',
+  allow_invoice_modification: true,
+  invoice_edit_time_limit_hours: 360,
+  license_key: '',
+  license_status: '',
+  domain_name: '',
+  domain_expiry: '',
+  ssl_status: '',
+  hosting_server: '',
+  client_app_id: 'CLIENT-SHEBA-TECH-8801'
+};
+
+export const DEFAULT_SMS_TRIGGERS = [
+  {
+    id: 1,
+    trigger_key: 'sale_confirm',
+    trigger_name: 'Sale Confirmation & Cash Memo',
+    category: 'Sales & POS',
+    recipient_type: 'Customer',
+    is_enabled: true,
+    template_bn: 'Thank you {customer_name}! Your invoice #{invoice_no}, Total: {amount} BDT, Paid: {paid_amount} BDT, Due: {due_amount} BDT. - {shop_name}',
+    available_tokens: '{customer_name}, {invoice_no}, {amount}, {paid_amount}, {due_amount}, {shop_name}'
+  },
+  {
+    id: 2,
+    trigger_key: 'purchase_confirm',
+    trigger_name: 'Supplier Purchase Confirmation',
+    category: 'Purchases & Stock',
+    recipient_type: 'Supplier',
+    is_enabled: true,
+    template_bn: 'Dear {supplier_name}, Goods for PO #{po_no} totaling {amount} BDT have been received successfully. - {shop_name}',
+    available_tokens: '{supplier_name}, {po_no}, {amount}, {paid_amount}, {due_amount}, {shop_name}'
+  },
+  {
+    id: 3,
+    trigger_key: 'wallet_trans',
+    trigger_name: 'Wallet Deposit & Withdrawal',
+    category: 'Accounts & Wallets',
+    recipient_type: 'Account Owner / Client',
+    is_enabled: true,
+    template_bn: 'Your {account_name} account has been updated with {amount} BDT ({trans_type}). Current balance: {balance} BDT. TrxID: {trx_id}. - {shop_name}',
+    available_tokens: '{customer_name}, {account_name}, {trans_type}, {amount}, {balance}, {trx_id}, {shop_name}'
+  },
+  {
+    id: 4,
+    trigger_key: 'due_payment_accept',
+    trigger_name: 'Due Payment Collection',
+    category: 'Customer Credit',
+    recipient_type: 'Customer',
+    is_enabled: true,
+    template_bn: 'Thank you {customer_name}! Payment of {received_amount} BDT received (Receipt #{receipt_no}). Remaining Due: {remaining_due} BDT. - {shop_name}',
+    available_tokens: '{customer_name}, {received_amount}, {remaining_due}, {receipt_no}, {shop_name}'
+  },
+  {
+    id: 5,
+    trigger_key: 'purchase_due_paid',
+    trigger_name: 'Supplier Due Settlement',
+    category: 'Purchases & Stock',
+    recipient_type: 'Supplier',
+    is_enabled: true,
+    template_bn: 'Dear {supplier_name}, Payment of {paid_amount} BDT disbursed via Voucher #{voucher_no}. Remaining Due: {remaining_due} BDT. - {shop_name}',
+    available_tokens: '{supplier_name}, {paid_amount}, {remaining_due}, {voucher_no}, {payment_method}, {shop_name}'
+  },
+  {
+    id: 6,
+    trigger_key: 'project_service_technician',
+    trigger_name: 'Field Technician Job Assignment',
+    category: 'Projects & Servicing',
+    recipient_type: 'Technician',
+    is_enabled: true,
+    template_bn: "Assignment Alert: {technician_name}, you have been assigned to project '{project_title}'. Client: {customer_name}, Phone: {customer_phone}, Location: {location}. Deadline: {deadline}.",
+    available_tokens: '{technician_name}, {project_title}, {customer_name}, {customer_phone}, {location}, {deadline}'
+  },
+  {
+    id: 7,
+    trigger_key: 'due_overdue_3d',
+    trigger_name: 'Due Payment Reminder (3-Day Grace)',
+    category: 'Customer Credit',
+    recipient_type: 'Customer',
+    is_enabled: true,
+    template_bn: 'Dear {customer_name}, this is a gentle reminder from {shop_name} for invoice #{invoice_no} with an overdue balance of {due_amount} BDT. Helpline: {hotline}.',
+    available_tokens: '{customer_name}, {due_amount}, {invoice_no}, {due_days}, {shop_name}, {hotline}'
+  },
+  {
+    id: 8,
+    trigger_key: 'due_overdue_7d',
+    trigger_name: 'Due Payment Reminder (7-Day Overdue)',
+    category: 'Customer Credit',
+    recipient_type: 'Customer',
+    is_enabled: true,
+    template_bn: 'Urgent Reminder: {customer_name}, your balance of {due_amount} BDT is 7 days overdue. Please settle via cash or mobile banking. - {shop_name}',
+    available_tokens: '{customer_name}, {due_amount}, {invoice_no}, {due_days}, {shop_name}, {hotline}'
+  },
+  {
+    id: 9,
+    trigger_key: 'due_overdue_30d',
+    trigger_name: 'Due Payment Final Notice (30-Day Overdue)',
+    category: 'Customer Credit',
+    recipient_type: 'Customer',
+    is_enabled: true,
+    template_bn: 'Final Overdue Notice: {customer_name}, your balance of {due_amount} BDT is 30 days past due. Please contact us within 3 days to avoid service hold. - {shop_name}, {hotline}',
+    available_tokens: '{customer_name}, {due_amount}, {invoice_no}, {due_days}, {shop_name}, {hotline}'
+  },
+  {
+    id: 10,
+    trigger_key: 'user_auth_otp',
+    trigger_name: 'OTP Verification & Password Reset',
+    category: 'Security & Auth',
+    recipient_type: 'Staff / Online User',
+    is_enabled: true,
+    template_bn: 'Your {shop_name} verification code is: {otp_code}. Valid for {valid_minutes} minutes. Please do not share this code with anyone.',
+    available_tokens: '{user_name}, {otp_code}, {valid_minutes}, {shop_name}'
+  },
+  {
+    id: 11,
+    trigger_key: 'technician_charge_transfer',
+    trigger_name: 'Technician Service Charge Payout',
+    category: 'Projects & Servicing',
+    recipient_type: 'Technician',
+    is_enabled: true,
+    template_bn: "Congratulations {technician_name}! Service charge of {charge_amount} BDT for project '{project_title}' has been transferred via {payment_channel}. TrxID: {trx_id}. - {shop_name}",
+    available_tokens: '{technician_name}, {charge_amount}, {project_title}, {payment_channel}, {trx_id}, {shop_name}'
+  }
+];
+
+export const DEFAULT_SMS_LOGS = [];
+
+export const DEFAULT_BACKUP_LOGS = [];
+
+export const TABS = [
+  { id: 'shop', label: 'Store Profile', path: 'shop' },
+  { id: 'pos', label: 'POS & System', path: 'pos' },
+  { id: 'print', label: 'Print Templates', path: 'print' },
+  { id: 'backup', label: 'Backup & Restore', path: 'backup' },
+  { id: 'sms', label: 'SMS Module', path: 'sms' },
+  { id: 'domain', label: 'License & Billing', path: 'domain' },
+  { id: 'lang', label: 'Language & Locale', path: 'lang' },
+  { id: 'updates', label: 'Updates & About', path: 'updates' },
+  { id: 'session', label: 'Session & Security', path: 'session' }
+];
+
+export const DEFAULT_PROVIDER_PRESETS = {
+  greenweb: {
+    provider_name: 'Greenweb Bangladesh',
+    provider_code: 'greenweb',
+    api_url: 'http://api.greenweb.com.bd/api.php',
+    http_method: 'GET',
+    auth_type: 'param',
+    param_api_key: 'token',
+    param_phone_key: 'to',
+    param_message_key: 'message',
+    param_sender_key: 'sender_id',
+    balance_endpoint: 'http://api.greenweb.com.bd/gurecomm/credit.php'
+  },
+  bulksmsbd: {
+    provider_name: 'BulkSMS BD',
+    provider_code: 'bulksmsbd',
+    api_url: 'http://bulksmsbd.net/api/smsapi',
+    http_method: 'GET',
+    auth_type: 'param',
+    param_api_key: 'api_key',
+    param_phone_key: 'number',
+    param_message_key: 'message',
+    param_sender_key: 'senderid',
+    balance_endpoint: 'http://bulksmsbd.net/api/getBalanceApi'
+  },
+  msensit: {
+    provider_name: 'mSensit SMS Gateway',
+    provider_code: 'msensit',
+    api_url: 'https://api.msensit.com/sms/send',
+    http_method: 'POST',
+    auth_type: 'param',
+    param_api_key: 'api_key',
+    param_phone_key: 'recipient',
+    param_message_key: 'message',
+    param_sender_key: 'sender_id',
+    balance_endpoint: 'https://api.msensit.com/sms/balance'
+  },
+  elitbuzz: {
+    provider_name: 'ElitBuzz SMS',
+    provider_code: 'elitbuzz',
+    api_url: 'https://msg.elitbuzz-bd.com/smsapi',
+    http_method: 'POST',
+    auth_type: 'param',
+    param_api_key: 'api_key',
+    param_phone_key: 'contacts',
+    param_message_key: 'msg',
+    param_sender_key: 'senderid',
+    balance_endpoint: 'https://msg.elitbuzz-bd.com/miscapi/{API_KEY}/getBalance'
+  },
+  twilio: {
+    provider_name: 'Twilio SMS International',
+    provider_code: 'twilio',
+    api_url: 'https://api.twilio.com/2010-04-01/Accounts/{AccountSid}/Messages.json',
+    http_method: 'POST',
+    auth_type: 'basic',
+    param_api_key: 'token',
+    param_phone_key: 'To',
+    param_message_key: 'Body',
+    param_sender_key: 'From',
+    balance_endpoint: ''
+  },
+  custom: {
+    provider_name: 'Custom HTTP Gateway',
+    provider_code: 'custom',
+    api_url: '',
+    http_method: 'POST',
+    auth_type: 'param',
+    param_api_key: 'token',
+    param_phone_key: 'phone',
+    param_message_key: 'message',
+    param_sender_key: 'sender_id',
+    balance_endpoint: ''
+  }
+};

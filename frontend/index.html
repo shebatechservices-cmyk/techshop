@@ -1,0 +1,54 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Sheba Technology ERP & POS</title>
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <link rel="alternate icon" href="/favicon.ico" />
+    <script>
+      // Intercept and suppress external VM/DevTools/Chrome Core Web Vitals instrumentation bugs
+      (function() {
+        var isIgnoredError = function(msg) {
+          var str = String(msg || '').toLowerCase();
+          return str.includes("reading 'starttime'") ||
+                 str.includes("reportallchanges") ||
+                 str.includes("soft navigation") ||
+                 str.includes("performanceobserver");
+        };
+
+        var originalOnError = window.onerror;
+        window.onerror = function(message, source, lineno, colno, error) {
+          var msg = String(message || (error && error.message) || '');
+          if (isIgnoredError(msg)) {
+            return true; // Prevents the error from showing in browser console
+          }
+          if (typeof originalOnError === 'function') {
+            return originalOnError.apply(this, arguments);
+          }
+          return false;
+        };
+
+        window.addEventListener('error', function(event) {
+          var msg = String((event && (event.message || (event.error && event.error.message))) || '');
+          if (isIgnoredError(msg)) {
+            event.preventDefault();
+            event.stopImmediatePropagation();
+          }
+        }, true);
+
+        window.addEventListener('unhandledrejection', function(event) {
+          var msg = String((event && event.reason && (event.reason.message || event.reason)) || '');
+          if (isIgnoredError(msg)) {
+            event.preventDefault();
+            event.stopImmediatePropagation();
+          }
+        }, true);
+      })();
+    </script>
+  </head>
+  <body>
+    <div id="root"></div>
+    <script type="module" src="/src/main.jsx"></script>
+  </body>
+</html>

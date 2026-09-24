@@ -1,0 +1,13 @@
+name: Keep Render Warm
+
+on:
+  schedule:
+    - cron: '*/10 * * * *'
+  workflow_dispatch:
+
+jobs:
+  ping:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Ping Render API (prevents free-tier sleep / cold start)
+        run: curl -s -o /dev/null -w "render /api: %{http_code}\n" https://sheba-technology.onrender.com/api || true
