@@ -2,10 +2,10 @@ import React from 'react';
 import API from '../../../services/api';
 
 export default function BackupRestoreTab({
-  settings,
-  setSettings,
-  saving,
-  handleSaveSettings,
+  settings = {},
+  setSettings = () => {},
+  saving = false,
+  handleSaveSettings = () => {},
   handleDownloadSqlBackup,
   downloadingBackup,
   handleExportJsonBackup,
@@ -114,7 +114,7 @@ export default function BackupRestoreTab({
           <label className="flex items-center gap-2 text-xs font-bold text-slate-700 cursor-pointer">
             <input
               type="checkbox"
-              checked={!!settings.auto_backup_enabled}
+              checked={!!settings?.auto_backup_enabled}
               onChange={(e) => setSettings({ ...settings, auto_backup_enabled: e.target.checked })}
               className="w-4 h-4 rounded border-slate-300 text-blue-600 focus:ring-blue-500 cursor-pointer"
             />
@@ -125,7 +125,7 @@ export default function BackupRestoreTab({
             <span className="text-xs text-slate-500">Execution Time:</span>
             <input
               type="time"
-              value={settings.auto_backup_time || '02:00'}
+              value={settings?.auto_backup_time || '02:00'}
               onChange={(e) => setSettings({ ...settings, auto_backup_time: e.target.value })}
               className="px-2.5 py-1.5 border border-slate-300 rounded text-xs text-slate-900 bg-white focus:outline-none focus:ring-2 focus:ring-blue-500"
             />

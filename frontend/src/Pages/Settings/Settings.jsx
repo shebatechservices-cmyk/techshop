@@ -336,6 +336,10 @@ export default function Settings({ onLogout, currentUser }) {
             path="backup"
             element={
               <BackupRestoreTab
+                settings={settings}
+                setSettings={setSettings}
+                saving={saving}
+                handleSaveSettings={handleSaveSettings}
                 handleDownloadSqlBackup={handleDownloadSqlBackup}
                 downloadingBackup={downloadingBackup}
                 handleExportJsonBackup={handleExportJsonBackup}
