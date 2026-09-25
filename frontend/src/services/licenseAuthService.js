@@ -82,7 +82,10 @@ export const licenseAuthService = {
    * Get configured vendor API base URL exactly from VITE_VENDOR_API_URL
    */
   getVendorUrl() {
-    const rawUrl = (import.meta.env && import.meta.env.VITE_VENDOR_API_URL) || '';
+    const rawUrl =
+      (import.meta.env && import.meta.env.VITE_VENDOR_API_URL) ||
+      (import.meta.env && import.meta.env.VITE_VENDOR_URL) ||
+      '';
     const trimmed = String(rawUrl || '').trim().replace(/\/+$/, '');
     return trimmed;
   },
@@ -456,7 +459,7 @@ export const licenseAuthService = {
       }
     }
 
-    // 2. Local Backend Licensing Route (/api/license/heartbeat)
+    // 2. Application Backend Licensing Route (/api/license/heartbeat)
     const localTargetUrl = `${API_BASE}/license/heartbeat`;
     try {
       const controller = new AbortController();
@@ -472,13 +475,13 @@ export const licenseAuthService = {
 
       const data = await res.json().catch(() => ({}));
       if (import.meta.env && import.meta.env.DEV) {
-        console.log('[licenseAuthService] ✅ Local Backend Heartbeat Response:', { status: res.status, data });
+        console.log('[licenseAuthService] ✅ Application Backend Heartbeat Response:', { status: res.status, data });
       }
       if (res.ok) {
         return { success: true, source: 'local', data };
       }
     } catch (err) {
-      logNetworkError('Heartbeat (Local Backend Proxy)', localTargetUrl, err);
+      logNetworkError('Heartbeat (Application Backend Proxy)', localTargetUrl, err);
     }
 
     return { success: false, error: 'Licensing servers unreachable' };
@@ -560,10 +563,10 @@ export const licenseAuthService = {
       }
     }
 
-    // 2. Local Backend Licensing Route (/api/license/status)
+    // 2. Application Backend Licensing Route (/api/license/status)
     const localTargetUrl = `${API_BASE}/license/status`;
     if (import.meta.env && import.meta.env.DEV) {
-      console.log('[licenseAuthService] 🔍 Checking License against Local Backend:', { localTargetUrl });
+      console.log('[licenseAuthService] 🔍 Checking License against Application Backend:', { localTargetUrl });
     }
 
     try {
@@ -578,7 +581,7 @@ export const licenseAuthService = {
 
       const data = await res.json().catch(() => ({}));
       if (import.meta.env && import.meta.env.DEV) {
-        console.log('[licenseAuthService] ✅ Local Backend License Status Response:', { status: res.status, data });
+        console.log('[licenseAuthService] ✅ Application Backend License Status Response:', { status: res.status, data });
       }
 
       if (res.ok) {
@@ -589,7 +592,7 @@ export const licenseAuthService = {
         }
       }
     } catch (err) {
-      logNetworkError('License Status Check (Local Backend)', localTargetUrl, err);
+      logNetworkError('License Status Check (Application Backend)', localTargetUrl, err);
       lastError = err;
     }
 

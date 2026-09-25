@@ -1,18 +1,16 @@
 const getApiBase = () => {
   let base = '';
-  // Vercel rewrites /api to Render. Keeping browser calls same-origin avoids
-  // CORS failures even when a stale VITE_API_URL points at Render directly.
-  if (typeof window !== 'undefined' && window.location?.hostname?.endsWith('.vercel.app')) {
-    return '/api';
-  }
+
+  // 1. Explicit VITE_API_URL from Vercel / environment (Highest Priority)
   if (import.meta.env && import.meta.env.VITE_API_URL) {
     base = String(import.meta.env.VITE_API_URL).trim();
   } else if (typeof window !== 'undefined' && window.location) {
     const { protocol, hostname, port } = window.location;
+    // Local Vite dev server ports -> connect directly to local backend port 3000
     if (['5173', '5174', '5175', '5176'].includes(port) || (port && port !== '3000' && (hostname === 'localhost' || hostname === '127.0.0.1'))) {
       return `${protocol}//${hostname}:3000/api`;
     }
-    // In production web hosts (Vercel rewrite proxy, Render, or custom domains), use /api
+    // Production web hosts (Vercel, Render, or custom domains) fallback to relative /api
     return '/api';
   } else {
     base = 'http://localhost:3000';
