@@ -8,10 +8,11 @@ datasource db {
 }
 
 model Tender {
-  id        Int       @id @default(autoincrement())
-  name      String    @unique @db.VarChar(100)
-  createdAt DateTime? @default(now()) @map("created_at") @db.Timestamp(6)
-  accounts  Account[]
+  id               Int                @id @default(autoincrement())
+  name             String             @unique @db.VarChar(100)
+  createdAt        DateTime?          @default(now()) @map("created_at") @db.Timestamp(6)
+  accounts         Account[]
+  payment_accounts payment_accounts[]
 
   @@map("tenders")
 }
@@ -40,6 +41,11 @@ model account_transactions {
   note             String?
   created_at       DateTime?        @default(now()) @db.Timestamp(6)
   transaction_id   String?          @db.VarChar(120)
+  transaction_type String?          @db.VarChar(20)
+  balance_after    Decimal?         @db.Decimal(14, 2)
+  source_type      String?          @db.VarChar(50)
+  source_id        String?          @db.VarChar(100)
+  created_by       String?          @db.VarChar(100)
   payment_accounts payment_accounts @relation(fields: [account_id], references: [id], onUpdate: NoAction)
 
   @@index([account_id], map: "idx_account_transactions_account_id")
@@ -113,6 +119,7 @@ model customers {
   deleted_by         Int?
   wallet_balance     Decimal?           @default(0) @db.Decimal(14, 2)
   updated_at         DateTime?          @default(now()) @db.Timestamp(6)
+  customer_group     String?            @db.VarChar(30)
   product_returns    product_returns[]
   sales_invoices     sales_invoices[]
   sales_quotations   sales_quotations[]
@@ -188,6 +195,7 @@ model expense_categories {
   id          Int        @id @default(autoincrement())
   name        String     @unique @db.VarChar(100)
   description String?
+  created_at  DateTime?  @default(now()) @db.Timestamp(6)
   expenses    expenses[]
 }
 
@@ -303,26 +311,28 @@ model payment_accounts {
   is_active               Boolean?                  @default(true)
   deleted_at              DateTime?                 @db.Timestamp(6)
   account_number          String?                   @db.VarChar(100)
+  tender_id               Int?
   account_transactions    account_transactions[]
   expenses                expenses[]
+  tenders                 Tender?                   @relation(fields: [tender_id], references: [id], onUpdate: NoAction)
   purchase_order_payments purchase_order_payments[]
 }
 
 model payment_methods {
   id                      Int                       @id @default(autoincrement())
-  name                    String?                   @db.VarChar(100)
   method_name             String                    @unique @db.VarChar(100)
-  type                    String?                   @default("cash") @db.VarChar(50)
-  account_number          String?                   @db.VarChar(100)
   is_active               Boolean?                  @default(true)
   account_details         String?
-  created_at              DateTime?                 @default(now()) @db.Timestamp(6)
-  updated_at              DateTime?                 @default(now()) @db.Timestamp(6)
   deleted_at              DateTime?                 @db.Timestamp(6)
   deleted_by              Int?
-  sales                   sales[]
-  purchase_orders         purchase_orders[]
+  name                    String?                   @db.VarChar(100)
+  type                    String?                   @default("cash") @db.VarChar(50)
+  account_number          String?                   @db.VarChar(100)
+  created_at              DateTime?                 @default(now()) @db.Timestamp(6)
+  updated_at              DateTime?                 @default(now()) @db.Timestamp(6)
   purchase_order_payments purchase_order_payments[]
+  purchase_orders         purchase_orders[]
+  sales                   sales[]
   transactions            transactions[]
 }
 
@@ -479,6 +489,8 @@ model purchase_order_items {
   sort_order                    Int                      @default(0)
   supplier_warranty_expire_date DateTime?                @db.Date
   updated_at                    DateTime?                @db.Timestamp(6)
+  supplier_warranty_months      Int?
+  customer_warranty_months      Int?
   purchase_orders               purchase_orders          @relation(fields: [purchase_order_id], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "fk_po_items_order")
   products                      products                 @relation(fields: [product_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "fk_po_items_product")
   purchase_order_serials        purchase_order_serials[]
@@ -492,13 +504,13 @@ model purchase_order_payments {
   id                Int               @id @default(autoincrement())
   purchase_order_id Int
   payment_method    String            @db.VarChar(40)
-  payment_method_id Int?
   account_id        Int?
   amount            Decimal           @default(0) @db.Decimal(14, 2)
   created_at        DateTime?         @default(now()) @db.Timestamp(6)
   receiver_name     String?           @db.VarChar(150)
   transaction_id    String?           @db.VarChar(100)
   sub_option        String?           @db.VarChar(150)
+  payment_method_id Int?
   payment_accounts  payment_accounts? @relation(fields: [account_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "fk_po_payments_account")
   purchase_orders   purchase_orders   @relation(fields: [purchase_order_id], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "fk_po_payments_order")
   payment_methods   payment_methods?  @relation(fields: [payment_method_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
@@ -506,6 +518,7 @@ model purchase_order_payments {
   @@index([purchase_order_id], map: "idx_purchase_order_payments_order")
 }
 
+/// This model contains an expression index which requires additional setup for migrations. Visit https://pris.ly/d/expression-indexes for more info.
 model purchase_order_serials {
   id                     Int                  @id @default(autoincrement())
   purchase_order_item_id Int
@@ -517,7 +530,6 @@ model purchase_orders {
   id                      Int                       @id @default(autoincrement())
   po_number               String                    @unique @db.VarChar(30)
   supplier_id             Int
-  payment_method_id       Int?
   transaction_reference   String?                   @db.VarChar(120)
   extra_cost              Decimal                   @default(0) @db.Decimal(14, 2)
   total_cost              Decimal                   @default(0) @db.Decimal(14, 2)
@@ -534,11 +546,12 @@ model purchase_orders {
   deleted_by              Int?
   extra_cost_category     String?                   @db.VarChar(100)
   extra_cost_notes        String?
+  payment_method_id       Int?
   payments                payments[]
   purchase_order_items    purchase_order_items[]
   purchase_order_payments purchase_order_payments[]
-  payment_methods         payment_methods?          @relation(fields: [payment_method_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
   suppliers               suppliers                 @relation(fields: [supplier_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "fk_purchase_orders_supplier")
+  payment_methods         payment_methods?          @relation(fields: [payment_method_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
 
   @@index([supplier_id, created_at(sort: Desc)], map: "idx_po_supp")
   @@index([created_at(sort: Desc)], map: "idx_purchase_orders_created_at")
@@ -598,33 +611,40 @@ model roles {
 }
 
 model sales {
-  id                    Int                @id @default(autoincrement())
-  invoice_no            String             @unique @db.VarChar(50)
-  customer_id           Int?
-  total_amount          Decimal            @db.Decimal(14, 2)
-  sale_date             DateTime?          @default(now()) @db.Timestamp(6)
-  deleted_at            DateTime?          @db.Timestamp(6)
-  loyalty_points_earned Decimal?           @default(0.00) @db.Decimal(10, 2)
-  loyalty_points_used   Decimal?           @default(0.00) @db.Decimal(10, 2)
-  payment_method_id     Int?
-  created_at            DateTime?          @default(now()) @db.Timestamp(6)
-  subtotal              Decimal?           @default(0) @db.Decimal(14, 2)
-  discount              Decimal?           @default(0) @db.Decimal(14, 2)
-  paid_amount           Decimal?           @default(0) @db.Decimal(14, 2)
-  due_amount            Decimal?           @default(0) @db.Decimal(14, 2)
-  payment_status        String?            @default("paid") @db.VarChar(30)
-  payment_details       Json?
-  vat                   Decimal?           @default(0.00) @db.Decimal(15, 2)
-  sales_person          String?            @db.VarChar(100)
-  destination           String?            @db.VarChar(255)
-  attention             String?            @db.VarChar(255)
-  invoice_date          DateTime?          @default(dbgenerated("CURRENT_DATE")) @db.Date
-  setup_charge          Decimal?           @default(0) @db.Decimal(12, 2)
-  deleted_by            Int?
-  notes                 String?
-  payments              payments[]
-  payment_methods       payment_methods?   @relation(fields: [payment_method_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
-  service_projects      service_projects[]
+  id                       Int                @id @default(autoincrement())
+  invoice_no               String             @unique @db.VarChar(50)
+  customer_id              Int?
+  total_amount             Decimal            @db.Decimal(14, 2)
+  sale_date                DateTime?          @default(now()) @db.Timestamp(6)
+  deleted_at               DateTime?          @db.Timestamp(6)
+  loyalty_points_earned    Decimal?           @default(0.00) @db.Decimal(10, 2)
+  loyalty_points_used      Decimal?           @default(0.00) @db.Decimal(10, 2)
+  payment_method_id        Int?
+  created_at               DateTime?          @default(now()) @db.Timestamp(6)
+  subtotal                 Decimal?           @default(0) @db.Decimal(14, 2)
+  discount                 Decimal?           @default(0) @db.Decimal(14, 2)
+  paid_amount              Decimal?           @default(0) @db.Decimal(14, 2)
+  due_amount               Decimal?           @default(0) @db.Decimal(14, 2)
+  payment_status           String?            @default("paid") @db.VarChar(30)
+  payment_details          Json?
+  vat                      Decimal?           @default(0.00) @db.Decimal(15, 2)
+  sales_person             String?            @db.VarChar(100)
+  destination              String?            @db.VarChar(255)
+  attention                String?            @db.VarChar(255)
+  invoice_date             DateTime?          @default(dbgenerated("CURRENT_DATE")) @db.Date
+  setup_charge             Decimal?           @default(0) @db.Decimal(12, 2)
+  deleted_by               Int?
+  notes                    String?
+  extra_cost               Decimal?           @default(0) @db.Decimal(14, 2)
+  extra_cost_category      String?            @db.VarChar(100)
+  extra_cost_notes         String?
+  previous_due             Decimal?           @default(0) @db.Decimal(14, 2)
+  exchange_from_invoice_no String?            @db.VarChar(100)
+  original_sale_id         Int?
+  exchange_details         Json?
+  payments                 payments[]
+  payment_methods          payment_methods?   @relation(fields: [payment_method_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  service_projects         service_projects[]
 
   @@index([created_at(sort: Desc)], map: "idx_sales_created_at")
   @@index([customer_id], map: "idx_sales_customer_id")
@@ -672,6 +692,7 @@ model sales_items {
   line_total           Decimal              @db.Decimal(14, 2)
   warranty_expire_date DateTime?            @db.Date
   sale_id              Int?
+  warranty_months      Int?                 @default(0)
   sales_item_serials   sales_item_serials[]
   products             products             @relation(fields: [product_id], references: [id], onUpdate: NoAction)
   sales_invoices       sales_invoices?      @relation(fields: [sales_invoice_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
@@ -779,61 +800,80 @@ model service_projects {
 }
 
 model shop_settings {
-  id                          Int       @id @default(autoincrement())
-  shop_name                   String    @db.VarChar(150)
-  shop_title                  String?   @db.VarChar(255)
-  description                 String?
-  phone                       String?   @db.VarChar(50)
-  email                       String?   @db.VarChar(100)
-  address                     String?
-  website                     String?   @db.VarChar(255)
-  logo_url                    String?
-  banner_url                  String?
-  theme_mode                  String?   @default("colorful") @db.VarChar(50)
-  invoice_template            String?   @default("standard") @db.VarChar(50)
-  invoice_color_scheme        String?   @default("#1e293b") @db.VarChar(50)
-  loyalty_enabled             Boolean?  @default(false)
-  loyalty_rate                Decimal?  @default(1.00) @db.Decimal(5, 2)
-  updated_at                  DateTime? @default(now()) @db.Timestamp(6)
-  branch_name                 String?   @default("Main Branch - Head Office") @db.VarChar(100)
-  alt_phone                   String?   @default("+880 1800-000000") @db.VarChar(50)
-  trade_license               String?   @default("TRAD/DNCC/048219/2024") @db.VarChar(100)
-  bin_tin                     String?   @default("BIN-003948172-0101") @db.VarChar(100)
-  currency_symbol             String?   @default("৳") @db.VarChar(10)
-  timezone                    String?   @default("Asia/Dhaka") @db.VarChar(50)
-  invoice_footer_note         String?   @default("ধন্যবাদ! আবার আসবেন। বিক্রিত পণ্য ৩ দিনের মধ্যে পরিবর্তনযোগ্য (শর্ত প্রযোজ্য)।")
-  invoice_terms               String?   @default("১. ক্যাশ মেমো ব্যতীত কোনো ওয়ারেন্টি দাবি গ্রহণযোগ্য নয়。\n২. বৈদ্যুতিক গোলযোগ বা বার্নজনিত ক্ষতি ওয়ারেন্টির আওতাভুক্ত নয়。\n৩. কাটার পর কোনো তার বা অপটিক্যাল ক্যাবল ফেরত নেওয়া হবে না।")
-  show_logo_on_invoice        Boolean?  @default(true)
-  show_qr_on_invoice          Boolean?  @default(true)
-  show_signature_on_invoice   Boolean?  @default(true)
-  default_invoice_format      String?   @default("thermal_80mm") @db.VarChar(30)
-  barcode_scanner_auto_submit Boolean?  @default(true)
-  sound_effects_enabled       Boolean?  @default(true)
-  low_stock_threshold         Int?      @default(5)
-  negative_stock_allowed      Boolean?  @default(false)
-  app_language                String?   @default("bn") @db.VarChar(20)
-  number_format               String?   @default("lakh") @db.VarChar(20)
-  sms_provider                String?   @default("greenweb") @db.VarChar(50)
-  sms_api_key                 String?   @default("gw_live_99a8b7c6d5e4f3") @db.VarChar(200)
-  sms_sender_id               String?   @default("SHEBATECH") @db.VarChar(50)
-  sms_sales_enabled           Boolean?  @default(true)
-  sms_warranty_enabled        Boolean?  @default(true)
-  sms_low_stock_enabled       Boolean?  @default(false)
-  sms_sales_template          String?   @default("ধন্যবাদ {customer_name}! আপনার চালান নং #{invoice_no}, মোট {amount} ৳ পরিশোধিত হয়েছে। - {shop_name}")
-  sms_warranty_template       String?   @default("প্রিয় {customer_name}, আপনার সার্ভিস টোকেন #{warranty_token} এর পণ্য সার্ভিসিং সম্পন্ন হয়েছে। শপে এসে সংগ্রহ করুন।")
-  auto_backup_enabled         Boolean?  @default(true)
-  auto_backup_time            String?   @default("02:00") @db.VarChar(10)
-  session_timeout_minutes     Int?      @default(30)
-  license_key                 String?   @default("SHEBA-ENT-2026-X99-PRO") @db.VarChar(100)
-  license_status              String?   @default("Active Lifetime Enterprise") @db.VarChar(50)
-  domain_name                 String?   @default("shebatech.com.bd") @db.VarChar(100)
-  domain_expiry               String?   @default("2027-01-15") @db.VarChar(50)
-  ssl_status                  String?   @default("Valid (Let's Encrypt Wildcard)") @db.VarChar(50)
-  hosting_server              String?   @default("Ubuntu 24.04 LTS (Dedicated 8 vCPU, 16GB RAM)") @db.VarChar(100)
-  warranty_policy             String?
-  return_refund_policy        String?
-  invoice_brand_logos         Json?     @default("[]")
-  client_app_id               String?   @default("CLIENT-SHEBA-TECH-8801") @db.VarChar(100)
+  id                            Int       @id @default(autoincrement())
+  shop_name                     String    @db.VarChar(150)
+  shop_title                    String?   @db.VarChar(255)
+  description                   String?
+  phone                         String?   @db.VarChar(50)
+  email                         String?   @db.VarChar(100)
+  address                       String?
+  website                       String?   @db.VarChar(255)
+  logo_url                      String?
+  banner_url                    String?
+  theme_mode                    String?   @default("colorful") @db.VarChar(50)
+  invoice_template              String?   @default("standard") @db.VarChar(50)
+  invoice_color_scheme          String?   @default("#1e293b") @db.VarChar(50)
+  loyalty_enabled               Boolean?  @default(false)
+  loyalty_rate                  Decimal?  @default(1.00) @db.Decimal(5, 2)
+  updated_at                    DateTime? @default(now()) @db.Timestamp(6)
+  branch_name                   String?   @default("Main Branch - Head Office") @db.VarChar(100)
+  alt_phone                     String?   @default("+880 1800-000000") @db.VarChar(50)
+  trade_license                 String?   @default("TRAD/DNCC/048219/2024") @db.VarChar(100)
+  bin_tin                       String?   @default("BIN-003948172-0101") @db.VarChar(100)
+  currency_symbol               String?   @default("৳") @db.VarChar(10)
+  timezone                      String?   @default("Asia/Dhaka") @db.VarChar(50)
+  invoice_footer_note           String?   @default("ধন্যবাদ! আবার আসবেন। বিক্রিত পণ্য ৩ দিনের মধ্যে পরিবর্তনযোগ্য (শর্ত প্রযোজ্য)।")
+  invoice_terms                 String?   @default("১. ক্যাশ মেমো ব্যতীত কোনো ওয়ারেন্টি দাবি গ্রহণযোগ্য নয়。\n২. বৈদ্যুতিক গোলযোগ বা বার্নজনিত ক্ষতি ওয়ারেন্টির আওতাভুক্ত নয়。\n৩. কাটার পর কোনো তার বা অপটিক্যাল ক্যাবল ফেরত নেওয়া হবে না।")
+  show_logo_on_invoice          Boolean?  @default(true)
+  show_qr_on_invoice            Boolean?  @default(true)
+  show_signature_on_invoice     Boolean?  @default(true)
+  default_invoice_format        String?   @default("thermal_80mm") @db.VarChar(30)
+  barcode_scanner_auto_submit   Boolean?  @default(true)
+  sound_effects_enabled         Boolean?  @default(true)
+  low_stock_threshold           Int?      @default(5)
+  negative_stock_allowed        Boolean?  @default(false)
+  app_language                  String?   @default("bn") @db.VarChar(20)
+  number_format                 String?   @default("lakh") @db.VarChar(20)
+  sms_provider                  String?   @default("greenweb") @db.VarChar(50)
+  sms_api_key                   String?   @default("gw_live_99a8b7c6d5e4f3") @db.VarChar(200)
+  sms_sender_id                 String?   @default("SHEBATECH") @db.VarChar(50)
+  sms_sales_enabled             Boolean?  @default(true)
+  sms_warranty_enabled          Boolean?  @default(true)
+  sms_low_stock_enabled         Boolean?  @default(false)
+  sms_sales_template            String?   @default("ধন্যবাদ {customer_name}! আপনার চালান নং #{invoice_no}, মোট {amount} ৳ পরিশোধিত হয়েছে। - {shop_name}")
+  sms_warranty_template         String?   @default("প্রিয় {customer_name}, আপনার সার্ভিস টোকেন #{warranty_token} এর পণ্য সার্ভিসিং সম্পন্ন হয়েছে। শপে এসে সংগ্রহ করুন।")
+  auto_backup_enabled           Boolean?  @default(true)
+  auto_backup_time              String?   @default("02:00") @db.VarChar(10)
+  session_timeout_minutes       Int?      @default(30)
+  license_key                   String?   @default("SHEBA-ENT-2026-X99-PRO") @db.VarChar(100)
+  license_status                String?   @default("Active Lifetime Enterprise") @db.VarChar(50)
+  domain_name                   String?   @default("shebatech.com.bd") @db.VarChar(100)
+  domain_expiry                 String?   @default("2027-01-15") @db.VarChar(50)
+  ssl_status                    String?   @default("Valid (Let's Encrypt Wildcard)") @db.VarChar(50)
+  hosting_server                String?   @default("Ubuntu 24.04 LTS (Dedicated 8 vCPU, 16GB RAM)") @db.VarChar(100)
+  warranty_policy               String?
+  return_refund_policy          String?
+  invoice_brand_logos           Json?     @default("[]")
+  client_app_id                 String?   @default("CLIENT-SHEBA-TECH-8801") @db.VarChar(100)
+  student_quota                 Int?      @default(500)
+  secondary_logo_url            String?
+  sister_concern_name           String?   @db.VarChar(150)
+  watermark_logo_url            String?
+  watermark_opacity             Int?      @default(6)
+  enable_watermark              Boolean?  @default(true)
+  show_sister_concern           Boolean?  @default(true)
+  thermal_tc_clause             String?
+  footer_greeting               String?
+  warranty_disclaimer_text      String?
+  return_policy_text            String?
+  footer_partner_logos          Json?     @default("[]")
+  paper_size                    String?   @default("a4") @db.VarChar(30)
+  page_margin                   String?   @default("default") @db.VarChar(30)
+  show_footer_details           Boolean?  @default(true)
+  shop_code                     String?   @default("SHB-001") @db.VarChar(50)
+  security_pin                  String?   @default("1234") @db.VarChar(20)
+  allow_invoice_modification    Boolean?  @default(true)
+  invoice_edit_time_limit_hours Int?      @default(360)
 }
 
 model sms_logs {
@@ -1033,6 +1073,12 @@ model wallet_transactions {
   balance_after      Decimal?  @default(0) @db.Decimal(14, 2)
   deleted_at         DateTime? @db.Timestamp(6)
   created_at         DateTime? @default(now()) @db.Timestamp(6)
+  wallet_id          Int?
+  entity_type        String?   @db.VarChar(20)
+  entity_id          Int?
+  entity_name        String?   @db.VarChar(150)
+  reference_type     String?   @db.VarChar(50)
+  reference_id       String?   @db.VarChar(120)
 }
 
 model warehouses {
@@ -1040,6 +1086,14 @@ model warehouses {
   name                                                            String            @unique @db.VarChar(100)
   location                                                        String?
   is_default                                                      Boolean?          @default(false)
+  code                                                            String?           @db.VarChar(50)
+  address                                                         String?
+  contact_person                                                  String?           @db.VarChar(100)
+  phone                                                           String?           @db.VarChar(50)
+  is_active                                                       Boolean?          @default(true)
+  deleted_at                                                      DateTime?         @db.Timestamptz(6)
+  created_at                                                      DateTime?         @default(now()) @db.Timestamptz(6)
+  updated_at                                                      DateTime?         @default(now()) @db.Timestamptz(6)
   sales_invoices                                                  sales_invoices[]
   stock_levels                                                    stock_levels[]
   stock_transfers_stock_transfers_dest_warehouse_idTowarehouses   stock_transfers[] @relation("stock_transfers_dest_warehouse_idTowarehouses")
@@ -1089,6 +1143,69 @@ model vendor_license_cache {
   last_sync_at        DateTime? @default(now()) @db.Timestamp(6)
   offline_grace_until DateTime? @db.Timestamp(6)
   cache_signature     String?   @db.VarChar(255)
-  client_app_id       String?   @db.VarChar(100)
   created_at          DateTime? @default(now()) @db.Timestamp(6)
+  student_quota       Int?      @default(500)
+  client_app_id       String?   @db.VarChar(100)
+}
+
+model register_shifts {
+  id                    Int       @id @default(autoincrement())
+  branch_id             Int?      @default(1)
+  opened_at             DateTime? @default(now()) @db.Timestamp(6)
+  closed_at             DateTime? @db.Timestamp(6)
+  opened_by             Int?
+  opened_by_name        String?   @db.VarChar(150)
+  closed_by             Int?
+  closed_by_name        String?   @db.VarChar(150)
+  opening_balance       Decimal?  @default(0.00) @db.Decimal(14, 2)
+  total_cash_sales      Decimal?  @default(0.00) @db.Decimal(14, 2)
+  total_due_collections Decimal?  @default(0.00) @db.Decimal(14, 2)
+  total_cash_expenses   Decimal?  @default(0.00) @db.Decimal(14, 2)
+  expected_cash_balance Decimal?  @default(0.00) @db.Decimal(14, 2)
+  actual_cash_counted   Decimal?  @default(0.00) @db.Decimal(14, 2)
+  variance_amount       Decimal?  @default(0.00) @db.Decimal(14, 2)
+  denominations         Json?     @default("{}")
+  status                String?   @default("open") @db.VarChar(50)
+  notes                 String?
+  is_locked             Boolean?  @default(false)
+  sms_alert_sent        Boolean?  @default(false)
+  sms_details           Json?     @default("{}")
+  created_at            DateTime? @default(now()) @db.Timestamp(6)
+  updated_at            DateTime? @default(now()) @db.Timestamp(6)
+}
+
+model sms_providers {
+  id                    Int       @id @default(autoincrement())
+  provider_name         String    @db.VarChar(100)
+  provider_code         String    @db.VarChar(50)
+  api_url               String
+  http_method           String?   @default("GET") @db.VarChar(10)
+  auth_type             String?   @default("param") @db.VarChar(20)
+  api_key               String?   @default("")
+  api_secret            String?   @default("")
+  sender_id             String?   @default("") @db.VarChar(50)
+  param_phone_key       String?   @default("to") @db.VarChar(50)
+  param_message_key     String?   @default("message") @db.VarChar(50)
+  param_sender_key      String?   @default("sender_id") @db.VarChar(50)
+  param_api_key         String?   @default("token") @db.VarChar(50)
+  extra_params          Json?     @default("{}")
+  balance_endpoint      String?   @default("")
+  balance_response_path String?   @default("") @db.VarChar(100)
+  is_active             Boolean?  @default(false)
+  created_at            DateTime? @default(now()) @db.Timestamp(6)
+  updated_at            DateTime? @default(now()) @db.Timestamp(6)
+}
+
+model wallets {
+  id          Int       @id @default(autoincrement())
+  entity_type String    @db.VarChar(20)
+  entity_id   Int
+  entity_name String?   @db.VarChar(150)
+  balance     Decimal   @default(0) @db.Decimal(14, 2)
+  status      String    @default("active") @db.VarChar(20)
+  created_at  DateTime? @default(now()) @db.Timestamp(6)
+  updated_at  DateTime? @default(now()) @db.Timestamp(6)
+  deleted_at  DateTime? @db.Timestamp(6)
+
+  @@unique([entity_type, entity_id], map: "uq_entity_wallet")
 }
