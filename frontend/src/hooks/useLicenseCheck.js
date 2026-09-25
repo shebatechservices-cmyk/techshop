@@ -55,7 +55,9 @@ export default function useLicenseCheck() {
       setOfflineGracePeriod(false);
       setLicenseData(result);
     } catch (err) {
-      console.warn('[useLicenseCheck] Network verification failed. Falling back to offline grace evaluation:', err.message);
+      if (import.meta.env && import.meta.env.DEV) {
+        console.warn('[useLicenseCheck] Network verification failed. Falling back to offline grace evaluation:', err.message);
+      }
 
       // Offline Fallback Evaluation (48 Hours Grace Period or Cached Trial)
       const cached = licenseAuthService.getCachedToken();
@@ -94,7 +96,9 @@ export default function useLicenseCheck() {
         }
       }
     } catch (err) {
-      console.warn('[useLicenseCheck] 5-Minute Heartbeat error:', err.message);
+      if (import.meta.env && import.meta.env.DEV) {
+        console.warn('[useLicenseCheck] 5-Minute Heartbeat error:', err.message);
+      }
     }
   }, []);
 

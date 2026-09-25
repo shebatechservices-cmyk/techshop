@@ -42,25 +42,27 @@ function generateDeviceId() {
  * Helper to log detailed network failures for debugging (CORS, timeout, down)
  */
 function logNetworkError(context, targetUrl, error) {
-  const isTimeout = error.name === 'AbortError';
-  const isTypeError = error.name === 'TypeError';
-  let diagnostic = 'Unknown connection error';
+  if (import.meta.env && import.meta.env.DEV) {
+    const isTimeout = error.name === 'AbortError';
+    const isTypeError = error.name === 'TypeError';
+    let diagnostic = 'Unknown connection error';
 
-  if (isTimeout) {
-    diagnostic = 'Request timed out (>4.5s). Vendor server may be slow or unreachable.';
-  } else if (isTypeError && error.message.includes('Failed to fetch')) {
-    diagnostic = 'Failed to fetch (Likely CORS policy block, SSL certificate error, or Vendor server is not running).';
-  } else if (error.message) {
-    diagnostic = error.message;
+    if (isTimeout) {
+      diagnostic = 'Request timed out (>4.5s). Vendor server may be slow or unreachable.';
+    } else if (isTypeError && error.message.includes('Failed to fetch')) {
+      diagnostic = 'Failed to fetch (Likely CORS policy block, SSL certificate error, or Vendor server is not running).';
+    } else if (error.message) {
+      diagnostic = error.message;
+    }
+
+    console.error(`[licenseAuthService] ❌ ${context} Network Failure:`, {
+      targetUrl,
+      errorName: error.name,
+      errorMessage: error.message,
+      probableCause: diagnostic,
+      timestamp: new Date().toISOString(),
+    });
   }
-
-  console.error(`[licenseAuthService] ❌ ${context} Network Failure:`, {
-    targetUrl,
-    errorName: error.name,
-    errorMessage: error.message,
-    probableCause: diagnostic,
-    timestamp: new Date().toISOString(),
-  });
 }
 
 export const licenseAuthService = {
@@ -339,7 +341,9 @@ export const licenseAuthService = {
     // 1. Notify Vendor API
     if (vendorUrl) {
       const targetUrl = `${vendorUrl}/api/license/activate-trial`;
-      console.log('[licenseAuthService] 🚀 Outgoing Trial Activation to Vendor:', { targetUrl, payload, headers });
+      if (import.meta.env && import.meta.env.DEV) {
+        console.log('[licenseAuthService] 🚀 Outgoing Trial Activation to Vendor:', { targetUrl, payload, headers });
+      }
       try {
         const controller = new AbortController();
         const timeoutId = setTimeout(() => controller.abort(), 4500);
@@ -352,7 +356,9 @@ export const licenseAuthService = {
         clearTimeout(timeoutId);
 
         const data = await res.json().catch(() => ({}));
-        console.log('[licenseAuthService] ✅ Vendor Trial Activation Response:', { status: res.status, data });
+        if (import.meta.env && import.meta.env.DEV) {
+          console.log('[licenseAuthService] ✅ Vendor Trial Activation Response:', { status: res.status, data });
+        }
       } catch (err) {
         logNetworkError('Trial Activation (Vendor API)', targetUrl, err);
       }
@@ -372,7 +378,9 @@ export const licenseAuthService = {
       clearTimeout(timeoutId);
 
       const data = await res.json().catch(() => ({}));
-      console.log('[licenseAuthService] ✅ Local Backend Trial Activation Response:', { status: res.status, data });
+      if (import.meta.env && import.meta.env.DEV) {
+        console.log('[licenseAuthService] ✅ Local Backend Trial Activation Response:', { status: res.status, data });
+      }
     } catch (err) {
       logNetworkError('Trial Activation (Local Backend)', localTargetUrl, err);
     }
@@ -411,13 +419,15 @@ export const licenseAuthService = {
 
     const headers = this.getRequestHeaders();
 
-    console.log('[licenseAuthService] 📡 Dispatching 5-Min Heartbeat Telemetry:', {
-      vendorUrl: vendorUrl || 'Local Proxy Only',
-      license_key: configuredKey ? `${configuredKey.substring(0, 8)}...` : 'NONE',
-      mac_address: macAddress,
-      hardware_fingerprint: hwFingerprint,
-      timestamp: new Date().toISOString(),
-    });
+    if (import.meta.env && import.meta.env.DEV) {
+      console.log('[licenseAuthService] 📡 Dispatching 5-Min Heartbeat Telemetry:', {
+        vendorUrl: vendorUrl || 'Local Proxy Only',
+        license_key: configuredKey ? `${configuredKey.substring(0, 8)}...` : 'NONE',
+        mac_address: macAddress,
+        hardware_fingerprint: hwFingerprint,
+        timestamp: new Date().toISOString(),
+      });
+    }
 
     // 1. Direct Vendor API Heartbeat Endpoint
     if (vendorUrl && configuredKey) {
@@ -435,7 +445,9 @@ export const licenseAuthService = {
         clearTimeout(timeoutId);
 
         const data = await res.json().catch(() => ({}));
-        console.log('[licenseAuthService] ✅ Direct Vendor Heartbeat Response:', { status: res.status, data });
+        if (import.meta.env && import.meta.env.DEV) {
+          console.log('[licenseAuthService] ✅ Direct Vendor Heartbeat Response:', { status: res.status, data });
+        }
         if (res.ok) {
           return { success: true, source: 'vendor', data };
         }
@@ -459,7 +471,9 @@ export const licenseAuthService = {
       clearTimeout(timeoutId);
 
       const data = await res.json().catch(() => ({}));
-      console.log('[licenseAuthService] ✅ Local Backend Heartbeat Response:', { status: res.status, data });
+      if (import.meta.env && import.meta.env.DEV) {
+        console.log('[licenseAuthService] ✅ Local Backend Heartbeat Response:', { status: res.status, data });
+      }
       if (res.ok) {
         return { success: true, source: 'local', data };
       }
@@ -505,11 +519,13 @@ export const licenseAuthService = {
     // 1. Direct Vendor API Call (if VITE_VENDOR_API_URL and key are present)
     if (vendorUrl && configuredKey) {
       const targetUrl = `${vendorUrl}/api/license/verify`;
-      console.log('[licenseAuthService] 🔍 Verifying License against Vendor API:', {
-        targetUrl,
-        license_key: configuredKey,
-        hardware_fingerprint: hwFingerprint,
-      });
+      if (import.meta.env && import.meta.env.DEV) {
+        console.log('[licenseAuthService] 🔍 Verifying License against Vendor API:', {
+          targetUrl,
+          license_key: configuredKey,
+          hardware_fingerprint: hwFingerprint,
+        });
+      }
 
       try {
         const controller = new AbortController();
@@ -524,7 +540,9 @@ export const licenseAuthService = {
         clearTimeout(timeoutId);
 
         const data = await res.json().catch(() => ({}));
-        console.log('[licenseAuthService] ✅ Vendor API License Verify Response:', { status: res.status, data });
+        if (import.meta.env && import.meta.env.DEV) {
+          console.log('[licenseAuthService] ✅ Vendor API License Verify Response:', { status: res.status, data });
+        }
 
         if (res.ok) {
           return this.formatVerificationResponse(data);
@@ -544,7 +562,9 @@ export const licenseAuthService = {
 
     // 2. Local Backend Licensing Route (/api/license/status)
     const localTargetUrl = `${API_BASE}/license/status`;
-    console.log('[licenseAuthService] 🔍 Checking License against Local Backend:', { localTargetUrl });
+    if (import.meta.env && import.meta.env.DEV) {
+      console.log('[licenseAuthService] 🔍 Checking License against Local Backend:', { localTargetUrl });
+    }
 
     try {
       const controller = new AbortController();
@@ -557,7 +577,9 @@ export const licenseAuthService = {
       clearTimeout(timeoutId);
 
       const data = await res.json().catch(() => ({}));
-      console.log('[licenseAuthService] ✅ Local Backend License Status Response:', { status: res.status, data });
+      if (import.meta.env && import.meta.env.DEV) {
+        console.log('[licenseAuthService] ✅ Local Backend License Status Response:', { status: res.status, data });
+      }
 
       if (res.ok) {
         if (data.status === 'active' && data.full_license_key && !data.is_trial) {
@@ -647,7 +669,9 @@ export const licenseAuthService = {
       if (!raw) return null;
       const parsed = JSON.parse(raw);
       if (parsed.checksum !== createChecksum(parsed)) {
-        console.warn('[licenseAuthService] Tampered license cache detected');
+        if (import.meta.env && import.meta.env.DEV) {
+          console.warn('[licenseAuthService] Tampered license cache detected');
+        }
         return null;
       }
       return parsed;
@@ -732,13 +756,15 @@ export const licenseAuthService = {
     const macAddress = this.getMacAddress();
     const appSecret = this.getAppSecret();
 
-    console.log('[licenseAuthService] 🎁 Outgoing Redeem Request:', {
-      code: cleanCode,
-      vendorUrl: vendorUrl || 'Local Proxy',
-      hardware_fingerprint: hwFingerprint,
-      isValidFormat: this.isValidLicenseFormat(cleanCode),
-      timestamp: new Date().toISOString(),
-    });
+    if (import.meta.env && import.meta.env.DEV) {
+      console.log('[licenseAuthService] 🎁 Outgoing Redeem Request:', {
+        code: cleanCode,
+        vendorUrl: vendorUrl || 'Local Proxy',
+        hardware_fingerprint: hwFingerprint,
+        isValidFormat: this.isValidLicenseFormat(cleanCode),
+        timestamp: new Date().toISOString(),
+      });
+    }
 
     if (!this.isValidLicenseFormat(cleanCode)) {
       const formatErr = {
@@ -746,7 +772,9 @@ export const licenseAuthService = {
         message: 'Invalid key format. Expected format: VEND-XXXX-XXXX-XXXX-XXXX or SHEBA-ENT-XXXX-PRO',
         error: 'Invalid Key Format',
       };
-      console.warn('[licenseAuthService] ⚠️ Key Format Validation Failed:', formatErr);
+      if (import.meta.env && import.meta.env.DEV) {
+        console.warn('[licenseAuthService] ⚠️ Key Format Validation Failed:', formatErr);
+      }
       return formatErr;
     }
 
@@ -775,7 +803,9 @@ export const licenseAuthService = {
     // 1. Direct Vendor API Call if VITE_VENDOR_API_URL is configured
     if (vendorUrl) {
       const targetUrl = `${vendorUrl}/api/vendor/redeem`;
-      console.log('[licenseAuthService] Attempting direct Vendor Redeem:', { targetUrl });
+      if (import.meta.env && import.meta.env.DEV) {
+        console.log('[licenseAuthService] Attempting direct Vendor Redeem:', { targetUrl });
+      }
       try {
         const controller = new AbortController();
         const timeoutId = setTimeout(() => controller.abort(), 6000);
@@ -789,7 +819,9 @@ export const licenseAuthService = {
         clearTimeout(timeoutId);
 
         const data = await res.json().catch(() => null);
-        console.log('[licenseAuthService] Vendor API Direct Redeem Response:', { status: res.status, data });
+        if (import.meta.env && import.meta.env.DEV) {
+          console.log('[licenseAuthService] Vendor API Direct Redeem Response:', { status: res.status, data });
+        }
 
         if (res.ok && data && (data.success || data.data)) {
           try {
@@ -815,7 +847,9 @@ export const licenseAuthService = {
 
     // 2. Local Backend Licensing Route (/api/license/redeem)
     const localTargetUrl = `${API_BASE}/license/redeem`;
-    console.log('[licenseAuthService] Attempting Local Backend Redeem Proxy:', { localTargetUrl });
+    if (import.meta.env && import.meta.env.DEV) {
+      console.log('[licenseAuthService] Attempting Local Backend Redeem Proxy:', { localTargetUrl });
+    }
 
     try {
       const controller = new AbortController();
@@ -830,7 +864,9 @@ export const licenseAuthService = {
       clearTimeout(timeoutId);
 
       const data = await res.json().catch(() => null);
-      console.log('[licenseAuthService] Local Backend Redeem Response:', { status: res.status, data });
+      if (import.meta.env && import.meta.env.DEV) {
+        console.log('[licenseAuthService] Local Backend Redeem Response:', { status: res.status, data });
+      }
 
       if (res.ok && data && (data.success || data.data)) {
         try {
@@ -851,7 +887,9 @@ export const licenseAuthService = {
           ? 'License key is suspended or blocked by administrator'
           : `Redemption failed with status ${res.status}`);
 
-      console.warn('[licenseAuthService] Server Rejected Code:', serverErrorMessage);
+      if (import.meta.env && import.meta.env.DEV) {
+        console.warn('[licenseAuthService] Server Rejected Code:', serverErrorMessage);
+      }
       return {
         success: false,
         message: serverErrorMessage,
