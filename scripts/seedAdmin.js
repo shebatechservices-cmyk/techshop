@@ -6,13 +6,6 @@ async function seedAdmin() {
     try {
         // 1. Ensure Roles Exist
         await pool.query(`
-            CREATE TABLE IF NOT EXISTS roles (
-                id SERIAL PRIMARY KEY,
-                name VARCHAR(100) UNIQUE NOT NULL,
-                permissions JSONB DEFAULT '[]',
-                created_at TIMESTAMP DEFAULT NOW(),
-                updated_at TIMESTAMP DEFAULT NOW()
-            );
             INSERT INTO roles (id, name, permissions) VALUES 
             (1, 'Super Admin', '[]'),
             (2, 'Admin', '[]'),
@@ -24,22 +17,15 @@ async function seedAdmin() {
 
         // 2. Ensure Shop Settings Exist
         await pool.query(`
-            CREATE TABLE IF NOT EXISTS shop_settings (
-                id SERIAL PRIMARY KEY,
-                shop_name VARCHAR(255) DEFAULT 'Sheba Technology',
-                tagline VARCHAR(255) DEFAULT 'Smart POS & ERP System',
-                phone VARCHAR(50) DEFAULT '+8801700000000',
-                email VARCHAR(100) DEFAULT 'support@sheba.technology',
-                address TEXT DEFAULT 'Dhaka, Bangladesh',
-                currency_symbol VARCHAR(10) DEFAULT '৳',
-                license_key VARCHAR(150) DEFAULT 'SHEBA-ENT-2026-X99-PRO',
-                license_status VARCHAR(50) DEFAULT 'active',
-                client_app_id VARCHAR(100) DEFAULT 'CLIENT-SHEBA-TECH-8801',
-                created_at TIMESTAMP DEFAULT NOW(),
-                updated_at TIMESTAMP DEFAULT NOW()
-            );
-            INSERT INTO shop_settings (id, shop_name, tagline, currency_symbol, license_key, license_status)
-            VALUES (1, 'Sheba Technology', 'Smart POS & ERP System', '৳', 'SHEBA-ENT-2026-X99-PRO', 'active')
+            INSERT INTO shop_settings (
+                id, shop_name, shop_title, phone, email, address, 
+                currency_symbol, license_key, license_status, client_app_id
+            )
+            VALUES (
+                1, 'Sheba Technology', 'Smart POS & ERP System', '+8801700000000', 
+                'support@sheba.technology', 'Dhaka, Bangladesh', '৳', 
+                'SHEBA-ENT-2026-X99-PRO', 'Active Lifetime Enterprise', 'CLIENT-SHEBA-TECH-8801'
+            )
             ON CONFLICT (id) DO NOTHING;
         `);
         console.log('✅ Shop settings initialized.');
