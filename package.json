@@ -8,6 +8,7 @@
     "dev:frontend": "cd frontend && npm run dev",
     "dev": "concurrently \"npm run dev:backend\" \"npm run dev:frontend\"",
     "test": "jest --runInBand",
+    "seed": "node scripts/seedExpenseCategories.js",
     "seed:expense-categories": "node scripts/seedExpenseCategories.js"
   },
   "engines": {
