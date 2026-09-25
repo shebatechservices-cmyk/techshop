@@ -1,0 +1,30 @@
+model ecommerce_order_items {
+  id               Int              @id @default(autoincrement())
+  order_id         Int
+  product_id       Int
+  quantity         Int
+  unit_price       Decimal          @db.Decimal(14, 2)
+  ecommerce_orders ecommerce_orders @relation(fields: [order_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+  products         products         @relation(fields: [product_id], references: [id], onUpdate: NoAction)
+}
+
+model ecommerce_orders {
+  id                    Int                     @id @default(autoincrement())
+  order_number          String                  @unique @db.VarChar(30)
+  customer_name         String                  @db.VarChar(100)
+  customer_phone        String                  @db.VarChar(50)
+  shipping_address      String
+  delivery_charge       Decimal?                @default(0) @db.Decimal(10, 2)
+  total_amount          Decimal                 @db.Decimal(14, 2)
+  payment_status        String?                 @default("unpaid") @db.VarChar(20)
+  order_status          String?                 @default("processing") @db.VarChar(30)
+  created_at            DateTime?               @default(now()) @db.Timestamp(6)
+  order_no              String?                 @db.VarChar(50)
+  courier_name          String?                 @db.VarChar(100)
+  tracking_code         String?                 @db.VarChar(100)
+  customer_notes        String?
+  payment_method        String?                 @default("cod") @db.VarChar(50)
+  deleted_at            DateTime?               @db.Timestamp(6)
+  deleted_by            Int?
+  ecommerce_order_items ecommerce_order_items[]
+}

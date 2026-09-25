@@ -1,0 +1,71 @@
+model service_projects {
+  id                                                Int        @id @default(autoincrement())
+  project_code                                      String?    @unique @db.VarChar(30)
+  title                                             String     @db.VarChar(200)
+  customer_id                                       Int?
+  assigned_technician                               Int?
+  contract_amount                                   Decimal?   @default(0) @db.Decimal(14, 2)
+  start_date                                        DateTime?  @db.Date
+  deadline                                          DateTime?  @db.Date
+  status                                            String?    @default("ongoing") @db.VarChar(30)
+  notes                                             String?
+  created_at                                        DateTime?  @default(now()) @db.Timestamp(6)
+  project_type                                      String?    @db.VarChar(100)
+  technician_id                                     Int?
+  charges                                           Decimal?   @default(0) @db.Decimal(14, 2)
+  description                                       String?
+  progress_note                                     String?
+  updated_at                                        DateTime?  @default(now()) @db.Timestamp(6)
+  invoice_id                                        Int?
+  invoice_no                                        String?    @db.VarChar(100)
+  setup_charge                                      Decimal?   @default(0) @db.Decimal(12, 2)
+  conveyance_cost                                   Decimal?   @default(0) @db.Decimal(12, 2)
+  meal_allowance                                    Decimal?   @default(0) @db.Decimal(12, 2)
+  customer_billing_amount                           Decimal?   @default(0) @db.Decimal(12, 2)
+  technician_status                                 String?    @default("assigned") @db.VarChar(50)
+  admin_confirmed                                   Boolean?   @default(false)
+  confirmed_by                                      Int?
+  site_address                                      String?
+  site_phone                                        String?    @db.VarChar(50)
+  equipment_details                                 Json?
+  completed_at                                      DateTime?  @db.Timestamp(6)
+  deleted_at                                        DateTime?  @db.Timestamp(6)
+  deleted_by                                        Int?
+  users_service_projects_assigned_technicianTousers users?     @relation("service_projects_assigned_technicianTousers", fields: [assigned_technician], references: [id], onUpdate: NoAction)
+  users_service_projects_confirmed_byTousers        users?     @relation("service_projects_confirmed_byTousers", fields: [confirmed_by], references: [id], onUpdate: NoAction)
+  customers                                         customers? @relation(fields: [customer_id], references: [id], onUpdate: NoAction)
+  sales                                             sales?     @relation(fields: [invoice_id], references: [id], onUpdate: NoAction)
+
+  @@index([admin_confirmed], map: "idx_service_projects_admin_confirmed")
+  @@index([invoice_id], map: "idx_service_projects_invoice_id")
+  @@index([technician_status], map: "idx_service_projects_tech_status")
+}
+
+model warranty_claims {
+  id                      Int        @id @default(autoincrement())
+  claim_no                String     @unique @db.VarChar(50)
+  order_source            String?    @default("offline") @db.VarChar(20)
+  invoice_no              String?    @db.VarChar(50)
+  ecommerce_order_no      String?    @db.VarChar(50)
+  customer_id             Int?
+  product_id              Int?
+  barcode                 String?    @db.VarChar(100)
+  issue_description       String
+  status                  String?    @default("Received") @db.VarChar(50)
+  claim_date              DateTime?  @default(now()) @db.Timestamp(6)
+  updated_at              DateTime?  @default(now()) @db.Timestamp(6)
+  deleted_at              DateTime?  @db.Timestamp(6)
+  customer_name           String?    @db.VarChar(150)
+  customer_phone          String?    @db.VarChar(50)
+  product_name            String?    @db.VarChar(255)
+  serial_code             String?    @db.VarChar(100)
+  service_notes           String?
+  replacement_serial_code String?    @db.VarChar(100)
+  backup_unit_provided    String?    @db.VarChar(255)
+  received_date           DateTime?  @default(now()) @db.Timestamp(6)
+  estimated_delivery_date DateTime?  @db.Date
+  completed_date          DateTime?  @db.Timestamp(6)
+  deleted_by              Int?
+  customers               customers? @relation(fields: [customer_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  products                products?  @relation(fields: [product_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+}

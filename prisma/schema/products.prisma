@@ -1,0 +1,239 @@
+model brands {
+  id              Int             @id @default(autoincrement())
+  name            String          @unique @db.VarChar(100)
+  deleted_at      DateTime?       @db.Timestamp(6)
+  deleted_by      Int?
+  sub_category_id Int?
+  models          models[]
+  product_names   product_names[]
+  products        products[]
+  series          series[]
+}
+
+model categories {
+  id             Int              @id @default(autoincrement())
+  name           String           @unique @db.VarChar(100)
+  deleted_at     DateTime?        @db.Timestamp(6)
+  deleted_by     Int?
+  models         models[]
+  product_names  product_names[]
+  products       products[]
+  sub_categories sub_categories[]
+}
+
+model damaged_products {
+  id          Int       @id @default(autoincrement())
+  product_id  Int?
+  quantity    Int
+  note        String?
+  recorded_at DateTime? @default(now()) @db.Timestamp(6)
+  products    products? @relation(fields: [product_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+}
+
+model models {
+  id              Int             @id @default(autoincrement())
+  name            String          @db.VarChar(100)
+  brand_id        Int
+  category_id     Int?
+  sub_category_id Int?
+  deleted_at      DateTime?       @db.Timestamp(6)
+  deleted_by      Int?
+  brands          brands          @relation(fields: [brand_id], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "fk_models_brand")
+  categories      categories?     @relation(fields: [category_id], references: [id], onUpdate: NoAction, map: "fk_models_category")
+  sub_categories  sub_categories? @relation(fields: [sub_category_id], references: [id], onUpdate: NoAction, map: "fk_models_sub_category")
+  products        products[]
+
+  @@unique([name, brand_id])
+}
+
+model product_images {
+  id         Int       @id @default(autoincrement())
+  product_id Int
+  image_url  String
+  image_type String    @default("gallery") @db.VarChar(20)
+  sort_order Int       @default(0)
+  created_at DateTime? @default(now()) @db.Timestamp(6)
+  products   products  @relation(fields: [product_id], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "fk_product_images_product")
+}
+
+model product_names {
+  id              Int             @id @default(autoincrement())
+  name            String          @db.VarChar(150)
+  brand_id        Int?
+  category_id     Int?
+  sub_category_id Int?
+  created_at      DateTime?       @default(now()) @db.Timestamp(6)
+  deleted_at      DateTime?       @db.Timestamp(6)
+  deleted_by      Int?
+  brands          brands?         @relation(fields: [brand_id], references: [id], onUpdate: NoAction)
+  categories      categories?     @relation(fields: [category_id], references: [id], onUpdate: NoAction)
+  sub_categories  sub_categories? @relation(fields: [sub_category_id], references: [id], onUpdate: NoAction)
+
+  @@unique([name, brand_id])
+}
+
+model product_returns {
+  id                 Int        @id @default(autoincrement())
+  return_no          String     @unique @db.VarChar(50)
+  order_source       String?    @default("offline") @db.VarChar(20)
+  invoice_no         String?    @db.VarChar(50)
+  ecommerce_order_no String?    @db.VarChar(50)
+  customer_id        Int?
+  product_id         Int?
+  return_qty         Int
+  refund_amount      Decimal?   @default(0.00) @db.Decimal(14, 2)
+  return_reason      String?
+  condition          String?    @default("Good") @db.VarChar(50)
+  return_date        DateTime?  @default(now()) @db.Timestamp(6)
+  deleted_at         DateTime?  @db.Timestamp(6)
+  customer_name      String?    @db.VarChar(150)
+  customer_phone     String?    @db.VarChar(50)
+  product_name       String?    @db.VarChar(255)
+  serial_code        String?    @db.VarChar(100)
+  return_type        String?    @default("Refund") @db.VarChar(50)
+  refund_method      String?    @default("Cash") @db.VarChar(50)
+  deleted_by         Int?
+  customers          customers? @relation(fields: [customer_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  products           products?  @relation(fields: [product_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+}
+
+model products {
+  id                            Int                        @id @default(autoincrement())
+  name                          String                     @db.VarChar(150)
+  short_name                    String?                    @db.VarChar(100)
+  sku                           String?                    @unique(map: "unique_product_sku") @default(dbgenerated("('SKU-'::text || lpad((nextval('product_sku_seq'::regclass))::text, 5, '0'::text))")) @db.VarChar(100)
+  barcode                       String?                    @db.VarChar(100)
+  description                   String?
+  category_id                   Int?
+  sub_category_id               Int?
+  brand_id                      Int?
+  model_id                      Int?
+  series_id                     Int?
+  purchase_price                Decimal?                   @default(0) @db.Decimal(12, 2)
+  selling_price                 Decimal?                   @default(0) @db.Decimal(12, 2)
+  mrp                           Decimal?                   @default(0) @db.Decimal(12, 2)
+  stock                         Int?                       @default(0)
+  min_stock                     Int?                       @default(0)
+  purchase_count                Int                        @default(0)
+  purchased_at                  DateTime?                  @db.Timestamp(6)
+  location                      String?                    @db.VarChar(100)
+  warranty_months               Int?                       @default(0)
+  status                        String?                    @default("active") @db.VarChar(20)
+  image_url                     String?
+  is_featured                   Boolean?                   @default(false)
+  supplier_name                 String?                    @db.VarChar(150)
+  supplier_phone                String?                    @db.VarChar(50)
+  created_at                    DateTime?                  @default(now()) @db.Timestamp(6)
+  updated_at                    DateTime?                  @default(now()) @db.Timestamp(6)
+  deleted_at                    DateTime?                  @db.Timestamp(6)
+  is_ecommerce_active           Boolean?                   @default(true)
+  feature_image                 String?
+  deleted_by                    Int?
+  supplier_warranty_expire_date DateTime?                  @db.Date
+  is_serial_tracked             Boolean?                   @default(false)
+  is_serial_required            Boolean?                   @default(false)
+  is_warranty_required          Boolean?                   @default(false)
+  damaged_products              damaged_products[]
+  ecommerce_order_items         ecommerce_order_items[]
+  product_images                product_images[]
+  product_returns               product_returns[]
+  brands                        brands?                    @relation(fields: [brand_id], references: [id], onUpdate: NoAction, map: "fk_products_brand")
+  categories                    categories?                @relation(fields: [category_id], references: [id], onUpdate: NoAction, map: "fk_products_category")
+  models                        models?                    @relation(fields: [model_id], references: [id], onUpdate: NoAction, map: "fk_products_model")
+  series                        series?                    @relation(fields: [series_id], references: [id], onUpdate: NoAction, map: "fk_products_series")
+  sub_categories                sub_categories?            @relation(fields: [sub_category_id], references: [id], onUpdate: NoAction, map: "fk_products_sub_category")
+  purchase_order_items          purchase_order_items[]
+  purchase_quotation_items      purchase_quotation_items[]
+  sales_items                   sales_items[]
+  sales_quotation_items         sales_quotation_items[]
+  stock_levels                  stock_levels[]
+  stock_transfers               stock_transfers[]
+  warranty_claims               warranty_claims[]
+
+  @@index([barcode], map: "idx_products_barcode")
+  @@index([brand_id], map: "idx_products_brand_id")
+  @@index([category_id], map: "idx_products_category_id")
+  @@index([model_id], map: "idx_products_model_id")
+  @@index([name], map: "idx_products_name")
+  @@index([sku], map: "idx_products_sku")
+  @@index([stock], map: "idx_products_stock")
+  @@index([sub_category_id], map: "idx_products_sub_category_id")
+}
+
+model series {
+  id         Int        @id @default(autoincrement())
+  name       String     @db.VarChar(100)
+  brand_id   Int
+  deleted_at DateTime?  @db.Timestamp(6)
+  deleted_by Int?
+  model_id   Int?
+  products   products[]
+  brands     brands     @relation(fields: [brand_id], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "fk_series_brand")
+
+  @@unique([name, brand_id])
+}
+
+model stock_levels {
+  id           Int        @id @default(autoincrement())
+  product_id   Int
+  warehouse_id Int
+  quantity     Int        @default(0)
+  products     products   @relation(fields: [product_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+  warehouses   warehouses @relation(fields: [warehouse_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+
+  @@unique([product_id, warehouse_id])
+  @@index([product_id, warehouse_id], map: "idx_stock_prod_wh")
+}
+
+model stock_transfers {
+  id                                                         Int         @id @default(autoincrement())
+  transfer_no                                                String      @unique @db.VarChar(50)
+  source_warehouse_id                                        Int?
+  dest_warehouse_id                                          Int?
+  product_id                                                 Int?
+  quantity                                                   Int         @default(1)
+  notes                                                      String?
+  transfer_date                                              DateTime?   @default(now()) @db.Timestamp(6)
+  created_at                                                 DateTime?   @default(now()) @db.Timestamp(6)
+  warehouses_stock_transfers_dest_warehouse_idTowarehouses   warehouses? @relation("stock_transfers_dest_warehouse_idTowarehouses", fields: [dest_warehouse_id], references: [id], onDelete: Restrict, onUpdate: NoAction)
+  products                                                   products?   @relation(fields: [product_id], references: [id], onDelete: Restrict, onUpdate: NoAction)
+  warehouses_stock_transfers_source_warehouse_idTowarehouses warehouses? @relation("stock_transfers_source_warehouse_idTowarehouses", fields: [source_warehouse_id], references: [id], onDelete: Restrict, onUpdate: NoAction)
+}
+
+model sub_categories {
+  id            Int             @id @default(autoincrement())
+  name          String          @db.VarChar(100)
+  category_id   Int
+  deleted_at    DateTime?       @db.Timestamp(6)
+  deleted_by    Int?
+  models        models[]
+  product_names product_names[]
+  products      products[]
+  categories    categories      @relation(fields: [category_id], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "fk_sub_categories_category")
+
+  @@unique([name, category_id])
+}
+
+model units {
+  id   Int    @id @default(autoincrement())
+  name String @unique @db.VarChar(50)
+}
+
+model warehouses {
+  id                                                              Int               @id @default(autoincrement())
+  name                                                            String            @unique @db.VarChar(100)
+  location                                                        String?
+  is_default                                                      Boolean?          @default(false)
+  code                                                            String?           @db.VarChar(50)
+  address                                                         String?
+  contact_person                                                  String?           @db.VarChar(100)
+  phone                                                           String?           @db.VarChar(50)
+  is_active                                                       Boolean?          @default(true)
+  deleted_at                                                      DateTime?         @db.Timestamptz(6)
+  created_at                                                      DateTime?         @default(now()) @db.Timestamptz(6)
+  updated_at                                                      DateTime?         @default(now()) @db.Timestamptz(6)
+  sales_invoices                                                  sales_invoices[]
+  stock_levels                                                    stock_levels[]
+  stock_transfers_stock_transfers_dest_warehouse_idTowarehouses   stock_transfers[] @relation("stock_transfers_dest_warehouse_idTowarehouses")
+  stock_transfers_stock_transfers_source_warehouse_idTowarehouses stock_transfers[] @relation("stock_transfers_source_warehouse_idTowarehouses")
+}

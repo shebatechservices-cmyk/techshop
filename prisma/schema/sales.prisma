@@ -1,0 +1,151 @@
+model customers {
+  id                 Int                @id @default(autoincrement())
+  name               String             @db.VarChar(150)
+  phone              String             @unique @db.VarChar(50)
+  email              String?            @db.VarChar(100)
+  address            String?
+  customer_type      String?            @default("retail") @db.VarChar(30)
+  receivable_balance Decimal            @default(0) @db.Decimal(14, 2)
+  created_at         DateTime?          @default(now()) @db.Timestamp(6)
+  user_role          String?            @default("regular") @db.VarChar(30)
+  deleted_at         DateTime?          @db.Timestamp(6)
+  loyalty_points     Decimal?           @default(0.00) @db.Decimal(10, 2)
+  deleted_by         Int?
+  wallet_balance     Decimal?           @default(0) @db.Decimal(14, 2)
+  updated_at         DateTime?          @default(now()) @db.Timestamp(6)
+  customer_group     String?            @db.VarChar(30)
+  product_returns    product_returns[]
+  sales_invoices     sales_invoices[]
+  sales_quotations   sales_quotations[]
+  service_projects   service_projects[]
+  warranty_claims    warranty_claims[]
+
+  @@index([name], map: "idx_customers_name")
+  @@index([phone], map: "idx_customers_phone")
+}
+
+model sales {
+  id                       Int                @id @default(autoincrement())
+  invoice_no               String             @unique @db.VarChar(50)
+  customer_id              Int?
+  total_amount             Decimal            @db.Decimal(14, 2)
+  sale_date                DateTime?          @default(now()) @db.Timestamp(6)
+  deleted_at               DateTime?          @db.Timestamp(6)
+  loyalty_points_earned    Decimal?           @default(0.00) @db.Decimal(10, 2)
+  loyalty_points_used      Decimal?           @default(0.00) @db.Decimal(10, 2)
+  payment_method_id        Int?
+  created_at               DateTime?          @default(now()) @db.Timestamp(6)
+  subtotal                 Decimal?           @default(0) @db.Decimal(14, 2)
+  discount                 Decimal?           @default(0) @db.Decimal(14, 2)
+  paid_amount              Decimal?           @default(0) @db.Decimal(14, 2)
+  due_amount               Decimal?           @default(0) @db.Decimal(14, 2)
+  payment_status           String?            @default("paid") @db.VarChar(30)
+  payment_details          Json?
+  vat                      Decimal?           @default(0.00) @db.Decimal(15, 2)
+  sales_person             String?            @db.VarChar(100)
+  destination              String?            @db.VarChar(255)
+  attention                String?            @db.VarChar(255)
+  invoice_date             DateTime?          @default(dbgenerated("CURRENT_DATE")) @db.Date
+  setup_charge             Decimal?           @default(0) @db.Decimal(12, 2)
+  deleted_by               Int?
+  notes                    String?
+  extra_cost               Decimal?           @default(0) @db.Decimal(14, 2)
+  extra_cost_category      String?            @db.VarChar(100)
+  extra_cost_notes         String?
+  previous_due             Decimal?           @default(0) @db.Decimal(14, 2)
+  exchange_from_invoice_no String?            @db.VarChar(100)
+  original_sale_id         Int?
+  exchange_details         Json?
+  payments                 payments[]
+  payment_methods          payment_methods?   @relation(fields: [payment_method_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  service_projects         service_projects[]
+
+  @@index([created_at(sort: Desc)], map: "idx_sales_created_at")
+  @@index([customer_id], map: "idx_sales_customer_id")
+  @@index([invoice_no], map: "idx_sales_invoice_no")
+  @@index([payment_status], map: "idx_sales_payment_status")
+}
+
+model sales_invoices {
+  id             Int           @id @default(autoincrement())
+  invoice_no     String        @unique @db.VarChar(30)
+  customer_id    Int
+  warehouse_id   Int?
+  subtotal       Decimal       @default(0) @db.Decimal(14, 2)
+  discount       Decimal       @default(0) @db.Decimal(14, 2)
+  vat            Decimal       @default(0) @db.Decimal(14, 2)
+  grand_total    Decimal       @default(0) @db.Decimal(14, 2)
+  paid_amount    Decimal       @default(0) @db.Decimal(14, 2)
+  due_amount     Decimal       @default(0) @db.Decimal(14, 2)
+  payment_status String?       @default("unpaid") @db.VarChar(20)
+  sold_by        Int?
+  invoice_date   DateTime?     @default(dbgenerated("CURRENT_DATE")) @db.Date
+  created_at     DateTime?     @default(now()) @db.Timestamp(6)
+  customers      customers     @relation(fields: [customer_id], references: [id], onUpdate: NoAction)
+  users          users?        @relation(fields: [sold_by], references: [id], onUpdate: NoAction)
+  warehouses     warehouses?   @relation(fields: [warehouse_id], references: [id], onDelete: Restrict, onUpdate: NoAction)
+  sales_items    sales_items[]
+
+  @@index([customer_id, invoice_date(sort: Desc)], map: "idx_sales_inv_cust")
+}
+
+model sales_item_serials {
+  id            Int         @id @default(autoincrement())
+  sales_item_id Int
+  serial_code   String      @db.VarChar(120)
+  sales_items   sales_items @relation(fields: [sales_item_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+}
+
+model sales_items {
+  id                   Int                  @id @default(autoincrement())
+  sales_invoice_id     Int?
+  product_id           Int
+  quantity             Int                  @default(1)
+  unit_price           Decimal              @db.Decimal(14, 2)
+  cost_price           Decimal              @default(0) @db.Decimal(14, 2)
+  line_total           Decimal              @db.Decimal(14, 2)
+  warranty_expire_date DateTime?            @db.Date
+  sale_id              Int?
+  warranty_months      Int?                 @default(0)
+  sales_item_serials   sales_item_serials[]
+  products             products             @relation(fields: [product_id], references: [id], onUpdate: NoAction)
+  sales_invoices       sales_invoices?      @relation(fields: [sales_invoice_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+
+  @@index([product_id], map: "idx_sales_items_product_id")
+  @@index([sale_id], map: "idx_sales_items_sale_id")
+}
+
+model sales_quotation_items {
+  id               Int              @id @default(autoincrement())
+  quotation_id     Int
+  product_id       Int?
+  product_name     String?          @db.VarChar(200)
+  quantity         Int              @default(1)
+  unit_price       Decimal          @default(0) @db.Decimal(14, 2)
+  line_total       Decimal          @default(0) @db.Decimal(14, 2)
+  warranty_months  Int?             @default(0)
+  products         products?        @relation(fields: [product_id], references: [id], onUpdate: NoAction)
+  sales_quotations sales_quotations @relation(fields: [quotation_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+}
+
+model sales_quotations {
+  id                    Int                     @id @default(autoincrement())
+  quotation_no          String                  @unique @db.VarChar(50)
+  customer_id           Int?
+  customer_name         String?                 @db.VarChar(150)
+  customer_phone        String?                 @db.VarChar(50)
+  customer_address      String?
+  subtotal              Decimal                 @default(0) @db.Decimal(14, 2)
+  discount              Decimal                 @default(0) @db.Decimal(14, 2)
+  vat                   Decimal                 @default(0) @db.Decimal(14, 2)
+  total_amount          Decimal                 @default(0) @db.Decimal(14, 2)
+  status                String?                 @default("pending") @db.VarChar(30)
+  valid_until           DateTime?               @db.Date
+  notes                 String?
+  created_at            DateTime?               @default(now()) @db.Timestamp(6)
+  updated_at            DateTime?               @default(now()) @db.Timestamp(6)
+  deleted_at            DateTime?               @db.Timestamp(6)
+  deleted_by            Int?
+  sales_quotation_items sales_quotation_items[]
+  customers             customers?              @relation(fields: [customer_id], references: [id], onUpdate: NoAction)
+}

@@ -1,0 +1,196 @@
+model Tender {
+  id               Int                @id @default(autoincrement())
+  name             String             @unique @db.VarChar(100)
+  createdAt        DateTime?          @default(now()) @map("created_at") @db.Timestamp(6)
+  accounts         Account[]
+  payment_accounts payment_accounts[]
+
+  @@map("tenders")
+}
+
+model Account {
+  id             Int       @id @default(autoincrement())
+  tenderId       Int?      @map("tender_id")
+  accountName    String    @map("account_name") @db.VarChar(200)
+  location       String?   @map("location") @db.VarChar(255)
+  openingBalance Decimal?  @default(0.00) @map("opening_balance") @db.Decimal(14, 2)
+  currentBalance Decimal?  @default(0.00) @map("current_balance") @db.Decimal(14, 2)
+  referenceId    String?   @map("reference_id") @db.VarChar(120)
+  createdBy      String?   @map("created_by") @db.VarChar(150)
+  createdAt      DateTime? @default(now()) @map("created_at") @db.Timestamp(6)
+  tender         Tender?   @relation(fields: [tenderId], references: [id], onDelete: Restrict, onUpdate: NoAction)
+
+  @@map("accounts")
+}
+
+model account_transactions {
+  id               Int              @id @default(autoincrement())
+  account_id       Int
+  type             String           @db.VarChar(20)
+  amount           Decimal          @db.Decimal(14, 2)
+  reference        String?          @db.VarChar(120)
+  note             String?
+  created_at       DateTime?        @default(now()) @db.Timestamp(6)
+  transaction_id   String?          @db.VarChar(120)
+  transaction_type String?          @db.VarChar(20)
+  balance_after    Decimal?         @db.Decimal(14, 2)
+  source_type      String?          @db.VarChar(50)
+  source_id        String?          @db.VarChar(100)
+  created_by       String?          @db.VarChar(100)
+  payment_accounts payment_accounts @relation(fields: [account_id], references: [id], onUpdate: NoAction)
+
+  @@index([account_id], map: "idx_account_transactions_account_id")
+  @@index([created_at(sort: Desc)], map: "idx_account_transactions_created_at")
+  @@index([type], map: "idx_account_transactions_type")
+}
+
+model daily_summaries {
+  id              Int       @id @default(autoincrement())
+  summary_date    DateTime  @unique @db.Date
+  total_sales     Decimal?  @default(0) @db.Decimal(14, 2)
+  total_purchases Decimal?  @default(0) @db.Decimal(14, 2)
+  total_expenses  Decimal?  @default(0) @db.Decimal(14, 2)
+  net_profit      Decimal?  @default(0) @db.Decimal(14, 2)
+  created_at      DateTime? @default(now()) @db.Timestamp(6)
+}
+
+model expense_categories {
+  id          Int        @id @default(autoincrement())
+  name        String     @unique @db.VarChar(100)
+  description String?
+  created_at  DateTime?  @default(now()) @db.Timestamp(6)
+  expenses    expenses[]
+}
+
+model expenses {
+  id                 Int                 @id @default(autoincrement())
+  category_id        Int?
+  account_id         Int?
+  amount             Decimal             @db.Decimal(14, 2)
+  expense_date       DateTime?           @default(dbgenerated("CURRENT_DATE")) @db.Date
+  reference_no       String?             @db.VarChar(100)
+  note               String?
+  created_by         Int?
+  created_at         DateTime?           @default(now()) @db.Timestamp(6)
+  voucher_no         String?             @db.VarChar(100)
+  category_name      String?             @db.VarChar(150)
+  account_name       String?             @db.VarChar(150)
+  payee_name         String?             @db.VarChar(150)
+  deleted_at         DateTime?           @db.Timestamp(6)
+  deleted_by         Int?
+  payment_accounts   payment_accounts?   @relation(fields: [account_id], references: [id], onDelete: Restrict, onUpdate: NoAction)
+  expense_categories expense_categories? @relation(fields: [category_id], references: [id], onUpdate: NoAction)
+  users              users?              @relation(fields: [created_by], references: [id], onUpdate: NoAction)
+}
+
+model financial_accounts {
+  id             Int            @id @default(autoincrement())
+  account_name   String         @db.VarChar(100)
+  account_type   String         @db.VarChar(50)
+  account_number String?        @db.VarChar(100)
+  balance        Decimal?       @default(0.00) @db.Decimal(14, 2)
+  deleted_at     DateTime?      @db.Timestamp(6)
+  deleted_by     Int?
+  transactions   transactions[]
+}
+
+model payment_accounts {
+  id                      Int                       @id @default(autoincrement())
+  name                    String                    @unique @db.VarChar(100)
+  account_type            String                    @default("drawer") @db.VarChar(30)
+  balance                 Decimal                   @default(0) @db.Decimal(14, 2)
+  is_active               Boolean?                  @default(true)
+  deleted_at              DateTime?                 @db.Timestamp(6)
+  account_number          String?                   @db.VarChar(100)
+  tender_id               Int?
+  account_transactions    account_transactions[]
+  expenses                expenses[]
+  tenders                 Tender?                   @relation(fields: [tender_id], references: [id], onUpdate: NoAction)
+  purchase_order_payments purchase_order_payments[]
+}
+
+model payment_methods {
+  id                      Int                       @id @default(autoincrement())
+  method_name             String                    @unique @db.VarChar(100)
+  is_active               Boolean?                  @default(true)
+  account_details         String?
+  deleted_at              DateTime?                 @db.Timestamp(6)
+  deleted_by              Int?
+  name                    String?                   @db.VarChar(100)
+  type                    String?                   @default("cash") @db.VarChar(50)
+  account_number          String?                   @db.VarChar(100)
+  created_at              DateTime?                 @default(now()) @db.Timestamp(6)
+  updated_at              DateTime?                 @default(now()) @db.Timestamp(6)
+  purchase_order_payments purchase_order_payments[]
+  purchase_orders         purchase_orders[]
+  sales                   sales[]
+  transactions            transactions[]
+}
+
+model payments {
+  id              Int              @id @default(autoincrement())
+  sale_id         Int?
+  purchase_id     Int?
+  payment_mode    String           @db.VarChar(50)
+  account_name    String?          @db.VarChar(150)
+  reference_no    String?          @db.VarChar(120)
+  amount          Decimal          @default(0) @db.Decimal(14, 2)
+  created_at      DateTime?        @default(now()) @db.Timestamp(6)
+  purchase_orders purchase_orders? @relation(fields: [purchase_id], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "fk_payments_purchase")
+  sales           sales?           @relation(fields: [sale_id], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "fk_payments_sale")
+}
+
+model transactions {
+  id                 Int                 @id @default(autoincrement())
+  transaction_no     String              @unique @db.VarChar(50)
+  account_id         Int?
+  payment_method_id  Int?
+  type               String              @db.VarChar(20)
+  amount             Decimal             @db.Decimal(14, 2)
+  reference_no       String?             @db.VarChar(50)
+  note               String?
+  created_at         DateTime?           @default(now()) @db.Timestamp(6)
+  deleted_at         DateTime?           @db.Timestamp(6)
+  financial_accounts financial_accounts? @relation(fields: [account_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  payment_methods    payment_methods?    @relation(fields: [payment_method_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+}
+
+model wallet_transactions {
+  id                 Int       @id @default(autoincrement())
+  party_type         String    @db.VarChar(20)
+  party_id           Int
+  party_name         String?   @db.VarChar(150)
+  type               String    @db.VarChar(30)
+  amount             Decimal   @db.Decimal(14, 2)
+  credit             Boolean   @default(true)
+  account_id         Int?
+  account_name       String?   @db.VarChar(100)
+  account_effect     String    @default("none") @db.VarChar(10)
+  cash_drawer_effect String    @default("none") @db.VarChar(10)
+  reference          String?   @db.VarChar(120)
+  note               String?
+  balance_before     Decimal?  @default(0) @db.Decimal(14, 2)
+  balance_after      Decimal?  @default(0) @db.Decimal(14, 2)
+  deleted_at         DateTime? @db.Timestamp(6)
+  created_at         DateTime? @default(now()) @db.Timestamp(6)
+  wallet_id          Int?
+  entity_type        String?   @db.VarChar(20)
+  entity_id          Int?
+  entity_name        String?   @db.VarChar(150)
+  reference_type     String?   @db.VarChar(50)
+  reference_id       String?   @db.VarChar(120)
+}
+
+model wallets {
+  id          Int       @id @default(autoincrement())
+  entity_type String    @db.VarChar(20)
+  entity_id   Int
+  entity_name String?   @db.VarChar(150)
+  balance     Decimal   @default(0) @db.Decimal(14, 2)
+  status      String    @default("active") @db.VarChar(20)
+  created_at  DateTime? @default(now()) @db.Timestamp(6)
+  updated_at  DateTime? @default(now()) @db.Timestamp(6)
+  deleted_at  DateTime? @db.Timestamp(6)
+
+  @@unique([entity_type, entity_id], map: "uq_entity_wallet")
+}

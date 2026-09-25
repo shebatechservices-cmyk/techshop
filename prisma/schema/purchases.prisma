@@ -1,0 +1,140 @@
+model purchase_order_items {
+  id                            Int                      @id @default(autoincrement())
+  purchase_order_id             Int
+  product_id                    Int
+  quantity                      Int                      @default(0)
+  cost_price                    Decimal                  @default(0) @db.Decimal(14, 2)
+  sale_price                    Decimal                  @default(0) @db.Decimal(14, 2)
+  margin_type                   String                   @default("percent") @db.VarChar(10)
+  margin_value                  Decimal                  @default(0) @db.Decimal(14, 2)
+  final_sale_price              Decimal                  @default(0) @db.Decimal(14, 2)
+  line_total                    Decimal                  @default(0) @db.Decimal(14, 2)
+  expected_date                 DateTime?                @db.Date
+  warranty_months               Int?                     @default(0)
+  sort_order                    Int                      @default(0)
+  supplier_warranty_expire_date DateTime?                @db.Date
+  updated_at                    DateTime?                @db.Timestamp(6)
+  supplier_warranty_months      Int?
+  customer_warranty_months      Int?
+  purchase_orders               purchase_orders          @relation(fields: [purchase_order_id], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "fk_po_items_order")
+  products                      products                 @relation(fields: [product_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "fk_po_items_product")
+  purchase_order_serials        purchase_order_serials[]
+
+  @@index([purchase_order_id], map: "idx_purchase_order_items_order")
+  @@index([purchase_order_id], map: "idx_purchase_order_items_po_id")
+  @@index([product_id], map: "idx_purchase_order_items_product_id")
+}
+
+model purchase_order_payments {
+  id                Int               @id @default(autoincrement())
+  purchase_order_id Int
+  payment_method    String            @db.VarChar(40)
+  account_id        Int?
+  amount            Decimal           @default(0) @db.Decimal(14, 2)
+  created_at        DateTime?         @default(now()) @db.Timestamp(6)
+  receiver_name     String?           @db.VarChar(150)
+  transaction_id    String?           @db.VarChar(100)
+  sub_option        String?           @db.VarChar(150)
+  payment_method_id Int?
+  payment_accounts  payment_accounts? @relation(fields: [account_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "fk_po_payments_account")
+  purchase_orders   purchase_orders   @relation(fields: [purchase_order_id], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "fk_po_payments_order")
+  payment_methods   payment_methods?  @relation(fields: [payment_method_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+
+  @@index([purchase_order_id], map: "idx_purchase_order_payments_order")
+}
+
+model purchase_order_serials {
+  id                     Int                  @id @default(autoincrement())
+  purchase_order_item_id Int
+  serial_code            String               @unique @db.VarChar(120)
+  purchase_order_items   purchase_order_items @relation(fields: [purchase_order_item_id], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "fk_po_serials_item")
+}
+
+model purchase_orders {
+  id                      Int                       @id @default(autoincrement())
+  po_number               String                    @unique @db.VarChar(30)
+  supplier_id             Int
+  transaction_reference   String?                   @db.VarChar(120)
+  extra_cost              Decimal                   @default(0) @db.Decimal(14, 2)
+  total_cost              Decimal                   @default(0) @db.Decimal(14, 2)
+  total_sale              Decimal                   @default(0) @db.Decimal(14, 2)
+  potential_profit        Decimal                   @default(0) @db.Decimal(14, 2)
+  total_paid              Decimal                   @default(0) @db.Decimal(14, 2)
+  total_due               Decimal                   @default(0) @db.Decimal(14, 2)
+  item_count              Int                       @default(0)
+  unit_count              Int                       @default(0)
+  status                  String                    @default("saved") @db.VarChar(20)
+  created_at              DateTime?                 @default(now()) @db.Timestamp(6)
+  updated_at              DateTime?                 @default(now()) @db.Timestamp(6)
+  deleted_at              DateTime?                 @db.Timestamp(6)
+  deleted_by              Int?
+  extra_cost_category     String?                   @db.VarChar(100)
+  extra_cost_notes        String?
+  payment_method_id       Int?
+  payments                payments[]
+  purchase_order_items    purchase_order_items[]
+  purchase_order_payments purchase_order_payments[]
+  suppliers               suppliers                 @relation(fields: [supplier_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "fk_purchase_orders_supplier")
+  payment_methods         payment_methods?          @relation(fields: [payment_method_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+
+  @@index([supplier_id, created_at(sort: Desc)], map: "idx_po_supp")
+  @@index([created_at(sort: Desc)], map: "idx_purchase_orders_created_at")
+  @@index([po_number], map: "idx_purchase_orders_po_number")
+  @@index([status], map: "idx_purchase_orders_status")
+  @@index([supplier_id, created_at(sort: Desc)], map: "idx_purchase_orders_supplier")
+  @@index([supplier_id], map: "idx_purchase_orders_supplier_id")
+}
+
+model purchase_quotation_items {
+  id                  Int                 @id @default(autoincrement())
+  quotation_id        Int
+  product_id          Int?
+  quantity            Int                 @default(1)
+  unit_price          Decimal             @default(0) @db.Decimal(14, 2)
+  line_total          Decimal             @default(0) @db.Decimal(14, 2)
+  notes               String?
+  products            products?           @relation(fields: [product_id], references: [id], onUpdate: NoAction)
+  purchase_quotations purchase_quotations @relation(fields: [quotation_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+}
+
+model purchase_quotations {
+  id                       Int                        @id @default(autoincrement())
+  quotation_no             String                     @unique @db.VarChar(50)
+  supplier_id              Int?
+  reference                String?                    @db.VarChar(120)
+  quotation_date           DateTime?                  @default(dbgenerated("CURRENT_DATE")) @db.Date
+  valid_until              DateTime?                  @db.Date
+  total_amount             Decimal?                   @default(0) @db.Decimal(14, 2)
+  item_count               Int?                       @default(0)
+  status                   String?                    @default("draft") @db.VarChar(30)
+  notes                    String?
+  created_at               DateTime?                  @default(now()) @db.Timestamp(6)
+  updated_at               DateTime?                  @default(now()) @db.Timestamp(6)
+  deleted_at               DateTime?                  @db.Timestamp(6)
+  deleted_by               Int?
+  purchase_quotation_items purchase_quotation_items[]
+  suppliers                suppliers?                 @relation(fields: [supplier_id], references: [id], onUpdate: NoAction)
+}
+
+model suppliers {
+  id                  Int                   @id @default(autoincrement())
+  name                String                @unique @db.VarChar(150)
+  contact_code        String?               @db.VarChar(50)
+  phone               String?               @db.VarChar(50)
+  payable_balance     Decimal               @default(0) @db.Decimal(14, 2)
+  created_at          DateTime?             @default(now()) @db.Timestamp(6)
+  updated_at          DateTime?             @default(now()) @db.Timestamp(6)
+  contact_person      String?               @db.VarChar(100)
+  mobile              String?               @db.VarChar(50)
+  email               String?               @unique @db.VarChar(150)
+  address             String?
+  deleted_at          DateTime?             @db.Timestamp(6)
+  deleted_by          Int?
+  wallet_balance      Decimal?              @default(0) @db.Decimal(14, 2)
+  purchase_orders     purchase_orders[]
+  purchase_quotations purchase_quotations[]
+
+  @@index([mobile], map: "idx_suppliers_mobile")
+  @@index([name], map: "idx_suppliers_name")
+  @@index([phone], map: "idx_suppliers_phone")
+}
