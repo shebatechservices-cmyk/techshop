@@ -80,7 +80,7 @@ const uploadTempShare = async (req, res) => {
         }
 
         const protocol = req.headers['x-forwarded-proto'] || req.protocol || 'http';
-        const host = req.get('host') || 'localhost:3000';
+        const host = req.get('host') || `localhost:${process.env.PORT || 3000}`;
         const fileUrl = `/uploads/temp_shares/${filename}`;
         const fullUrl = `${protocol}://${host}${fileUrl}`;
 
