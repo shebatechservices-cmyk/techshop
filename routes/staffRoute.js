@@ -20,7 +20,13 @@ router.put('/:id', staffController.updateStaff);
 // 6. Quick toggle active status
 router.patch('/:id/status', staffController.toggleStaffStatus);
 
-// 7. Delete staff member
+// 7. Get technician/staff personal wallet and earnings
+router.get('/wallet/:id', staffController.getStaffWallet);
+
+// 8. Admin wallet adjustment
+router.post('/wallet/:id/adjust', staffController.adjustStaffWallet);
+
+// 9. Delete staff member
 router.delete('/:id', staffController.deleteStaff);
 
 module.exports = router;

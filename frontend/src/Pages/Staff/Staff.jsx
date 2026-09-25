@@ -270,6 +270,7 @@ export default function Staff({ currentUser }) {
                   <th className="py-3 px-4">Role & Access</th>
                   <th className="py-3 px-4">Contact Details</th>
                   <th className="py-3 px-4">Salary</th>
+                  <th className="py-3 px-4">Wallet (৳)</th>
                   <th className="py-3 px-4">Joining Date</th>
                   <th className="py-3 px-4 text-center">Status</th>
                   <th className="py-3 px-4 text-right">Actions</th>
@@ -293,9 +294,16 @@ export default function Staff({ currentUser }) {
 
                     {/* Role */}
                     <td className="py-3.5 px-4">
-                      <span className={`inline-block px-2.5 py-1 text-[11px] font-bold rounded-lg border ${getRoleBadgeColor(staff.role_name)}`}>
-                        {staff.role_name}
-                      </span>
+                      <div className="flex flex-col gap-1 items-start">
+                        <span className={`inline-block px-2 py-0.5 text-[10px] font-black rounded uppercase tracking-wider ${
+                          (staff.role || '').toUpperCase() === 'ADMIN' ? 'bg-purple-100 text-purple-800' :
+                          (staff.role || '').toUpperCase() === 'TECHNICIAN' ? 'bg-amber-100 text-amber-800' :
+                          'bg-blue-100 text-blue-800'
+                        }`}>
+                          {staff.role || (staff.role_name?.toLowerCase().includes('admin') ? 'ADMIN' : staff.role_name?.toLowerCase().includes('tech') ? 'TECHNICIAN' : 'STAFF')}
+                        </span>
+                        <span className="text-[11px] font-medium text-slate-500">{staff.role_name}</span>
+                      </div>
                     </td>
 
                     {/* Contact */}
@@ -322,6 +330,11 @@ export default function Staff({ currentUser }) {
                     {/* Salary */}
                     <td className="py-3.5 px-4 font-bold text-slate-800">
                       {staff.salary ? `৳${parseFloat(staff.salary).toLocaleString()}` : '—'}
+                    </td>
+
+                    {/* Personal Wallet */}
+                    <td className="py-3.5 px-4 font-bold text-emerald-700">
+                      ৳{parseFloat(staff.wallet_balance || 0).toLocaleString()}
                     </td>
 
                     {/* Joining Date */}

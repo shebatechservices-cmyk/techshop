@@ -128,11 +128,57 @@ export default function StaffModal({
             <h4 className="text-xs font-bold text-slate-500 uppercase tracking-wider mb-3 flex items-center gap-1.5">
               <span>🛡️</span> Role & Security Credentials
             </h4>
+
+            {/* Role Enum Buttons */}
+            <div className="mb-4">
+              <label className="block text-xs font-bold text-slate-700 mb-1.5">
+                System Access Role <span className="text-rose-500">*</span>
+              </label>
+              <div className="grid grid-cols-3 gap-2.5">
+                {[
+                  { role: 'ADMIN', label: 'Admin', icon: '👑', desc: 'Full System Control' },
+                  { role: 'STAFF', label: 'Staff', icon: '💼', desc: 'POS & Store Operations' },
+                  { role: 'TECHNICIAN', label: 'Technician', icon: '🔧', desc: 'Projects, Stock & Wallet' }
+                ].map((item) => {
+                  const isSelected = (formData.role || 'STAFF') === item.role;
+                  return (
+                    <button
+                      key={item.role}
+                      type="button"
+                      onClick={() => {
+                        let matchingRoleId = 3;
+                        if (item.role === 'ADMIN') matchingRoleId = roles.find(r => r.name.toLowerCase().includes('admin'))?.id || 1;
+                        else if (item.role === 'TECHNICIAN') matchingRoleId = roles.find(r => r.name.toLowerCase().includes('tech'))?.id || 4;
+                        else matchingRoleId = roles.find(r => !r.name.toLowerCase().includes('admin') && !r.name.toLowerCase().includes('tech'))?.id || 3;
+                        setFormData({
+                          ...formData,
+                          role: item.role,
+                          role_id: matchingRoleId,
+                          designation: formData.designation || (item.role === 'TECHNICIAN' ? 'Field Technician' : item.role === 'ADMIN' ? 'Shop Admin' : 'Sales Executive')
+                        });
+                      }}
+                      className={`p-3 rounded-xl border text-left transition-all ${
+                        isSelected
+                          ? 'border-blue-600 bg-blue-50/70 shadow-sm ring-1 ring-blue-600'
+                          : 'border-slate-200 hover:border-slate-300 hover:bg-slate-50'
+                      }`}
+                    >
+                      <div className="flex items-center gap-1.5 text-sm font-bold text-slate-800">
+                        <span>{item.icon}</span>
+                        <span>{item.label}</span>
+                      </div>
+                      <p className="text-[11px] text-slate-500 mt-1 leading-tight">{item.desc}</p>
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-              {/* Role Selection */}
+              {/* Detailed Role Title */}
               <div>
                 <label className="block text-xs font-bold text-slate-700 mb-1">
-                  Assigned System Role <span className="text-rose-500">*</span>
+                  Role Title / Permission Group
                 </label>
                 <select
                   value={formData.role_id || 3}
@@ -145,9 +191,6 @@ export default function StaffModal({
                     </option>
                   ))}
                 </select>
-                <p className="text-[11px] text-slate-400 mt-1">
-                  Determines permissions for POS, stock, accounts & reports.
-                </p>
               </div>
 
               {/* Password */}
@@ -190,9 +233,9 @@ export default function StaffModal({
           {/* Employment & Compensation */}
           <div className="pt-2 border-t border-slate-100">
             <h4 className="text-xs font-bold text-slate-500 uppercase tracking-wider mb-3 flex items-center gap-1.5">
-              <span>💼</span> Job Role & Payroll
+              <span>💼</span> Job Role, Payroll & Wallet
             </h4>
-            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
               {/* Designation */}
               <div>
                 <label className="block text-xs font-bold text-slate-700 mb-1">
@@ -200,7 +243,7 @@ export default function StaffModal({
                 </label>
                 <input
                   type="text"
-                  placeholder="e.g. Sales Executive, Technician"
+                  placeholder="e.g. Field Technician"
                   value={formData.designation || ''}
                   onChange={(e) => setFormData({ ...formData, designation: e.target.value })}
                   className="w-full px-3.5 py-2 border border-slate-300 rounded-xl text-sm focus:outline-none focus:ring-2 focus:border-blue-500 focus:ring-blue-100"
@@ -218,6 +261,20 @@ export default function StaffModal({
                   value={formData.salary || ''}
                   onChange={(e) => setFormData({ ...formData, salary: e.target.value })}
                   className="w-full px-3.5 py-2 border border-slate-300 rounded-xl text-sm focus:outline-none focus:ring-2 focus:border-blue-500 focus:ring-blue-100"
+                />
+              </div>
+
+              {/* Wallet Balance */}
+              <div>
+                <label className="block text-xs font-bold text-slate-700 mb-1">
+                  Personal Wallet (৳)
+                </label>
+                <input
+                  type="number"
+                  placeholder="0.00"
+                  value={formData.wallet_balance !== undefined ? formData.wallet_balance : ''}
+                  onChange={(e) => setFormData({ ...formData, wallet_balance: e.target.value })}
+                  className="w-full px-3.5 py-2 border border-emerald-300 rounded-xl text-sm focus:outline-none focus:ring-2 focus:border-emerald-500 focus:ring-emerald-100 bg-emerald-50/30 font-semibold text-emerald-900"
                 />
               </div>
 

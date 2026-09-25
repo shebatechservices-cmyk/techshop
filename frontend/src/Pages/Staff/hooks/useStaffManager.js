@@ -6,9 +6,11 @@ const INITIAL_FORM = {
   phone: '',
   email: '',
   password: '',
+  role: 'STAFF', // 'ADMIN' | 'STAFF' | 'TECHNICIAN'
   role_id: 3,
   designation: 'Staff Member',
   salary: '',
+  wallet_balance: '',
   address: '',
   emergency_contact: '',
   joining_date: new Date().toISOString().split('T')[0],
@@ -115,6 +117,7 @@ export default function useStaffManager() {
   const openCreateModal = () => {
     setFormData({
       ...INITIAL_FORM,
+      role: 'STAFF',
       role_id: roles.find(r => r.name.toLowerCase() === 'staff')?.id || roles[0]?.id || 3
     });
     setFormErrors({});
@@ -130,9 +133,11 @@ export default function useStaffManager() {
       phone: staff.phone || '',
       email: staff.email || '',
       password: '',
+      role: staff.role || (staff.role_name?.toLowerCase().includes('admin') ? 'ADMIN' : staff.role_name?.toLowerCase().includes('tech') ? 'TECHNICIAN' : 'STAFF'),
       role_id: staff.role_id || 3,
       designation: staff.designation || '',
       salary: staff.salary ? String(staff.salary) : '',
+      wallet_balance: staff.wallet_balance !== undefined && staff.wallet_balance !== null ? String(staff.wallet_balance) : '0',
       address: staff.address || '',
       emergency_contact: staff.emergency_contact || '',
       joining_date: staff.joining_date ? new Date(staff.joining_date).toISOString().split('T')[0] : '',

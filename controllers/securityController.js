@@ -763,8 +763,11 @@ exports.login = async (req, res) => {
                 name: user.name,
                 email: user.email,
                 phone: user.phone,
+                role: user.role || ((user.role_title || user.role_name || '').toLowerCase().includes('admin') || user.role_id === 1 ? 'ADMIN' : (user.role_title || user.role_name || '').toLowerCase().includes('tech') || user.role_id === 4 ? 'TECHNICIAN' : 'STAFF'),
                 role_id: user.role_id || 1,
-                role_name: user.role_title || 'Super Admin'
+                role_name: user.role_title || user.role_name || 'Super Admin',
+                designation: user.designation || '',
+                wallet_balance: parseFloat(user.wallet_balance || 0)
             }
         });
     } catch (error) {

@@ -1,7 +1,6 @@
 import React from 'react';
 import { useLoginModalState } from '../hooks/useLoginModalState';
 import LoginForm from '../shared/auth/LoginForm';
-import StaffSignupForm from '../shared/auth/StaffSignupForm';
 import ForgotPasswordForm from '../shared/auth/ForgotPasswordForm';
 
 export default function LoginModal({ isOpen, onLoginSuccess, canClose = false, onClose, onOpenDevConsole }) {
@@ -50,12 +49,6 @@ export default function LoginModal({ isOpen, onLoginSuccess, canClose = false, o
         <div className="p-6">
           {mode === 'login' && (
             <LoginForm
-              {...modalState}
-            />
-          )}
-
-          {mode === 'staff_signup' && (
-            <StaffSignupForm
               {...modalState}
             />
           )}

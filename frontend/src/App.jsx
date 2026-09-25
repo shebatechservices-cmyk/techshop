@@ -49,6 +49,7 @@ const Ecommerce = lazyWithRetry(() => import("./Pages/Ecommerce/Ecommerce"));
 const Security = lazyWithRetry(() => import("./Pages/SOC_Security/Security"));
 const Warranty = lazyWithRetry(() => import("./Pages/Warranty/Warranty"));
 const Staff = lazyWithRetry(() => import("./Pages/Staff/Staff"));
+const TechnicianWallet = lazyWithRetry(() => import("./Pages/Staff/TechnicianWallet"));
 const Trash = lazyWithRetry(() => import("./Pages/Trash/Trash"));
 const Settings = lazyWithRetry(() => import("./Pages/Settings/Settings"));
 
@@ -108,6 +109,24 @@ export default function App() {
     recheckLicense,
   } = useLicenseCheck();
 
+  const userRole = (currentUser?.role || "").toUpperCase();
+  const userRoleName = (currentUser?.role_name || "").toLowerCase();
+  const isTechnician =
+    userRole === "TECHNICIAN" ||
+    userRoleName.includes("technician") ||
+    userRoleName.includes("tech") ||
+    currentUser?.role_id === 4;
+
+  // Strict Technician Route Guard: Technicians can ONLY access projects, inventory, and wallet
+  React.useEffect(() => {
+    if (isTechnician) {
+      const allowedTechSections = ["projects", "inventory", "wallet"];
+      if (!allowedTechSections.includes(section)) {
+        setSection("projects");
+      }
+    }
+  }, [isTechnician, section, setSection]);
+
   // Strict Vendor License Kill-Switch Gate: If license is invalid, expired, or blocked, render ONLY the LicenseLockScreen
   if (!licenseLoading && (!isLicenseValid || isLicenseBlocked || isLicenseExpired)) {
     return (
@@ -156,21 +175,21 @@ export default function App() {
             handleLoginSuccess(user);
             exitDevModeToUserMode();
           }}
-          onQuickSale={() => handleGlobalNavigate({ section: "sales" })}
-          onQuickPurchase={() => setIsPurchaseOpen(true)}
-          onQuickAddProduct={() => {
+          onQuickSale={isTechnician ? undefined : () => handleGlobalNavigate({ section: "sales" })}
+          onQuickPurchase={isTechnician ? undefined : () => setIsPurchaseOpen(true)}
+          onQuickAddProduct={isTechnician ? undefined : () => {
             setSection("products");
             window.dispatchEvent(new CustomEvent("open-add-product"));
           }}
-          onQuickExpense={() => handleGlobalNavigate({ section: "expenses" })}
-          onQuickWarranty={() => handleGlobalNavigate({ section: "warranty" })}
-          onOpenRegisterModal={() => setIsRegisterModalOpen(true)}
+          onQuickExpense={isTechnician ? undefined : () => handleGlobalNavigate({ section: "expenses" })}
+          onQuickWarranty={isTechnician ? undefined : () => handleGlobalNavigate({ section: "warranty" })}
+          onOpenRegisterModal={isTechnician ? undefined : () => setIsRegisterModalOpen(true)}
           onLogout={handleLogout}
           onNavigate={handleGlobalNavigate}
           onOpenMenu={() => setIsMobileDrawerOpen(true)}
         />
 
-        {/* Discrete 15-Day Free Trial Status Banner (Strictly hidden when commercial/enterprise license is active) */}
+        {/* Discrete 15-Day Free Trial Status Banner */}
         {!licenseLoading && isTrial && !hasCommercialLicense && isLicenseValid && !isLicenseBlocked && (
           <div className="w-full mb-3 px-4 py-2 bg-gradient-to-r from-amber-500/10 via-amber-500/5 to-transparent border border-amber-500/30 rounded-xl flex items-center justify-between text-xs text-amber-950 shadow-sm animate-fadeIn">
             <div className="flex items-center gap-2">
@@ -190,25 +209,46 @@ export default function App() {
 
         {/* Dynamic Route View */}
         <Suspense fallback={<PageFallback />}>
-          {section === "dashboard" ? (
+          {section === "wallet" ? (
+            <TechnicianWallet currentUser={currentUser} />
+          ) : section === "inventory" ? (
+            <Inventory
+              readOnly={isTechnician}
+              onOpenNewSale={
+                isTechnician
+                  ? undefined
+                  : (product) => {
+                      setSection("sales");
+                      setGlobalNav({
+                        section: "sales",
+                        tab: "history",
+                        search: product.name || "",
+                        key: Date.now(),
+                      });
+                    }
+              }
+            />
+          ) : section === "projects" ? (
+            <Projects currentUser={currentUser} />
+          ) : section === "dashboard" && !isTechnician ? (
             <Dashboard />
-          ) : section === "products" ? (
+          ) : section === "products" && !isTechnician ? (
             <Products
               initialTab={activeTab || "catalog"}
               initialSearch={globalNav.section === "products" ? globalNav.search : ""}
             />
-          ) : section === "accounts" ? (
+          ) : section === "accounts" && !isTechnician ? (
             <Accounts onNavigateToExpenses={() => setSection("expenses")} />
-          ) : section === "expenses" ? (
+          ) : section === "expenses" && !isTechnician ? (
             <Expenses />
-          ) : section === "sales" ? (
+          ) : section === "sales" && !isTechnician ? (
             <Sales
               initialTab={globalNav.section === "sales" ? globalNav.tab || "history" : "history"}
               initialSearch={globalNav.section === "sales" ? globalNav.search || "" : ""}
               navKey={globalNav.key}
               currentUser={currentUser}
             />
-          ) : section === "purchases" ? (
+          ) : section === "purchases" && !isTechnician ? (
             <Purchases
               initialTab={globalNav.section === "purchases" ? globalNav.tab || "history" : "history"}
               initialSearch={globalNav.section === "purchases" ? globalNav.search || "" : ""}
@@ -218,33 +258,19 @@ export default function App() {
                 window.dispatchEvent(new CustomEvent("open-add-product"));
               }}
             />
-          ) : section === "inventory" ? (
-            <Inventory
-              onOpenNewSale={(product) => {
-                setSection("sales");
-                setGlobalNav({
-                  section: "sales",
-                  tab: "history",
-                  search: product.name || "",
-                  key: Date.now(),
-                });
-              }}
-            />
-          ) : section === "projects" ? (
-            <Projects />
-          ) : section === "ecommerce" ? (
+          ) : section === "ecommerce" && !isTechnician ? (
             <Ecommerce />
-          ) : section === "soc" ? (
+          ) : section === "soc" && !isTechnician ? (
             <Security />
-          ) : section === "warranty" ? (
+          ) : section === "warranty" && !isTechnician ? (
             <Warranty />
-          ) : section === "staff" ? (
+          ) : section === "staff" && !isTechnician ? (
             <Staff currentUser={currentUser} />
-          ) : section === "trash" ? (
+          ) : section === "trash" && !isTechnician ? (
             <Trash />
-          ) : section === "settings" ? (
+          ) : section === "settings" && !isTechnician ? (
             <Settings onLogout={handleLogout} currentUser={currentUser} />
-          ) : section === "reports" ? (
+          ) : section === "reports" && !isTechnician ? (
             <Reports />
           ) : (
             <div className="bg-white p-10 rounded-2xl text-center border border-slate-200">
@@ -255,7 +281,7 @@ export default function App() {
                 {section.toUpperCase()}
               </h2>
               <p className="text-xs text-slate-500">
-                This module is under development. Navigate to other sections from the sidebar.
+                This module is under development or restricted for your account. Navigate to other sections from the sidebar.
               </p>
             </div>
           )}
@@ -263,78 +289,120 @@ export default function App() {
 
         {/* Mobile Bottom Navigation Bar */}
         <nav className="mobile-bottom-nav">
-          <button
-            type="button"
-            className={`mobile-nav-item ${section === "dashboard" ? "active" : ""}`}
-            onClick={() => handleGlobalNavigate({ section: "dashboard" })}
-          >
-            <span>📊</span>
-            <small>Dashboard</small>
-          </button>
-          <button
-            type="button"
-            className={`mobile-nav-item ${section === "sales" ? "active" : ""}`}
-            onClick={() => handleGlobalNavigate({ section: "sales" })}
-          >
-            <span>🛍️</span>
-            <small>Sales</small>
-          </button>
-          <button
-            type="button"
-            className={`mobile-nav-item ${section === "purchases" ? "active" : ""}`}
-            onClick={() => handleGlobalNavigate({ section: "purchases" })}
-          >
-            <span>📦</span>
-            <small>Purchase</small>
-          </button>
-          <button
-            type="button"
-            className={`mobile-nav-item ${section === "inventory" ? "active" : ""}`}
-            onClick={() => handleGlobalNavigate({ section: "inventory" })}
-          >
-            <span>🏬</span>
-            <small>Stock</small>
-          </button>
-          <button
-            type="button"
-            className={`mobile-nav-item ${section === "accounts" ? "active" : ""}`}
-            onClick={() => handleGlobalNavigate({ section: "accounts" })}
-          >
-            <span>💳</span>
-            <small>Accounts</small>
-          </button>
-          <button
-            type="button"
-            className="mobile-nav-item"
-            onClick={() => setIsMobileDrawerOpen(true)}
-            title="More Modules"
-          >
-            <span>☰</span>
-            <small>More</small>
-          </button>
+          {isTechnician ? (
+            <>
+              <button
+                type="button"
+                className={`mobile-nav-item ${section === "projects" ? "active" : ""}`}
+                onClick={() => handleGlobalNavigate({ section: "projects" })}
+              >
+                <span>🛠️</span>
+                <small>Projects</small>
+              </button>
+              <button
+                type="button"
+                className={`mobile-nav-item ${section === "inventory" ? "active" : ""}`}
+                onClick={() => handleGlobalNavigate({ section: "inventory" })}
+              >
+                <span>🏢</span>
+                <small>Prices</small>
+              </button>
+              <button
+                type="button"
+                className={`mobile-nav-item ${section === "wallet" ? "active" : ""}`}
+                onClick={() => handleGlobalNavigate({ section: "wallet" })}
+              >
+                <span>👛</span>
+                <small>My Wallet</small>
+              </button>
+              <button
+                type="button"
+                className="mobile-nav-item"
+                onClick={() => setIsMobileDrawerOpen(true)}
+                title="Menu"
+              >
+                <span>☰</span>
+                <small>Menu</small>
+              </button>
+            </>
+          ) : (
+            <>
+              <button
+                type="button"
+                className={`mobile-nav-item ${section === "dashboard" ? "active" : ""}`}
+                onClick={() => handleGlobalNavigate({ section: "dashboard" })}
+              >
+                <span>📊</span>
+                <small>Dashboard</small>
+              </button>
+              <button
+                type="button"
+                className={`mobile-nav-item ${section === "sales" ? "active" : ""}`}
+                onClick={() => handleGlobalNavigate({ section: "sales" })}
+              >
+                <span>🛍️</span>
+                <small>Sales</small>
+              </button>
+              <button
+                type="button"
+                className={`mobile-nav-item ${section === "purchases" ? "active" : ""}`}
+                onClick={() => handleGlobalNavigate({ section: "purchases" })}
+              >
+                <span>📦</span>
+                <small>Purchase</small>
+              </button>
+              <button
+                type="button"
+                className={`mobile-nav-item ${section === "inventory" ? "active" : ""}`}
+                onClick={() => handleGlobalNavigate({ section: "inventory" })}
+              >
+                <span>🏬</span>
+                <small>Stock</small>
+              </button>
+              <button
+                type="button"
+                className={`mobile-nav-item ${section === "accounts" ? "active" : ""}`}
+                onClick={() => handleGlobalNavigate({ section: "accounts" })}
+              >
+                <span>💳</span>
+                <small>Accounts</small>
+              </button>
+              <button
+                type="button"
+                className="mobile-nav-item"
+                onClick={() => setIsMobileDrawerOpen(true)}
+                title="More Modules"
+              >
+                <span>☰</span>
+                <small>More</small>
+              </button>
+            </>
+          )}
         </nav>
       </div>
 
-      {/* Mobile Floating Action Button Speed Dial */}
-      <MobileQuickActionFab
-        onQuickSale={() => {
-          setSection("sales");
-          setGlobalNav({ section: "sales", tab: "new", key: Date.now() });
-        }}
-        onQuickPurchase={() => setIsPurchaseOpen(true)}
-        onQuickExpense={() => {
-          setSection("expenses");
-          setGlobalNav({ section: "expenses", key: Date.now() });
-        }}
-        onQuickScanner={() => {
-          setSection("inventory");
-          setGlobalNav({ section: "inventory", key: Date.now() });
-        }}
-        onQuickAddProduct={() => {
-          setSection("products");
-          window.dispatchEvent(new CustomEvent("open-add-product"));
-        }}
-      />
+      {/* Mobile Floating Action Button Speed Dial (Hidden for Technicians) */}
+      {!isTechnician && (
+        <MobileQuickActionFab
+          onQuickSale={() => {
+            setSection("sales");
+            setGlobalNav({ section: "sales", tab: "new", key: Date.now() });
+          }}
+          onQuickPurchase={() => setIsPurchaseOpen(true)}
+          onQuickExpense={() => {
+            setSection("expenses");
+            setGlobalNav({ section: "expenses", key: Date.now() });
+          }}
+          onQuickScanner={() => {
+            setSection("inventory");
+            setGlobalNav({ section: "inventory", key: Date.now() });
+          }}
+          onQuickAddProduct={() => {
+            setSection("products");
+            window.dispatchEvent(new CustomEvent("open-add-product"));
+          }}
+        />
+      )}
 
       {/* Mobile Navigation Drawer */}
       <MobileNavDrawer
@@ -351,12 +419,14 @@ export default function App() {
         }}
         shopName={shopInfo.shop_name || "Sheba Technology & Networking"}
         userName={currentUser?.name || "Super Admin"}
+        currentUser={currentUser}
         onLogout={handleLogout}
       />
 
       {/* Right Side Hover Navigation Dock */}
       <RightHoverNav
         activeSlug={section}
+        currentUser={currentUser}
         onSelect={(slug) => {
           setSection(slug);
           if (slug === "products") {

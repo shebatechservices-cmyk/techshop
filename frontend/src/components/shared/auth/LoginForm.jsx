@@ -131,17 +131,8 @@ export default function LoginForm({
         {loading ? 'লগইন হচ্ছে...' : 'লগইন করুন (Sign In)'}
       </button>
 
-      <div className="mt-4 pt-3.5 border-t border-slate-100 flex justify-center items-center text-xs text-slate-500">
-        <div>
-          <span>নতুন স্টাফ?</span>
-          <button
-            type="button"
-            onClick={() => { setMode('staff_signup'); setErrorMsg(''); setSuccessMsg(''); }}
-            className="text-emerald-600 font-bold ml-1.5 hover:underline"
-          >
-            রেজিস্ট্রেশন করুন
-          </button>
-        </div>
+      <div className="mt-4 pt-3.5 border-t border-slate-100 flex justify-center items-center text-center text-xs text-slate-400">
+        <span>🔒 নতুন একাউন্ট শুধুমাত্র শপ অ্যাডমিন কর্তৃক তৈরি করা হয়।</span>
       </div>
     </form>
   );

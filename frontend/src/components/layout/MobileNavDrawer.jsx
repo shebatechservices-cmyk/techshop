@@ -1,6 +1,6 @@
 import React from 'react';
 
-const DRAWER_ITEMS = [
+const ALL_DRAWER_ITEMS = [
   { slug: 'dashboard', label: 'Dashboard', icon: '📊', desc: 'Overview & Statistics' },
   { slug: 'sales', label: 'Sales & Customers', icon: '💰', desc: 'POS Invoices, Quotations, Due Collection' },
   { slug: 'purchases', label: 'Purchases & Suppliers', icon: '🛒', desc: 'Purchase Orders & Supplier Ledgers' },
@@ -18,6 +18,12 @@ const DRAWER_ITEMS = [
   { slug: 'trash', label: 'Trash', icon: '🗑️', desc: 'Deleted & Archived Items' },
 ];
 
+const TECHNICIAN_DRAWER_ITEMS = [
+  { slug: 'projects', label: 'Projects & Services', icon: '🛠️', desc: 'Assigned CCTV & Service Tasks' },
+  { slug: 'inventory', label: 'Inventory (Prices)', icon: '🏢', desc: 'Product Stock & Price Lookup' },
+  { slug: 'wallet', label: 'My Wallet & Earnings', icon: '👛', desc: 'Personal Balance & Commission Payouts' },
+];
+
 export default function MobileNavDrawer({
   isOpen,
   onClose,
@@ -25,9 +31,16 @@ export default function MobileNavDrawer({
   onSelect,
   shopName = 'Seba Technology & Networking',
   userName = 'Super Admin',
+  currentUser,
   onLogout,
 }) {
   if (!isOpen) return null;
+
+  const role = (currentUser?.role || '').toUpperCase();
+  const roleName = (currentUser?.role_name || '').toLowerCase();
+  const isTechnician = role === 'TECHNICIAN' || roleName.includes('technician') || roleName.includes('tech') || currentUser?.role_id === 4;
+
+  const drawerItems = isTechnician ? TECHNICIAN_DRAWER_ITEMS : ALL_DRAWER_ITEMS;
 
   return (
     <div className="mobile-drawer-backdrop" onClick={onClose}>
@@ -59,7 +72,7 @@ export default function MobileNavDrawer({
 
         {/* Drawer Navigation List */}
         <div className="mobile-drawer-list">
-          {DRAWER_ITEMS.map((item) => {
+          {drawerItems.map((item) => {
             const isActive = activeSlug === item.slug;
             return (
               <button

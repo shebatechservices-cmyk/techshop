@@ -8,7 +8,7 @@ import InventoryMetrics from './components/InventoryMetrics';
 import InventoryFilters from './components/InventoryFilters';
 import InventoryTable from './components/InventoryTable';
 
-export default function Inventory({ onOpenNewSale }) {
+export default function Inventory({ onOpenNewSale, readOnly = false }) {
   const {
     // States
     products,
@@ -107,13 +107,15 @@ export default function Inventory({ onOpenNewSale }) {
 
         <div className="flex items-center gap-2 flex-wrap">
           {/* Stock Transfer Action */}
-          <button
-            type="button"
-            onClick={() => handleOpenTransferModal()}
-            className="flex items-center gap-1.5 py-1.5 px-3 rounded-md border-0 bg-sky-600 hover:bg-sky-700 text-white font-bold text-xs cursor-pointer shadow-sm transition-colors"
-          >
-            <span>🔄</span> Stock Transfer
-          </button>
+          {!readOnly && (
+            <button
+              type="button"
+              onClick={() => handleOpenTransferModal()}
+              className="flex items-center gap-1.5 py-1.5 px-3 rounded-md border-0 bg-sky-600 hover:bg-sky-700 text-white font-bold text-xs cursor-pointer shadow-sm transition-colors"
+            >
+              <span>🔄</span> Stock Transfer
+            </button>
+          )}
 
           {/* Refresh Button */}
           <button

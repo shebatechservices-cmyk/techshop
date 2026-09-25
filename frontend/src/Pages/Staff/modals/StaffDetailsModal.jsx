@@ -68,17 +68,23 @@ export default function StaffDetailsModal({
         {/* Modal Body */}
         <div className="flex-1 overflow-y-auto p-6 space-y-5">
           {/* Quick Stats Grid */}
-          <div className="grid grid-cols-2 gap-3">
+          <div className="grid grid-cols-3 gap-3">
             <div className="p-3.5 bg-slate-50 border border-slate-100 rounded-xl">
-              <span className="text-[11px] font-bold text-slate-400 uppercase tracking-wider block mb-1">Monthly Salary</span>
-              <span className="text-base font-extrabold text-slate-800">
-                {staff.salary ? `৳${parseFloat(staff.salary).toLocaleString()}` : 'Not Specified'}
+              <span className="text-[11px] font-bold text-slate-400 uppercase tracking-wider block mb-1">System Role</span>
+              <span className="text-xs font-black text-blue-700 bg-blue-100 px-2 py-0.5 rounded-md inline-block">
+                {staff.role || (staff.role_name?.toLowerCase().includes('admin') ? 'ADMIN' : staff.role_name?.toLowerCase().includes('tech') ? 'TECHNICIAN' : 'STAFF')}
+              </span>
+            </div>
+            <div className="p-3.5 bg-emerald-50/50 border border-emerald-100 rounded-xl">
+              <span className="text-[11px] font-bold text-emerald-600 uppercase tracking-wider block mb-1">Wallet Balance</span>
+              <span className="text-sm font-black text-emerald-700">
+                ৳{parseFloat(staff.wallet_balance || 0).toLocaleString()}
               </span>
             </div>
             <div className="p-3.5 bg-slate-50 border border-slate-100 rounded-xl">
-              <span className="text-[11px] font-bold text-slate-400 uppercase tracking-wider block mb-1">Joining Date</span>
-              <span className="text-xs font-bold text-slate-800">
-                {staff.joining_date ? new Date(staff.joining_date).toLocaleDateString('en-GB') : 'N/A'}
+              <span className="text-[11px] font-bold text-slate-400 uppercase tracking-wider block mb-1">Monthly Salary</span>
+              <span className="text-sm font-extrabold text-slate-800">
+                {staff.salary ? `৳${parseFloat(staff.salary).toLocaleString()}` : '—'}
               </span>
             </div>
           </div>

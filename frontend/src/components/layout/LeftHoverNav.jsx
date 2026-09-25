@@ -1,6 +1,6 @@
 import React from 'react';
 
-const MENU_ITEMS = [
+const ALL_MENU_ITEMS = [
   { slug: 'dashboard', label: 'Dashboard', icon: '📊' },
   { slug: 'products', label: 'Products & Catalog', icon: '📦' },
   { slug: 'purchases', label: 'Purchases & Suppliers', icon: '🛒' },
@@ -18,11 +18,23 @@ const MENU_ITEMS = [
   { slug: 'settings', label: 'Settings', icon: '⚙️' },
 ];
 
+const TECHNICIAN_MENU_ITEMS = [
+  { slug: 'projects', label: 'Projects & Services', icon: '🛠️' },
+  { slug: 'inventory', label: 'Inventory (Prices)', icon: '🏢' },
+  { slug: 'wallet', label: 'My Wallet & Earnings', icon: '👛' },
+];
+
 export default function LeftHoverNav({ 
   activeSlug, 
   onSelect, 
-  shopName = 'Seba Technology & Networking' 
+  shopName = 'Seba Technology & Networking',
+  currentUser
 }) {
+  const role = (currentUser?.role || '').toUpperCase();
+  const roleName = (currentUser?.role_name || '').toLowerCase();
+  const isTechnician = role === 'TECHNICIAN' || roleName.includes('technician') || roleName.includes('tech') || currentUser?.role_id === 4;
+
+  const menuItems = isTechnician ? TECHNICIAN_MENU_ITEMS : ALL_MENU_ITEMS;
   return (
     <>
       <style>{`
@@ -209,7 +221,7 @@ export default function LeftHoverNav({
           </div>
 
           <nav className="dock-list">
-            {MENU_ITEMS.map((item) => {
+            {menuItems.map((item) => {
               const isActive = activeSlug === item.slug;
               return (
                 <button

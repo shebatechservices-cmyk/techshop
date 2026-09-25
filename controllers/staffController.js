@@ -2,11 +2,24 @@ const pool = require('../config/db');
 const { hashPassword } = require('../config/auth');
 
 /**
+ * Helper to normalize role enum
+ */
+function normalizeRole(role, roleName, roleId) {
+    if (role && ['ADMIN', 'STAFF', 'TECHNICIAN'].includes(String(role).toUpperCase())) {
+        return String(role).toUpperCase();
+    }
+    const name = String(roleName || '').toLowerCase();
+    if (name.includes('admin') || roleId === 1) return 'ADMIN';
+    if (name.includes('technician') || name.includes('tech') || roleId === 4) return 'TECHNICIAN';
+    return 'STAFF';
+}
+
+/**
  * Get all staff members with stats & filtering
  */
 exports.getStaff = async (req, res) => {
     try {
-        const { search = '', role_id, status = 'all', page = 1, limit = 50 } = req.query;
+        const { search = '', role_id, role, status = 'all', page = 1, limit = 50 } = req.query;
         const offset = (Math.max(1, parseInt(page, 10)) - 1) * parseInt(limit, 10);
 
         let whereClauses = ['u.deleted_at IS NULL'];
@@ -20,7 +33,11 @@ exports.getStaff = async (req, res) => {
             valIndex++;
         }
 
-        if (role_id && role_id !== 'all') {
+        if (role && role !== 'all') {
+            whereClauses.push(`u.role = $${valIndex}`);
+            values.push(role.toUpperCase());
+            valIndex++;
+        } else if (role_id && role_id !== 'all') {
             whereClauses.push(`u.role_id = $${valIndex}`);
             values.push(parseInt(role_id, 10));
             valIndex++;
@@ -41,6 +58,7 @@ exports.getStaff = async (req, res) => {
                 u.name,
                 u.phone,
                 u.email,
+                u.role,
                 u.role_id,
                 COALESCE(r.name, u.role_name, 'Staff') AS role_name,
                 u.is_active,
@@ -48,13 +66,13 @@ exports.getStaff = async (req, res) => {
                 u.approval_status,
                 u.designation,
                 u.salary,
+                u.wallet_balance,
                 u.address,
                 u.emergency_contact,
                 u.joining_date,
                 u.notes,
                 u.last_login,
-                u.created_at,
-                u.wallet_balance
+                u.created_at
             FROM users u
             LEFT JOIN roles r ON u.role_id = r.id
             ${whereSql}
@@ -71,9 +89,10 @@ exports.getStaff = async (req, res) => {
                     COUNT(*) AS total_staff,
                     COUNT(*) FILTER (WHERE is_active = true AND is_locked = false) AS active_staff,
                     COUNT(*) FILTER (WHERE is_active = false OR is_locked = true) AS inactive_staff,
-                    COUNT(*) FILTER (WHERE role_id IN (1, 2) OR LOWER(role_name) LIKE '%admin%') AS admin_count,
-                    COUNT(*) FILTER (WHERE role_id = 4 OR LOWER(role_name) LIKE '%tech%') AS tech_count,
-                    COALESCE(SUM(salary), 0) AS total_monthly_payroll
+                    COUNT(*) FILTER (WHERE role = 'ADMIN' OR role_id IN (1, 2) OR LOWER(role_name) LIKE '%admin%') AS admin_count,
+                    COUNT(*) FILTER (WHERE role = 'TECHNICIAN' OR role_id = 4 OR LOWER(role_name) LIKE '%tech%') AS tech_count,
+                    COALESCE(SUM(salary), 0) AS total_monthly_payroll,
+                    COALESCE(SUM(wallet_balance), 0) AS total_technician_wallets
                 FROM users
                 WHERE deleted_at IS NULL
             `)
@@ -85,7 +104,8 @@ exports.getStaff = async (req, res) => {
             inactive_staff: 0,
             admin_count: 0,
             tech_count: 0,
-            total_monthly_payroll: 0
+            total_monthly_payroll: 0,
+            total_technician_wallets: 0
         };
 
         return res.status(200).json({
@@ -100,7 +120,8 @@ exports.getStaff = async (req, res) => {
                 inactiveStaff: parseInt(stats.inactive_staff, 10),
                 adminCount: parseInt(stats.admin_count, 10),
                 techCount: parseInt(stats.tech_count, 10),
-                totalMonthlyPayroll: parseFloat(stats.total_monthly_payroll || 0)
+                totalMonthlyPayroll: parseFloat(stats.total_monthly_payroll || 0),
+                totalTechnicianWallets: parseFloat(stats.total_technician_wallets || 0)
             }
         });
     } catch (err) {
@@ -137,6 +158,7 @@ exports.getStaffById = async (req, res) => {
                 u.name,
                 u.phone,
                 u.email,
+                u.role,
                 u.role_id,
                 COALESCE(r.name, u.role_name, 'Staff') AS role_name,
                 r.permissions AS role_permissions,
@@ -145,13 +167,13 @@ exports.getStaffById = async (req, res) => {
                 u.approval_status,
                 u.designation,
                 u.salary,
+                u.wallet_balance,
                 u.address,
                 u.emergency_contact,
                 u.joining_date,
                 u.notes,
                 u.last_login,
-                u.created_at,
-                u.wallet_balance
+                u.created_at
             FROM users u
             LEFT JOIN roles r ON u.role_id = r.id
             WHERE u.id = $1 AND u.deleted_at IS NULL
@@ -181,9 +203,11 @@ exports.createStaff = async (req, res) => {
             phone,
             email,
             password,
+            role = 'STAFF',
             role_id = 3,
             designation = 'Staff Member',
             salary = 0,
+            wallet_balance = 0,
             address = '',
             emergency_contact = '',
             joining_date = new Date().toISOString(),
@@ -195,7 +219,7 @@ exports.createStaff = async (req, res) => {
             return res.status(400).json({ success: false, message: 'Staff name is required' });
         }
         if (!phone && !email) {
-            return res.status(400).json({ success: false, message: 'At least a phone number or email is required' });
+            return res.status(400).json({ success: false, message: 'At least a phone number or email (User ID) is required' });
         }
         if (!password || password.trim().length < 4) {
             return res.status(400).json({ success: false, message: 'Password must be at least 4 characters long' });
@@ -216,32 +240,39 @@ exports.createStaff = async (req, res) => {
             }
         }
 
-        // Get Role name
+        // Normalize role and role_name
         let roleName = 'Staff';
         const roleRes = await pool.query('SELECT name FROM roles WHERE id = $1', [role_id]);
         if (roleRes.rows.length > 0) {
             roleName = roleRes.rows[0].name;
+        } else {
+            if (role === 'ADMIN') roleName = 'Shop Admin';
+            else if (role === 'TECHNICIAN') roleName = 'Field Technician';
+            else roleName = 'Staff';
         }
 
+        const resolvedRole = normalizeRole(role, roleName, parseInt(role_id, 10));
         const passwordHash = await hashPassword(password.trim());
 
         const insertResult = await pool.query(`
             INSERT INTO users (
-                name, phone, email, password_hash, role_id, role_name,
-                designation, salary, address, emergency_contact, joining_date,
+                name, phone, email, password_hash, role, role_id, role_name,
+                designation, salary, wallet_balance, address, emergency_contact, joining_date,
                 is_active, approval_status, notes, created_at, updated_at
             )
-            VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, 'approved', $13, NOW(), NOW())
-            RETURNING id, name, phone, email, role_id, role_name, designation, salary, is_active, created_at
+            VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, 'approved', $15, NOW(), NOW())
+            RETURNING id, name, phone, email, role, role_id, role_name, designation, salary, wallet_balance, is_active, created_at
         `, [
             name.trim(),
             phone ? phone.trim() : null,
             email ? email.trim() : null,
             passwordHash,
-            role_id,
+            resolvedRole,
+            parseInt(role_id, 10) || 3,
             roleName,
-            designation.trim(),
+            designation ? designation.trim() : (resolvedRole === 'TECHNICIAN' ? 'Field Technician' : 'Staff Member'),
             parseFloat(salary) || 0,
+            parseFloat(wallet_balance) || 0,
             address ? address.trim() : null,
             emergency_contact ? emergency_contact.trim() : null,
             joining_date ? new Date(joining_date) : new Date(),
@@ -251,12 +282,12 @@ exports.createStaff = async (req, res) => {
 
         return res.status(201).json({
             success: true,
-            message: `Staff member "${name}" created successfully`,
+            message: `Staff account for "${insertResult.rows[0].name}" created successfully`,
             data: insertResult.rows[0]
         });
     } catch (err) {
         console.error('Error in createStaff:', err);
-        return res.status(500).json({ success: false, message: 'Failed to create staff member', error: err.message });
+        return res.status(500).json({ success: false, message: 'Failed to create staff account', error: err.message });
     }
 };
 
@@ -271,9 +302,11 @@ exports.updateStaff = async (req, res) => {
             phone,
             email,
             password,
+            role,
             role_id,
             designation,
             salary,
+            wallet_balance,
             address,
             emergency_contact,
             joining_date,
@@ -288,6 +321,13 @@ exports.updateStaff = async (req, res) => {
         }
 
         const existing = checkRes.rows[0];
+
+        // Safeguard root Super Admin
+        if (Number(id) === 1) {
+            if (is_active === false || is_active === 'false' || is_locked === true) {
+                return res.status(403).json({ success: false, message: 'Primary Super Admin account cannot be deactivated or locked' });
+            }
+        }
 
         // Check duplicates if phone/email changed
         if (phone && phone.trim() !== (existing.phone || '')) {
@@ -304,7 +344,7 @@ exports.updateStaff = async (req, res) => {
             }
         }
 
-        // Get Role name
+        // Determine Role name
         let roleName = existing.role_name;
         if (role_id && role_id !== existing.role_id) {
             const roleRes = await pool.query('SELECT name FROM roles WHERE id = $1', [role_id]);
@@ -312,6 +352,8 @@ exports.updateStaff = async (req, res) => {
                 roleName = roleRes.rows[0].name;
             }
         }
+
+        const resolvedRole = role ? normalizeRole(role, roleName, parseInt(role_id || existing.role_id, 10)) : existing.role;
 
         // Handle password update if supplied
         let passwordHash = existing.password_hash;
@@ -322,36 +364,40 @@ exports.updateStaff = async (req, res) => {
         const updateResult = await pool.query(`
             UPDATE users SET
                 name = COALESCE($1, name),
-                phone = $2,
-                email = $3,
+                phone = COALESCE($2, phone),
+                email = COALESCE($3, email),
                 password_hash = $4,
-                role_id = COALESCE($5, role_id),
-                role_name = COALESCE($6, role_name),
-                designation = COALESCE($7, designation),
-                salary = COALESCE($8, salary),
-                address = $9,
-                emergency_contact = $10,
-                joining_date = COALESCE($11, joining_date),
-                is_active = COALESCE($12, is_active),
-                is_locked = COALESCE($13, is_locked),
-                notes = $14,
+                role = COALESCE($5, role),
+                role_id = COALESCE($6, role_id),
+                role_name = COALESCE($7, role_name),
+                designation = COALESCE($8, designation),
+                salary = COALESCE($9, salary),
+                wallet_balance = COALESCE($10, wallet_balance),
+                address = COALESCE($11, address),
+                emergency_contact = COALESCE($12, emergency_contact),
+                joining_date = COALESCE($13, joining_date),
+                is_active = COALESCE($14, is_active),
+                is_locked = COALESCE($15, is_locked),
+                notes = COALESCE($16, notes),
                 updated_at = NOW()
-            WHERE id = $15
-            RETURNING id, name, phone, email, role_id, role_name, designation, salary, is_active, is_locked, updated_at
+            WHERE id = $17 AND deleted_at IS NULL
+            RETURNING id, name, phone, email, role, role_id, role_name, designation, salary, wallet_balance, is_active, is_locked, updated_at
         `, [
-            name ? name.trim() : null,
+            name ? name.trim() : existing.name,
             phone !== undefined ? (phone ? phone.trim() : null) : existing.phone,
             email !== undefined ? (email ? email.trim() : null) : existing.email,
             passwordHash,
-            role_id || null,
-            roleName || null,
-            designation !== undefined ? designation : null,
-            salary !== undefined ? parseFloat(salary) : null,
+            resolvedRole,
+            role_id !== undefined ? parseInt(role_id, 10) : existing.role_id,
+            roleName,
+            designation !== undefined ? designation.trim() : existing.designation,
+            salary !== undefined ? parseFloat(salary) : existing.salary,
+            wallet_balance !== undefined ? parseFloat(wallet_balance) : existing.wallet_balance,
             address !== undefined ? address : existing.address,
             emergency_contact !== undefined ? emergency_contact : existing.emergency_contact,
-            joining_date ? new Date(joining_date) : null,
-            is_active !== undefined ? is_active : null,
-            is_locked !== undefined ? is_locked : null,
+            joining_date ? new Date(joining_date) : existing.joining_date,
+            is_active !== undefined ? Boolean(is_active) : existing.is_active,
+            is_locked !== undefined ? Boolean(is_locked) : existing.is_locked,
             notes !== undefined ? notes : existing.notes,
             id
         ]);
@@ -430,5 +476,181 @@ exports.deleteStaff = async (req, res) => {
     } catch (err) {
         console.error('Error in deleteStaff:', err);
         return res.status(500).json({ success: false, message: 'Failed to delete staff member', error: err.message });
+    }
+};
+
+/**
+ * Get technician personal wallet details, earnings, project tasks, and payout history
+ */
+exports.getStaffWallet = async (req, res) => {
+    try {
+        const userId = req.params.id || req.query.userId;
+        if (!userId) {
+            return res.status(400).json({ success: false, message: 'User ID is required' });
+        }
+
+        const userRes = await pool.query(`
+            SELECT id, name, phone, email, role, role_id, role_name, designation, wallet_balance, created_at
+            FROM users
+            WHERE id = $1 AND deleted_at IS NULL
+        `, [userId]);
+
+        if (userRes.rows.length === 0) {
+            return res.status(404).json({ success: false, message: 'User not found' });
+        }
+
+        const user = userRes.rows[0];
+
+        // Fetch assigned projects & commissions
+        const projectsRes = await pool.query(`
+            SELECT 
+                sp.id,
+                sp.project_code,
+                sp.title,
+                sp.status,
+                sp.technician_status,
+                sp.admin_confirmed,
+                sp.charges,
+                sp.setup_charge,
+                sp.conveyance_cost,
+                sp.meal_allowance,
+                sp.start_date,
+                sp.deadline,
+                sp.completed_at,
+                sp.created_at,
+                c.name as customer_name,
+                c.phone as customer_phone,
+                sp.site_address
+            FROM service_projects sp
+            LEFT JOIN customers c ON sp.customer_id = c.id
+            WHERE (sp.assigned_technician = $1 OR sp.technician_id = $1)
+              AND sp.deleted_at IS NULL
+            ORDER BY sp.id DESC
+            LIMIT 50
+        `, [userId]);
+
+        // Aggregate project stats
+        const projects = projectsRes.rows;
+        let totalProjects = projects.length;
+        let completedProjects = 0;
+        let ongoingProjects = 0;
+        let totalEarnedCommission = 0;
+
+        projects.forEach(p => {
+            const isCompleted = p.status === 'completed' || p.technician_status === 'completed' || p.admin_confirmed;
+            if (isCompleted) {
+                completedProjects++;
+                const projectCommission = (parseFloat(p.charges) || 0) + (parseFloat(p.conveyance_cost) || 0) + (parseFloat(p.meal_allowance) || 0);
+                totalEarnedCommission += projectCommission;
+            } else {
+                ongoingProjects++;
+            }
+        });
+
+        // Fetch wallet transaction / payout history
+        const walletHistoryRes = await pool.query(`
+            SELECT 
+                wt.id,
+                wt.type,
+                wt.amount,
+                wt.credit,
+                wt.reference,
+                wt.note,
+                wt.balance_before,
+                wt.balance_after,
+                wt.account_name,
+                wt.party_name
+            FROM wallet_transactions wt
+            WHERE (wt.party_id = $1 AND wt.party_type IN ('technician', 'staff'))
+               OR wt.reference ILIKE $2
+            ORDER BY wt.id DESC
+            LIMIT 30
+        `, [userId, `%user-${userId}%`]);
+
+        return res.status(200).json({
+            success: true,
+            data: {
+                user: {
+                    id: user.id,
+                    name: user.name,
+                    phone: user.phone,
+                    email: user.email,
+                    role: user.role,
+                    roleName: user.role_name,
+                    designation: user.designation,
+                    walletBalance: parseFloat(user.wallet_balance || 0),
+                    joinedAt: user.created_at
+                },
+                summary: {
+                    walletBalance: parseFloat(user.wallet_balance || 0),
+                    totalEarnedCommission,
+                    totalProjects,
+                    completedProjects,
+                    ongoingProjects
+                },
+                projects,
+                transactions: walletHistoryRes.rows
+            }
+        });
+    } catch (err) {
+        console.error('Error in getStaffWallet:', err);
+        return res.status(500).json({ success: false, message: 'Failed to fetch technician wallet', error: err.message });
+    }
+};
+
+/**
+ * Adjust technician wallet balance manually by Admin
+ */
+exports.adjustStaffWallet = async (req, res) => {
+    try {
+        const { id } = req.params;
+        const { amount, type = 'credit', note = '', reference = '' } = req.body;
+
+        const valAmount = parseFloat(amount);
+        if (isNaN(valAmount) || valAmount <= 0) {
+            return res.status(400).json({ success: false, message: 'Valid adjustment amount is required' });
+        }
+
+        const userRes = await pool.query('SELECT id, name, wallet_balance FROM users WHERE id = $1 AND deleted_at IS NULL', [id]);
+        if (userRes.rows.length === 0) {
+            return res.status(404).json({ success: false, message: 'Staff member not found' });
+        }
+
+        const user = userRes.rows[0];
+        const currentBal = parseFloat(user.wallet_balance || 0);
+        const isCredit = type === 'credit';
+        const newBal = isCredit ? currentBal + valAmount : Math.max(0, currentBal - valAmount);
+
+        await pool.query('UPDATE users SET wallet_balance = $1, updated_at = NOW() WHERE id = $2', [newBal, id]);
+
+        // Log transaction
+        await pool.query(`
+            INSERT INTO wallet_transactions (
+                party_type, party_id, party_name, type, amount, credit,
+                reference, note, balance_before, balance_after
+            ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)
+        `, [
+            'technician',
+            user.id,
+            user.name,
+            isCredit ? 'ADMIN_WALLET_CREDIT' : 'ADMIN_WALLET_DEBIT',
+            valAmount,
+            isCredit,
+            reference || `Admin Adjustment: User #${user.id}`,
+            note || (isCredit ? 'Wallet credit added by Admin' : 'Wallet debit/payout by Admin'),
+            currentBal,
+            newBal
+        ]).catch(() => null);
+
+        return res.status(200).json({
+            success: true,
+            message: `Wallet of "${user.name}" updated. New balance: ৳${newBal.toLocaleString()}`,
+            data: {
+                walletBalance: newBal
+            }
+        });
+    } catch (err) {
+        console.error('Error in adjustStaffWallet:', err);
+        return res.status(500).json({ success: false, message: 'Failed to adjust wallet balance', error: err.message });
     }
 };
