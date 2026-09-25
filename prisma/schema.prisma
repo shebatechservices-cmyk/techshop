@@ -1044,6 +1044,12 @@ model users {
   browser_fingerprint                                          String?                   @db.VarChar(255)
   approval_status                                              String?                   @default("approved") @db.VarChar(50)
   wallet_balance                                               Decimal?                  @default(0) @db.Decimal(14, 2)
+  designation                                                  String?                   @db.VarChar(100)
+  salary                                                       Decimal?                  @default(0) @db.Decimal(14, 2)
+  address                                                      String?                   @db.Text
+  emergency_contact                                            String?                   @db.VarChar(50)
+  joining_date                                                 DateTime?                 @default(now()) @db.Timestamp(6)
+  notes                                                        String?                   @db.Text
   expenses                                                     expenses[]
   ip_rules                                                     ip_rules[]
   password_reset_requests                                      password_reset_requests[]

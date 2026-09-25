@@ -8,6 +8,7 @@ const DRAWER_ITEMS = [
   { slug: 'products', label: 'Products & Catalog', icon: '📦', desc: 'Product Master & Categories' },
   { slug: 'accounts', label: 'Accounts and Ledgers', icon: '💳', desc: 'Cash, Banks, Ledgers & Payment Methods' },
   { slug: 'expenses', label: 'Expenses & Overheads', icon: '💸', desc: 'Daily Expenses & Operating Costs' },
+  { slug: 'staff', label: 'Staff Management', icon: '👥', desc: 'Team Members, Roles & Access' },
   { slug: 'reports', label: 'Reports & Analytics', icon: '📈', desc: 'Profit & Loss, Sales & Stock Reports' },
   { slug: 'projects', label: 'Projects & Services', icon: '🛠️', desc: 'CCTV Installation & Service Jobs' },
   { slug: 'ecommerce', label: 'E-Commerce', icon: '🌐', desc: 'Online Storefront & Orders' },

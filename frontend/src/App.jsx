@@ -48,6 +48,7 @@ const Projects = lazyWithRetry(() => import("./Pages/Projects/Projects"));
 const Ecommerce = lazyWithRetry(() => import("./Pages/Ecommerce/Ecommerce"));
 const Security = lazyWithRetry(() => import("./Pages/SOC_Security/Security"));
 const Warranty = lazyWithRetry(() => import("./Pages/Warranty/Warranty"));
+const Staff = lazyWithRetry(() => import("./Pages/Staff/Staff"));
 const Trash = lazyWithRetry(() => import("./Pages/Trash/Trash"));
 const Settings = lazyWithRetry(() => import("./Pages/Settings/Settings"));
 
@@ -237,6 +238,8 @@ export default function App() {
             <Security />
           ) : section === "warranty" ? (
             <Warranty />
+          ) : section === "staff" ? (
+            <Staff currentUser={currentUser} />
           ) : section === "trash" ? (
             <Trash />
           ) : section === "settings" ? (

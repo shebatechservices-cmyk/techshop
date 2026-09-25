@@ -8,6 +8,7 @@ const MENU_ITEMS = [
   { slug: 'sales', label: 'Sales & Customers', icon: '💰' },
   { slug: 'accounts', label: 'Accounts and Ledgers', icon: '💳' },
   { slug: 'expenses', label: 'Expenses & Overheads', icon: '💸' },
+  { slug: 'staff', label: 'Staff Management', icon: '👥' },
   { slug: 'reports', label: 'Reports & Analytics', icon: '📈' },
   { slug: 'projects', label: 'Projects & Services', icon: '🛠️' },
   { slug: 'ecommerce', label: 'E-Commerce', icon: '🌐' },

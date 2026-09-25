@@ -179,6 +179,7 @@ registerRoute('/expenses', require('./routes/expenseRoute'));
 registerRoute('/expense-categories', require('./routes/expenseCategoryRoute'));
 registerRoute('/register', require('./routes/registerRoute'));
 registerRoute('/devices', require('./routes/deviceRoute'));
+registerRoute('/staff', require('./routes/staffRoute'));
 registerRoute('/dev', require('./routes/devRoute'));
 
 // Serve frontend static files in production if built
