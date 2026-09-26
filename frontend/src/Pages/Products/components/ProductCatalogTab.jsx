@@ -174,6 +174,10 @@ export default function ProductCatalogTab({
                       >
                         {product.stock} / {product.min_stock}
                       </span>
+                      <span className="text-[11px] text-slate-500 block font-normal">
+                        {product.unit_name || "Pcs"}
+                        {product.sub_unit_name ? ` (${product.conversion_rate || 1} ${product.sub_unit_name})` : ""}
+                      </span>
                     </td>
                     <td className="py-3 px-3 text-right">
                       <TableActionDropdown

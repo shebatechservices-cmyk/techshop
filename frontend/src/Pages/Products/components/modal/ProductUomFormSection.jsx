@@ -27,9 +27,9 @@ export default function ProductUomFormSection({
           </label>
           <input
             name="unit_name"
-            value={form.unit_name || "Box"}
+            value={form.unit_name || ""}
             onChange={handleFieldChange}
-            placeholder="e.g. Box"
+            placeholder="e.g. Box, Pcs, Meter"
             className="w-full px-3.5 py-2.5 border border-slate-300 rounded-lg text-sm bg-white focus:ring-2 focus:ring-sky-500 font-semibold text-slate-800"
           />
         </div>
@@ -65,7 +65,7 @@ export default function ProductUomFormSection({
 
             <div className="flex flex-col gap-1.5">
               <label className="text-xs font-bold text-slate-700">
-                Conversion Rate (1 {form.unit_name || "Box"} =)
+                Conversion Rate (1 {form.unit_name || "Base Unit"} =)
               </label>
               <div className="flex items-center gap-1.5">
                 <input
@@ -73,20 +73,20 @@ export default function ProductUomFormSection({
                   name="conversion_rate"
                   min="1"
                   step="any"
-                  value={form.conversion_rate || "305"}
+                  value={form.conversion_rate || ""}
                   onChange={handleFieldChange}
                   placeholder="305"
                   className="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm font-bold text-center focus:ring-2 focus:ring-sky-500 text-slate-800"
                 />
                 <span className="text-xs text-slate-500 font-bold whitespace-nowrap">
-                  {form.sub_unit_name || "Meters"}
+                  {form.sub_unit_name || "Units"}
                 </span>
               </div>
             </div>
 
             <div className="flex flex-col gap-1.5">
               <label className="text-xs font-bold text-slate-700">
-                Per-{form.sub_unit_name || "Meter"} Price (Tk)
+                Per-{form.sub_unit_name || "Unit"} Price (Tk)
               </label>
               <input
                 type="number"
@@ -120,11 +120,11 @@ export default function ProductUomFormSection({
             <div>
               <span className="font-bold">Inventory & POS Fraction Logic: </span>
               <span>
-                When you purchase 1 {form.unit_name || "Box"}, stock automatically reflects{" "}
+                When you purchase 1 {form.unit_name || "Base Unit"}, stock automatically reflects{" "}
                 <strong className="text-sky-950 font-bold">
-                  {form.conversion_rate || 305} {form.sub_unit_name || "Meters"}
+                  {form.conversion_rate || 1} {form.sub_unit_name || "Units"}
                 </strong>.
-                In POS, you can sell fractional quantities (e.g. 20 {form.sub_unit_name || "Meters"}), and the system will automatically charge the per-{form.sub_unit_name || "meter"} price and deduct exactly 20 {form.sub_unit_name || "Meters"} from total inventory.
+                In POS, you can sell fractional quantities (e.g. 20 {form.sub_unit_name || "Units"}), and the system will automatically charge the per-{form.sub_unit_name || "unit"} price and deduct exactly 20 {form.sub_unit_name || "Units"} from total inventory.
               </span>
             </div>
           </div>

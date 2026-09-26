@@ -303,6 +303,12 @@ exports.updateProduct = async (req, res) => {
       (isBundle !== undefined ? isBundle : undefined)
     );
 
+    const hasUnitName = unit_name !== undefined;
+    const hasSubUnitName = sub_unit_name !== undefined;
+    const hasConversionRate = conversion_rate !== undefined;
+    const hasSubUnitSellingPrice = sub_unit_selling_price !== undefined;
+    const hasSubUnitBarcode = sub_unit_barcode !== undefined;
+
     const query = `
       UPDATE products SET
         name = COALESCE($1, name),
@@ -323,11 +329,11 @@ exports.updateProduct = async (req, res) => {
         is_serial_required = COALESCE($15, is_serial_required),
         is_warranty_required = COALESCE($16, is_warranty_required),
         is_bundle = COALESCE($17, is_bundle),
-        unit_name = COALESCE($18, unit_name),
-        sub_unit_name = COALESCE($19, sub_unit_name),
-        conversion_rate = COALESCE($20, conversion_rate),
-        sub_unit_selling_price = COALESCE($21, sub_unit_selling_price),
-        sub_unit_barcode = COALESCE($22, sub_unit_barcode),
+        unit_name = CASE WHEN $26::boolean THEN $18 ELSE unit_name END,
+        sub_unit_name = CASE WHEN $27::boolean THEN $19 ELSE sub_unit_name END,
+        conversion_rate = CASE WHEN $28::boolean THEN $20 ELSE conversion_rate END,
+        sub_unit_selling_price = CASE WHEN $29::boolean THEN $21 ELSE sub_unit_selling_price END,
+        sub_unit_barcode = CASE WHEN $30::boolean THEN $22 ELSE sub_unit_barcode END,
         status = COALESCE($23, status),
         description = COALESCE($24, description),
         updated_at = NOW()
@@ -353,14 +359,19 @@ exports.updateProduct = async (req, res) => {
       isSerialReq !== undefined ? isSerialReq : null,
       isWarrantyReq !== undefined ? isWarrantyReq : null,
       isBundleVal !== undefined ? isBundleVal : null,
-      unit_name !== undefined ? (unit_name || 'Pcs') : null,
-      sub_unit_name !== undefined ? (sub_unit_name || null) : null,
-      conversion_rate !== undefined ? Number(conversion_rate) : null,
-      sub_unit_selling_price !== undefined ? (sub_unit_selling_price ? Number(sub_unit_selling_price) : null) : null,
-      sub_unit_barcode !== undefined ? (sub_unit_barcode ? String(sub_unit_barcode).trim() : null) : null,
+      hasUnitName ? (unit_name ? String(unit_name).trim() : 'Pcs') : null,
+      hasSubUnitName ? (sub_unit_name ? String(sub_unit_name).trim() : null) : null,
+      hasConversionRate ? (conversion_rate ? Number(conversion_rate) : 1) : null,
+      hasSubUnitSellingPrice ? (sub_unit_selling_price ? Number(sub_unit_selling_price) : null) : null,
+      hasSubUnitBarcode ? (sub_unit_barcode ? String(sub_unit_barcode).trim() : null) : null,
       status || null,
       description !== undefined ? description : null,
       Number(id),
+      hasUnitName,
+      hasSubUnitName,
+      hasConversionRate,
+      hasSubUnitSellingPrice,
+      hasSubUnitBarcode,
     ];
 
     const result = await db.query(query, values);

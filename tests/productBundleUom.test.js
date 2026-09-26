@@ -273,7 +273,89 @@ describe('Product Bundle and UoM Features', () => {
         await salesOrder.createSale(req, res);
 
         expect(res.status).toHaveBeenCalledWith(201);
-        // Selling 20 Meters in sub-unit deducts exactly 20 Meters from inventory
         expect(deductedStock).toBe(20);
+    });
+
+    test('updateProduct successfully updates unit_name from Pcs to Meter', async () => {
+        const req = {
+            params: { id: 105 },
+            body: {
+                name: 'Cat.6 Cable',
+                unit_name: 'Meter',
+                sub_unit_name: null,
+                conversion_rate: 1
+            }
+        };
+        const res = mockRes();
+
+        let updatedParams = [];
+        pool.query.mockImplementation((sql, params) => {
+            if (/UPDATE products SET/.test(sql)) {
+                updatedParams = params;
+                return Promise.resolve({
+                    rows: [{
+                        id: 105,
+                        name: 'Cat.6 Cable',
+                        unit_name: 'Meter',
+                        sub_unit_name: null,
+                        conversion_rate: 1,
+                        stock: 100
+                    }]
+                });
+            }
+            return Promise.resolve({ rows: [] });
+        });
+
+        await productController.updateProduct(req, res);
+
+        expect(res.status).toHaveBeenCalledWith(200);
+        const data = res.json.mock.calls[0][0].data;
+        expect(data.unit_name).toBe('Meter');
+        expect(data.sub_unit_name).toBeNull();
+        expect(updatedParams[17]).toBe('Meter'); // $18
+        expect(updatedParams[18]).toBeNull(); // $19
+        expect(updatedParams[25]).toBe(true); // $26 hasUnitName
+    });
+
+    test('updateProduct successfully updates fractional sub-unit settings (Box -> Roll, Feet)', async () => {
+        const req = {
+            params: { id: 106 },
+            body: {
+                name: 'Fiber Optic Drop Cable',
+                unit_name: 'Roll',
+                sub_unit_name: 'Feet',
+                conversion_rate: 1000,
+                sub_unit_selling_price: 3.50,
+                sub_unit_barcode: 'OPTIC-FEET-01'
+            }
+        };
+        const res = mockRes();
+
+        pool.query.mockImplementation((sql, params) => {
+            if (/UPDATE products SET/.test(sql)) {
+                return Promise.resolve({
+                    rows: [{
+                        id: 106,
+                        name: 'Fiber Optic Drop Cable',
+                        unit_name: 'Roll',
+                        sub_unit_name: 'Feet',
+                        conversion_rate: 1000,
+                        sub_unit_selling_price: 3.50,
+                        sub_unit_barcode: 'OPTIC-FEET-01',
+                        stock: 5
+                    }]
+                });
+            }
+            return Promise.resolve({ rows: [] });
+        });
+
+        await productController.updateProduct(req, res);
+
+        expect(res.status).toHaveBeenCalledWith(200);
+        const data = res.json.mock.calls[0][0].data;
+        expect(data.unit_name).toBe('Roll');
+        expect(data.sub_unit_name).toBe('Feet');
+        expect(data.conversion_rate).toBe(1000);
+        expect(data.sub_unit_selling_price).toBe(3.5);
     });
 });

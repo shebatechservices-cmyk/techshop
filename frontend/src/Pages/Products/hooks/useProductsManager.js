@@ -293,9 +293,11 @@ export default function useProductsManager({ initialTab = "catalog", initialSear
       if (featureImageFile || (galleryImageFiles && galleryImageFiles.length > 0)) {
         const formData = new FormData();
         Object.entries(payload).forEach(([k, v]) => {
-          if (v !== null && v !== undefined) {
+          if (v !== undefined) {
             if (k === 'bundle_items') {
               formData.append(k, JSON.stringify(v));
+            } else if (v === null) {
+              formData.append(k, "");
             } else {
               formData.append(k, String(v));
             }
