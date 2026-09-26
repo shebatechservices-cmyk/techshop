@@ -76,7 +76,11 @@ export default function ProductCascadingFields({
             required
           >
             <option value="">
-              {selectedCategory ? "Select sub-category" : "Select category first"}
+              {!selectedCategory
+                ? "Select category first"
+                : catalogSubCategories.length === 0
+                ? "No sub-categories (click + to add)"
+                : "Select sub-category"}
             </option>
             {catalogSubCategories.map((item) => (
               <option key={item.id} value={item.id}>
@@ -115,7 +119,11 @@ export default function ProductCascadingFields({
             required
           >
             <option value="">
-              {selectedSubCategory ? "Select brand" : "Select sub-category first"}
+              {!selectedSubCategory
+                ? "Select sub-category first"
+                : catalogBrands.length === 0
+                ? "No brands (click + to add)"
+                : "Select brand"}
             </option>
             {catalogBrands.map((brand) => (
               <option key={brand.id} value={brand.id}>
@@ -148,17 +156,21 @@ export default function ProductCascadingFields({
         <div className="flex gap-2">
           <select
             name="name"
-            value={form.name}
+            value={form.name || ""}
             disabled={!selectedBrand}
             onChange={handleProductNameChange}
             required
             className="flex-1 px-3.5 py-2.5 border border-slate-300 rounded-lg text-sm bg-white focus:outline-none focus:ring-2 focus:ring-sky-500 disabled:bg-slate-100 disabled:opacity-60 text-slate-800"
           >
             <option value="">
-              {selectedBrand ? "Select product name" : "Select brand first"}
+              {!selectedBrand
+                ? "Select brand first"
+                : productNames.length === 0
+                ? "No product names for this brand (click + to add)"
+                : "Select product name"}
             </option>
             {productNames
-              .filter((item) => !item.brand_id || String(item.brand_id) === String(selectedBrand))
+              .filter((item) => String(item.brand_id) === String(selectedBrand))
               .map((item) => (
                 <option key={item.id} value={item.name}>
                   {item.name}
@@ -190,32 +202,43 @@ export default function ProductCascadingFields({
         <div className="flex gap-2">
           <select
             value={selectedModel}
-            disabled={!form.name}
+            disabled={!selectedBrand || !form.name}
             onChange={handleModelChange}
             className="flex-1 px-3.5 py-2.5 border border-slate-300 rounded-lg text-sm bg-white focus:outline-none focus:ring-2 focus:ring-sky-500 disabled:bg-slate-100 disabled:opacity-60 text-slate-800"
             required
           >
             <option value="">
-              {form.name ? "Select model" : "Select product name first"}
+              {!selectedBrand
+                ? "Select brand first"
+                : !form.name
+                ? "Select product name first"
+                : models.length === 0
+                ? "No models for this brand (click + to add)"
+                : "Select model"}
             </option>
-            {selectedModel && !models.some((m) => String(m.id) === String(selectedModel)) && (
-              <option value={selectedModel}>Current Model</option>
-            )}
-            {models.map((model) => (
-              <option key={model.id} value={model.id}>
-                {model.name}
-              </option>
-            ))}
+            {models
+              .filter((model) => String(model.brand_id) === String(selectedBrand))
+              .map((model) => (
+                <option key={model.id} value={model.id}>
+                  {model.name}
+                </option>
+              ))}
           </select>
           <button
             type="button"
-            disabled={!form.name}
+            disabled={!selectedBrand || !form.name}
             onClick={(e) => {
               e.preventDefault();
               e.stopPropagation();
               openQuickAddModal("models");
             }}
-            title={form.name ? "Add new model" : "Select product name first"}
+            title={
+              !selectedBrand
+                ? "Select brand first"
+                : !form.name
+                ? "Select product name first"
+                : "Add new model"
+            }
             className="w-10 h-10 border border-sky-300 bg-sky-50 hover:bg-sky-600 hover:text-white text-sky-700 font-bold rounded-lg flex items-center justify-center transition-colors cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed text-lg"
           >
             +
@@ -238,16 +261,19 @@ export default function ProductCascadingFields({
             required
           >
             <option value="">
-              {selectedModel ? "Select series" : "Select model first"}
+              {!selectedModel
+                ? "Select model first"
+                : series.length === 0
+                ? "No series for this model (click + to add)"
+                : "Select series"}
             </option>
-            {selectedSeries && !series.some((s) => String(s.id) === String(selectedSeries)) && (
-              <option value={selectedSeries}>Current Series</option>
-            )}
-            {series.map((item) => (
-              <option key={item.id} value={item.id}>
-                {item.name}
-              </option>
-            ))}
+            {series
+              .filter((item) => String(item.model_id) === String(selectedModel))
+              .map((item) => (
+                <option key={item.id} value={item.id}>
+                  {item.name}
+                </option>
+              ))}
           </select>
           <button
             type="button"
