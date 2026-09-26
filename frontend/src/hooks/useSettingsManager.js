@@ -8,6 +8,10 @@ import {
   DEFAULT_BACKUP_LOGS,
   DEFAULT_PROVIDER_PRESETS
 } from '../utils/settingsConstants';
+import { useSmsSettingsState } from './settings/useSmsSettingsState';
+import { useBackupSettingsState } from './settings/useBackupSettingsState';
+import { useLicenseSettingsState } from './settings/useLicenseSettingsState';
+import { usePrintTemplateState } from './settings/usePrintTemplateState';
 
 export default function useSettingsManager() {
   const checkIsAdmin = () => {
@@ -66,40 +70,70 @@ export default function useSettingsManager() {
   const [settings, setSettings] = useState(DEFAULT_SETTINGS);
   const [loading, setLoading] = useState(false);
   const [saving, setSaving] = useState(false);
-  const [savingTriggers, setSavingTriggers] = useState(false);
   const [toast, setToast] = useState({ show: false, msg: '', type: 'success' });
-  const [backupLogs, setBackupLogs] = useState(DEFAULT_BACKUP_LOGS);
 
-  // SMS Module States
-  const [smsProviders, setSmsProviders] = useState([]);
-  const [smsBalance, setSmsBalance] = useState({ loading: false, balance: null, raw: null, error: null, checkedAt: null });
-  const [providerModal, setProviderModal] = useState({
-    open: false,
-    mode: 'create',
-    data: {
-      provider_name: '',
-      provider_code: 'greenweb',
-      api_url: 'http://api.greenweb.com.bd/api.php',
-      http_method: 'GET',
-      auth_type: 'param',
-      api_key: '',
-      api_secret: '',
-      sender_id: '',
-      param_phone_key: 'to',
-      param_message_key: 'message',
-      param_sender_key: 'sender_id',
-      param_api_key: 'token',
-      balance_endpoint: 'http://api.greenweb.com.bd/gurecomm/credit.php',
-      is_active: false
-    }
-  });
-  const [smsTriggers, setSmsTriggers] = useState(DEFAULT_SMS_TRIGGERS);
-  const [smsLogs, setSmsLogs] = useState(DEFAULT_SMS_LOGS);
-  const [smsCategoryFilter, setSmsCategoryFilter] = useState('All');
-  const [showApiKey, setShowApiKey] = useState(false);
-  const [samplePreviewModal, setSamplePreviewModal] = useState({ open: false, title: '', text: '' });
-  const [testSmsModal, setTestSmsModal] = useState({ open: false, phone: '', message: '', sending: false, result: null });
-  const [bulkSmsModal, setBulkSmsModal] = useState({ open: false, targetGroup: 'due_customers', customNumbers: '', message: '', sending: false, result: null });
+  // Sub-hooks for modular domain state management
+  const {
+    smsProviders,
+    setSmsProviders,
+    smsBalance,
+    setSmsBalance,
+    providerModal,
+    setProviderModal,
+    smsTriggers,
+    setSmsTriggers,
+    smsLogs,
+    setSmsLogs,
+    smsCategoryFilter,
+    setSmsCategoryFilter,
+    showApiKey,
+    setShowApiKey,
+    samplePreviewModal,
+    setSamplePreviewModal,
+    testSmsModal,
+    setTestSmsModal,
+    bulkSmsModal,
+    setBulkSmsModal,
+    savingTriggers,
+    setSavingTriggers,
+  } = useSmsSettingsState();
+
+  const {
+    backupLogs,
+    setBackupLogs,
+    downloadingBackup,
+    setDownloadingBackup,
+    downloadingJson,
+    setDownloadingJson,
+    showClearModal,
+    setShowClearModal,
+    backupFiles,
+    setBackupFiles,
+    loadingFiles,
+    setLoadingFiles,
+    restoreModal,
+    setRestoreModal,
+    uploadingBackup,
+    setUploadingBackup,
+  } = useBackupSettingsState();
+
+  const {
+    licenseInfo,
+    setLicenseInfo,
+    redemptionCode,
+    setRedemptionCode,
+    redeeming,
+    setRedeeming,
+    syncingHeartbeat,
+    setSyncingHeartbeat,
+    redemptionResult,
+    setRedemptionResult,
+  } = useLicenseSettingsState();
+
+  const {
+    previewMode,
+    setPreviewMode,
+  } = usePrintTemplateState();
 
   // System Stats & Security
   const [stats, setStats] = useState({
@@ -116,21 +150,6 @@ export default function useSettingsManager() {
   const [pinError, setPinError] = useState(false);
   const [updateChecking, setUpdateChecking] = useState(false);
   const [updateStatus, setUpdateStatus] = useState(null);
-  const [previewMode, setPreviewMode] = useState('thermal');
-  const [downloadingBackup, setDownloadingBackup] = useState(false);
-  const [downloadingJson, setDownloadingJson] = useState(false);
-  const [showClearModal, setShowClearModal] = useState(false);
-  const [backupFiles, setBackupFiles] = useState([]);
-  const [loadingFiles, setLoadingFiles] = useState(false);
-  const [restoreModal, setRestoreModal] = useState({ open: false, targetFile: null, isDemoRestore: false });
-  const [uploadingBackup, setUploadingBackup] = useState(false);
-
-  // License, Quota & Vendor Integration States
-  const [licenseInfo, setLicenseInfo] = useState(null);
-  const [redemptionCode, setRedemptionCode] = useState('');
-  const [redeeming, setRedeeming] = useState(false);
-  const [syncingHeartbeat, setSyncingHeartbeat] = useState(false);
-  const [redemptionResult, setRedemptionResult] = useState(null);
 
   // Toast notification helper
   const showToast = (msg, type = 'success') => {
