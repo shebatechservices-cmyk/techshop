@@ -37,22 +37,23 @@ export default function SaleProductTable({
     <>
       <div className="bg-white rounded-lg border border-slate-200 overflow-visible relative mb-1.5 shadow-sm">
         {/* Table Header */}
-        <div className="grid grid-cols-[40px_minmax(200px,1fr)_68px_62px_72px_110px_110px_56px] items-center bg-slate-50 p-2 text-xs font-bold text-slate-500 border-b-2 border-slate-200 rounded-t-md">
+        <div className="grid grid-cols-[38px_minmax(180px,1fr)_96px_116px_96px_105px_105px_52px] items-center bg-slate-50 p-2 text-xs font-bold text-slate-500 border-b-2 border-slate-200 rounded-t-md">
           <div className="text-center">#</div>
           <div className="pl-1.5">PRODUCT</div>
           <div className="text-center" title="Customer Warranty (Months)">WAR (Cust)</div>
           <div className="text-center">QTY</div>
           <div className="text-center">DISC</div>
-          <div className="text-right pr-3">PRICE</div>
-          <div className="text-right pr-3">TOTAL</div>
+          <div className="text-right pr-2.5">PRICE</div>
+          <div className="text-right pr-2.5">TOTAL</div>
           <div className="text-center"></div>
         </div>
 
         {/* Items Rows */}
         {items.map((it, idx) => {
-          const isSerialMissing = it.is_serial_tracked && (!it.serials || it.serials.length === 0);
+          const isTracked = isProductSerialTracked(it);
+          const isSerialMissing = isTracked && (!it.serials || it.serials.length === 0);
           const isWarrantyMissing = it.is_warranty_required && (it.warranty_months === '' || it.warranty_months === null || it.warranty_months === undefined || Number(it.warranty_months) <= 0);
-          const qty = it.is_serial_tracked ? (it.serials || []).length : Number(it.quantity || 1);
+          const qty = isTracked ? (it.serials || []).length : Number(it.quantity || 1);
           const lineDiscount = Number(it.discount || 0);
           const lineTotal = qty * Number(it.unit_price || 0) - lineDiscount;
           const isExpanded = expandedId === it.localId;
@@ -71,7 +72,7 @@ export default function SaleProductTable({
                 activeCostCardId === it.localId ? 'z-[1000]' : 'z-[1]'
               } ${idx === items.length - 1 && !isExpanded ? 'rounded-b-md' : ''}`}
             >
-              <div className="grid grid-cols-[40px_minmax(200px,1fr)_68px_62px_72px_110px_110px_56px] items-center py-1.5 px-2">
+              <div className="grid grid-cols-[38px_minmax(180px,1fr)_96px_116px_96px_105px_105px_52px] items-center py-2 px-2">
                 {/* # */}
                 <div className="text-center text-xs text-slate-500 font-medium">
                   {idx + 1}
@@ -86,7 +87,7 @@ export default function SaleProductTable({
                         🎁 Bundle Kit
                       </span>
                     )}
-                    {it.is_serial_tracked && (
+                    {isTracked && (
                       <span className={`text-[0.66rem] font-extrabold py-px px-1.5 rounded ${
                         isSerialMissing
                           ? 'text-rose-700 bg-rose-50 border border-rose-200'
@@ -137,43 +138,45 @@ export default function SaleProductTable({
                     </div>
                   )}
 
-                  {/* Barcode/Serial Chips */}
-                  <div className="flex flex-wrap items-center gap-1 mt-1">
-                    {it.serials &&
-                      it.serials.map((s, sIdx) => (
-                        <span
-                          key={sIdx}
-                          className="inline-flex items-center gap-1 py-px px-1.5 bg-white border border-slate-300 rounded text-[0.7rem] font-mono text-slate-700"
-                        >
-                          {s}
-                          <button
-                            type="button"
-                            onClick={() => handleRemoveBarcode(it.localId, s)}
-                            className="border-0 bg-transparent text-slate-400 hover:text-rose-500 cursor-pointer text-xs p-0 leading-none"
+                  {/* Barcode/Serial Chips (Strictly for serial tracked items) */}
+                  {isTracked && (
+                    <div className="flex flex-wrap items-center gap-1 mt-1">
+                      {it.serials &&
+                        it.serials.map((s, sIdx) => (
+                          <span
+                            key={sIdx}
+                            className="inline-flex items-center gap-1 py-px px-1.5 bg-white border border-slate-300 rounded text-[0.7rem] font-mono text-slate-700"
                           >
-                            ×
-                          </button>
-                        </span>
-                      ))}
-                    <button
-                      type="button"
-                      onClick={() => setExpandedId(isExpanded ? null : it.localId)}
-                      title={isSerialMissing ? 'Serial numbers are strictly required' : 'Scan or add barcode/serial'}
-                      className={`rounded py-0.5 px-1.5 text-[0.7rem] font-bold cursor-pointer transition-colors ${
-                        isSerialMissing
-                          ? 'border-[1.5px] border-rose-500 bg-rose-50 text-rose-600 ring-2 ring-rose-200'
-                          : isExpanded
-                          ? 'border border-slate-300 bg-indigo-100 text-indigo-600'
-                          : 'border border-dashed border-slate-300 bg-slate-50 text-slate-500 hover:bg-slate-100'
-                      }`}
-                    >
-                      {isExpanded ? '✕ Close' : (isSerialMissing ? '⚠️ + Add Serial' : '+ Barcode')}
-                    </button>
-                  </div>
+                            {s}
+                            <button
+                              type="button"
+                              onClick={() => handleRemoveBarcode(it.localId, s)}
+                              className="border-0 bg-transparent text-slate-400 hover:text-rose-500 cursor-pointer text-xs p-0 leading-none"
+                            >
+                              ×
+                            </button>
+                          </span>
+                        ))}
+                      <button
+                        type="button"
+                        onClick={() => setExpandedId(isExpanded ? null : it.localId)}
+                        title={isSerialMissing ? 'Serial numbers are strictly required' : 'Scan or add barcode/serial'}
+                        className={`rounded py-0.5 px-1.5 text-[0.7rem] font-bold cursor-pointer transition-colors ${
+                          isSerialMissing
+                            ? 'border-[1.5px] border-rose-500 bg-rose-50 text-rose-600 ring-2 ring-rose-200'
+                            : isExpanded
+                            ? 'border border-slate-300 bg-indigo-100 text-indigo-600'
+                            : 'border border-dashed border-slate-300 bg-slate-50 text-slate-500 hover:bg-slate-100'
+                        }`}
+                      >
+                        {isExpanded ? '✕ Close' : (isSerialMissing ? '⚠️ + Add Serial' : '+ Barcode')}
+                      </button>
+                    </div>
+                  )}
                 </div>
 
                 {/* WAR */}
-                <div className="text-center">
+                <div className="flex justify-center">
                   <input
                     type="number"
                     min="0"
@@ -181,30 +184,30 @@ export default function SaleProductTable({
                     onChange={(e) => updateItem(it.localId, { warranty_months: e.target.value })}
                     title={isWarrantyMissing ? 'Warranty is required for this product' : 'Warranty duration in months'}
                     placeholder={it.is_warranty_required ? 'Req' : '0'}
-                    className={`w-11 py-1 px-1 rounded-md text-center text-xs outline-none transition-colors ${
+                    className={`w-20 py-1.5 px-2 rounded-md text-center text-xs outline-none transition-colors ${
                       isWarrantyMissing
                         ? 'border-2 border-rose-500 bg-rose-50 text-rose-700 font-bold ring-2 ring-rose-200'
-                        : 'border border-slate-300 bg-white text-slate-800 font-medium'
+                        : 'border border-slate-300 bg-white text-slate-800 font-medium focus:border-sky-500 focus:ring-1 focus:ring-sky-500'
                     }`}
                   />
                 </div>
 
                 {/* QTY */}
-                <div className="text-center">
-                  {it.is_serial_tracked ? (
+                <div className="flex justify-center items-center">
+                  {isTracked ? (
                     <input
                       type="number"
                       readOnly={true}
                       value={qty}
                       title="Quantity is auto-calculated from scanned serials count"
-                      className={`w-12 py-1 px-1 rounded-md text-center text-xs font-bold cursor-not-allowed outline-none ${
+                      className={`w-20 py-1.5 px-2 rounded-md text-center text-xs font-bold cursor-not-allowed outline-none ${
                         isSerialMissing
                           ? 'border-2 border-rose-500 bg-rose-50 text-rose-700 ring-2 ring-rose-200'
                           : 'border border-slate-300 bg-slate-100 text-slate-600'
                       }`}
                     />
                   ) : (
-                    <div className="inline-flex items-center gap-1 justify-center">
+                    <div className="inline-flex items-center gap-1.5 justify-center">
                       <input
                         type="number"
                         min="0.01"
@@ -214,7 +217,7 @@ export default function SaleProductTable({
                           const val = parseFloat(e.target.value);
                           updateItem(it.localId, { quantity: isNaN(val) ? '' : val });
                         }}
-                        className="w-14 py-1 px-1 rounded-md border border-slate-300 text-center text-xs font-semibold text-slate-800 outline-none bg-white focus:ring-1 focus:ring-sky-500"
+                        className="w-20 py-1.5 px-2 rounded-md border border-slate-300 text-center text-xs font-bold text-slate-800 outline-none bg-white focus:border-sky-500 focus:ring-1 focus:ring-sky-500"
                       />
                       {it.unit_name && (
                         <span className="text-[10px] text-slate-500 font-bold whitespace-nowrap">
@@ -226,7 +229,7 @@ export default function SaleProductTable({
                 </div>
 
                 {/* DISC */}
-                <div className="text-center">
+                <div className="flex justify-center">
                   <input
                     type="number"
                     min="0"
@@ -235,12 +238,12 @@ export default function SaleProductTable({
                     onChange={(e) =>
                       updateItem(it.localId, { discount: Math.max(0, parseFloat(e.target.value) || 0) })
                     }
-                    className="w-14 py-1 px-1 rounded-md border border-slate-300 text-center text-xs font-medium text-slate-800 outline-none bg-white"
+                    className="w-20 py-1.5 px-2 rounded-md border border-slate-300 text-center text-xs font-semibold text-slate-800 outline-none bg-white focus:border-sky-500 focus:ring-1 focus:ring-sky-500"
                   />
                 </div>
 
                 {/* PRICE */}
-                <div className="text-right pr-3 font-bold text-slate-900 text-sm">
+                <div className="text-right pr-2.5 font-bold text-slate-900 text-sm">
                   {taka(it.unit_price)}
                   {it.unit_name && (
                     <span className="text-[10px] text-slate-500 block font-normal">
@@ -250,7 +253,7 @@ export default function SaleProductTable({
                 </div>
 
                 {/* TOTAL */}
-                <div className="text-right pr-3 font-extrabold text-slate-900 text-sm">
+                <div className="text-right pr-2.5 font-extrabold text-slate-900 text-sm">
                   {taka(lineTotal)}
                 </div>
 
@@ -329,12 +332,12 @@ export default function SaleProductTable({
                 </div>
               </div>
 
-              {/* Barcode Scanner Row for Serial-Tracked items or Expanded items */}
-              {(it.isSerialRequired || it.is_serial_required || it.is_serial_tracked || isProductSerialTracked(it) || isExpanded) && (
+              {/* Barcode Scanner Row for Serial-Tracked items */}
+              {isTracked && (isExpanded || isSerialMissing) && (
                 <div
                   className={`py-2 pr-4 pl-14 flex items-center gap-2.5 flex-wrap border-t border-dashed border-slate-200 ${
-                    it.is_serial_tracked && (!it.serials || it.serials.length === 0) ? 'bg-rose-50' : 'bg-slate-50'
-                  } ${it.is_serial_tracked ? 'border-l-[3px] border-l-indigo-500' : ''}`}
+                    isSerialMissing ? 'bg-rose-50' : 'bg-slate-50'
+                  } border-l-[3px] border-l-indigo-500`}
                 >
                   <span className="text-xs font-bold text-indigo-600 flex items-center gap-1">
                     <span>📷</span>
@@ -357,7 +360,7 @@ export default function SaleProductTable({
                       }}
                       placeholder="Scan barcode with scanner or press Enter..."
                       className={`flex-1 py-1.5 px-2.5 rounded-md text-xs outline-none bg-white ${
-                        (barcodeError[it.localId] || (it.is_serial_tracked && (!it.serials || it.serials.length === 0)))
+                        (barcodeError[it.localId] || isSerialMissing)
                           ? 'border-[1.5px] border-rose-500'
                           : 'border-[1.5px] border-indigo-400'
                       }`}
@@ -370,7 +373,7 @@ export default function SaleProductTable({
                       + Add
                     </button>
                   </div>
-                  {it.is_serial_tracked && (!it.serials || it.serials.length === 0) && !barcodeError[it.localId] && (
+                  {isSerialMissing && !barcodeError[it.localId] && (
                     <span className="text-rose-600 text-[0.74rem] font-bold">
                       ⚠️ Serial scan required (Quantity auto-locked to count)
                     </span>

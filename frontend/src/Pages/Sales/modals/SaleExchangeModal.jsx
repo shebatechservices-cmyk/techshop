@@ -579,37 +579,37 @@ export default function SaleExchangeModal({
                             <tr style={{ borderBottom: '1px solid #f1f5f9' }}>
                               <td style={{ padding: '8px 10px' }}>
                                 <div style={{ fontWeight: 700, color: '#1e293b' }}>{it.full_name || it.name}</div>
-                                <div style={{ display: 'flex', gap: '4px', alignItems: 'center', marginTop: '4px', flexWrap: 'wrap' }}>
-                                  {it.is_serial_tracked && (
+                                {it.is_serial_tracked && (
+                                  <div style={{ display: 'flex', gap: '4px', alignItems: 'center', marginTop: '4px', flexWrap: 'wrap' }}>
                                     <span style={{ fontSize: '0.68rem', color: isSerialMissing ? '#b91c1c' : '#4f46e5', background: isSerialMissing ? '#fef2f2' : '#eef2ff', padding: '1px 5px', borderRadius: '4px', fontWeight: 800 }}>
                                       {isSerialMissing ? '⚠️ Serial Required' : 'Serial Tracked'}
                                     </span>
-                                  )}
-                                  {(it.serials || []).map((s, sIdx) => (
-                                    <span key={sIdx} style={{ fontSize: '0.68rem', fontFamily: 'monospace', background: '#f1f5f9', border: '1px solid #cbd5e1', padding: '1px 5px', borderRadius: '3px' }}>
-                                      {s}{' '}
-                                      <button type="button" onClick={() => handleRemoveBarcode(it.localId, s)} style={{ border: 'none', background: 'none', color: '#ef4444', cursor: 'pointer', padding: 0 }}>
-                                        ×
-                                      </button>
-                                    </span>
-                                  ))}
-                                  <button
-                                    type="button"
-                                    onClick={() => setExpandedId(isExpanded ? null : it.localId)}
-                                    style={{
-                                      fontSize: '0.68rem',
-                                      padding: '1px 6px',
-                                      borderRadius: '4px',
-                                      border: isSerialMissing ? '1.5px solid #ef4444' : '1px dashed #cbd5e1',
-                                      background: isSerialMissing ? '#fef2f2' : '#f8fafc',
-                                      color: isSerialMissing ? '#dc2626' : '#4338ca',
-                                      cursor: 'pointer',
-                                      fontWeight: 700,
-                                    }}
-                                  >
-                                    {isExpanded ? '✕ Close' : isSerialMissing ? '⚠️ + Add Serial' : '+ Barcode'}
-                                  </button>
-                                </div>
+                                    {(it.serials || []).map((s, sIdx) => (
+                                      <span key={sIdx} style={{ fontSize: '0.68rem', fontFamily: 'monospace', background: '#f1f5f9', border: '1px solid #cbd5e1', padding: '1px 5px', borderRadius: '3px' }}>
+                                        {s}{' '}
+                                        <button type="button" onClick={() => handleRemoveBarcode(it.localId, s)} style={{ border: 'none', background: 'none', color: '#ef4444', cursor: 'pointer', padding: 0 }}>
+                                          ×
+                                        </button>
+                                      </span>
+                                    ))}
+                                    <button
+                                      type="button"
+                                      onClick={() => setExpandedId(isExpanded ? null : it.localId)}
+                                      style={{
+                                        fontSize: '0.68rem',
+                                        padding: '1px 6px',
+                                        borderRadius: '4px',
+                                        border: isSerialMissing ? '1.5px solid #ef4444' : '1px dashed #cbd5e1',
+                                        background: isSerialMissing ? '#fef2f2' : '#f8fafc',
+                                        color: isSerialMissing ? '#dc2626' : '#4338ca',
+                                        cursor: 'pointer',
+                                        fontWeight: 700,
+                                      }}
+                                    >
+                                      {isExpanded ? '✕ Close' : isSerialMissing ? '⚠️ + Add Serial' : '+ Barcode'}
+                                    </button>
+                                  </div>
+                                )}
                               </td>
                               <td style={{ padding: '8px 10px', textAlign: 'center' }}>
                                 <input
@@ -619,13 +619,15 @@ export default function SaleExchangeModal({
                                   onChange={(e) => updateNewItem(it.localId, { warranty_months: e.target.value })}
                                   placeholder={it.is_warranty_required ? 'Req' : '0'}
                                   style={{
-                                    width: '46px',
-                                    padding: '4px',
-                                    borderRadius: '4px',
+                                    width: '76px',
+                                    padding: '4px 6px',
+                                    borderRadius: '6px',
                                     border: isWarrantyMissing ? '2px solid #ef4444' : '1px solid #cbd5e1',
                                     backgroundColor: isWarrantyMissing ? '#fef2f2' : '#ffffff',
                                     color: isWarrantyMissing ? '#b91c1c' : '#1e293b',
                                     textAlign: 'center',
+                                    fontWeight: 600,
+                                    fontSize: '0.8rem',
                                   }}
                                 />
                               </td>
@@ -637,14 +639,15 @@ export default function SaleExchangeModal({
                                     value={qty}
                                     title="Auto-calculated from serials count"
                                     style={{
-                                      width: '46px',
-                                      padding: '4px',
-                                      borderRadius: '4px',
+                                      width: '76px',
+                                      padding: '4px 6px',
+                                      borderRadius: '6px',
                                       border: isSerialMissing ? '2px solid #ef4444' : '1px solid #cbd5e1',
                                       backgroundColor: isSerialMissing ? '#fef2f2' : '#f1f5f9',
                                       color: isSerialMissing ? '#b91c1c' : '#475569',
                                       textAlign: 'center',
                                       fontWeight: 700,
+                                      fontSize: '0.8rem',
                                     }}
                                   />
                                 ) : (
@@ -653,7 +656,7 @@ export default function SaleExchangeModal({
                                     min="1"
                                     value={it.quantity || 1}
                                     onChange={(e) => updateNewItem(it.localId, { quantity: Math.max(1, parseInt(e.target.value) || 1) })}
-                                    style={{ width: '46px', padding: '4px', borderRadius: '4px', border: '1px solid #cbd5e1', textAlign: 'center' }}
+                                    style={{ width: '76px', padding: '4px 6px', borderRadius: '6px', border: '1px solid #cbd5e1', textAlign: 'center', fontWeight: 600, fontSize: '0.8rem' }}
                                   />
                                 )}
                               </td>
