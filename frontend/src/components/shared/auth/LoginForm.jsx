@@ -22,13 +22,16 @@ export default function LoginForm({
   return (
     <form onSubmit={(e) => { e.preventDefault(); executeLogin(); }}>
 
+      {/* Identifier Input Group */}
       <div className="mb-4">
         <label htmlFor="login-username" className="block text-xs font-semibold text-slate-700 mb-1.5">
           Phone Number or Email (User ID)
         </label>
-        <div className="relative">
-          <span className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400">
-            👤
+        <div className="flex rounded-lg border border-slate-300 overflow-hidden bg-white shadow-sm focus-within:border-emerald-600 focus-within:ring-1 focus-within:ring-emerald-600 transition-all">
+          <span className="inline-flex items-center justify-center px-3.5 bg-slate-50 border-r border-slate-300 text-slate-500 select-none">
+            <svg className="w-4 h-4 text-slate-500" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="2">
+              <path strokeLinecap="round" strokeLinejoin="round" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+            </svg>
           </span>
           <input
             type="text"
@@ -40,11 +43,12 @@ export default function LoginForm({
             placeholder="017xxxxxxxx or user@shebatech.com"
             autoFocus
             required
-            className="w-full pl-9 pr-3.5 py-2.5 rounded-xl border border-slate-300 text-sm font-medium text-slate-800 placeholder-slate-400 outline-none focus:border-emerald-500 focus:ring-2 focus:ring-emerald-100 transition-all"
+            className="flex-1 min-w-0 block w-full px-3 py-2.5 text-sm text-slate-800 placeholder-slate-400 bg-white border-none focus:outline-none focus:ring-0"
           />
         </div>
       </div>
 
+      {/* Password Input Group */}
       <div className="mb-3.5">
         <div className="flex justify-between items-center mb-1.5">
           <label htmlFor="login-password" className="text-xs font-semibold text-slate-700">
@@ -53,14 +57,16 @@ export default function LoginForm({
           <button
             type="button"
             onClick={() => { setMode('forgot_password'); setErrorMsg(''); setSuccessMsg(''); }}
-            className="text-xs font-semibold text-sky-600 hover:underline"
+            className="text-xs font-semibold text-sky-600 hover:text-sky-700 hover:underline"
           >
             Forgot Password?
           </button>
         </div>
-        <div className="relative">
-          <span className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400">
-            🔒
+        <div className="flex rounded-lg border border-slate-300 overflow-hidden bg-white shadow-sm focus-within:border-emerald-600 focus-within:ring-1 focus-within:ring-emerald-600 transition-all">
+          <span className="inline-flex items-center justify-center px-3.5 bg-slate-50 border-r border-slate-300 text-slate-500 select-none">
+            <svg className="w-4 h-4 text-slate-500" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="2">
+              <path strokeLinecap="round" strokeLinejoin="round" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
+            </svg>
           </span>
           <input
             type={showPassword ? 'text' : 'password'}
@@ -71,14 +77,25 @@ export default function LoginForm({
             onChange={(e) => setPassword(e.target.value)}
             placeholder="••••••••"
             required
-            className="w-full pl-9 pr-10 py-2.5 rounded-xl border border-slate-300 text-sm font-medium text-slate-800 placeholder-slate-400 outline-none focus:border-emerald-500 focus:ring-2 focus:ring-emerald-100 transition-all"
+            className="flex-1 min-w-0 block w-full px-3 py-2.5 text-sm text-slate-800 placeholder-slate-400 bg-white border-none focus:outline-none focus:ring-0"
           />
           <button
             type="button"
             onClick={() => setShowPassword(!showPassword)}
-            className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600"
+            className="inline-flex items-center px-3 bg-white text-slate-400 hover:text-slate-600 focus:outline-none transition-colors border-l border-slate-200"
+            title={showPassword ? "Hide password" : "Show password"}
+            aria-label={showPassword ? "Hide password" : "Show password"}
           >
-            {showPassword ? '👁️' : '🙈'}
+            {showPassword ? (
+              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="2">
+                <path strokeLinecap="round" strokeLinejoin="round" d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.88 9.88l-3.29-3.29m7.532 7.532l3.29 3.29M3 3l18 18" />
+              </svg>
+            ) : (
+              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="2">
+                <path strokeLinecap="round" strokeLinejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                <path strokeLinecap="round" strokeLinejoin="round" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+              </svg>
+            )}
           </button>
         </div>
 
@@ -104,7 +121,7 @@ export default function LoginForm({
           id="remember-me"
           checked={rememberMe}
           onChange={(e) => setRememberMe(e.target.checked)}
-          className="w-4 h-4 rounded text-emerald-600 focus:ring-emerald-500 cursor-pointer accent-emerald-600"
+          className="w-4 h-4 rounded border-slate-300 text-emerald-600 focus:ring-emerald-500 cursor-pointer accent-emerald-600"
         />
         <label htmlFor="remember-me" className="ml-2 text-xs text-slate-600 cursor-pointer select-none">
           Remember me on this browser
@@ -112,28 +129,48 @@ export default function LoginForm({
       </div>
 
       {errorMsg && (
-        <div className="p-3 rounded-xl bg-rose-50 border border-rose-200 text-rose-700 text-xs font-medium mb-4">
-          {errorMsg}
+        <div className="p-3 rounded-lg bg-rose-50 border border-rose-200 text-rose-700 text-xs font-medium mb-4 flex items-center gap-2">
+          <svg className="w-4 h-4 flex-shrink-0 text-rose-500" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="2">
+            <path strokeLinecap="round" strokeLinejoin="round" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+          </svg>
+          <span>{errorMsg}</span>
         </div>
       )}
 
       {successMsg && (
-        <div className="p-3 rounded-xl bg-emerald-50 border border-emerald-200 text-emerald-700 text-xs font-medium mb-4">
-          {successMsg}
+        <div className="p-3 rounded-lg bg-emerald-50 border border-emerald-200 text-emerald-700 text-xs font-medium mb-4 flex items-center gap-2">
+          <svg className="w-4 h-4 flex-shrink-0 text-emerald-500" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="2">
+            <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
+          </svg>
+          <span>{successMsg}</span>
         </div>
       )}
 
       <button
         type="submit"
         disabled={loading}
-        className="w-full py-3 px-4 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-sm shadow-lg shadow-emerald-600/30 flex items-center justify-center gap-2 transition-all disabled:opacity-50"
+        className="w-full py-2.5 px-4 rounded-lg bg-emerald-600 hover:bg-emerald-700 active:bg-emerald-800 text-white font-semibold text-sm shadow-sm hover:shadow transition-all disabled:opacity-50 flex items-center justify-center gap-2"
       >
-        {loading ? 'Signing In...' : 'Sign In'}
+        {loading ? (
+          <>
+            <svg className="animate-spin -ml-1 mr-2 h-4 w-4 text-white" fill="none" viewBox="0 0 24 24">
+              <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+              <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+            </svg>
+            <span>Signing In...</span>
+          </>
+        ) : (
+          'Sign In'
+        )}
       </button>
 
-      <div className="mt-4 pt-3.5 border-t border-slate-100 flex justify-center items-center text-center text-xs text-slate-400">
-        <span>🔒 New accounts are created and managed by the shop administrator.</span>
+      <div className="mt-4 pt-3.5 border-t border-slate-100 flex justify-center items-center text-center text-xs text-slate-500 gap-1.5">
+        <svg className="w-3.5 h-3.5 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="2">
+          <path strokeLinecap="round" strokeLinejoin="round" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
+        </svg>
+        <span>Authorized access only • Managed by system administrator</span>
       </div>
     </form>
   );
 }
+
