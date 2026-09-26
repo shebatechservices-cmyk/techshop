@@ -4,15 +4,15 @@ import RealtimeNotificationCenter from '../shared/RealtimeNotificationCenter';
 import DeveloperConsoleModal from '../modals/DeveloperConsoleModal';
 import Calculator from '../shared/Calculator';
 
-export default function TopWelcomeBar({ 
-  shopName = 'Sheba Technology', 
+export default function TopWelcomeBar({
+  shopName = 'Sheba Technology',
   userName = 'Super Admin',
   branchName = 'Head Office - Dhaka',
+  currentUser,
+  isSidebarCollapsed,
+  onToggleSidebar,
   onQuickSale,
   onQuickPurchase,
-  onQuickAddProduct,
-  onQuickExpense,
-  onQuickWarranty,
   onOpenRegisterModal,
   onLogout,
   onNavigate,
@@ -26,13 +26,16 @@ export default function TopWelcomeBar({
   const [internalDevMode, setInternalDevMode] = useState(() => localStorage.getItem('sheba_dev_mode') !== 'false');
   const isDevMode = propDevMode !== undefined ? propDevMode : internalDevMode;
   const [showDevConsole, setShowDevConsole] = useState(false);
-  const [devToast, setDevToast] = useState({ show: false, message: '', isDev: false });
   const [showCalc, setShowCalc] = useState(false);
   const [showUserMenu, setShowUserMenu] = useState(false);
   const calcRef = useRef(null);
   const userMenuRef = useRef(null);
 
-  // Live clock
+  const role = (currentUser?.role || '').toUpperCase();
+  const roleName = (currentUser?.role_name || '').toLowerCase();
+  const isTechnician = role === 'TECHNICIAN' || roleName.includes('technician') || roleName.includes('tech') || currentUser?.role_id === 4;
+
+  // Live clock tick
   useEffect(() => {
     const timer = setInterval(() => setCurrentDateTime(new Date()), 1000);
     return () => clearInterval(timer);
@@ -52,305 +55,234 @@ export default function TopWelcomeBar({
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, []);
 
-  // Format single compact inline date & time
+  // Format compact inline date & time
   const timeString = currentDateTime.toLocaleTimeString('en-US', {
     hour: '2-digit',
     minute: '2-digit',
-    hour12: true
+    hour12: true,
   });
 
   const dateString = currentDateTime.toLocaleDateString('en-US', {
     weekday: 'short',
     day: 'numeric',
-    month: 'short'
+    month: 'short',
   });
 
-  // Initials for avatar
   const userInitials = (userName || 'Admin')
     .split(' ')
     .filter(Boolean)
     .slice(0, 2)
-    .map(n => n[0].toUpperCase())
+    .map((n) => n[0].toUpperCase())
     .join('') || 'A';
 
-
-
   return (
-    <div className="w-full flex flex-col gap-2 mb-3">
-      {/* 1. Top Navigation Row: Sidebar Toggle, Brand, Quick Action Dock, Utilities & Profile */}
-      <header className="top-header-wrapper !mb-0 flex items-center justify-between w-full">
-        {/* Left Section: Sidebar Toggle & Brand Header */}
-        <div className="top-header-left">
-          {onOpenMenu && (
-            <button
-              type="button"
-              className="top-header-menu-btn mobile-only"
-              onClick={onOpenMenu}
-              aria-label="Toggle Navigation Sidebar"
-              title="Open Full Navigation Menu"
-            >
-              ☰
-            </button>
-          )}
+    <header className="sticky top-0 z-30 w-full h-14 bg-white border-b border-slate-200 px-3 sm:px-5 flex items-center justify-between shadow-sm select-none mb-4 rounded-xl">
+      {/* Left Section: Sidebar Toggle & Quick Global Search */}
+      <div className="flex items-center gap-2 sm:gap-4 flex-1 max-w-xl">
+        {/* Mobile Hamburger Drawer Trigger */}
+        <button
+          type="button"
+          onClick={onOpenMenu}
+          className="md:hidden p-1.5 rounded-lg text-slate-600 hover:text-slate-900 hover:bg-slate-100 transition-colors"
+          aria-label="Open Navigation Menu"
+        >
+          <span className="text-lg leading-none">☰</span>
+        </button>
 
-          <div
-            className="top-header-brand"
-            onClick={() => onNavigate && onNavigate({ section: 'dashboard' })}
-            title="Go to Sheba ERP Dashboard"
-          >
-            <div className="top-header-greeting-icon">⚡</div>
-            <div className="top-header-brand-info">
-              <div className="top-header-brand-title">
-                <span className="brand-name">{shopName || 'Sheba Technology'}</span>
-                <span className="brand-badge">ERP</span>
-              </div>
-              <span className="brand-subtitle">{branchName || 'Network & POS Solution'}</span>
-            </div>
-          </div>
+        {/* Desktop Sidebar Collapse Toggle */}
+        <button
+          type="button"
+          onClick={onToggleSidebar}
+          className="hidden md:flex items-center justify-center p-1.5 rounded-lg text-slate-500 hover:text-slate-800 hover:bg-slate-100 transition-colors"
+          title={isSidebarCollapsed ? 'Expand Sidebar' : 'Collapse Sidebar'}
+        >
+          <span className="text-base leading-none">☰</span>
+        </button>
+
+        {/* Global Search Component */}
+        <div className="flex-1 max-w-md">
+          <GlobalSearchBar onNavigate={onNavigate} compact={true} />
         </div>
-
-        {/* Right Section: Grouped Shortcuts, Compact Clock, Utilities & User Profile */}
-        <div className="top-header-right">
-          {/* Quick Action Shortcuts Dock */}
-          <div className="top-quick-actions-dock">
-            <button
-              type="button"
-              onClick={onQuickSale}
-              className="top-quick-btn btn-sale"
-              title="Emergency POS Sale (New Invoice)"
-            >
-              <span>⚡</span>
-              <span>Sale</span>
-            </button>
-
-            <button
-              type="button"
-              onClick={onQuickPurchase}
-              className="top-quick-btn btn-purchase"
-              title="Stock In / Purchase Order"
-            >
-              <span>📦</span>
-              <span>Purchase</span>
-            </button>
-
-            <button
-              type="button"
-              onClick={onQuickAddProduct}
-              className="top-quick-btn btn-product"
-              title="Add New Catalog Product"
-            >
-              <span>➕</span>
-              <span>Item</span>
-            </button>
-
-            <button
-              type="button"
-              onClick={() => onNavigate && onNavigate({ section: 'inventory' })}
-              className="top-quick-btn btn-stock"
-              title="Inventory & Stock Master"
-            >
-              <span>🏬</span>
-              <span>Stock</span>
-            </button>
-
-            <button
-              type="button"
-              onClick={() => onOpenRegisterModal && onOpenRegisterModal()}
-              className="top-quick-btn btn-register"
-              style={{ background: 'linear-gradient(135deg, #475569 0%, #1e293b 100%)', color: '#ffffff', borderColor: '#334155' }}
-              title="End-of-Day (EOD) / Cash Register Shift Closing"
-            >
-              <span>🔒</span>
-              <span>EOD Close</span>
-            </button>
-
-            <button
-              type="button"
-              onClick={() => window.location.reload()}
-              className="top-quick-btn btn-reload"
-              title="Sync & Refresh Page"
-            >
-              🔄
-            </button>
-          </div>
-
-          {/* Compact Inline Date & Time */}
-          <div className="top-datetime-pill" title="Dhaka Time (GMT+6)">
-            <span className="datetime-icon">📅</span>
-            <span className="datetime-date">{dateString}</span>
-            <span className="datetime-divider">|</span>
-            <span className="datetime-time">{timeString}</span>
-          </div>
-
-          {/* Utility: Quick Calculator Popover */}
-          <div style={{ position: 'relative' }} ref={calcRef}>
-            <button
-              type="button"
-              className="top-header-icon-btn"
-              onClick={() => setShowCalc(!showCalc)}
-              title="Quick Calculator"
-            >
-              🧮
-            </button>
-
-            {showCalc && (
-              <Calculator
-                isOpen={showCalc}
-                onClose={() => setShowCalc(false)}
-              />
-            )}
-          </div>
-
-          {/* Utility: Realtime Notifications */}
-          <RealtimeNotificationCenter onNavigate={onNavigate} compact={true} />
-
-          {/* Utility: Developer Console Toggle (Dev Mode only) */}
-          {isDevMode && (
-            <button
-              type="button"
-              className="top-header-dev-btn"
-              onClick={() => {
-                if (onOpenDevConsole) onOpenDevConsole();
-                else setShowDevConsole(true);
-              }}
-              title="Developer Console (Ctrl + Shift + D)"
-            >
-              <span>🛠️ Dev</span>
-            </button>
-          )}
-
-          {/* User Profile Avatar & Dropdown Menu */}
-          <div className="top-user-menu-container" ref={userMenuRef}>
-            <button
-              type="button"
-              onClick={() => setShowUserMenu(!showUserMenu)}
-              className="top-user-avatar-btn"
-              title={`${userName} (${branchName}) — Click for options`}
-            >
-              <div className="top-user-avatar-wrapper">
-                <div className="top-user-avatar-circle">
-                  {userInitials}
-                </div>
-                <span className="top-user-online-dot" />
-              </div>
-              <div className="top-user-text">
-                <span className="top-user-name">{userName}</span>
-                <span className="top-user-status">Online</span>
-              </div>
-              <span className="top-user-caret">▾</span>
-            </button>
-
-            {/* User Profile Dropdown Menu */}
-            {showUserMenu && (
-              <div className="top-user-dropdown-menu">
-                <div className="top-user-dropdown-header">
-                  <div className="top-dropdown-name">{userName}</div>
-                  <div className="top-dropdown-branch">{branchName}</div>
-                  <div className="top-dropdown-status">
-                    <span className="top-dropdown-dot" />
-                    <span>Active Session</span>
-                  </div>
-                </div>
-
-                <div className="top-user-dropdown-links">
-                  <button
-                    type="button"
-                    onClick={() => {
-                      setShowUserMenu(false);
-                      onOpenRegisterModal && onOpenRegisterModal();
-                    }}
-                    className="top-dropdown-item"
-                  >
-                    <span>🔒</span>
-                    <span>Close Shift / EOD</span>
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => {
-                      setShowUserMenu(false);
-                      onNavigate && onNavigate({ section: 'settings' });
-                    }}
-                    className="top-dropdown-item"
-                  >
-                    <span>⚙️</span>
-                    <span>Shop Settings</span>
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => {
-                      setShowUserMenu(false);
-                      onNavigate && onNavigate({ section: 'reports' });
-                    }}
-                    className="top-dropdown-item"
-                  >
-                    <span>📊</span>
-                    <span>Business Reports</span>
-                  </button>
-                  {isDevMode && (
-                    <button
-                      type="button"
-                      onClick={() => {
-                        setShowUserMenu(false);
-                        if (onOpenDevConsole) onOpenDevConsole();
-                        else setShowDevConsole(true);
-                      }}
-                      className="top-dropdown-item dev-item"
-                    >
-                      <span>🛠️</span>
-                      <span>Developer Console</span>
-                    </button>
-                  )}
-                </div>
-
-                {onLogout && (
-                  <div className="top-user-dropdown-footer">
-                    <button
-                      type="button"
-                      onClick={() => {
-                        setShowUserMenu(false);
-                        onLogout();
-                      }}
-                      className="top-dropdown-logout-btn"
-                    >
-                      <span>🚪</span>
-                      <span>Log Out</span>
-                    </button>
-                  </div>
-                )}
-              </div>
-            )}
-          </div>
-        </div>
-      </header>
-
-      {/* 2. Full-Width Global Search Bar Row */}
-      <div className="w-full">
-        <GlobalSearchBar onNavigate={onNavigate} compact={false} />
       </div>
 
-      {/* Dev Mode Notification Toast */}
-      {devToast.show && (
-        <div className="top-dev-toast">
-          <span>{devToast.isDev ? '🛠️' : '👤'}</span>
-          <span>{devToast.message}</span>
-        </div>
-      )}
+      {/* Right Section: Quick POS Button, Live Clock, Utilities & User Profile */}
+      <div className="flex items-center gap-2 sm:gap-3">
+        {/* Quick New Sale (POS) Primary Button */}
+        {!isTechnician && onQuickSale && (
+          <button
+            type="button"
+            onClick={onQuickSale}
+            className="flex items-center gap-1.5 px-3 py-1.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg text-xs font-bold shadow-sm hover:shadow transition-all"
+            title="Open POS Terminal / New Sale"
+          >
+            <span className="text-sm leading-none">⚡</span>
+            <span className="hidden sm:inline">POS Sale</span>
+          </button>
+        )}
 
-      {/* Developer Console Modal */}
+        {/* Live Clock Pill */}
+        <div className="hidden lg:flex items-center gap-2 px-2.5 py-1 bg-slate-100 border border-slate-200 rounded-lg text-xs text-slate-600 font-mono">
+          <span className="text-slate-700 font-semibold">{dateString}</span>
+          <span className="text-slate-300">|</span>
+          <span className="text-sky-700 font-bold">{timeString}</span>
+        </div>
+
+        {/* Quick Calculator Popover */}
+        <div className="relative" ref={calcRef}>
+          <button
+            type="button"
+            onClick={() => setShowCalc(!showCalc)}
+            className="p-1.5 rounded-lg text-slate-600 hover:text-slate-900 hover:bg-slate-100 border border-slate-200 text-sm transition-colors"
+            title="Calculator"
+          >
+            🧮
+          </button>
+          {showCalc && <Calculator isOpen={showCalc} onClose={() => setShowCalc(false)} />}
+        </div>
+
+        {/* Realtime Notification Center */}
+        <RealtimeNotificationCenter onNavigate={onNavigate} compact={true} />
+
+        {/* Developer Console Shortcut (If Active) */}
+        {isDevMode && (
+          <button
+            type="button"
+            onClick={() => {
+              if (onOpenDevConsole) onOpenDevConsole();
+              else setShowDevConsole(true);
+            }}
+            className="px-2 py-1 bg-rose-50 border border-rose-200 text-rose-700 hover:bg-rose-100 rounded-lg text-xs font-bold transition-colors"
+            title="Developer Console (Ctrl + Shift + D)"
+          >
+            🛠️ Dev
+          </button>
+        )}
+
+        {/* User Profile Avatar & Dropdown */}
+        <div className="relative" ref={userMenuRef}>
+          <button
+            type="button"
+            onClick={() => setShowUserMenu(!showUserMenu)}
+            className="flex items-center gap-2 p-1 pl-1.5 rounded-lg hover:bg-slate-100 border border-transparent hover:border-slate-200 transition-all text-left"
+          >
+            <div className="relative">
+              <div className="w-8 h-8 rounded-full bg-slate-800 text-white flex items-center justify-center text-xs font-bold">
+                {userInitials}
+              </div>
+              <span className="absolute bottom-0 right-0 w-2.5 h-2.5 bg-emerald-500 border-2 border-white rounded-full" />
+            </div>
+            <div className="hidden sm:flex flex-col leading-tight">
+              <span className="text-xs font-bold text-slate-800 truncate max-w-[120px]">
+                {userName}
+              </span>
+              <span className="text-[10px] text-slate-500 truncate max-w-[120px]">
+                {branchName}
+              </span>
+            </div>
+            <span className="text-slate-400 text-xs">▾</span>
+          </button>
+
+          {/* User Dropdown Menu */}
+          {showUserMenu && (
+            <div className="absolute right-0 mt-2 w-52 bg-white rounded-xl shadow-xl border border-slate-200 py-1.5 z-50 text-xs animate-fadeIn">
+              <div className="px-3 py-2 border-b border-slate-100">
+                <div className="font-bold text-slate-900 truncate">{userName}</div>
+                <div className="text-[11px] text-slate-500 truncate">{branchName}</div>
+                <div className="mt-1 flex items-center gap-1.5">
+                  <span className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
+                  <span className="text-[10px] font-semibold text-emerald-700 uppercase">
+                    {role || 'STAFF'}
+                  </span>
+                </div>
+              </div>
+
+              <div className="py-1">
+                {!isTechnician && onOpenRegisterModal && (
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setShowUserMenu(false);
+                      onOpenRegisterModal();
+                    }}
+                    className="w-full px-3 py-2 flex items-center gap-2.5 text-slate-700 hover:bg-slate-50 text-left transition-colors"
+                  >
+                    <span>🔒</span>
+                    <span>Shift Closing (EOD)</span>
+                  </button>
+                )}
+
+                {!isTechnician && (
+                  <>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setShowUserMenu(false);
+                        onNavigate && onNavigate({ section: 'settings' });
+                      }}
+                      className="w-full px-3 py-2 flex items-center gap-2.5 text-slate-700 hover:bg-slate-50 text-left transition-colors"
+                    >
+                      <span>⚙️</span>
+                      <span>Shop Settings</span>
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setShowUserMenu(false);
+                        onNavigate && onNavigate({ section: 'reports' });
+                      }}
+                      className="w-full px-3 py-2 flex items-center gap-2.5 text-slate-700 hover:bg-slate-50 text-left transition-colors"
+                    >
+                      <span>📈</span>
+                      <span>Analytics & Reports</span>
+                    </button>
+                  </>
+                )}
+
+                {isDevMode && (
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setShowUserMenu(false);
+                      if (onOpenDevConsole) onOpenDevConsole();
+                      else setShowDevConsole(true);
+                    }}
+                    className="w-full px-3 py-2 flex items-center gap-2.5 text-rose-700 hover:bg-rose-50 text-left font-medium transition-colors"
+                  >
+                    <span>🛠️</span>
+                    <span>Developer Console</span>
+                  </button>
+                )}
+              </div>
+
+              {onLogout && (
+                <div className="pt-1 border-t border-slate-100">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setShowUserMenu(false);
+                      onLogout();
+                    }}
+                    className="w-full px-3 py-2 flex items-center gap-2.5 text-rose-600 hover:bg-rose-50 font-bold text-left transition-colors"
+                  >
+                    <span>🚪</span>
+                    <span>Log Out</span>
+                  </button>
+                </div>
+              )}
+            </div>
+          )}
+        </div>
+      </div>
+
+      {/* Developer Console Modal Fallback */}
       {!onOpenDevConsole && (
         <DeveloperConsoleModal
           isOpen={showDevConsole}
           onClose={() => setShowDevConsole(false)}
-          onSwitchToUserMode={() => {
-            setInternalDevMode(false);
-            localStorage.removeItem('sheba_dev_mode');
-            setShowDevConsole(false);
-            setDevToast({ show: true, message: '👤 Switched to Standard User Mode', isDev: false });
-            setTimeout(() => setDevToast({ show: false, message: '', isDev: false }), 2500);
-          }}
+          onSwitchToUserMode={onSwitchToUserMode}
           onDeveloperLogin={onDeveloperLogin}
         />
       )}
-    </div>
+    </header>
   );
 }

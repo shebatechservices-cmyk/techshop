@@ -1,21 +1,52 @@
-import React from 'react';
+import React, { useState } from 'react';
 
-const ALL_MENU_ITEMS = [
-  { slug: 'dashboard', label: 'Dashboard', icon: '📊' },
-  { slug: 'products', label: 'Products & Catalog', icon: '📦' },
-  { slug: 'purchases', label: 'Purchases & Suppliers', icon: '🛒' },
-  { slug: 'inventory', label: 'Inventory & Stock', icon: '🏢' },
-  { slug: 'sales', label: 'Sales & Customers', icon: '💰' },
-  { slug: 'accounts', label: 'Accounts and Ledgers', icon: '💳' },
-  { slug: 'expenses', label: 'Expenses & Overheads', icon: '💸' },
-  { slug: 'staff', label: 'Staff Management', icon: '👥' },
-  { slug: 'reports', label: 'Reports & Analytics', icon: '📈' },
-  { slug: 'projects', label: 'Projects & Services', icon: '🛠️' },
-  { slug: 'ecommerce', label: 'E-Commerce', icon: '🌐' },
-  { slug: 'soc', label: 'SOC Security', icon: '🛡️' },
-  { slug: 'warranty', label: 'Warranty & Serial', icon: '🏷️' },
-  { slug: 'trash', label: 'Trash', icon: '🗑️' },
-  { slug: 'settings', label: 'Settings', icon: '⚙️' },
+// Grouped ERP Navigation Architecture
+const ERP_MENU_GROUPS = [
+  {
+    group: 'Main',
+    roles: ['ADMIN', 'STAFF'],
+    items: [
+      { slug: 'dashboard', label: 'Dashboard', icon: '📊', roles: ['ADMIN', 'STAFF'] },
+    ],
+  },
+  {
+    group: 'Operations',
+    roles: ['ADMIN', 'STAFF'],
+    items: [
+      { slug: 'sales', label: 'Sales & POS', icon: '💰', roles: ['ADMIN', 'STAFF'] },
+      { slug: 'purchases', label: 'Purchases', icon: '🛒', roles: ['ADMIN', 'STAFF'] },
+      { slug: 'inventory', label: 'Inventory & Stock', icon: '🏢', roles: ['ADMIN', 'STAFF'] },
+      { slug: 'products', label: 'Products & Catalog', icon: '📦', roles: ['ADMIN', 'STAFF'] },
+    ],
+  },
+  {
+    group: 'Financials',
+    roles: ['ADMIN', 'STAFF'],
+    items: [
+      { slug: 'accounts', label: 'Accounts & Ledgers', icon: '💳', roles: ['ADMIN', 'STAFF'] },
+      { slug: 'expenses', label: 'Expenses', icon: '💸', roles: ['ADMIN', 'STAFF'] },
+    ],
+  },
+  {
+    group: 'Services & Commerce',
+    roles: ['ADMIN', 'STAFF'],
+    items: [
+      { slug: 'projects', label: 'Projects & Services', icon: '🛠️', roles: ['ADMIN', 'STAFF'] },
+      { slug: 'ecommerce', label: 'E-Commerce', icon: '🌐', roles: ['ADMIN', 'STAFF'] },
+      { slug: 'warranty', label: 'Warranty & RMA', icon: '🏷️', roles: ['ADMIN', 'STAFF'] },
+    ],
+  },
+  {
+    group: 'Administration',
+    roles: ['ADMIN', 'STAFF'],
+    items: [
+      { slug: 'staff', label: 'Staff Management', icon: '👥', roles: ['ADMIN'] },
+      { slug: 'reports', label: 'Reports & Analytics', icon: '📈', roles: ['ADMIN', 'STAFF'] },
+      { slug: 'soc', label: 'SOC Security', icon: '🛡️', roles: ['ADMIN'] },
+      { slug: 'settings', label: 'Settings', icon: '⚙️', roles: ['ADMIN'] },
+      { slug: 'trash', label: 'Trash', icon: '🗑️', roles: ['ADMIN'] },
+    ],
+  },
 ];
 
 const TECHNICIAN_MENU_ITEMS = [
@@ -24,222 +55,153 @@ const TECHNICIAN_MENU_ITEMS = [
   { slug: 'wallet', label: 'My Wallet & Earnings', icon: '👛' },
 ];
 
-export default function LeftHoverNav({ 
-  activeSlug, 
-  onSelect, 
-  shopName = 'Seba Technology & Networking',
-  currentUser
+export default function LeftHoverNav({
+  activeSlug,
+  onSelect,
+  shopName = 'Sheba Technology',
+  currentUser,
+  isCollapsed = false,
+  onToggleCollapse,
+  onLogout,
 }) {
-  const role = (currentUser?.role || '').toUpperCase();
+  const role = (currentUser?.role || 'STAFF').toUpperCase();
   const roleName = (currentUser?.role_name || '').toLowerCase();
+  const isSuperAdmin = role === 'ADMIN' || currentUser?.is_admin || roleName.includes('admin');
   const isTechnician = role === 'TECHNICIAN' || roleName.includes('technician') || roleName.includes('tech') || currentUser?.role_id === 4;
 
-  const menuItems = isTechnician ? TECHNICIAN_MENU_ITEMS : ALL_MENU_ITEMS;
+  const currentRoleTag = isSuperAdmin ? 'ADMIN' : (isTechnician ? 'TECHNICIAN' : 'STAFF');
+
+  // Filter menu groups based on RBAC
+  const visibleGroups = ERP_MENU_GROUPS.map((group) => {
+    const items = group.items.filter((item) => {
+      if (item.roles.includes('ADMIN') && isSuperAdmin) return true;
+      if (item.roles.includes('STAFF') && !isTechnician) return true;
+      return false;
+    });
+    return { ...group, items };
+  }).filter((group) => group.items.length > 0);
+
   return (
-    <>
-      <style>{`
-        /* Desktop-only Left Hover Navigation Dock */
-        @media (min-width: 769px) {
-          .left-hover-dock {
-            position: fixed !important;
-            top: 0 !important;
-            left: 0 !important;
-            right: auto !important;
-            bottom: 0 !important;
-            width: 60px;
-            background: #0f172a;
-            border-right: 1px solid #1e293b;
-            box-shadow: 4px 0 20px rgba(0, 0, 0, 0.25);
-            z-index: 9999 !important;
-            transition: width 0.25s cubic-bezier(0.4, 0, 0.2, 1);
-            overflow: hidden;
-            display: flex;
-            flex-direction: column;
-          }
-
-          @media (hover: hover) and (pointer: fine) {
-            .left-hover-dock:hover {
-              width: 260px;
-              box-shadow: 8px 0 30px rgba(0, 0, 0, 0.45);
-            }
-          }
-        }
-
-        /* Mobile Screens: Completely hide hover dock and remove padding */
-        @media (max-width: 768px) {
-          .left-hover-dock {
-            display: none !important;
-            pointer-events: none !important;
-            visibility: hidden !important;
-            width: 0 !important;
-            height: 0 !important;
-            opacity: 0 !important;
-          }
-        }
-
-        .dock-container {
-          display: flex;
-          flex-direction: column;
-          height: 100%;
-          padding: 12px 8px;
-          overflow-y: auto;
-          overflow-x: hidden;
-        }
-
-        .dock-container::-webkit-scrollbar {
-          width: 4px;
-        }
-        .dock-container::-webkit-scrollbar-thumb {
-          background: #334155;
-          border-radius: 4px;
-        }
-
-        .dock-header {
-          display: flex;
-          align-items: center;
-          gap: 12px;
-          padding: 8px 8px 14px 8px;
-          border-bottom: 1px solid #1e293b;
-          margin-bottom: 10px;
-          white-space: nowrap;
-        }
-
-        .dock-header-icon {
-          font-size: 1.35rem;
-          min-width: 26px;
-          text-align: center;
-        }
-
-        .dock-title-group {
-          display: flex;
-          flex-direction: column;
-          overflow: hidden;
-        }
-
-        .dock-title {
-          color: #38bdf8;
-          font-size: 0.88rem;
-          font-weight: 700;
-          letter-spacing: 0.5px;
-          text-transform: uppercase;
-          white-space: nowrap;
-          overflow: hidden;
-          text-overflow: ellipsis;
-        }
-
-        .dock-subtitle {
-          color: #64748b;
-          font-size: 0.7rem;
-          font-weight: 500;
-          white-space: nowrap;
-        }
-
-        .dock-list {
-          display: flex;
-          flex-direction: column;
-          gap: 4px;
-        }
-
-        .dock-item {
-          display: flex;
-          align-items: center;
-          gap: 14px;
-          width: 100%;
-          padding: 9px 10px;
-          background: transparent;
-          border: none;
-          border-radius: 8px;
-          color: #cbd5e1;
-          font-size: 0.86rem;
-          cursor: pointer;
-          text-align: left;
-          white-space: nowrap;
-          transition: all 0.15s ease;
-          position: relative;
-        }
-
-        .dock-item:hover {
-          background: #1e293b;
-          color: #38bdf8;
-        }
-
-        .dock-item.active {
-          background: #1e293b;
-          color: #38bdf8;
-          font-weight: 600;
-        }
-
-        .dock-item-icon {
-          font-size: 1.15rem;
-          min-width: 24px;
-          text-align: center;
-          line-height: 1;
-        }
-
-        .dock-item-text {
-          flex: 1;
-          overflow: hidden;
-          text-overflow: ellipsis;
-        }
-
-        .dock-active-pill {
-          width: 4px;
-          height: 16px;
-          background: #38bdf8;
-          border-radius: 4px;
-        }
-
-        @media (min-width: 769px) {
-          .app-frame {
-            padding-left: 60px !important;
-            transition: padding-left 0.25s cubic-bezier(0.4, 0, 0.2, 1) !important;
-            box-sizing: border-box;
-          }
-
-          @media (hover: hover) and (pointer: fine) {
-            .app-frame:has(.left-hover-dock:hover) {
-              padding-left: 260px !important;
-            }
-          }
-        }
-
-        @media (max-width: 768px) {
-          .app-frame {
-            padding-left: 0 !important;
-          }
-        }
-      `}</style>
-
-      <aside className="left-hover-dock" aria-label="Navigation Dock">
-        <div className="dock-container">
-          <div className="dock-header">
-            <span className="dock-header-icon">⚡</span>
-            <div className="dock-title-group">
-              <span className="dock-title">{shopName}</span>
-              <span className="dock-subtitle">ERP & POS Terminal</span>
-            </div>
+    <aside
+      className={`fixed top-0 left-0 bottom-0 z-40 bg-slate-900 border-r border-slate-800 text-slate-300 transition-all duration-200 ease-in-out flex flex-col select-none hidden md:flex ${
+        isCollapsed ? 'w-16' : 'w-60'
+      }`}
+      aria-label="Sidebar Navigation"
+    >
+      {/* Brand Header */}
+      <div className="h-14 flex items-center justify-between px-3 border-b border-slate-800 bg-slate-950/40">
+        <div className="flex items-center gap-2.5 overflow-hidden">
+          <div className="w-8 h-8 rounded-lg bg-sky-500/20 border border-sky-400/30 flex items-center justify-center text-sky-400 font-extrabold text-sm flex-shrink-0">
+            ⚡
           </div>
+          {!isCollapsed && (
+            <div className="flex flex-col overflow-hidden">
+              <span className="text-xs font-bold text-white tracking-wide truncate">
+                {shopName}
+              </span>
+              <span className="text-[10px] text-sky-400 font-semibold tracking-wider uppercase">
+                ERP & POS
+              </span>
+            </div>
+          )}
+        </div>
 
-          <nav className="dock-list">
-            {menuItems.map((item) => {
+        {onToggleCollapse && (
+          <button
+            type="button"
+            onClick={onToggleCollapse}
+            className="p-1 rounded-md text-slate-400 hover:text-white hover:bg-slate-800 transition-colors"
+            title={isCollapsed ? 'Expand Sidebar' : 'Collapse Sidebar'}
+          >
+            <span className="text-xs font-mono">{isCollapsed ? '❯' : '❮'}</span>
+          </button>
+        )}
+      </div>
+
+      {/* Navigation List */}
+      <div className="flex-1 overflow-y-auto py-3 px-2 space-y-4 custom-scrollbar">
+        {isTechnician ? (
+          <div className="space-y-1">
+            {!isCollapsed && (
+              <div className="px-2 pb-1 text-[10px] font-bold text-slate-400 uppercase tracking-wider">
+                Technician Portal
+              </div>
+            )}
+            {TECHNICIAN_MENU_ITEMS.map((item) => {
               const isActive = activeSlug === item.slug;
               return (
                 <button
                   key={item.slug}
                   type="button"
-                  className={`dock-item ${isActive ? 'active' : ''}`}
                   onClick={() => onSelect(item.slug)}
-                  title={item.label}
+                  title={isCollapsed ? item.label : undefined}
+                  className={`w-full flex items-center gap-3 px-2.5 py-2 rounded-lg text-xs font-medium transition-all ${
+                    isActive
+                      ? 'bg-sky-600 text-white font-semibold shadow-sm'
+                      : 'text-slate-300 hover:bg-slate-800 hover:text-white'
+                  } ${isCollapsed ? 'justify-center px-0' : ''}`}
                 >
-                  <span className="dock-item-icon">{item.icon}</span>
-                  <span className="dock-item-text">{item.label}</span>
-                  {isActive && <span className="dock-active-pill"></span>}
+                  <span className="text-base flex-shrink-0">{item.icon}</span>
+                  {!isCollapsed && <span className="truncate">{item.label}</span>}
                 </button>
               );
             })}
-          </nav>
+          </div>
+        ) : (
+          visibleGroups.map((grp) => (
+            <div key={grp.group} className="space-y-1">
+              {!isCollapsed && (
+                <div className="px-2 pb-1 text-[10px] font-extrabold text-slate-400 uppercase tracking-wider">
+                  {grp.group}
+                </div>
+              )}
+              {grp.items.map((item) => {
+                const isActive = activeSlug === item.slug;
+                return (
+                  <button
+                    key={item.slug}
+                    type="button"
+                    onClick={() => onSelect(item.slug)}
+                    title={isCollapsed ? item.label : undefined}
+                    className={`w-full flex items-center gap-3 px-2.5 py-2 rounded-lg text-xs font-medium transition-all ${
+                      isActive
+                        ? 'bg-sky-600 text-white font-semibold shadow-sm'
+                        : 'text-slate-300 hover:bg-slate-800 hover:text-white'
+                    } ${isCollapsed ? 'justify-center px-0' : ''}`}
+                  >
+                    <span className="text-base flex-shrink-0">{item.icon}</span>
+                    {!isCollapsed && <span className="truncate">{item.label}</span>}
+                  </button>
+                );
+              })}
+            </div>
+          ))
+        )}
+      </div>
+
+      {/* User Footer Summary */}
+      <div className="p-2 border-t border-slate-800 bg-slate-950/40">
+        <div
+          className={`flex items-center gap-2.5 p-1.5 rounded-lg hover:bg-slate-800/60 transition-colors ${
+            isCollapsed ? 'justify-center' : ''
+          }`}
+        >
+          <div className="w-7 h-7 rounded-full bg-slate-700 text-slate-200 flex items-center justify-center text-xs font-bold flex-shrink-0">
+            {(currentUser?.name || 'U').charAt(0).toUpperCase()}
+          </div>
+          {!isCollapsed && (
+            <div className="flex-1 overflow-hidden">
+              <div className="text-xs font-semibold text-white truncate">
+                {currentUser?.name || 'Logged User'}
+              </div>
+              <div className="text-[10px] text-slate-400 flex items-center gap-1">
+                <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 inline-block" />
+                <span className="truncate">{currentRoleTag}</span>
+              </div>
+            </div>
+          )}
         </div>
-      </aside>
-    </>
+      </div>
+    </aside>
   );
 }
