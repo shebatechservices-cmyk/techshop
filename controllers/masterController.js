@@ -18,6 +18,23 @@ async function ensureMasterSchema() {
     await pool.query('ALTER TABLE products ADD COLUMN IF NOT EXISTS is_warranty_required BOOLEAN DEFAULT FALSE').catch(() => null);
     await pool.query('ALTER TABLE products ADD COLUMN IF NOT EXISTS warranty_months INTEGER DEFAULT 0').catch(() => null);
     await pool.query('ALTER TABLE products ADD COLUMN IF NOT EXISTS supplier_warranty_expire_date DATE').catch(() => null);
+    await pool.query('ALTER TABLE products ADD COLUMN IF NOT EXISTS is_bundle BOOLEAN DEFAULT FALSE').catch(() => null);
+    await pool.query("ALTER TABLE products ADD COLUMN IF NOT EXISTS unit_name VARCHAR(50) DEFAULT 'Pcs'").catch(() => null);
+    await pool.query('ALTER TABLE products ADD COLUMN IF NOT EXISTS sub_unit_name VARCHAR(50)').catch(() => null);
+    await pool.query('ALTER TABLE products ADD COLUMN IF NOT EXISTS conversion_rate NUMERIC(10,2) DEFAULT 1').catch(() => null);
+    await pool.query('ALTER TABLE products ADD COLUMN IF NOT EXISTS sub_unit_selling_price NUMERIC(12,2)').catch(() => null);
+    await pool.query('ALTER TABLE products ADD COLUMN IF NOT EXISTS sub_unit_barcode VARCHAR(100)').catch(() => null);
+    await pool.query(`
+        CREATE TABLE IF NOT EXISTS product_bundle_items (
+            id SERIAL PRIMARY KEY,
+            bundle_id INT NOT NULL REFERENCES products(id) ON DELETE CASCADE,
+            product_id INT NOT NULL REFERENCES products(id) ON DELETE CASCADE,
+            quantity INT NOT NULL DEFAULT 1,
+            unit_price NUMERIC(12,2) DEFAULT 0,
+            created_at TIMESTAMP DEFAULT NOW(),
+            updated_at TIMESTAMP DEFAULT NOW()
+        )
+    `).catch(() => null);
     await pool.query(`
         CREATE TABLE IF NOT EXISTS trash_records (
             id SERIAL PRIMARY KEY,
@@ -57,6 +74,7 @@ const formatProductResponse = (row) => {
         parseBool(row.isWarrantyRequired) ||
         (Number(row.warranty_months || 0) > 0)
     );
+    const isBundle = Boolean(parseBool(row.is_bundle));
     const costPrice = Number(row.cost_price || row.costPrice || row.last_purchase_price || row.purchase_price || 0);
     const salePrice = Number(row.sale_price || row.salePrice || row.batch_sale_price || row.selling_price || row.mrp || costPrice);
     return {
@@ -73,6 +91,13 @@ const formatProductResponse = (row) => {
         tracks_serial: isSerial,
         isWarrantyRequired: isWarranty,
         is_warranty_required: isWarranty,
+        is_bundle: isBundle,
+        unit_name: row.unit_name || 'Pcs',
+        sub_unit_name: row.sub_unit_name || null,
+        conversion_rate: Number(row.conversion_rate || 1),
+        sub_unit_selling_price: row.sub_unit_selling_price !== null && row.sub_unit_selling_price !== undefined ? Number(row.sub_unit_selling_price) : null,
+        sub_unit_barcode: row.sub_unit_barcode || null,
+        bundle_items: Array.isArray(row.bundle_items) ? row.bundle_items : [],
     };
 };
 
@@ -275,8 +300,36 @@ const getAll = async (req, res) => {
 
         query += entity === 'products' ? ' ORDER BY p.id ASC' : ' ORDER BY id ASC';
         const result = await pool.query(query, params);
-        const rows = entity === 'products' ? result.rows.map(formatProductResponse) : result.rows;
-        res.status(200).json(rows);
+        if (entity === 'products') {
+            const bundleItemsRes = await pool.query(`
+                SELECT bi.*, p.name AS component_name, p.sku AS component_sku, p.stock AS component_stock, p.selling_price AS component_selling_price
+                FROM product_bundle_items bi
+                JOIN products p ON p.id = bi.product_id
+                WHERE p.deleted_at IS NULL
+            `).catch(() => ({ rows: [] }));
+            const bundleMap = {};
+            for (const row of bundleItemsRes.rows) {
+                if (!bundleMap[row.bundle_id]) bundleMap[row.bundle_id] = [];
+                bundleMap[row.bundle_id].push(row);
+            }
+            const rows = result.rows.map((row) => {
+                const p = formatProductResponse(row);
+                p.bundle_items = bundleMap[row.id] || [];
+                if (p.is_bundle) {
+                    if (p.bundle_items.length > 0) {
+                        const maxKits = Math.min(
+                            ...p.bundle_items.map((bi) => Math.floor(Number(bi.component_stock || 0) / Math.max(1, Number(bi.quantity || 1))))
+                        );
+                        p.stock = isFinite(maxKits) ? Math.max(0, maxKits) : 0;
+                    } else {
+                        p.stock = 0;
+                    }
+                }
+                return p;
+            });
+            return res.status(200).json(rows);
+        }
+        res.status(200).json(result.rows);
     } catch (error) {
         console.error(error);
         res.status(500).json({ error: 'Server error!' });
@@ -386,6 +439,11 @@ const create = async (req, res) => {
                 parseBool(req.body.isWarrantyRequired) ??
                 (Number(warranty_months || req.body.warranty_months || 0) > 0)
             );
+            const isBundleVal = Boolean(
+                parseBool(req.body.is_bundle) ??
+                parseBool(req.body.isBundle) ??
+                false
+            );
 
             result = await pool.query(
                 `INSERT INTO products (
@@ -393,8 +451,9 @@ const create = async (req, res) => {
                     sku, barcode, short_name, description,
                     purchase_price, selling_price, mrp, stock, min_stock,
                     location, warranty_months, status, image_url, is_featured,
-                    supplier_name, supplier_phone, is_serial_tracked, is_serial_required, is_warranty_required
-                ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, $19, $20, $21, $22, $23, $24, $25)
+                    supplier_name, supplier_phone, is_serial_tracked, is_serial_required, is_warranty_required,
+                    is_bundle, unit_name, sub_unit_name, conversion_rate, sub_unit_selling_price, sub_unit_barcode
+                ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, $19, $20, $21, $22, $23, $24, $25, $26, $27, $28, $29, $30, $31)
                 RETURNING *`,
                 [
                     name,
@@ -422,8 +481,30 @@ const create = async (req, res) => {
                     isSerialReq,
                     isSerialReq,
                     isWarrantyReq,
+                    isBundleVal,
+                    req.body.unit_name || 'Pcs',
+                    req.body.sub_unit_name || null,
+                    req.body.conversion_rate ? Number(req.body.conversion_rate) : 1,
+                    req.body.sub_unit_selling_price ? Number(req.body.sub_unit_selling_price) : null,
+                    req.body.sub_unit_barcode ? String(req.body.sub_unit_barcode).trim() : null,
                 ]
             );
+
+            const createdProd = result.rows[0];
+            const rawBundleItems = req.body.bundle_items || req.body.bundleItems;
+            if (isBundleVal && rawBundleItems) {
+                const parsed = typeof rawBundleItems === 'string' ? JSON.parse(rawBundleItems) : (Array.isArray(rawBundleItems) ? rawBundleItems : []);
+                for (const bi of parsed) {
+                    if (bi.product_id) {
+                        await pool.query(
+                            `INSERT INTO product_bundle_items (bundle_id, product_id, quantity, unit_price)
+                             VALUES ($1, $2, $3, $4)`,
+                            [createdProd.id, Number(bi.product_id), Number(bi.quantity || 1), Number(bi.unit_price || 0)]
+                        );
+                    }
+                }
+                createdProd.bundle_items = parsed;
+            }
         } else if (entity === 'product_names') {
             result = await pool.query(
                 `INSERT INTO product_names (name, brand_id, category_id, sub_category_id)
@@ -507,7 +588,8 @@ const update = async (req, res) => {
             'purchase_price', 'selling_price', 'mrp', 'stock', 'min_stock',
             'location', 'warranty_months', 'status', 'image_url', 'is_featured',
             'supplier_name', 'supplier_phone',
-            'is_serial_tracked', 'is_serial_required', 'is_warranty_required'
+            'is_serial_tracked', 'is_serial_required', 'is_warranty_required',
+            'is_bundle', 'unit_name', 'sub_unit_name', 'conversion_rate', 'sub_unit_selling_price', 'sub_unit_barcode'
         ];
 
         const columns = [];
@@ -528,6 +610,11 @@ const update = async (req, res) => {
                 (payload.warranty_months !== undefined ? (Number(payload.warranty_months || 0) > 0) : undefined))
             );
 
+            const isBundleVal = parseBool(
+                payload.is_bundle !== undefined ? payload.is_bundle :
+                (payload.isBundle !== undefined ? payload.isBundle : undefined)
+            );
+
             const cleanPayload = { ...payload };
             delete cleanPayload.id;
             delete cleanPayload.tracks_serial;
@@ -540,6 +627,9 @@ const update = async (req, res) => {
             }
             if (isWarrantyReq !== undefined) {
                 cleanPayload.is_warranty_required = isWarrantyReq;
+            }
+            if (isBundleVal !== undefined) {
+                cleanPayload.is_bundle = isBundleVal;
             }
 
             Object.entries(cleanPayload).forEach(([key, value]) => {
@@ -569,9 +659,28 @@ const update = async (req, res) => {
 
         if (result.rows.length === 0) return res.status(404).json({ error: 'Item not found' });
 
+        const updatedRow = result.rows[0];
+        if (entity === 'products') {
+            const rawBundleItems = payload.bundle_items || payload.bundleItems;
+            if (rawBundleItems !== undefined) {
+                const parsed = typeof rawBundleItems === 'string' ? JSON.parse(rawBundleItems) : (Array.isArray(rawBundleItems) ? rawBundleItems : []);
+                await pool.query('DELETE FROM product_bundle_items WHERE bundle_id = $1', [Number(id)]);
+                for (const bi of parsed) {
+                    if (bi.product_id) {
+                        await pool.query(
+                            `INSERT INTO product_bundle_items (bundle_id, product_id, quantity, unit_price)
+                             VALUES ($1, $2, $3, $4)`,
+                            [Number(id), Number(bi.product_id), Number(bi.quantity || 1), Number(bi.unit_price || 0)]
+                        );
+                    }
+                }
+                updatedRow.bundle_items = parsed;
+            }
+        }
+
         res.status(200).json({
             message: 'Successfully updated!',
-            data: entity === 'products' ? formatProductResponse(result.rows[0]) : result.rows[0]
+            data: entity === 'products' ? formatProductResponse(updatedRow) : updatedRow
         });
     } catch (error) {
         if (error.code === '23505') {

@@ -115,6 +115,7 @@ export default function NewSaleModal({
     handleRestoreDraft,
     handleDiscardDraft,
     addProduct,
+    switchItemUnit,
     updateItem,
     removeItem,
     handleScanEnter,
@@ -358,6 +359,7 @@ export default function NewSaleModal({
               activeCostCardId={activeCostCardId}
               toggleCostCard={toggleCostCard}
               updateItem={updateItem}
+              switchItemUnit={switchItemUnit}
               removeItem={removeItem}
               handleAddBarcode={handleAddBarcode}
               handleRemoveBarcode={handleRemoveBarcode}

@@ -92,6 +92,13 @@ export default function useProductsManager({ initialTab = "catalog", initialSear
     condition: "New",
     is_service: false,
     is_bundle: false,
+    bundle_items: [],
+    unit_name: "Pcs",
+    enable_sub_unit: false,
+    sub_unit_name: "",
+    conversion_rate: "1",
+    sub_unit_selling_price: "",
+    sub_unit_barcode: "",
     tracks_serial: false,
     is_serial_tracked: false,
     is_serial_required: false,
@@ -701,6 +708,13 @@ export default function useProductsManager({ initialTab = "catalog", initialSear
       condition: "New",
       is_service: false,
       is_bundle: false,
+      bundle_items: [],
+      unit_name: "Pcs",
+      enable_sub_unit: false,
+      sub_unit_name: "",
+      conversion_rate: "1",
+      sub_unit_selling_price: "",
+      sub_unit_barcode: "",
       tracks_serial: false,
       is_serial_tracked: false,
       is_serial_required: false,
@@ -757,7 +771,14 @@ export default function useProductsManager({ initialTab = "catalog", initialSear
       image_url: product.image_url || "",
       condition: product.condition || "New",
       is_service: product.is_service || false,
-      is_bundle: product.is_bundle || false,
+      is_bundle: Boolean(product.is_bundle),
+      bundle_items: Array.isArray(product.bundle_items) ? product.bundle_items : [],
+      unit_name: product.unit_name || "Pcs",
+      enable_sub_unit: Boolean(product.sub_unit_name),
+      sub_unit_name: product.sub_unit_name || "",
+      conversion_rate: String(product.conversion_rate || 1),
+      sub_unit_selling_price: product.sub_unit_selling_price ? String(product.sub_unit_selling_price) : "",
+      sub_unit_barcode: product.sub_unit_barcode || "",
       tracks_serial: isSerialReq,
       is_serial_tracked: isSerialReq,
       is_serial_required: isSerialReq,
@@ -786,21 +807,34 @@ export default function useProductsManager({ initialTab = "catalog", initialSear
     setSaveError("");
     setSaveSuccess("");
     setDuplicatePopupMessage("");
-    if (
-      !selectedCategory ||
-      !selectedSubCategory ||
-      !selectedBrand ||
-      !form.name ||
-      !selectedModel ||
-      !selectedSeries
-    ) {
-      setSaveError("Please select all cascading fields from Category to Series.");
-      return;
+
+    if (form.is_bundle) {
+      if (!form.name || !form.name.trim()) {
+        setSaveError("Please enter a package / bundle kit name.");
+        return;
+      }
+      if (!form.bundle_items || form.bundle_items.length === 0) {
+        setSaveError("Please add at least one component to this bundle kit.");
+        return;
+      }
+    } else {
+      if (
+        !selectedCategory ||
+        !selectedSubCategory ||
+        !selectedBrand ||
+        !form.name ||
+        !selectedModel ||
+        !selectedSeries
+      ) {
+        setSaveError("Please select all cascading fields from Category to Series.");
+        return;
+      }
     }
+
     const optionalId = (value) => (value ? Number(value) : null);
 
     // Check duplicate in catalog before submitting
-    if (!editingProductId) {
+    if (!editingProductId && !form.is_bundle) {
       const norm = (val) => String(val || "").trim().toLowerCase();
       const inputSku = norm(form.sku);
       const inputBarcode = norm(form.barcode);
@@ -846,6 +880,13 @@ export default function useProductsManager({ initialTab = "catalog", initialSear
 
     const payload = {
       ...form,
+      is_bundle: Boolean(form.is_bundle),
+      bundle_items: form.is_bundle ? form.bundle_items : [],
+      unit_name: form.unit_name || "Pcs",
+      sub_unit_name: form.enable_sub_unit ? (form.sub_unit_name || null) : null,
+      conversion_rate: form.enable_sub_unit ? (Number(form.conversion_rate) || 1) : 1,
+      sub_unit_selling_price: form.enable_sub_unit && form.sub_unit_selling_price ? Number(form.sub_unit_selling_price) : null,
+      sub_unit_barcode: form.enable_sub_unit && form.sub_unit_barcode ? String(form.sub_unit_barcode).trim() : null,
       category_id: optionalId(selectedCategory || form.category_id),
       sub_category_id: optionalId(selectedSubCategory || form.sub_category_id),
       brand_id: optionalId(selectedBrand || form.brand_id),
@@ -871,7 +912,11 @@ export default function useProductsManager({ initialTab = "catalog", initialSear
         const formData = new FormData();
         Object.entries(payload).forEach(([k, v]) => {
           if (v !== null && v !== undefined) {
-            formData.append(k, String(v));
+            if (k === 'bundle_items') {
+              formData.append(k, JSON.stringify(v));
+            } else {
+              formData.append(k, String(v));
+            }
           }
         });
         formData.append("is_serial_required", isSerialReq ? "true" : "false");

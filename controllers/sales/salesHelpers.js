@@ -346,14 +346,32 @@ const reverseSaleFinancials = async (sale, id, client) => {
 
     const saleItems = await client.query('SELECT * FROM sales_items WHERE sale_id = $1', [id]);
     for (const item of saleItems.rows) {
-        await client.query(
-            'UPDATE products SET stock = COALESCE(stock, 0) + $1, updated_at = NOW() WHERE id = $2',
-            [Number(item.quantity || 0), item.product_id]
-        );
-        await client.query(
-            'UPDATE stock_levels SET quantity = quantity + $1 WHERE product_id = $2 AND warehouse_id = 1',
-            [Number(item.quantity || 0), item.product_id]
-        ).catch(() => null);
+        const prodRes = await client.query('SELECT is_bundle FROM products WHERE id = $1', [item.product_id]);
+        const isBundle = Boolean(prodRes.rows[0]?.is_bundle);
+
+        if (isBundle) {
+            const bundleItemsRes = await client.query('SELECT product_id, quantity FROM product_bundle_items WHERE bundle_id = $1', [item.product_id]);
+            for (const bItem of bundleItemsRes.rows) {
+                const restoreQty = Number(item.quantity || 1) * Number(bItem.quantity || 1);
+                await client.query(
+                    'UPDATE products SET stock = COALESCE(stock, 0) + $1, updated_at = NOW() WHERE id = $2',
+                    [restoreQty, bItem.product_id]
+                );
+                await client.query(
+                    'UPDATE stock_levels SET quantity = quantity + $1 WHERE product_id = $2 AND warehouse_id = 1',
+                    [restoreQty, bItem.product_id]
+                ).catch(() => null);
+            }
+        } else {
+            await client.query(
+                'UPDATE products SET stock = COALESCE(stock, 0) + $1, updated_at = NOW() WHERE id = $2',
+                [Number(item.quantity || 0), item.product_id]
+            );
+            await client.query(
+                'UPDATE stock_levels SET quantity = quantity + $1 WHERE product_id = $2 AND warehouse_id = 1',
+                [Number(item.quantity || 0), item.product_id]
+            ).catch(() => null);
+        }
     }
     await client.query('DELETE FROM sales_item_serials WHERE sales_item_id IN (SELECT id FROM sales_items WHERE sale_id = $1)', [id]);
     await client.query('DELETE FROM sales_items WHERE sale_id = $1', [id]);

@@ -9,6 +9,7 @@ export default function SaleProductTable({
   activeCostCardId,
   toggleCostCard,
   updateItem,
+  switchItemUnit,
   removeItem,
   handleAddBarcode,
   handleRemoveBarcode,
@@ -80,6 +81,11 @@ export default function SaleProductTable({
                 <div className="pl-1.5">
                   <div className="font-bold text-slate-800 text-xs leading-snug flex items-center gap-1.5 flex-wrap">
                     <span>{it.full_name || it.name}</span>
+                    {it.is_bundle && (
+                      <span className="text-[0.66rem] font-extrabold py-px px-1.5 rounded text-purple-700 bg-purple-100 border border-purple-200">
+                        🎁 Bundle Kit
+                      </span>
+                    )}
                     {it.is_serial_tracked && (
                       <span className={`text-[0.66rem] font-extrabold py-px px-1.5 rounded ${
                         isSerialMissing
@@ -95,6 +101,41 @@ export default function SaleProductTable({
                       </span>
                     )}
                   </div>
+
+                  {/* Bundle Items Summary */}
+                  {it.is_bundle && it.bundle_items && it.bundle_items.length > 0 && (
+                    <div className="text-[10px] text-purple-700 font-medium mt-0.5">
+                      Kit Items: {it.bundle_items.map((b) => `${b.quantity}x ${b.component_name || `Item #${b.product_id}`}`).join(', ')}
+                    </div>
+                  )}
+
+                  {/* Dual-UoM Unit Toggle Selector */}
+                  {it.sub_unit_name && (
+                    <div className="inline-flex items-center rounded-md border border-slate-200 bg-slate-100 p-0.5 mt-1 text-[10px] font-bold">
+                      <button
+                        type="button"
+                        onClick={() => switchItemUnit && switchItemUnit(it.localId, 'base_unit')}
+                        className={`px-1.5 py-0.5 rounded transition-all cursor-pointer ${
+                          it.unit_type !== 'sub_unit'
+                            ? 'bg-white text-slate-900 shadow-xs'
+                            : 'text-slate-500 hover:text-slate-800'
+                        }`}
+                      >
+                        {it.base_unit_name || 'Box'}
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => switchItemUnit && switchItemUnit(it.localId, 'sub_unit')}
+                        className={`px-1.5 py-0.5 rounded transition-all cursor-pointer ${
+                          it.unit_type === 'sub_unit'
+                            ? 'bg-sky-600 text-white shadow-xs'
+                            : 'text-slate-500 hover:text-slate-800'
+                        }`}
+                      >
+                        {it.sub_unit_name || 'Meter'}
+                      </button>
+                    </div>
+                  )}
 
                   {/* Barcode/Serial Chips */}
                   <div className="flex flex-wrap items-center gap-1 mt-1">
@@ -192,6 +233,11 @@ export default function SaleProductTable({
                 {/* PRICE */}
                 <div className="text-right pr-3 font-bold text-slate-900 text-sm">
                   {taka(it.unit_price)}
+                  {it.unit_name && (
+                    <span className="text-[10px] text-slate-500 block font-normal">
+                      /{it.unit_name}
+                    </span>
+                  )}
                 </div>
 
                 {/* TOTAL */}

@@ -212,6 +212,7 @@ export default function Products({ initialTab = "catalog", initialSearch = "" } 
         galleryImagePreviews={galleryImagePreviews}
         fileInputKey={fileInputKey}
         setFileInputKey={setFileInputKey}
+        products={products}
         saveError={saveError}
         handleResetForm={handleResetForm}
         handleSubmit={handleSubmit}
