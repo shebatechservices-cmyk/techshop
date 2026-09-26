@@ -81,12 +81,12 @@ export default function AddCustomerModal({ isOpen, onClose, onCustomerCreated })
     >
       <div className="bg-white w-full max-w-2xl rounded-2xl shadow-2xl overflow-hidden border border-slate-200 animate-in fade-in zoom-in duration-150 flex flex-col">
         {/* Header */}
-        <div className="px-6 py-5 bg-slate-900 border-b border-slate-800 flex justify-between items-center text-white">
+        <div className="px-6 py-4 bg-white border-b border-gray-200 flex justify-between items-center">
           <div className="flex items-center gap-3">
-            <span className="text-2xl">👤</span>
+            <span className="text-2xl text-gray-500">👤</span>
             <div>
-              <h3 className="m-0 text-lg font-bold">Add New Customer</h3>
-              <p className="m-0 text-xs text-slate-400 mt-0.5">
+              <h3 className="m-0 text-lg font-bold text-gray-900">Add New Customer</h3>
+              <p className="m-0 text-xs text-gray-500 mt-0.5">
                 Register customer for sales, POS, and quotations
               </p>
             </div>
@@ -94,7 +94,8 @@ export default function AddCustomerModal({ isOpen, onClose, onCustomerCreated })
           <button
             type="button"
             onClick={onClose}
-            className="w-8 h-8 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-300 hover:text-white flex items-center justify-center font-bold text-sm cursor-pointer transition-colors"
+            className="w-8 h-8 rounded-full bg-gray-100 hover:bg-gray-200 border border-gray-200 text-gray-500 hover:text-gray-800 flex items-center justify-center font-bold text-sm cursor-pointer transition-colors"
+            title="Close modal"
           >
             ✕
           </button>

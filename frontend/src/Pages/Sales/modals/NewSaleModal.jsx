@@ -156,14 +156,14 @@ export default function NewSaleModal({
     <div className="fixed inset-0 z-[99999] bg-slate-900/75 flex items-center justify-center p-4 backdrop-blur-[3px]">
       <div className="bg-slate-50 rounded-2xl w-[min(1180px,calc(100vw-32px))] max-h-[calc(100vh-32px)] shadow-2xl overflow-hidden grid grid-rows-[auto_minmax(0,1fr)_auto]">
         {/* Header */}
-        <div className="px-6 py-4 bg-gradient-to-br from-slate-900 to-emerald-800 flex justify-between items-center text-white">
-          <div className="flex items-center gap-2.5">
-            <span className="text-2xl">{editSale ? '✏️' : '🛒'}</span>
+        <div className="px-6 py-4 bg-white border-b border-gray-200 flex justify-between items-center">
+          <div className="flex items-center gap-3">
+            <span className="text-2xl text-gray-500">{editSale ? '✏️' : '🛒'}</span>
             <div>
-              <h3 className="m-0 text-lg font-bold">
+              <h3 className="m-0 text-lg font-bold text-gray-900">
                 {editSale ? `Edit Sale Invoice #${editSale.invoice_no || editSale.id}` : 'New POS Sale & Invoice'}
               </h3>
-              <p className="m-0 text-xs text-emerald-200">
+              <p className="m-0 text-xs text-gray-500 mt-0.5">
                 {editSale
                   ? 'Editing is only allowed within 7 days of the original sale. Stock, serials & payments are re-settled automatically.'
                   : 'Instant point of sale, barcode scanning, loyalty points, and multi-tender payments'}
@@ -173,7 +173,8 @@ export default function NewSaleModal({
           <button
             type="button"
             onClick={onClose}
-            className="bg-white/15 hover:bg-white/25 border-0 rounded-full w-8 h-8 text-white text-lg cursor-pointer grid place-items-center transition-colors"
+            className="w-8 h-8 rounded-full bg-gray-100 hover:bg-gray-200 border border-gray-200 text-gray-500 hover:text-gray-800 flex items-center justify-center font-bold text-sm cursor-pointer transition-colors"
+            title="Close modal"
           >
             ✕
           </button>
