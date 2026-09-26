@@ -8,6 +8,7 @@ export default function useProductAttributes({ onEntityCreated } = {}) {
   const [categories, setCategories] = useState([]);
   const [subCategories, setSubCategories] = useState([]);
   const [brands, setBrands] = useState([]);
+  const [allProductNames, setAllProductNames] = useState([]);
   const [productNames, setProductNames] = useState([]);
   const [models, setModels] = useState([]);
   const [series, setSeries] = useState([]);
@@ -78,12 +79,14 @@ export default function useProductAttributes({ onEntityCreated } = {}) {
         fetchJson(`${API}/product_names`).catch(() => []),
       ]);
 
-      setCategories(categoryData);
-      setSubCategories(subCategoryData);
-      setBrands(brandData);
-      setModels(modelData);
-      setSeries(seriesData);
-      setProductNames(productNamesData || []);
+      setCategories(Array.isArray(categoryData) ? categoryData : categoryData?.data || []);
+      setSubCategories(Array.isArray(subCategoryData) ? subCategoryData : subCategoryData?.data || []);
+      setBrands(Array.isArray(brandData) ? brandData : brandData?.data || []);
+      setModels(Array.isArray(modelData) ? modelData : modelData?.data || []);
+      setSeries(Array.isArray(seriesData) ? seriesData : seriesData?.data || []);
+      const allPNames = Array.isArray(productNamesData) ? productNamesData : productNamesData?.data || [];
+      setAllProductNames(allPNames);
+      setProductNames([]);
     } catch (error) {
       console.error("Attributes fetch error:", error);
     }
@@ -121,7 +124,12 @@ export default function useProductAttributes({ onEntityCreated } = {}) {
     }
 
     fetchJson(`${API}/product_names?${query.toString()}`)
-      .then((data) => setProductNames(Array.isArray(data) ? data : []))
+      .then((data) => {
+        const items = Array.isArray(data) ? data : (data?.data || []);
+        // Strict brand matching: only items associated with this specific brand
+        const filtered = items.filter((p) => String(p.brand_id) === String(selectedBrand));
+        setProductNames(filtered);
+      })
       .catch(() => setProductNames([]));
   }, [selectedBrand, selectedSubCategory, selectedCategory]);
 
@@ -141,7 +149,11 @@ export default function useProductAttributes({ onEntityCreated } = {}) {
     }
 
     fetchJson(`${API}/models?${query.toString()}`)
-      .then((data) => setModels(Array.isArray(data) ? data : []))
+      .then((data) => {
+        const items = Array.isArray(data) ? data : (data?.data || []);
+        const filtered = items.filter((m) => String(m.brand_id) === String(selectedBrand));
+        setModels(filtered);
+      })
       .catch(() => setModels([]));
   }, [selectedBrand, selectedCategory, selectedSubCategory]);
 
@@ -152,7 +164,11 @@ export default function useProductAttributes({ onEntityCreated } = {}) {
       return;
     }
     fetchJson(`${API}/series?model_id=${selectedModel}`)
-      .then((data) => setSeries(Array.isArray(data) ? data : []))
+      .then((data) => {
+        const items = Array.isArray(data) ? data : (data?.data || []);
+        const filtered = items.filter((s) => String(s.model_id) === String(selectedModel));
+        setSeries(filtered);
+      })
       .catch(() => setSeries([]));
   }, [selectedModel]);
 
@@ -165,7 +181,10 @@ export default function useProductAttributes({ onEntityCreated } = {}) {
       models: setModels,
       series: setSeries,
     };
-    if (setters[entity]) {
+    if (entity === "product_names") {
+      setAllProductNames((prev) => [item, ...prev.filter((p) => p.id !== item.id)]);
+      setProductNames((prev) => [item, ...prev.filter((p) => p.id !== item.id)]);
+    } else if (setters[entity]) {
       setters[entity]((prev) => [item, ...prev.filter((p) => p.id !== item.id)]);
     }
   };
@@ -360,6 +379,7 @@ export default function useProductAttributes({ onEntityCreated } = {}) {
     categories,
     subCategories,
     brands,
+    allProductNames,
     productNames,
     models,
     series,

@@ -160,16 +160,22 @@ const buildFilters = (entity, query) => {
         index += 1;
     }
 
-    if (entity === 'product_names' && brandId !== null) {
-        filters.push(`(brand_id = $${index} OR brand_id IS NULL)`);
-        params.push(brandId);
-        index += 1;
-    }
-
-    if (entity === 'product_names' && subCategoryId !== null) {
-        filters.push(`(sub_category_id = $${index} OR sub_category_id IS NULL)`);
-        params.push(subCategoryId);
-        index += 1;
+    if (entity === 'product_names') {
+        if (brandId !== null) {
+            filters.push(`brand_id = $${index}`);
+            params.push(brandId);
+            index += 1;
+        }
+        if (subCategoryId !== null) {
+            filters.push(`sub_category_id = $${index}`);
+            params.push(subCategoryId);
+            index += 1;
+        }
+        if (categoryId !== null) {
+            filters.push(`category_id = $${index}`);
+            params.push(categoryId);
+            index += 1;
+        }
     }
 
     if (entity === 'models') {
@@ -203,7 +209,7 @@ const buildFilters = (entity, query) => {
             index += 1;
         }
         if (modelId !== null) {
-            filters.push(`(model_id = $${index} OR model_id IS NULL)`);
+            filters.push(`model_id = $${index}`);
             params.push(modelId);
             index += 1;
         }

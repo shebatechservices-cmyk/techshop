@@ -157,14 +157,13 @@ export default function ProductCascadingFields({
             <option value="">
               {selectedBrand ? "Select product name" : "Select brand first"}
             </option>
-            {form.name && !productNames.some((item) => item.name === form.name) && (
-              <option value={form.name}>{form.name}</option>
-            )}
-            {productNames.map((item) => (
-              <option key={item.id} value={item.name}>
-                {item.name}
-              </option>
-            ))}
+            {productNames
+              .filter((item) => !item.brand_id || String(item.brand_id) === String(selectedBrand))
+              .map((item) => (
+                <option key={item.id} value={item.name}>
+                  {item.name}
+                </option>
+              ))}
           </select>
           <button
             type="button"

@@ -117,6 +117,7 @@ export default function useProductsManager({ initialTab = "catalog", initialSear
     attributesState.setSelectedSeries("");
     formState.setForm((prev) => ({
       ...prev,
+      name: "",
       category_id: value,
       sub_category_id: "",
       brand_id: "",
@@ -133,6 +134,7 @@ export default function useProductsManager({ initialTab = "catalog", initialSear
     attributesState.setSelectedSeries("");
     formState.setForm((prev) => ({
       ...prev,
+      name: "",
       sub_category_id: value,
       brand_id: "",
       model_id: "",
@@ -147,6 +149,7 @@ export default function useProductsManager({ initialTab = "catalog", initialSear
     attributesState.setSelectedSeries("");
     formState.setForm((prev) => ({
       ...prev,
+      name: "",
       brand_id: value,
       model_id: "",
       series_id: "",
@@ -155,7 +158,14 @@ export default function useProductsManager({ initialTab = "catalog", initialSear
 
   const handleProductNameChange = (e) => {
     const value = e.target.value;
-    formState.setForm((prev) => ({ ...prev, name: value }));
+    attributesState.setSelectedModel("");
+    attributesState.setSelectedSeries("");
+    formState.setForm((prev) => ({
+      ...prev,
+      name: value,
+      model_id: "",
+      series_id: "",
+    }));
   };
 
   const handleModelChange = (e) => {
@@ -364,6 +374,7 @@ export default function useProductsManager({ initialTab = "catalog", initialSear
     categories: attributesState.categories,
     subCategories: attributesState.subCategories,
     brands: attributesState.brands,
+    allProductNames: attributesState.allProductNames,
     productNames: attributesState.productNames,
     models: attributesState.models,
     series: attributesState.series,

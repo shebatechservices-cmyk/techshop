@@ -19,6 +19,7 @@ export default function Products({ initialTab = "catalog", initialSearch = "" } 
     categories,
     subCategories,
     brands,
+    allProductNames,
     productNames,
     models,
     series,
@@ -168,7 +169,7 @@ export default function Products({ initialTab = "catalog", initialSearch = "" } 
           categories={categories}
           subCategories={subCategories}
           brands={brands}
-          productNames={productNames}
+          productNames={allProductNames || []}
           models={models}
           series={series}
           showAttributeAdd={showAttributeAdd}
