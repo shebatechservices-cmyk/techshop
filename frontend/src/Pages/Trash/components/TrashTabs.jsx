@@ -7,7 +7,7 @@ export default function TrashTabs({
   counts,
 }) {
   return (
-    <div className="bg-slate-900 rounded-xl p-1.5 mb-3.5 border border-slate-800 flex overflow-x-auto gap-1 scrollbar-thin">
+    <div className="bg-white rounded-xl p-1.5 mb-3.5 border border-gray-200 shadow-sm flex overflow-x-auto gap-1 scrollbar-thin">
       {MODULE_TABS.map((tab) => {
         const tabCount = counts[tab.key] ?? 0;
         const isActive = selectedModule === tab.key;
@@ -18,17 +18,20 @@ export default function TrashTabs({
             onClick={() => setSelectedModule(tab.key)}
             className={`flex items-center gap-1.5 py-1.5 px-3 rounded-lg border-0 text-xs whitespace-nowrap cursor-pointer transition-all ${
               isActive
-                ? 'bg-sky-600 text-white font-extrabold'
-                : 'bg-transparent text-slate-400 hover:text-slate-200 font-semibold'
+                ? 'bg-green-600 text-white font-bold shadow-sm'
+                : 'bg-transparent text-gray-600 hover:bg-gray-100 hover:text-gray-900 font-medium'
             }`}
           >
             <span>{tab.icon}</span>
             <span>{tab.label}</span>
             <span
-              style={{
-                backgroundColor: isActive ? 'rgba(255, 255, 255, 0.25)' : tabCount > 0 ? tab.color : '#334155',
-              }}
-              className="text-white rounded-full py-px px-1.5 text-[0.64rem] font-extrabold"
+              className={`rounded-full py-0.5 px-1.5 text-[0.65rem] font-bold ${
+                isActive
+                  ? 'bg-white/25 text-white'
+                  : tabCount > 0
+                  ? 'bg-gray-100 text-gray-700 border border-gray-200'
+                  : 'bg-gray-50 text-gray-400'
+              }`}
             >
               {tabCount}
             </span>

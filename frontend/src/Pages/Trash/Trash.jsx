@@ -34,12 +34,12 @@ export default function Trash() {
   } = useTrashManager();
 
   return (
-    <div className="p-4 sm:px-5 bg-slate-900 min-h-[calc(100vh-70px)] text-slate-100 font-sans">
+    <div className="p-4 sm:px-5 bg-gray-50 min-h-[calc(100vh-70px)] text-gray-800 font-sans">
       {/* Toast Notification */}
       {actionMsg.text && (
         <div
-          className={`fixed top-5 right-6 z-[999999] py-2.5 px-4.5 rounded-lg text-sm font-bold shadow-2xl flex items-center gap-2 text-white ${
-            actionMsg.type === 'error' ? 'bg-red-500' : 'bg-emerald-500'
+          className={`fixed top-5 right-6 z-[999999] py-2.5 px-4.5 rounded-lg text-sm font-semibold shadow-lg flex items-center gap-2 text-white transition-all animate-bounce ${
+            actionMsg.type === 'error' ? 'bg-red-600' : 'bg-green-600'
           }`}
         >
           <span>{actionMsg.type === 'error' ? '⚠️' : '✓'}</span>
