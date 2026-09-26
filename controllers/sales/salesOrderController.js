@@ -112,8 +112,9 @@ exports.createSale = async (req, res) => {
 
         const dateStr = new Date().toISOString().slice(0, 10).replace(/-/g, '');
         const generateInvoiceNo = async () => {
-            const seqRes = await client.query("SELECT nextval('sales_invoice_no_seq') AS seq");
-            return `INV-${dateStr}-${String(seqRes.rows[0].seq).padStart(4, '0').slice(-4)}`;
+            const seqRes = await client.query("SELECT nextval('sales_invoice_no_seq') AS seq").catch(() => ({ rows: [] }));
+            const seqVal = seqRes.rows?.[0]?.seq || Math.floor(1000 + Math.random() * 9000);
+            return `INV-${dateStr}-${String(seqVal).padStart(4, '0').slice(-4)}`;
         };
         let invoiceNo = await generateInvoiceNo();
 
@@ -180,9 +181,21 @@ exports.createSale = async (req, res) => {
                 ? new Date(Date.now() + warrantyMonths * 30 * 24 * 60 * 60 * 1000)
                 : null;
             const savedItem = await client.query(
-                `INSERT INTO sales_items (sale_id, product_id, quantity, unit_price, cost_price, line_total, warranty_expire_date, warranty_months)
-                 VALUES ($1, $2, $3, $4, $5, $6, $7, $8) RETURNING id`,
-                [saleId, item.product_id, item.quantity, item.unit_price, item.cost_price, item.line_total, expireDate, warrantyMonths]
+                `INSERT INTO sales_items (sale_id, product_id, quantity, unit_price, cost_price, line_total, warranty_expire_date, warranty_months, unit_name, unit_type, conversion_rate)
+                 VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11) RETURNING id`,
+                [
+                    saleId,
+                    item.product_id,
+                    item.quantity,
+                    item.unit_price,
+                    item.cost_price,
+                    item.line_total,
+                    expireDate,
+                    warrantyMonths,
+                    item.unit_name || null,
+                    item.unit_type || 'base_unit',
+                    Number(item.conversion_rate || 1)
+                ]
             );
 
             for (const serial of item.serials) {
@@ -196,7 +209,7 @@ exports.createSale = async (req, res) => {
             }
 
             // Deduct stock for standard product or bundle components
-            const prodRes = await client.query('SELECT is_bundle FROM products WHERE id = $1', [item.product_id]);
+            const prodRes = await client.query('SELECT is_bundle, conversion_rate, unit_name, sub_unit_name FROM products WHERE id = $1', [item.product_id]);
             const isBundle = Boolean(prodRes.rows[0]?.is_bundle);
 
             if (isBundle) {
@@ -218,18 +231,24 @@ exports.createSale = async (req, res) => {
                     ).catch(() => null);
                 }
             } else {
+                const prodData = prodRes.rows[0];
+                const convRate = Number(prodData?.conversion_rate || 1);
+                const isSubUnit = item.unit_type === 'sub_unit' || (prodData?.sub_unit_name && item.unit_name === prodData?.sub_unit_name);
+                const deductMultiplier = isSubUnit ? 1 : (convRate > 1 ? convRate : 1);
+                const deductQty = Number(item.quantity || 0) * deductMultiplier;
+
                 await client.query(
                     `UPDATE products
                      SET stock = GREATEST(0, COALESCE(stock, 0) - $1),
                          updated_at = NOW()
                      WHERE id = $2`,
-                    [item.quantity, item.product_id]
+                    [deductQty, item.product_id]
                 );
                 await client.query(
                     `UPDATE stock_levels
                      SET quantity = GREATEST(0, quantity - $1)
                      WHERE product_id = $2 AND warehouse_id = 1`,
-                    [item.quantity, item.product_id]
+                    [deductQty, item.product_id]
                 ).catch(() => null);
             }
         }

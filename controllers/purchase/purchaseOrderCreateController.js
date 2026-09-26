@@ -200,10 +200,14 @@ const createOrder = async (req, res) => {
         }
 
         for (const item of normalizedItems) {
-            const product = await client.query('SELECT id FROM products WHERE id = $1', [item.product_id]);
+            const product = await client.query('SELECT id, conversion_rate, unit_name, sub_unit_name FROM products WHERE id = $1', [item.product_id]);
             if (!product.rows.length) {
                 throw Object.assign(new Error('A product was not found'), { status: 400 });
             }
+            const prodData = product.rows[0];
+            const convRate = Number(prodData?.conversion_rate || 1);
+            const isSubUnit = item.unit_type === 'sub_unit' || (prodData?.sub_unit_name && item.unit === prodData?.sub_unit_name);
+            const stockIncrement = isSubUnit ? (Number(item.quantity) || 1) : (Number(item.quantity) || 1) * (convRate > 1 ? convRate : 1);
 
             let supplierWarrantyExpireDate = null;
             const supplierWarrantyMonths = Math.max(0, parseInt(item.supplier_warranty_months !== undefined && item.supplier_warranty_months !== null ? item.supplier_warranty_months : item.warranty_months, 10) || 0);
@@ -257,7 +261,7 @@ const createOrder = async (req, res) => {
 
             await client.query(
                 `UPDATE products
-                 SET stock = COALESCE(stock, 0) + $1::int,
+                 SET stock = COALESCE(stock, 0) + $1,
                      purchase_count = COALESCE(purchase_count, 0) + 1,
                      purchased_at = NOW(),
                      purchase_price = $6::numeric,
@@ -269,7 +273,7 @@ const createOrder = async (req, res) => {
                      updated_at = NOW()
                  WHERE id = $4::int`,
                 [
-                    Number(item.quantity) || 1,
+                    stockIncrement,
                     supplierWarrantyExpireDate || null,
                     customerWarrantyMonths,
                     Number(item.product_id) || 0,
@@ -284,7 +288,7 @@ const createOrder = async (req, res) => {
                  VALUES ($1, 1, $2)
                  ON CONFLICT (product_id, warehouse_id)
                  DO UPDATE SET quantity = stock_levels.quantity + EXCLUDED.quantity`,
-                [Number(item.product_id) || 0, Number(item.quantity) || 1]
+                [Number(item.product_id) || 0, stockIncrement]
             ).catch(() => null);
         }
 

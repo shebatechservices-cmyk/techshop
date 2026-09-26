@@ -146,4 +146,134 @@ describe('Product Bundle and UoM Features', () => {
         expect(bundle.stock).toBe(2);
         expect(bundle.bundle_items.length).toBe(2);
     });
+
+    test('Purchase of 1 Box increases stock by 305 Meters', async () => {
+        const purchaseCreate = require('../controllers/purchase/purchaseOrderCreateController');
+        const req = {
+            body: {
+                supplier_id: 1,
+                items: [
+                    {
+                        product_id: 105,
+                        quantity: 1, // 1 Box
+                        cost_price: 3800,
+                        sale_price: 4400,
+                        expected_date: '2026-09-26',
+                        unit_type: 'base_unit'
+                    }
+                ],
+                payments: [{ amount: 3800, method: 'Cash' }]
+            }
+        };
+        const res = mockRes();
+
+        let updatedStockIncrement = 0;
+        const mockClient = {
+            query: jest.fn().mockImplementation((sql, params) => {
+                if (/BEGIN|COMMIT|ROLLBACK/.test(sql)) return Promise.resolve({});
+                if (/SELECT.*FROM suppliers/.test(sql)) {
+                    return Promise.resolve({ rows: [{ id: 1, name: 'Main Cable Importer' }] });
+                }
+                if (/SELECT.*FROM products WHERE id/.test(sql)) {
+                    return Promise.resolve({
+                        rows: [{
+                            id: 105,
+                            name: 'Cat.6 Cable Box',
+                            conversion_rate: 305,
+                            unit_name: 'Box',
+                            sub_unit_name: 'Meter',
+                            stock: 0
+                        }]
+                    });
+                }
+                if (/INSERT INTO purchase_orders/.test(sql)) {
+                    return Promise.resolve({ rows: [{ id: 501, po_number: 'PO-20260926-001' }] });
+                }
+                if (/INSERT INTO purchase_order_items/.test(sql)) {
+                    return Promise.resolve({ rows: [{ id: 1001 }] });
+                }
+                if (/UPDATE products\s+SET stock = COALESCE\(stock, 0\) \+ \$1/.test(sql)) {
+                    updatedStockIncrement = params[0];
+                    return Promise.resolve({ rows: [] });
+                }
+                if (/INSERT INTO stock_levels/.test(sql)) {
+                    return Promise.resolve({ rows: [] });
+                }
+                if (/SELECT.*FROM payment_accounts/.test(sql)) {
+                    return Promise.resolve({ rows: [{ id: 1, name: 'Cash Drawer', balance: 50000 }] });
+                }
+                return Promise.resolve({ rows: [], rowCount: 0 });
+            }),
+            release: jest.fn()
+        };
+        pool.connect.mockResolvedValue(mockClient);
+
+        await purchaseCreate.createOrder(req, res);
+
+        expect(res.status).toHaveBeenCalledWith(201);
+        // 1 Box * 305 = 305 Meters added to stock
+        expect(updatedStockIncrement).toBe(305);
+    });
+
+    test('POS sale of 20 Meters deducts exactly 20 Meters from stock', async () => {
+        const salesOrder = require('../controllers/sales/salesOrderController');
+        const req = {
+            body: {
+                customer_id: 1,
+                items: [
+                    {
+                        product_id: 105,
+                        quantity: 20, // 20 Meters
+                        unit_price: 14.43,
+                        cost_price: 12.46,
+                        unit_type: 'sub_unit',
+                        unit_name: 'Meter'
+                    }
+                ],
+                payments: [{ amount: 288.60, method: 'Cash' }]
+            }
+        };
+        const res = mockRes();
+
+        let deductedStock = 0;
+        const mockClient = {
+            query: jest.fn().mockImplementation((sql, params) => {
+                if (/BEGIN|COMMIT|ROLLBACK/.test(sql)) return Promise.resolve({});
+                if (/SELECT.*FROM products WHERE id/.test(sql)) {
+                    return Promise.resolve({
+                        rows: [{
+                            id: 105,
+                            name: 'Cat.6 Cable Box',
+                            conversion_rate: 305,
+                            unit_name: 'Box',
+                            sub_unit_name: 'Meter',
+                            stock: 305
+                        }]
+                    });
+                }
+                if (/INSERT INTO sales\s*\(/.test(sql)) {
+                    return Promise.resolve({ rows: [{ id: 701, invoice_no: 'INV-20260926-001' }] });
+                }
+                if (/INSERT INTO sales_items/.test(sql)) {
+                    return Promise.resolve({ rows: [{ id: 2001 }] });
+                }
+                if (/UPDATE products\s+SET stock = GREATEST\(0, COALESCE\(stock, 0\) - \$1\)/.test(sql)) {
+                    deductedStock = params[0];
+                    return Promise.resolve({ rows: [] });
+                }
+                if (/SELECT.*FROM payment_accounts/.test(sql)) {
+                    return Promise.resolve({ rows: [{ id: 1, name: 'Cash Drawer', balance: 50000 }] });
+                }
+                return Promise.resolve({ rows: [], rowCount: 0 });
+            }),
+            release: jest.fn()
+        };
+        pool.connect.mockResolvedValue(mockClient);
+
+        await salesOrder.createSale(req, res);
+
+        expect(res.status).toHaveBeenCalledWith(201);
+        // Selling 20 Meters in sub-unit deducts exactly 20 Meters from inventory
+        expect(deductedStock).toBe(20);
+    });
 });

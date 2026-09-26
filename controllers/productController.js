@@ -77,8 +77,13 @@ const formatProductResponse = (row) => {
     unit_name: row.unit_name || 'Pcs',
     sub_unit_name: row.sub_unit_name || null,
     conversion_rate: Number(row.conversion_rate || 1),
-    sub_unit_selling_price: row.sub_unit_selling_price !== null && row.sub_unit_selling_price !== undefined ? Number(row.sub_unit_selling_price) : null,
+    sub_unit_selling_price: row.sub_unit_selling_price !== null && row.sub_unit_selling_price !== undefined
+      ? Number(row.sub_unit_selling_price)
+      : (Number(row.conversion_rate || 1) > 1 ? Number((salePrice / Number(row.conversion_rate)).toFixed(2)) : null),
     sub_unit_barcode: row.sub_unit_barcode || null,
+    stock_display: row.sub_unit_name && Number(row.conversion_rate || 1) > 1
+      ? `${Number(row.stock || 0)} ${row.sub_unit_name} (${(Number(row.stock || 0) / Number(row.conversion_rate)).toFixed(2)} ${row.unit_name || 'Box'})`
+      : `${Number(row.stock || 0)} ${row.unit_name || 'Pcs'}`,
     bundle_items: Array.isArray(row.bundle_items) ? row.bundle_items : [],
   };
 };

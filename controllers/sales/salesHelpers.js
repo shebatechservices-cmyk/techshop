@@ -18,6 +18,9 @@ const ensureSalesColumns = async (dbClient = pool) => {
             ALTER TABLE customers ADD COLUMN IF NOT EXISTS deleted_at TIMESTAMP;
             ALTER TABLE products ADD COLUMN IF NOT EXISTS is_serial_tracked BOOLEAN DEFAULT false;
             ALTER TABLE sales_items ADD COLUMN IF NOT EXISTS warranty_months INT DEFAULT 0;
+            ALTER TABLE sales_items ADD COLUMN IF NOT EXISTS unit_name VARCHAR(50);
+            ALTER TABLE sales_items ADD COLUMN IF NOT EXISTS unit_type VARCHAR(20) DEFAULT 'base_unit';
+            ALTER TABLE sales_items ADD COLUMN IF NOT EXISTS conversion_rate NUMERIC(10,2) DEFAULT 1;
             ALTER TABLE sales ADD COLUMN IF NOT EXISTS previous_due NUMERIC(14,2) DEFAULT 0;
             ALTER TABLE sales ADD COLUMN IF NOT EXISTS exchange_from_invoice_no VARCHAR(100);
             ALTER TABLE sales ADD COLUMN IF NOT EXISTS original_sale_id INT;
@@ -346,7 +349,7 @@ const reverseSaleFinancials = async (sale, id, client) => {
 
     const saleItems = await client.query('SELECT * FROM sales_items WHERE sale_id = $1', [id]);
     for (const item of saleItems.rows) {
-        const prodRes = await client.query('SELECT is_bundle FROM products WHERE id = $1', [item.product_id]);
+        const prodRes = await client.query('SELECT is_bundle, conversion_rate, unit_name, sub_unit_name FROM products WHERE id = $1', [item.product_id]);
         const isBundle = Boolean(prodRes.rows[0]?.is_bundle);
 
         if (isBundle) {
@@ -363,13 +366,19 @@ const reverseSaleFinancials = async (sale, id, client) => {
                 ).catch(() => null);
             }
         } else {
+            const prodData = prodRes.rows[0];
+            const convRate = Number(prodData?.conversion_rate || 1);
+            const isSubUnit = item.unit_type === 'sub_unit' || (prodData?.sub_unit_name && item.unit_name === prodData?.sub_unit_name);
+            const restoreMultiplier = isSubUnit ? 1 : (convRate > 1 ? convRate : 1);
+            const restoreQty = Number(item.quantity || 0) * restoreMultiplier;
+
             await client.query(
                 'UPDATE products SET stock = COALESCE(stock, 0) + $1, updated_at = NOW() WHERE id = $2',
-                [Number(item.quantity || 0), item.product_id]
+                [restoreQty, item.product_id]
             );
             await client.query(
                 'UPDATE stock_levels SET quantity = quantity + $1 WHERE product_id = $2 AND warehouse_id = 1',
-                [Number(item.quantity || 0), item.product_id]
+                [restoreQty, item.product_id]
             ).catch(() => null);
         }
     }

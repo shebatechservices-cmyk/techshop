@@ -204,15 +204,24 @@ export default function SaleProductTable({
                       }`}
                     />
                   ) : (
-                    <input
-                      type="number"
-                      min="1"
-                      value={it.quantity || 1}
-                      onChange={(e) =>
-                        updateItem(it.localId, { quantity: Math.max(1, parseInt(e.target.value) || 1) })
-                      }
-                      className="w-12 py-1 px-1 rounded-md border border-slate-300 text-center text-xs font-medium text-slate-800 outline-none bg-white"
-                    />
+                    <div className="inline-flex items-center gap-1 justify-center">
+                      <input
+                        type="number"
+                        min="0.01"
+                        step="any"
+                        value={it.quantity !== undefined ? it.quantity : 1}
+                        onChange={(e) => {
+                          const val = parseFloat(e.target.value);
+                          updateItem(it.localId, { quantity: isNaN(val) ? '' : val });
+                        }}
+                        className="w-14 py-1 px-1 rounded-md border border-slate-300 text-center text-xs font-semibold text-slate-800 outline-none bg-white focus:ring-1 focus:ring-sky-500"
+                      />
+                      {it.unit_name && (
+                        <span className="text-[10px] text-slate-500 font-bold whitespace-nowrap">
+                          {it.unit_name}
+                        </span>
+                      )}
+                    </div>
                   )}
                 </div>
 
