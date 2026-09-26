@@ -1,5 +1,7 @@
 import React, { useState } from 'react';
 import API from '../../../services/api';
+import BDPhoneInput from '../../../components/shared/BDPhoneInput';
+import { isValidBDPhone } from '../../../utils/phoneUtils';
 
 export default function AddCustomerModal({ isOpen, onClose, onCustomerCreated }) {
   const [name, setName] = useState('');
@@ -24,6 +26,10 @@ export default function AddCustomerModal({ isOpen, onClose, onCustomerCreated })
     }
     if (!phone.trim()) {
       setError('Phone number is required');
+      return;
+    }
+    if (!isValidBDPhone(phone)) {
+      setError('Please enter a valid 10-digit phone number after +880 (e.g. 17-XXXXXXXX).');
       return;
     }
 
@@ -115,19 +121,13 @@ export default function AddCustomerModal({ isOpen, onClose, onCustomerCreated })
 
             {/* Phone & Email Grid */}
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-              <div className="flex flex-col gap-1.5">
-                <label className="text-sm font-bold text-slate-700">
-                  Phone Number <span className="text-rose-500">*</span>
-                </label>
-                <input
-                  type="tel"
-                  placeholder="e.g. 01711000000"
-                  value={phone}
-                  onChange={(e) => setPhone(e.target.value)}
-                  required
-                  className="w-full px-3.5 py-2.5 border border-slate-300 rounded-lg text-sm text-slate-800 focus:outline-none focus:ring-2 focus:ring-green-500"
-                />
-              </div>
+              <BDPhoneInput
+                label="Phone Number"
+                required
+                value={phone}
+                onChange={(e) => setPhone(e.target.value)}
+                placeholder="1X-XXXXXXXX"
+              />
 
               <div className="flex flex-col gap-1.5">
                 <label className="text-sm font-bold text-slate-700">

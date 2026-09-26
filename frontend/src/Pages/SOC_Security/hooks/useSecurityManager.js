@@ -1,5 +1,6 @@
 import { useState, useEffect, useMemo, useCallback } from 'react';
 import API from '../../../services/api';
+import { isValidBDPhone } from '../../../utils/phoneUtils';
 import {
   DEFAULT_MODULES,
   DEFAULT_ROLES,
@@ -348,6 +349,10 @@ export function useSecurityManager() {
   // Create Staff / Technician
   const handleCreateStaff = async (e) => {
     e.preventDefault();
+    if (newStaff.phone && !isValidBDPhone(newStaff.phone)) {
+      showToast('Please enter a valid 10-digit phone number after +880 (e.g. 17-XXXXXXXX)');
+      return;
+    }
     try {
       const optimisticId = Date.now();
       const createdUser = {
@@ -400,6 +405,10 @@ export function useSecurityManager() {
   const handleUpdateStaffSubmit = async (e) => {
     e.preventDefault();
     if (!editingStaff) return;
+    if (editingStaff.phone && !isValidBDPhone(editingStaff.phone)) {
+      showToast('Please enter a valid 10-digit phone number after +880 (e.g. 17-XXXXXXXX)');
+      return;
+    }
     try {
       setUsers((prev) =>
         prev.map((u) => (u.id === editingStaff.id ? { ...u, ...editingStaff } : u))

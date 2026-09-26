@@ -1,4 +1,5 @@
 import React from 'react';
+import BDPhoneInput from '../../../components/shared/BDPhoneInput';
 
 export default function CustomerAccountView({
   customer,
@@ -176,31 +177,12 @@ export default function CustomerAccountView({
             </div>
 
             <div style={{ marginBottom: '12px' }}>
-              <label
-                style={{
-                  display: 'block',
-                  fontSize: '0.8rem',
-                  fontWeight: 700,
-                  color: '#334155',
-                  marginBottom: '4px',
-                }}
-              >
-                Mobile Number *
-              </label>
-              <input
-                type="text"
+              <BDPhoneInput
+                label="Mobile Number"
                 required
-                placeholder="017XXXXXXXX"
+                placeholder="1X-XXXXXXXX"
                 value={authPhone}
                 onChange={(e) => setAuthPhone(e.target.value)}
-                style={{
-                  width: '100%',
-                  padding: '8px 12px',
-                  borderRadius: '6px',
-                  border: '1px solid #cbd5e1',
-                  fontSize: '0.88rem',
-                  boxSizing: 'border-box',
-                }}
               />
             </div>
 

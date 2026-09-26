@@ -1,5 +1,6 @@
 import { useState, useEffect, useMemo } from 'react';
 import API from '../../../services/api';
+import { isValidBDPhone } from '../../../utils/phoneUtils';
 
 export const money = (val) => Number.parseFloat(val || 0) || 0;
 export const taka = (val) =>
@@ -113,6 +114,10 @@ export default function useStorefrontManager({ products = [], onOrderPlaced } = 
       setAuthMsg('Please enter both name and phone number.');
       return;
     }
+    if (!isValidBDPhone(authPhone)) {
+      setAuthMsg('Please enter a valid 10-digit phone number after +880 (e.g. 17-XXXXXXXX).');
+      return;
+    }
     try {
       setAuthLoading(true);
       setAuthMsg('');
@@ -163,6 +168,10 @@ export default function useStorefrontManager({ products = [], onOrderPlaced } = 
     }
     if (!checkoutName.trim() || !checkoutPhone.trim() || !checkoutAddress.trim()) {
       setCheckoutError('Please provide delivery recipient name, phone number, and address.');
+      return;
+    }
+    if (!isValidBDPhone(checkoutPhone)) {
+      setCheckoutError('Please enter a valid 10-digit delivery phone number after +880 (e.g. 17-XXXXXXXX).');
       return;
     }
 

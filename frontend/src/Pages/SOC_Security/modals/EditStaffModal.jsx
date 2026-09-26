@@ -1,4 +1,5 @@
 import React from "react";
+import BDPhoneInput from "../../../components/shared/BDPhoneInput";
 
 export default function EditStaffModal({
   editingStaff,
@@ -47,15 +48,12 @@ export default function EditStaffModal({
 
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mb-3">
             <div>
-              <label className="block text-xs font-bold text-slate-700 mb-1">
-                Mobile Number *
-              </label>
-              <input
-                type="text"
+              <BDPhoneInput
+                label="Mobile Number"
                 required
                 value={editingStaff.phone}
                 onChange={(e) => setEditingStaff({ ...editingStaff, phone: e.target.value })}
-                className="w-full px-2.5 py-2 rounded-md border border-slate-300 text-sm focus:outline-none focus:ring-2 focus:ring-sky-500/20 focus:border-sky-500 bg-white text-slate-900 box-border"
+                placeholder="1X-XXXXXXXX"
               />
             </div>
             <div>

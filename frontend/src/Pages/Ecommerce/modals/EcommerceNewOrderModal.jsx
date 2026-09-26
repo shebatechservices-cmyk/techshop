@@ -1,5 +1,7 @@
 import React, { useState } from 'react';
 import API from '../../../services/api';
+import BDPhoneInput from '../../../components/shared/BDPhoneInput';
+import { isValidBDPhone } from '../../../utils/phoneUtils';
 
 const money = (val) => Number.parseFloat(val || 0) || 0;
 const taka = (val) => `৳${money(val).toLocaleString('en-BD', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
@@ -59,6 +61,10 @@ export default function EcommerceNewOrderModal({ isOpen, onClose, products = [],
     e.preventDefault();
     if (!customerName.trim() || !customerPhone.trim() || !shippingAddress.trim()) {
       setError('Please fill in customer name, phone number, and delivery address.');
+      return;
+    }
+    if (!isValidBDPhone(customerPhone)) {
+      setError('Please enter a valid 10-digit phone number after +880 (e.g. 17-XXXXXXXX).');
       return;
     }
 
@@ -205,16 +211,12 @@ export default function EcommerceNewOrderModal({ isOpen, onClose, products = [],
               </div>
 
               <div>
-                <label style={{ display: 'block', fontSize: '0.8rem', fontWeight: 700, color: '#334155', marginBottom: '4px' }}>
-                  Phone Number *
-                </label>
-                <input
-                  type="text"
+                <BDPhoneInput
+                  label="Phone Number"
                   required
-                  placeholder="017XXXXXXXX"
+                  placeholder="1X-XXXXXXXX"
                   value={customerPhone}
                   onChange={(e) => setCustomerPhone(e.target.value)}
-                  style={{ width: '100%', padding: '8px 12px', borderRadius: '6px', border: '1px solid #cbd5e1', fontSize: '0.88rem', boxSizing: 'border-box' }}
                 />
               </div>
             </div>

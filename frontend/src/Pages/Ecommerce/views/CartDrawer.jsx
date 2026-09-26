@@ -1,4 +1,5 @@
 import React from 'react';
+import BDPhoneInput from '../../../components/shared/BDPhoneInput';
 
 export default function CartDrawer({
   isOpen,
@@ -200,20 +201,11 @@ export default function CartDrawer({
               </div>
 
               <div style={{ marginBottom: '8px' }}>
-                <input
-                  type="text"
+                <BDPhoneInput
                   required
-                  placeholder="Mobile Number *"
+                  placeholder="1X-XXXXXXXX"
                   value={checkoutPhone}
                   onChange={(e) => setCheckoutPhone(e.target.value)}
-                  style={{
-                    width: '100%',
-                    padding: '7px 10px',
-                    borderRadius: '6px',
-                    border: '1px solid #cbd5e1',
-                    fontSize: '0.82rem',
-                    boxSizing: 'border-box',
-                  }}
                 />
               </div>
 

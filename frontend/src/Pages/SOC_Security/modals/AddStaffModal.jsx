@@ -1,4 +1,5 @@
 import React from "react";
+import BDPhoneInput from "../../../components/shared/BDPhoneInput";
 
 export default function AddStaffModal({
   isOpen,
@@ -38,16 +39,12 @@ export default function AddStaffModal({
               />
             </div>
             <div>
-              <label className="block text-xs font-bold text-slate-700 mb-1">
-                Mobile Number (Primary Login) *
-              </label>
-              <input
-                type="text"
+              <BDPhoneInput
+                label="Mobile Number (Login)"
                 required
-                placeholder="017XXXXXXXX"
                 value={newStaff.phone}
                 onChange={(e) => setNewStaff({ ...newStaff, phone: e.target.value })}
-                className="w-full px-2.5 py-2 rounded-md border border-slate-300 text-sm focus:outline-none focus:ring-2 focus:ring-sky-500/20 focus:border-sky-500 bg-white text-slate-900 box-border"
+                placeholder="1X-XXXXXXXX"
               />
             </div>
           </div>

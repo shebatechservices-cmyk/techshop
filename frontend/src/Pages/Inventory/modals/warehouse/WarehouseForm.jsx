@@ -1,4 +1,5 @@
 import React from 'react';
+import BDPhoneInput from '../../../../components/shared/BDPhoneInput';
 
 export default function WarehouseForm({
   editingId,
@@ -141,22 +142,12 @@ export default function WarehouseForm({
 
         {/* Phone */}
         <div>
-          <label style={{ display: 'block', fontSize: '0.74rem', fontWeight: 700, color: '#334155', marginBottom: '3px' }}>
-            Phone / Mobile Number
-          </label>
-          <input
-            type="text"
+          <BDPhoneInput
+            label="Phone / Mobile Number"
+            name="phone"
             value={formData.phone}
             onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
-            placeholder="e.g. 017xxxxxxxx"
-            style={{
-              width: '100%',
-              padding: '6px 10px',
-              borderRadius: '6px',
-              border: '1px solid #cbd5e1',
-              fontSize: '0.82rem',
-              boxSizing: 'border-box',
-            }}
+            placeholder="1X-XXXXXXXX"
           />
         </div>
       </div>

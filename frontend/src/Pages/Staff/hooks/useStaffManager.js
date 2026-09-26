@@ -1,5 +1,6 @@
 import { useState, useEffect, useCallback } from 'react';
 import API from '../../../services/api';
+import { isValidBDPhone } from '../../../utils/phoneUtils';
 
 const INITIAL_FORM = {
   name: '',
@@ -171,6 +172,9 @@ export default function useStaffManager() {
     }
     if (!formData.phone && !formData.email) {
       errors.contact = 'At least a phone number or email is required';
+    }
+    if (formData.phone && !isValidBDPhone(formData.phone)) {
+      errors.contact = 'Please enter a valid 10-digit phone number after +880 (e.g. 17-XXXXXXXX)';
     }
     if (modalMode === 'create' && (!formData.password || formData.password.trim().length < 4)) {
       errors.password = 'Password must be at least 4 characters long';

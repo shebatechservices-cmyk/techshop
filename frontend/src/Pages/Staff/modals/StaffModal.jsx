@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import BDPhoneInput from '../../../components/shared/BDPhoneInput';
 
 export default function StaffModal({
   isOpen,
@@ -89,15 +90,12 @@ export default function StaffModal({
 
               {/* Phone Number */}
               <div>
-                <label className="block text-sm font-bold text-slate-700 mb-1.5">
-                  Phone Number <span className="text-slate-400 text-xs">(Login & SMS)</span>
-                </label>
-                <input
-                  type="text"
-                  placeholder="017XXXXXXXX"
+                <BDPhoneInput
+                  label="Phone Number"
+                  helperText="(Primary Login & SMS)"
+                  placeholder="1X-XXXXXXXX"
                   value={formData.phone || ''}
                   onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
-                  className="w-full px-3.5 py-2.5 border border-slate-300 rounded-xl text-sm focus:outline-none focus:ring-2 focus:border-blue-500 focus:ring-blue-100 text-slate-800"
                 />
               </div>
 

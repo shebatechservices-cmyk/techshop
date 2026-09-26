@@ -1,5 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import API from '../../../services/api';
+import BDPhoneInput from '../../../components/shared/BDPhoneInput';
+import { isValidBDPhone } from '../../../utils/phoneUtils';
 
 export default function NewProjectModal({ isOpen, onClose, onSuccess }) {
   const [projectCategory, setProjectCategory] = useState('new_setup'); // 'new_setup' | 'old_repair'
@@ -80,6 +82,10 @@ export default function NewProjectModal({ isOpen, onClose, onSuccess }) {
     e.preventDefault();
     if (!title.trim()) {
       alert('Please enter a project title.');
+      return;
+    }
+    if (sitePhone && !isValidBDPhone(sitePhone)) {
+      alert('Please enter a valid 10-digit site phone number after +880 (e.g. 17-XXXXXXXX).');
       return;
     }
 
@@ -322,16 +328,11 @@ export default function NewProjectModal({ isOpen, onClose, onSuccess }) {
               </div>
 
               <div>
-                <label style={{ display: 'block', fontSize: '0.82rem', fontWeight: 600, color: '#334155', marginBottom: '4px' }}>
-                  Site Phone Number *
-                </label>
-                <input
-                  type="text"
-                  required
-                  placeholder="017xxxxxxxx"
+                <BDPhoneInput
+                  label="Site Phone Number"
+                  placeholder="1X-XXXXXXXX"
                   value={sitePhone}
                   onChange={(e) => setSitePhone(e.target.value)}
-                  style={{ width: '100%', padding: '8px 12px', borderRadius: '6px', border: '1px solid #cbd5e1', fontSize: '0.85rem', boxSizing: 'border-box' }}
                 />
               </div>
 

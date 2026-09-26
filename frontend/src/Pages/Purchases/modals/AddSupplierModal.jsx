@@ -1,5 +1,7 @@
 import React, { useState } from 'react';
 import API from '../../../services/api';
+import BDPhoneInput from '../../../components/shared/BDPhoneInput';
+import { isValidBDPhone } from '../../../utils/phoneUtils';
 
 export default function AddSupplierModal({ isOpen, onClose, onSupplierCreated }) {
   const [formData, setFormData] = useState({
@@ -29,6 +31,14 @@ export default function AddSupplierModal({ isOpen, onClose, onSupplierCreated })
     e.preventDefault();
     if (!formData.name.trim()) {
       setError('Supplier name is required');
+      return;
+    }
+    if (formData.phone && !isValidBDPhone(formData.phone)) {
+      setError('Please enter a valid 10-digit phone number after +880 (e.g. 17-XXXXXXXX).');
+      return;
+    }
+    if (formData.mobile && !isValidBDPhone(formData.mobile)) {
+      setError('Please enter a valid 10-digit alternative mobile number after +880 (e.g. 18-XXXXXXXX).');
       return;
     }
 
@@ -139,34 +149,22 @@ export default function AddSupplierModal({ isOpen, onClose, onSupplierCreated })
             </div>
 
             {/* Phone */}
-            <div className="flex flex-col gap-1.5">
-              <label className="text-sm font-bold text-slate-700">
-                Phone Number
-              </label>
-              <input
-                type="text"
-                name="phone"
-                value={formData.phone}
-                onChange={handleChange}
-                placeholder="e.g. 01711000000"
-                className="w-full px-3.5 py-2.5 border border-slate-300 rounded-lg text-sm text-slate-800 focus:outline-none focus:ring-2 focus:ring-sky-500"
-              />
-            </div>
+            <BDPhoneInput
+              label="Phone Number"
+              name="phone"
+              value={formData.phone}
+              onChange={handleChange}
+              placeholder="1X-XXXXXXXX"
+            />
 
             {/* Mobile */}
-            <div className="flex flex-col gap-1.5">
-              <label className="text-sm font-bold text-slate-700">
-                Alternative Mobile
-              </label>
-              <input
-                type="text"
-                name="mobile"
-                value={formData.mobile}
-                onChange={handleChange}
-                placeholder="e.g. 01811000000"
-                className="w-full px-3.5 py-2.5 border border-slate-300 rounded-lg text-sm text-slate-800 focus:outline-none focus:ring-2 focus:ring-sky-500"
-              />
-            </div>
+            <BDPhoneInput
+              label="Alternative Mobile"
+              name="mobile"
+              value={formData.mobile}
+              onChange={handleChange}
+              placeholder="1X-XXXXXXXX"
+            />
 
             {/* Email */}
             <div className="flex flex-col gap-1.5">

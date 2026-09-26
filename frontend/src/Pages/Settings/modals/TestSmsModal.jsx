@@ -1,4 +1,5 @@
 import React from 'react';
+import BDPhoneInput from '../../../components/shared/BDPhoneInput';
 
 export default function TestSmsModal({
   testSmsModal,
@@ -71,15 +72,12 @@ export default function TestSmsModal({
           </div>
 
           <div>
-            <label className="block text-[11px] font-bold text-slate-700 uppercase tracking-wider mb-1">
-              Recipient Mobile Number <span className="text-red-500">*</span>
-            </label>
-            <input
-              type="text"
+            <BDPhoneInput
+              label="Recipient Mobile Number"
+              required
               value={testSmsModal.phone}
               onChange={(e) => setTestSmsModal({ ...testSmsModal, phone: e.target.value })}
-              placeholder="017xxxxxxxx"
-              className="w-full px-3 py-2 text-xs rounded-lg border border-slate-300 focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none transition"
+              placeholder="1X-XXXXXXXX"
             />
           </div>
 
