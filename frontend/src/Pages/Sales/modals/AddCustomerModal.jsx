@@ -75,11 +75,15 @@ export default function AddCustomerModal({ isOpen, onClose, onCustomerCreated })
       aria-modal="true"
       onClick={(e) => {
         if (e.target === e.currentTarget) {
+          e.stopPropagation();
           onClose();
         }
       }}
     >
-      <div className="bg-white w-full max-w-2xl rounded-2xl shadow-2xl overflow-hidden border border-slate-200 animate-in fade-in zoom-in duration-150 flex flex-col">
+      <div
+        onClick={(e) => e.stopPropagation()}
+        className="bg-white w-full max-w-2xl rounded-2xl shadow-2xl overflow-hidden border border-slate-200 animate-in fade-in zoom-in duration-150 flex flex-col"
+      >
         {/* Header */}
         <div className="px-6 py-4 bg-white border-b border-gray-200 flex justify-between items-center">
           <div className="flex items-center gap-3">

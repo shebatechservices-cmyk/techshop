@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { createPortal } from 'react-dom';
 import SalePrintModal from './SalePrintModal';
 import AddCustomerModal from './AddCustomerModal';
 import SaleCustomerSidebar from '../components/SaleCustomerSidebar';
@@ -152,8 +153,8 @@ export default function NewSaleModal({
 
   if (!isOpen) return null;
 
-  return (
-    <div className="fixed inset-0 z-[99999] bg-slate-900/75 flex items-center justify-center p-4 backdrop-blur-[3px]">
+  return createPortal(
+    <div className="fixed inset-0 z-[50000] bg-slate-900/75 flex items-center justify-center p-4 backdrop-blur-[3px]">
       <div className="bg-slate-50 rounded-2xl w-[min(1180px,calc(100vw-32px))] max-h-[calc(100vh-32px)] shadow-2xl overflow-hidden grid grid-rows-[auto_minmax(0,1fr)_auto]">
         {/* Header */}
         <div className="px-6 py-4 bg-white border-b border-gray-200 flex justify-between items-center">
@@ -545,6 +546,7 @@ export default function NewSaleModal({
           }}
         />
       )}
-    </div>
+    </div>,
+    document.body
   );
 }
