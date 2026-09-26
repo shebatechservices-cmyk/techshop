@@ -311,8 +311,8 @@ export default function App() {
             </Suspense>
           </main>
 
-          {/* Mobile Bottom Navigation Bar */}
-          <nav className="mobile-bottom-nav">
+          {/* Mobile Bottom Navigation Bar (Strictly Hidden on Desktop) */}
+          <nav className="mobile-bottom-nav md:hidden">
             {isTechnician ? (
               <>
                 <button
@@ -398,27 +398,29 @@ export default function App() {
         </div>
       </div>
 
-      {/* Mobile Floating Action Button Speed Dial (Hidden for Technicians) */}
+      {/* Mobile Floating Action Button Speed Dial (Strictly Hidden on Desktop & for Technicians) */}
       {!isTechnician && (
-        <MobileQuickActionFab
-          onQuickSale={() => {
-            setSection("sales");
-            setGlobalNav({ section: "sales", tab: "new", key: Date.now() });
-          }}
-          onQuickPurchase={() => setIsPurchaseOpen(true)}
-          onQuickExpense={() => {
-            setSection("expenses");
-            setGlobalNav({ section: "expenses", key: Date.now() });
-          }}
-          onQuickScanner={() => {
-            setSection("inventory");
-            setGlobalNav({ section: "inventory", key: Date.now() });
-          }}
-          onQuickAddProduct={() => {
-            setSection("products");
-            window.dispatchEvent(new CustomEvent("open-add-product"));
-          }}
-        />
+        <div className="md:hidden">
+          <MobileQuickActionFab
+            onQuickSale={() => {
+              setSection("sales");
+              setGlobalNav({ section: "sales", tab: "new", key: Date.now() });
+            }}
+            onQuickPurchase={() => setIsPurchaseOpen(true)}
+            onQuickExpense={() => {
+              setSection("expenses");
+              setGlobalNav({ section: "expenses", key: Date.now() });
+            }}
+            onQuickScanner={() => {
+              setSection("inventory");
+              setGlobalNav({ section: "inventory", key: Date.now() });
+            }}
+            onQuickAddProduct={() => {
+              setSection("products");
+              window.dispatchEvent(new CustomEvent("open-add-product"));
+            }}
+          />
+        </div>
       )}
 
       {/* Mobile Navigation Drawer */}

@@ -30,7 +30,7 @@ export default function MobileQuickActionFab({
   };
 
   return (
-    <div ref={fabRef} className="mobile-fab-container">
+    <div ref={fabRef} className="mobile-fab-container md:hidden">
       {/* Speed Dial Menu Items */}
       {isOpen && (
         <div className="mobile-fab-menu" role="menu" aria-label="Quick Actions Menu">
@@ -42,7 +42,7 @@ export default function MobileQuickActionFab({
             title="New Quick Sale"
           >
             <span className="fab-action-icon">⚡</span>
-            <span className="fab-action-label">ক্যাশ মেমো / New Sale</span>
+            <span className="fab-action-label">New Sale</span>
           </button>
 
           {/* Quick Expense */}
@@ -53,7 +53,7 @@ export default function MobileQuickActionFab({
             title="Quick Expense Entry"
           >
             <span className="fab-action-icon">💸</span>
-            <span className="fab-action-label">দ্রুত খরচ / Quick Expense</span>
+            <span className="fab-action-label">Quick Expense</span>
           </button>
 
           {/* Quick Purchase */}
@@ -64,7 +64,7 @@ export default function MobileQuickActionFab({
             title="New Purchase Entry"
           >
             <span className="fab-action-icon">🛒</span>
-            <span className="fab-action-label">পণ্য ক্রয় / New Purchase</span>
+            <span className="fab-action-label">New Purchase</span>
           </button>
 
           {/* Barcode Scanner / Search */}
@@ -75,7 +75,7 @@ export default function MobileQuickActionFab({
             title="Barcode Scanner / Search"
           >
             <span className="fab-action-icon">📷</span>
-            <span className="fab-action-label">বারকোড স্ক্যানার / Scanner</span>
+            <span className="fab-action-label">Barcode Scanner</span>
           </button>
         </div>
       )}
