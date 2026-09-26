@@ -184,51 +184,22 @@ export default function RealtimeNotificationCenter({ onNavigate, compact = false
         ref={buttonRef}
         type="button"
         onClick={() => setIsOpen(!isOpen)}
-        style={compact ? {
-          background: isOpen ? '#38bdf8' : 'rgba(255, 255, 255, 0.1)',
-          color: isOpen ? '#0f172a' : '#f1f5f9',
-          border: '1px solid rgba(255, 255, 255, 0.2)',
-          borderRadius: '7px',
-          padding: '5px 8px',
-          display: 'flex',
-          alignItems: 'center',
-          gap: '5px',
-          cursor: 'pointer',
-          position: 'relative',
-          transition: 'all 0.15s ease'
-        } : {
-          background: isOpen ? '#0f172a' : '#fff',
-          color: isOpen ? '#fff' : '#334155',
-          border: '1px solid #cbd5e1',
-          borderRadius: '10px',
-          padding: '8px 12px',
-          display: 'flex',
-          alignItems: 'center',
-          gap: '8px',
-          cursor: 'pointer',
-          position: 'relative',
-          boxShadow: '0 1px 3px rgba(0,0,0,0.06)',
-          transition: 'all 0.15s ease'
-        }}
+        className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg border text-xs font-semibold transition-all ${
+          isOpen
+            ? 'bg-gray-100 border-gray-300 text-gray-900 shadow-inner'
+            : 'bg-white border-gray-200 text-gray-700 hover:bg-gray-50 hover:text-gray-900 shadow-sm'
+        }`}
         title="Live System Notifications"
       >
-        <span style={{ fontSize: compact ? '0.98rem' : '1.15rem' }}>🔔</span>
-        <span style={{ fontSize: compact ? '0.76rem' : '0.82rem', fontWeight: '700', display: 'flex', alignItems: 'center', gap: '4px' }}>
-          Alerts
-          {unreadCount > 0 && (
-            <span style={{
-              background: '#ef4444',
-              color: '#fff',
-              fontSize: compact ? '0.62rem' : '0.68rem',
-              fontWeight: '800',
-              padding: compact ? '1px 5px' : '1px 6px',
-              borderRadius: '10px',
-              boxShadow: '0 0 8px rgba(239, 68, 68, 0.6)'
-            }}>
-              {unreadCount}
-            </span>
-          )}
-        </span>
+        <svg className="w-4 h-4 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="2">
+          <path strokeLinecap="round" strokeLinejoin="round" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" />
+        </svg>
+        <span className="font-bold text-gray-700">Alerts</span>
+        {unreadCount > 0 && (
+          <span className="bg-red-500 text-white text-[10px] font-extrabold px-1.5 py-0.5 rounded-full leading-none">
+            {unreadCount}
+          </span>
+        )}
       </button>
 
       {/* Slide-out / Popover Notification Panel */}

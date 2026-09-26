@@ -130,13 +130,11 @@ export default function GlobalSearchBar({ onNavigate, compact = false, className
     <div className={`relative w-full z-[900] ${className}`}>
       {/* Search Input Bar */}
       <div
-        className={`w-full flex items-center bg-white rounded-xl border transition-all duration-200 ${
-          isOpen
-            ? 'border-sky-500 shadow-md ring-2 ring-sky-100'
-            : 'border-slate-300 shadow-sm hover:border-slate-400'
-        } ${compact ? 'px-3 py-1.5' : 'px-4 py-2.5'}`}
+        className={`w-full flex items-center bg-gray-100 border border-transparent rounded-lg transition-all duration-150 focus-within:bg-white focus-within:border-transparent focus-within:ring-2 focus-within:ring-green-500 focus-within:shadow-sm ${compact ? 'px-3 py-1.5' : 'px-4 py-2'}`}
       >
-        <span className={`text-sky-600 mr-2.5 flex-shrink-0 ${compact ? 'text-sm' : 'text-base'}`}>🔍</span>
+        <svg className={`text-gray-500 mr-2.5 flex-shrink-0 ${compact ? 'w-4 h-4' : 'w-5 h-5'}`} fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="2">
+          <path strokeLinecap="round" strokeLinejoin="round" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+        </svg>
         <input
           ref={inputRef}
           type="text"
@@ -145,13 +143,13 @@ export default function GlobalSearchBar({ onNavigate, compact = false, className
             if (query.trim()) setIsOpen(true);
           }}
           onChange={(e) => handleQueryChange(e.target.value)}
-          placeholder={compact ? "Search invoices, customers, suppliers..." : "Global Search: Invoices, Quotations, Customers, Suppliers, Products, SKU, Barcodes..."}
-          className={`flex-1 min-w-0 border-0 outline-none bg-transparent font-medium text-slate-800 placeholder-slate-400 ${compact ? 'text-xs' : 'text-sm'}`}
+          placeholder={compact ? "Search invoices, customers, suppliers..." : "Global Search: Invoices, Quotations, Customers, Suppliers, Products, SKU..."}
+          className={`flex-1 min-w-0 border-none outline-none bg-transparent font-medium text-gray-800 placeholder-gray-400 focus:outline-none focus:ring-0 ${compact ? 'text-xs' : 'text-sm'}`}
         />
 
         {/* Loading Spinner */}
         {loading && (
-          <span className="text-xs font-semibold text-sky-600 mr-2 animate-pulse flex-shrink-0">
+          <span className="text-xs font-semibold text-green-600 mr-2 animate-pulse flex-shrink-0">
             Searching...
           </span>
         )}
@@ -161,17 +159,19 @@ export default function GlobalSearchBar({ onNavigate, compact = false, className
           <button
             type="button"
             onClick={handleClear}
-            className="p-1 text-slate-400 hover:text-slate-600 rounded-md transition-colors mr-1 flex-shrink-0"
+            className="p-1 text-gray-400 hover:text-gray-600 rounded-md transition-colors mr-1 flex-shrink-0"
             title="Clear search"
           >
-            ✕
+            <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="2">
+              <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
+            </svg>
           </button>
         )}
 
         {/* Shortcut Badge */}
         <span
-          className={`bg-slate-100 border border-slate-200 text-slate-500 font-bold rounded-md tracking-wider select-none whitespace-nowrap flex-shrink-0 ${
-            compact ? 'text-[10px] px-1.5 py-0.5' : 'text-xs px-2.5 py-1'
+          className={`bg-gray-200/80 text-gray-500 font-semibold rounded tracking-wide select-none whitespace-nowrap flex-shrink-0 ${
+            compact ? 'text-[10px] px-1.5 py-0.5' : 'text-xs px-2 py-0.5'
           }`}
           title="Press Ctrl+K to search anytime"
         >
