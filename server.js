@@ -101,9 +101,8 @@ app.use('/api/security/login', authLimiter);
 app.use('/api/security/signup', authLimiter);
 app.use('/api/security/recovery-request', otpLimiter);
 
-// Global License Kill Switch Middleware
+// Global License Kill Switch Middleware for API requests
 app.use('/api', checkLicenseKillSwitch);
-app.use(checkLicenseKillSwitch);
 
 app.use('/api', async (req, res, next) => {
     const rawPath = req.path;
@@ -144,10 +143,9 @@ app.use('/api', async (req, res, next) => {
     return requireAuth(req, res, next);
 });
 
-// Register API routes on both /api and root prefixes for maximum client compatibility
+// Register API routes strictly under /api prefix so they do not conflict with frontend SPA routes
 const registerRoute = (basePath, router) => {
     app.use(`/api${basePath}`, router);
-    app.use(basePath, router);
 };
 
 registerRoute('/license', require('./routes/licenseRoute'));
@@ -191,17 +189,32 @@ registerRoute('/product_names', createEntityRouter('product_names'));
 registerRoute('/sub-categories', createEntityRouter('sub_categories'));
 registerRoute('/sub_categories', createEntityRouter('sub_categories'));
 
-// Serve frontend static files in production if built
+// Serve frontend static assets in production if built
 const distPath = path.join(__dirname, 'frontend/dist');
 if (fs.existsSync(distPath)) {
     app.use(express.static(distPath));
-    app.use((req, res, next) => {
-        if (req.method === 'GET' && !req.path.startsWith('/api') && req.accepts('html')) {
-            return res.sendFile(path.join(distPath, 'index.html'));
-        }
-        next();
-    });
 }
+
+// 404 handler for unmatched /api requests (returns JSON, never HTML)
+app.use('/api', (req, res) => {
+    res.status(404).json({
+        success: false,
+        error: 'API endpoint not found',
+        path: req.originalUrl
+    });
+});
+
+// Catch-all route to serve the React SPA index.html for all non-API GET requests
+app.use((req, res, next) => {
+    if (req.method === 'GET') {
+        const indexPath = path.join(__dirname, 'frontend/dist/index.html');
+        if (fs.existsSync(indexPath)) {
+            return res.sendFile(indexPath);
+        }
+        return res.status(404).send('Frontend build not found. Please build the frontend application.');
+    }
+    next();
+});
 
 // Global JSON error handler: ensure unhandled errors always return JSON, never HTML
 app.use((err, req, res, next) => {
