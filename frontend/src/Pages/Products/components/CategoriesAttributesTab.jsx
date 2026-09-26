@@ -110,37 +110,69 @@ export default function CategoriesAttributesTab({
               {/* Items List */}
               <div className="space-y-1.5 max-h-56 overflow-y-auto pr-1 my-3">
                 {items.length > 0 ? (
-                  items.map((item) => (
-                    <div
-                      key={item.id}
-                      className="flex justify-between items-center px-2.5 py-1.5 bg-slate-50 rounded-lg border border-slate-100 text-xs hover:bg-slate-100/70 transition-colors"
-                    >
-                      <span className="font-semibold text-slate-800">
-                        {item.name}
-                        {entity === "sub_categories" && item.category_id ? (
-                          <small className="text-slate-400 font-normal ml-1">
-                            ({categories.find((c) => c.id === item.category_id)?.name || ""})
-                          </small>
-                        ) : null}
-                      </span>
-                      <div className="flex items-center gap-2">
-                        <button
-                          type="button"
-                          onClick={() => openQuickEditModal(entity, item)}
-                          className="text-sky-600 hover:text-sky-800 text-[11px] font-bold cursor-pointer"
-                        >
-                          Edit
-                        </button>
-                        <button
-                          type="button"
-                          onClick={() => deleteAttribute(entity, item)}
-                          className="text-rose-500 hover:text-rose-700 text-[11px] font-bold cursor-pointer"
-                        >
-                          Delete
-                        </button>
+                  items.map((item) => {
+                    const getParentContext = () => {
+                      if (entity === "sub_categories") {
+                        const parent = categories.find((c) => String(c.id) === String(item.category_id));
+                        return parent ? { label: "Category", name: parent.name } : item.category_name ? { label: "Category", name: item.category_name } : null;
+                      }
+                      if (entity === "brands") {
+                        const parent = subCategories.find((s) => String(s.id) === String(item.sub_category_id));
+                        return parent ? { label: "Sub-category", name: parent.name } : item.sub_category_name ? { label: "Sub-category", name: item.sub_category_name } : null;
+                      }
+                      if (entity === "product_names") {
+                        const parent = brands.find((b) => String(b.id) === String(item.brand_id));
+                        return parent ? { label: "Brand", name: parent.name } : item.brand_name ? { label: "Brand", name: item.brand_name } : null;
+                      }
+                      if (entity === "models") {
+                        const parent = brands.find((b) => String(b.id) === String(item.brand_id));
+                        return parent ? { label: "Brand", name: parent.name } : item.brand_name ? { label: "Brand", name: item.brand_name } : null;
+                      }
+                      if (entity === "series") {
+                        const parent = models.find((m) => String(m.id) === String(item.model_id));
+                        return parent ? { label: "Model", name: parent.name } : item.model_name ? { label: "Model", name: item.model_name } : null;
+                      }
+                      return null;
+                    };
+                    const parentContext = getParentContext();
+
+                    return (
+                      <div
+                        key={item.id}
+                        className="flex justify-between items-center px-2.5 py-1.5 bg-slate-50 rounded-lg border border-slate-100 text-xs hover:bg-slate-100/70 transition-colors"
+                      >
+                        <div className="flex flex-col min-w-0 pr-2">
+                          <span className="font-semibold text-slate-800 truncate">
+                            {item.name}
+                          </span>
+                          {parentContext && (
+                            <span className="text-[10px] text-slate-500 font-medium truncate flex items-center gap-1 mt-0.5">
+                              <span className="text-slate-400">{parentContext.label}:</span>
+                              <span className="font-semibold text-sky-700 bg-sky-50 px-1.5 py-0.2 rounded border border-sky-100">
+                                {parentContext.name}
+                              </span>
+                            </span>
+                          )}
+                        </div>
+                        <div className="flex items-center gap-2 shrink-0">
+                          <button
+                            type="button"
+                            onClick={() => openQuickEditModal(entity, item)}
+                            className="text-sky-600 hover:text-sky-800 text-[11px] font-bold cursor-pointer"
+                          >
+                            Edit
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => deleteAttribute(entity, item)}
+                            className="text-rose-500 hover:text-rose-700 text-[11px] font-bold cursor-pointer"
+                          >
+                            Delete
+                          </button>
+                        </div>
                       </div>
-                    </div>
-                  ))
+                    );
+                  })
                 ) : (
                   <div className="text-center py-6 text-slate-400 text-xs font-medium">
                     No items found
