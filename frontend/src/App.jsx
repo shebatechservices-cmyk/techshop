@@ -227,86 +227,88 @@ export default function App() {
             </div>
           )}
 
-          {/* Dynamic Module Route View */}
-          <main className="flex-1">
-            <Suspense fallback={<PageFallback />}>
-              {section === "wallet" ? (
-                <TechnicianWallet currentUser={currentUser} />
-              ) : section === "inventory" ? (
-                <Inventory
-                  readOnly={isTechnician}
-                  onOpenNewSale={
-                    isTechnician
-                      ? undefined
-                      : (product) => {
-                          setSection("sales");
-                          setGlobalNav({
-                            section: "sales",
-                            tab: "history",
-                            search: product.name || "",
-                            key: Date.now(),
-                          });
-                        }
-                  }
-                />
-              ) : section === "projects" ? (
-                <Projects currentUser={currentUser} />
-              ) : section === "dashboard" && !isTechnician ? (
-                <Dashboard />
-              ) : section === "products" && !isTechnician ? (
-                <Products
-                  initialTab={activeTab || "catalog"}
-                  initialSearch={globalNav.section === "products" ? globalNav.search : ""}
-                />
-              ) : section === "accounts" && !isTechnician ? (
-                <Accounts onNavigateToExpenses={() => setSection("expenses")} />
-              ) : section === "expenses" && !isTechnician ? (
-                <Expenses />
-              ) : section === "sales" && !isTechnician ? (
-                <Sales
-                  initialTab={globalNav.section === "sales" ? globalNav.tab || "history" : "history"}
-                  initialSearch={globalNav.section === "sales" ? globalNav.search || "" : ""}
-                  navKey={globalNav.key}
-                  currentUser={currentUser}
-                />
-              ) : section === "purchases" && !isTechnician ? (
-                <Purchases
-                  initialTab={globalNav.section === "purchases" ? globalNav.tab || "history" : "history"}
-                  initialSearch={globalNav.section === "purchases" ? globalNav.search || "" : ""}
-                  navKey={globalNav.key}
-                  onOpenAddProduct={() => {
-                    setSection("products");
-                    window.dispatchEvent(new CustomEvent("open-add-product"));
-                  }}
-                />
-              ) : section === "ecommerce" && !isTechnician ? (
-                <Ecommerce />
-              ) : section === "soc" && !isTechnician ? (
-                <Security />
-              ) : section === "warranty" && !isTechnician ? (
-                <Warranty />
-              ) : section === "staff" && !isTechnician ? (
-                <Staff currentUser={currentUser} />
-              ) : section === "trash" && !isTechnician ? (
-                <Trash />
-              ) : section === "settings" && !isTechnician ? (
-                <Settings onLogout={handleLogout} currentUser={currentUser} />
-              ) : section === "reports" && !isTechnician ? (
-                <Reports />
-              ) : (
-                <div className="bg-white p-10 rounded-2xl text-center border border-slate-200 shadow-sm">
-                  <p className="text-sky-600 font-extrabold text-xs uppercase tracking-widest">
-                    Sheba Technology ERP
-                  </p>
-                  <h2 className="text-lg font-bold text-slate-900 my-2.5">
-                    {section.toUpperCase()}
-                  </h2>
-                  <p className="text-xs text-slate-500">
-                    This module is restricted or under configuration for your role. Please use the sidebar to navigate to permitted modules.
-                  </p>
-                </div>
-              )}
-            </Suspense>
+          {/* Dynamic Module Route View inside Distinct Global Page Frame */}
+          <main className="flex-1 mt-4">
+            <div className="erp-global-frame bg-gray-50/50 p-4 md:p-6 border border-gray-200 rounded-2xl shadow-xs min-h-[calc(100vh-140px)]">
+              <Suspense fallback={<PageFallback />}>
+                {section === "wallet" ? (
+                  <TechnicianWallet currentUser={currentUser} />
+                ) : section === "inventory" ? (
+                  <Inventory
+                    readOnly={isTechnician}
+                    onOpenNewSale={
+                      isTechnician
+                        ? undefined
+                        : (product) => {
+                            setSection("sales");
+                            setGlobalNav({
+                              section: "sales",
+                              tab: "history",
+                              search: product.name || "",
+                              key: Date.now(),
+                            });
+                          }
+                    }
+                  />
+                ) : section === "projects" ? (
+                  <Projects currentUser={currentUser} />
+                ) : section === "dashboard" && !isTechnician ? (
+                  <Dashboard />
+                ) : section === "products" && !isTechnician ? (
+                  <Products
+                    initialTab={activeTab || "catalog"}
+                    initialSearch={globalNav.section === "products" ? globalNav.search : ""}
+                  />
+                ) : section === "accounts" && !isTechnician ? (
+                  <Accounts onNavigateToExpenses={() => setSection("expenses")} />
+                ) : section === "expenses" && !isTechnician ? (
+                  <Expenses />
+                ) : section === "sales" && !isTechnician ? (
+                  <Sales
+                    initialTab={globalNav.section === "sales" ? globalNav.tab || "history" : "history"}
+                    initialSearch={globalNav.section === "sales" ? globalNav.search || "" : ""}
+                    navKey={globalNav.key}
+                    currentUser={currentUser}
+                  />
+                ) : section === "purchases" && !isTechnician ? (
+                  <Purchases
+                    initialTab={globalNav.section === "purchases" ? globalNav.tab || "history" : "history"}
+                    initialSearch={globalNav.section === "purchases" ? globalNav.search || "" : ""}
+                    navKey={globalNav.key}
+                    onOpenAddProduct={() => {
+                      setSection("products");
+                      window.dispatchEvent(new CustomEvent("open-add-product"));
+                    }}
+                  />
+                ) : section === "ecommerce" && !isTechnician ? (
+                  <Ecommerce />
+                ) : section === "soc" && !isTechnician ? (
+                  <Security />
+                ) : section === "warranty" && !isTechnician ? (
+                  <Warranty />
+                ) : section === "staff" && !isTechnician ? (
+                  <Staff currentUser={currentUser} />
+                ) : section === "trash" && !isTechnician ? (
+                  <Trash />
+                ) : section === "settings" && !isTechnician ? (
+                  <Settings onLogout={handleLogout} currentUser={currentUser} />
+                ) : section === "reports" && !isTechnician ? (
+                  <Reports />
+                ) : (
+                  <div className="bg-white p-10 rounded-2xl text-center border border-slate-200 shadow-sm">
+                    <p className="text-sky-600 font-extrabold text-xs uppercase tracking-widest">
+                      Sheba Technology ERP
+                    </p>
+                    <h2 className="text-lg font-bold text-slate-900 my-2.5">
+                      {section.toUpperCase()}
+                    </h2>
+                    <p className="text-xs text-slate-500">
+                      This module is restricted or under configuration for your role. Please use the sidebar to navigate to permitted modules.
+                    </p>
+                  </div>
+                )}
+              </Suspense>
+            </div>
           </main>
 
           {/* Mobile Bottom Navigation Bar (Strictly Hidden on Desktop) */}

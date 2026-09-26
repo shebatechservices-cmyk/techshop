@@ -1,4 +1,5 @@
 import React from 'react';
+import TableActionDropdown from '../../../components/ui/TableActionDropdown';
 
 export default function InventoryTable({
   loading,
@@ -297,62 +298,39 @@ export default function InventoryTable({
                       </button>
                     </td>
 
-                    {/* 9. Actions (Three-Dot Menu) */}
-                    <td className="py-1 px-2 text-center align-middle relative">
-                      <button
-                        type="button"
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          setOpenActionId((current) => (current === p.id ? null : p.id));
-                        }}
-                        className={`border border-slate-300 rounded py-px px-1.5 cursor-pointer font-bold text-sm text-slate-600 leading-none transition-colors ${
-                          openActionId === p.id ? 'bg-slate-200' : 'bg-slate-50 hover:bg-slate-100'
-                        }`}
-                        title="Actions"
-                        aria-label="Actions"
-                      >
-                        ⋮
-                      </button>
-
-                      {openActionId === p.id && (
-                        <div
-                          onClick={(e) => e.stopPropagation()}
-                          className="absolute right-2 top-[calc(100%+2px)] bg-white rounded-lg border border-slate-300 shadow-2xl z-[1000] min-w-[150px] py-1 text-left"
-                        >
-                          <button
-                            type="button"
-                            onClick={() => {
-                              setOpenActionId(null);
+                    {/* 9. Actions (Three-Dot Menu via React Portal) */}
+                    <td className="py-1 px-2 text-center align-middle">
+                      <TableActionDropdown
+                        triggerLabel="⋮"
+                        triggerTitle="Actions"
+                        triggerClassName="border border-slate-300 rounded py-px px-1.5 font-bold text-sm text-slate-600 leading-none"
+                        items={[
+                          {
+                            key: 'new-sale',
+                            label: 'New Sale',
+                            icon: '🛒',
+                            className: 'text-green-800 hover:bg-green-50',
+                            onClick: () => {
                               if (onOpenNewSale) {
                                 onOpenNewSale(p);
                               }
-                            }}
-                            className="w-full flex items-center gap-2 py-1.5 px-3 bg-transparent hover:bg-green-50 border-0 text-xs font-semibold text-green-800 cursor-pointer transition-colors"
-                          >
-                            <span>🛒</span> New Sale
-                          </button>
-                          <button
-                            type="button"
-                            onClick={() => {
-                              setOpenActionId(null);
-                              handleOpenLabelModal(p);
-                            }}
-                            className="w-full flex items-center gap-2 py-1.5 px-3 bg-transparent hover:bg-slate-50 border-0 text-xs font-semibold text-slate-700 cursor-pointer transition-colors"
-                          >
-                            <span>🏷️</span> Print Labels
-                          </button>
-                          <button
-                            type="button"
-                            onClick={() => {
-                              setOpenActionId(null);
-                              handleOpenTransferModal(p);
-                            }}
-                            className="w-full flex items-center gap-2 py-1.5 px-3 bg-transparent hover:bg-sky-50 border-0 text-xs font-semibold text-sky-600 cursor-pointer transition-colors"
-                          >
-                            <span>🔄</span> Transfer Stock
-                          </button>
-                        </div>
-                      )}
+                            },
+                          },
+                          {
+                            key: 'print-labels',
+                            label: 'Print Labels',
+                            icon: '🏷️',
+                            onClick: () => handleOpenLabelModal(p),
+                          },
+                          {
+                            key: 'transfer-stock',
+                            label: 'Transfer Stock',
+                            icon: '🔄',
+                            className: 'text-sky-600 hover:bg-sky-50',
+                            onClick: () => handleOpenTransferModal(p),
+                          },
+                        ]}
+                      />
                     </td>
                   </tr>
                 );

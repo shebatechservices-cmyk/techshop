@@ -1,5 +1,6 @@
 import React from "react";
 import { isProductSerialTracked, isProductWarrantyRequired } from "../../../utils/productUtils";
+import TableActionDropdown from "../../../components/ui/TableActionDropdown";
 
 export default function ProductCatalogTab({
   products = [],
@@ -174,63 +175,42 @@ export default function ProductCatalogTab({
                         {product.stock} / {product.min_stock}
                       </span>
                     </td>
-                    <td className="py-3 px-3 text-right relative">
-                      <div className="inline-block relative">
-                        <button
-                          type="button"
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            setOpenProductAction((curr) => (curr === product.id ? null : product.id));
-                          }}
-                          className="px-2.5 py-1 bg-slate-50 hover:bg-slate-200 border border-slate-300 rounded-md text-xs font-bold text-slate-600 cursor-pointer transition-colors"
-                          title="Actions"
-                        >
-                          ⋯
-                        </button>
-                        {openProductAction === product.id && (
-                          <div
-                            className="absolute right-0 top-full mt-1 bg-white border border-slate-200 rounded-xl shadow-xl z-50 flex flex-col min-w-[130px] overflow-hidden animate-in fade-in zoom-in-95 duration-100 text-xs"
-                            onClick={(e) => e.stopPropagation()}
-                          >
-                            <button
-                              type="button"
-                              onClick={() => {
-                                setOpenProductAction(null);
-                                handleEditProduct(product);
-                              }}
-                              className="px-3.5 py-2 text-left hover:bg-slate-50 text-slate-700 font-semibold flex items-center gap-2 cursor-pointer"
-                            >
-                              ✏️ Edit
-                            </button>
-                            <button
-                              type="button"
-                              onClick={() => {
-                                setOpenProductAction(null);
-                                if (
-                                  window.confirm(
-                                    `Are you sure you want to delete product "${product.name}"?`
-                                  )
-                                ) {
-                                  deleteProduct(product.id);
-                                }
-                              }}
-                              className="px-3.5 py-2 text-left hover:bg-rose-50 text-rose-600 font-semibold flex items-center gap-2 cursor-pointer"
-                            >
-                              🗑️ Delete
-                            </button>
-                            <button
-                              type="button"
-                              onClick={() => {
-                                setOpenProductAction(null);
-                                toggleProductStatus(product);
-                              }}
-                              className="px-3.5 py-2 text-left hover:bg-slate-50 text-slate-700 font-semibold flex items-center gap-2 cursor-pointer border-t border-slate-100"
-                            >
-                              {product.status === "active" ? "⏸️ Inactivate" : "▶️ Activate"}
-                            </button>
-                          </div>
-                        )}
-                      </div>
+                    <td className="py-3 px-3 text-right">
+                      <TableActionDropdown
+                        triggerLabel="⋯"
+                        triggerTitle="Actions"
+                        triggerClassName="px-2.5 py-1 bg-slate-50 hover:bg-slate-200 border border-slate-300 rounded-md text-xs font-bold text-slate-600"
+                        items={[
+                          {
+                            key: 'edit',
+                            label: 'Edit Product',
+                            icon: '✏️',
+                            onClick: () => handleEditProduct(product),
+                          },
+                          {
+                            key: 'delete',
+                            label: 'Delete',
+                            icon: '🗑️',
+                            danger: true,
+                            onClick: () => {
+                              if (
+                                window.confirm(
+                                  `Are you sure you want to delete product "${product.name}"?`
+                                )
+                              ) {
+                                deleteProduct(product.id);
+                              }
+                            },
+                          },
+                          { divider: true },
+                          {
+                            key: 'toggle-status',
+                            label: product.status === 'active' ? 'Inactivate' : 'Activate',
+                            icon: product.status === 'active' ? '⏸️' : '▶️',
+                            onClick: () => toggleProductStatus(product),
+                          },
+                        ]}
+                      />
                     </td>
                   </tr>
                 ))

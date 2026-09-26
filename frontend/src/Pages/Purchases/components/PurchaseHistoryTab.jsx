@@ -1,4 +1,5 @@
 import React from 'react';
+import TableActionDropdown from '../../../components/ui/TableActionDropdown';
 
 export default function PurchaseHistoryTab({
   orders,
@@ -166,145 +167,52 @@ export default function PurchaseHistoryTab({
                         {order.status || 'Approved'}
                       </span>
                     </td>
-                    <td style={{ padding: '12px 16px', textAlign: 'center', position: 'relative' }}>
-                      <div style={{ position: 'relative', display: 'inline-block' }}>
-                        <button
-                          type="button"
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            setOpenActionOrderId(openActionOrderId === order.id ? null : order.id);
-                          }}
-                          style={{
-                            background: '#f8fafc',
-                            border: '1.5px solid #cbd5e1',
-                            borderRadius: '6px',
-                            padding: '4px 10px',
-                            fontSize: '0.95rem',
-                            fontWeight: 800,
-                            cursor: 'pointer',
-                            color: '#334155',
-                            display: 'inline-flex',
-                            alignItems: 'center',
-                            justifyContent: 'center',
-                            transition: 'all 0.15s ease',
-                          }}
-                          title="Purchase Order Actions"
-                        >
-                          ⋮
-                        </button>
+                    <td style={{ padding: '12px 16px', textAlign: 'center' }}>
+                      {(() => {
+                        const hoursOld = order.created_at ? (Date.now() - new Date(order.created_at).getTime()) / (1000 * 60 * 60) : 0;
+                        const isEditable = !order.created_at || hoursOld <= 360; // 15 days
+                        const isDeletable = !order.created_at || hoursOld <= 168; // 7 days
 
-                        {openActionOrderId === order.id && (
-                          <div
-                            onClick={(e) => e.stopPropagation()}
-                            style={{
-                              position: 'absolute',
-                              right: 0,
-                              top: 'calc(100% + 4px)',
-                              background: '#ffffff',
-                              border: '1px solid #cbd5e1',
-                              borderRadius: '8px',
-                              boxShadow: '0 10px 25px -5px rgba(0,0,0,0.2)',
-                              zIndex: 100,
-                              minWidth: '150px',
-                              padding: '4px 0',
-                              textAlign: 'left',
-                              animation: 'fadeIn 0.15s ease',
-                            }}
-                          >
-                            {/* 1. Print / Preview */}
-                            <button
-                              type="button"
-                              onClick={() => {
-                                setOpenActionOrderId(null);
-                                handleOpenPrintOrder(order.id);
-                              }}
-                              style={{
-                                width: '100%',
-                                display: 'flex',
-                                alignItems: 'center',
-                                gap: '8px',
-                                padding: '8px 14px',
-                                background: 'none',
-                                border: 'none',
-                                fontSize: '0.82rem',
-                                fontWeight: 600,
-                                color: '#0284c7',
-                                cursor: 'pointer',
-                              }}
-                              onMouseEnter={(e) => (e.currentTarget.style.background = '#f0f9ff')}
-                              onMouseLeave={(e) => (e.currentTarget.style.background = 'none')}
-                            >
-                              <span>🖨️</span> Print / Preview
-                            </button>
-
-                            {(() => {
-                              const hoursOld = order.created_at ? (Date.now() - new Date(order.created_at).getTime()) / (1000 * 60 * 60) : 0;
-                              const isEditable = !order.created_at || hoursOld <= 360; // 15 days
-                              const isDeletable = !order.created_at || hoursOld <= 168; // 7 days
-
-                              return (
-                                <>
-                                  {/* 2. Edit Order (15-day window) */}
-                                  <button
-                                    type="button"
-                                    onClick={() => {
-                                      setOpenActionOrderId(null);
-                                      handleEditOrder(order);
-                                    }}
-                                    title={isEditable ? 'Edit purchase order (15-day window)' : 'Edit window closed — orders only editable within 15 days of creation'}
-                                    style={{
-                                      width: '100%',
-                                      display: 'flex',
-                                      alignItems: 'center',
-                                      gap: '8px',
-                                      padding: '8px 14px',
-                                      background: 'none',
-                                      border: 'none',
-                                      fontSize: '0.82rem',
-                                      fontWeight: 600,
-                                      color: isEditable ? '#d97706' : '#94a3b8',
-                                      cursor: isEditable ? 'pointer' : 'not-allowed',
-                                      opacity: isEditable ? 1 : 0.5,
-                                    }}
-                                    onMouseEnter={(e) => { if (isEditable) e.currentTarget.style.background = '#fffbeb'; }}
-                                    onMouseLeave={(e) => (e.currentTarget.style.background = 'none')}
-                                  >
-                                    <span>✏️</span> Edit Order
-                                  </button>
-
-                                  {/* 3. Delete Order (7-day window) */}
-                                  <button
-                                    type="button"
-                                    onClick={() => {
-                                      setOpenActionOrderId(null);
-                                      handleDeleteOrder(order.id, order);
-                                    }}
-                                    title={isDeletable ? 'Delete purchase order (7-day window)' : 'Deletion window closed — orders only deletable within 7 days of creation'}
-                                    style={{
-                                      width: '100%',
-                                      display: 'flex',
-                                      alignItems: 'center',
-                                      gap: '8px',
-                                      padding: '8px 14px',
-                                      background: 'none',
-                                      border: 'none',
-                                      fontSize: '0.82rem',
-                                      fontWeight: 600,
-                                      color: isDeletable ? '#dc2626' : '#94a3b8',
-                                      cursor: isDeletable ? 'pointer' : 'not-allowed',
-                                      opacity: isDeletable ? 1 : 0.5,
-                                    }}
-                                    onMouseEnter={(e) => { if (isDeletable) e.currentTarget.style.background = '#fef2f2'; }}
-                                    onMouseLeave={(e) => (e.currentTarget.style.background = 'none')}
-                                  >
-                                    <span>🗑️</span> Delete Order
-                                  </button>
-                                </>
-                              );
-                            })()}
-                          </div>
-                        )}
-                      </div>
+                        return (
+                          <TableActionDropdown
+                            triggerLabel="⋮"
+                            triggerTitle="Purchase Order Actions"
+                            triggerClassName="bg-slate-50 border border-slate-300 rounded px-2.5 py-1 text-sm font-extrabold text-slate-700 hover:bg-slate-100"
+                            items={[
+                              {
+                                key: 'print',
+                                label: 'Print / Preview',
+                                icon: '🖨️',
+                                className: 'text-sky-600 hover:bg-sky-50',
+                                onClick: () => handleOpenPrintOrder(order.id),
+                              },
+                              {
+                                key: 'edit',
+                                label: 'Edit Order',
+                                icon: '✏️',
+                                disabled: !isEditable,
+                                title: isEditable
+                                  ? 'Edit purchase order (15-day window)'
+                                  : 'Edit window closed — orders only editable within 15 days of creation',
+                                className: isEditable ? 'text-amber-600 hover:bg-amber-50' : 'text-slate-400',
+                                onClick: () => handleEditOrder(order),
+                              },
+                              {
+                                key: 'delete',
+                                label: 'Delete Order',
+                                icon: '🗑️',
+                                danger: true,
+                                disabled: !isDeletable,
+                                title: isDeletable
+                                  ? 'Delete purchase order (7-day window)'
+                                  : 'Deletion window closed — orders only deletable within 7 days of creation',
+                                className: isDeletable ? 'text-rose-600 hover:bg-rose-50' : 'text-slate-400',
+                                onClick: () => handleDeleteOrder(order.id, order),
+                              },
+                            ]}
+                          />
+                        );
+                      })()}
                     </td>
                   </tr>
                 ))}
