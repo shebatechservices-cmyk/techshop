@@ -1,5 +1,5 @@
 import React from 'react';
-import BDPhoneInput from '../../../components/shared/BDPhoneInput';
+import BangladeshiPhoneInput from '../../../components/ui/BangladeshiPhoneInput';
 
 export default function StoreProfileTab({
   settings,
@@ -119,7 +119,7 @@ export default function StoreProfileTab({
 
         {/* 5. Primary Phone Number */}
         <div className="flex flex-col gap-1.5">
-          <BDPhoneInput
+          <BangladeshiPhoneInput
             label="Primary Phone Number"
             required
             value={settings.phone || ''}
@@ -130,7 +130,7 @@ export default function StoreProfileTab({
 
         {/* 6. Alternate Phone / Hotline */}
         <div className="flex flex-col gap-1.5">
-          <BDPhoneInput
+          <BangladeshiPhoneInput
             label="Alternate Phone / Hotline"
             value={settings.alt_phone || ''}
             onChange={(e) => setSettings({ ...settings, alt_phone: e.target.value })}

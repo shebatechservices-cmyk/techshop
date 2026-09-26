@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import API from '../../../services/api';
-import BDPhoneInput from '../../../components/shared/BDPhoneInput';
+import BangladeshiPhoneInput from '../../../components/ui/BangladeshiPhoneInput';
 import { isValidBDPhone } from '../../../utils/phoneUtils';
 
 export default function AddCustomerModal({ isOpen, onClose, onCustomerCreated }) {
@@ -121,7 +121,7 @@ export default function AddCustomerModal({ isOpen, onClose, onCustomerCreated })
 
             {/* Phone & Email Grid */}
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-              <BDPhoneInput
+              <BangladeshiPhoneInput
                 label="Phone Number"
                 required
                 value={phone}

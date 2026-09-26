@@ -1,5 +1,5 @@
 import React from 'react';
-import BDPhoneInput from '../../../../components/shared/BDPhoneInput';
+import BangladeshiPhoneInput from '../../../../components/ui/BangladeshiPhoneInput';
 
 export default function WarehouseForm({
   editingId,
@@ -142,7 +142,7 @@ export default function WarehouseForm({
 
         {/* Phone */}
         <div>
-          <BDPhoneInput
+          <BangladeshiPhoneInput
             label="Phone / Mobile Number"
             name="phone"
             value={formData.phone}

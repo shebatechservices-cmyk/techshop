@@ -1,5 +1,5 @@
 import React from "react";
-import BDPhoneInput from "../../../components/shared/BDPhoneInput";
+import BangladeshiPhoneInput from "../../../components/ui/BangladeshiPhoneInput";
 
 export default function AddStaffModal({
   isOpen,
@@ -39,7 +39,7 @@ export default function AddStaffModal({
               />
             </div>
             <div>
-              <BDPhoneInput
+              <BangladeshiPhoneInput
                 label="Mobile Number (Login)"
                 required
                 value={newStaff.phone}

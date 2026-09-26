@@ -1,5 +1,5 @@
 import React from "react";
-import BDPhoneInput from "../../../components/shared/BDPhoneInput";
+import BangladeshiPhoneInput from "../../../components/ui/BangladeshiPhoneInput";
 
 export default function EditStaffModal({
   editingStaff,
@@ -48,7 +48,7 @@ export default function EditStaffModal({
 
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mb-3">
             <div>
-              <BDPhoneInput
+              <BangladeshiPhoneInput
                 label="Mobile Number"
                 required
                 value={editingStaff.phone}

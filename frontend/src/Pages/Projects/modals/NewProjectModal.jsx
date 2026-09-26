@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import API from '../../../services/api';
-import BDPhoneInput from '../../../components/shared/BDPhoneInput';
+import BangladeshiPhoneInput from '../../../components/ui/BangladeshiPhoneInput';
 import { isValidBDPhone } from '../../../utils/phoneUtils';
 
 export default function NewProjectModal({ isOpen, onClose, onSuccess }) {
@@ -328,7 +328,7 @@ export default function NewProjectModal({ isOpen, onClose, onSuccess }) {
               </div>
 
               <div>
-                <BDPhoneInput
+                <BangladeshiPhoneInput
                   label="Site Phone Number"
                   placeholder="1X-XXXXXXXX"
                   value={sitePhone}

@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import API from '../../../services/api';
-import BDPhoneInput from '../../../components/shared/BDPhoneInput';
+import BangladeshiPhoneInput from '../../../components/ui/BangladeshiPhoneInput';
 import { isValidBDPhone } from '../../../utils/phoneUtils';
 
 const money = (val) => Number.parseFloat(val || 0) || 0;
@@ -211,7 +211,7 @@ export default function EcommerceNewOrderModal({ isOpen, onClose, products = [],
               </div>
 
               <div>
-                <BDPhoneInput
+                <BangladeshiPhoneInput
                   label="Phone Number"
                   required
                   placeholder="1X-XXXXXXXX"

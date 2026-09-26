@@ -1,5 +1,5 @@
 import React from 'react';
-import BDPhoneInput from '../../../components/shared/BDPhoneInput';
+import BangladeshiPhoneInput from '../../../components/ui/BangladeshiPhoneInput';
 
 export default function TestSmsModal({
   testSmsModal,
@@ -72,7 +72,7 @@ export default function TestSmsModal({
           </div>
 
           <div>
-            <BDPhoneInput
+            <BangladeshiPhoneInput
               label="Recipient Mobile Number"
               required
               value={testSmsModal.phone}

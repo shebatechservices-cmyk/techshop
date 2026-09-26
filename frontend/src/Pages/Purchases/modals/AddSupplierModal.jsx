@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import API from '../../../services/api';
-import BDPhoneInput from '../../../components/shared/BDPhoneInput';
+import BangladeshiPhoneInput from '../../../components/ui/BangladeshiPhoneInput';
 import { isValidBDPhone } from '../../../utils/phoneUtils';
 
 export default function AddSupplierModal({ isOpen, onClose, onSupplierCreated }) {
@@ -149,7 +149,7 @@ export default function AddSupplierModal({ isOpen, onClose, onSupplierCreated })
             </div>
 
             {/* Phone */}
-            <BDPhoneInput
+            <BangladeshiPhoneInput
               label="Phone Number"
               name="phone"
               value={formData.phone}
@@ -158,7 +158,7 @@ export default function AddSupplierModal({ isOpen, onClose, onSupplierCreated })
             />
 
             {/* Mobile */}
-            <BDPhoneInput
+            <BangladeshiPhoneInput
               label="Alternative Mobile"
               name="mobile"
               value={formData.mobile}

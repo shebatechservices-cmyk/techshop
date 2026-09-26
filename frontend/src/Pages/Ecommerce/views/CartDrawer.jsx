@@ -1,5 +1,5 @@
 import React from 'react';
-import BDPhoneInput from '../../../components/shared/BDPhoneInput';
+import BangladeshiPhoneInput from '../../../components/ui/BangladeshiPhoneInput';
 
 export default function CartDrawer({
   isOpen,
@@ -201,7 +201,7 @@ export default function CartDrawer({
               </div>
 
               <div style={{ marginBottom: '8px' }}>
-                <BDPhoneInput
+                <BangladeshiPhoneInput
                   required
                   placeholder="1X-XXXXXXXX"
                   value={checkoutPhone}

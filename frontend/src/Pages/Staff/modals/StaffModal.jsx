@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import BDPhoneInput from '../../../components/shared/BDPhoneInput';
+import BangladeshiPhoneInput from '../../../components/ui/BangladeshiPhoneInput';
 
 export default function StaffModal({
   isOpen,
@@ -90,7 +90,7 @@ export default function StaffModal({
 
               {/* Phone Number */}
               <div>
-                <BDPhoneInput
+                <BangladeshiPhoneInput
                   label="Phone Number"
                   helperText="(Primary Login & SMS)"
                   placeholder="1X-XXXXXXXX"

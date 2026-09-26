@@ -1,5 +1,5 @@
 import React from 'react';
-import BDPhoneInput from '../../../components/shared/BDPhoneInput';
+import BangladeshiPhoneInput from '../../../components/ui/BangladeshiPhoneInput';
 
 export default function CustomerAccountView({
   customer,
@@ -177,7 +177,7 @@ export default function CustomerAccountView({
             </div>
 
             <div style={{ marginBottom: '12px' }}>
-              <BDPhoneInput
+              <BangladeshiPhoneInput
                 label="Mobile Number"
                 required
                 placeholder="1X-XXXXXXXX"
