@@ -41,6 +41,20 @@ export default function QuickAddModal({
           }}
         >
           <div className="p-6 flex flex-col gap-4">
+            {quickAdd.parentName && (
+              <div className="flex items-center gap-2.5 p-3.5 bg-sky-50 border border-sky-200 rounded-xl text-xs text-sky-900 shadow-xs">
+                <span className="text-base">📁</span>
+                <div className="leading-snug">
+                  <span className="text-slate-600 font-medium">
+                    Adding new {quickAdd.entityLabel || "item"} under:{" "}
+                  </span>
+                  <span className="font-bold text-sky-900 bg-sky-100/90 px-2 py-0.5 rounded-md border border-sky-300 inline-block ml-1">
+                    {quickAdd.parentName}
+                  </span>
+                </div>
+              </div>
+            )}
+
             {quickAdd.extraInfo && (
               <p className="text-xs text-amber-800 bg-amber-50 p-3 rounded-lg border border-amber-200">
                 {quickAdd.extraInfo}

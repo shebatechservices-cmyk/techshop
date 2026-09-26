@@ -69,13 +69,8 @@ export default function ProductCascadingFields({
 
       {/* Sub-Category */}
       <div className="flex flex-col gap-1.5">
-        <label className="text-sm font-bold text-slate-700 flex items-center gap-1.5 flex-wrap">
+        <label className="text-sm font-bold text-slate-700 flex items-center gap-1">
           <span>Sub-category</span>
-          {activeCategory?.name && (
-            <span className="text-xs font-semibold text-sky-700 bg-sky-50 px-2 py-0.5 rounded-md border border-sky-200 animate-fadeIn">
-              ({activeCategory.name})
-            </span>
-          )}
           <span className="text-rose-500">*</span>
         </label>
         <div className="flex gap-2">
@@ -105,7 +100,7 @@ export default function ProductCascadingFields({
             onClick={(e) => {
               e.preventDefault();
               e.stopPropagation();
-              openQuickAddModal("sub_categories");
+              openQuickAddModal("sub_categories", { parentName: activeCategory?.name, parentType: "Category" });
             }}
             title={selectedCategory ? `Add new sub-category for ${activeCategory?.name || 'selected category'}` : "Select category first"}
             className="w-10 h-10 border border-sky-300 bg-sky-50 hover:bg-sky-600 hover:text-white text-sky-700 font-bold rounded-lg flex items-center justify-center transition-colors cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed text-lg"
@@ -117,13 +112,8 @@ export default function ProductCascadingFields({
 
       {/* Brand */}
       <div className="flex flex-col gap-1.5">
-        <label className="text-sm font-bold text-slate-700 flex items-center gap-1.5 flex-wrap">
+        <label className="text-sm font-bold text-slate-700 flex items-center gap-1">
           <span>Brand</span>
-          {activeSubCategory?.name && (
-            <span className="text-xs font-semibold text-sky-700 bg-sky-50 px-2 py-0.5 rounded-md border border-sky-200 animate-fadeIn">
-              ({activeSubCategory.name})
-            </span>
-          )}
           <span className="text-rose-500">*</span>
         </label>
         <div className="flex gap-2">
@@ -153,7 +143,7 @@ export default function ProductCascadingFields({
             onClick={(e) => {
               e.preventDefault();
               e.stopPropagation();
-              openQuickAddModal("brands");
+              openQuickAddModal("brands", { parentName: activeSubCategory?.name, parentType: "Sub-category" });
             }}
             title={selectedSubCategory ? `Add new brand for ${activeSubCategory?.name || 'selected sub-category'}` : "Select sub-category first"}
             className="w-10 h-10 border border-sky-300 bg-sky-50 hover:bg-sky-600 hover:text-white text-sky-700 font-bold rounded-lg flex items-center justify-center transition-colors cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed text-lg"
@@ -165,13 +155,8 @@ export default function ProductCascadingFields({
 
       {/* Product Name */}
       <div className="flex flex-col gap-1.5">
-        <label className="text-sm font-bold text-slate-700 flex items-center gap-1.5 flex-wrap">
+        <label className="text-sm font-bold text-slate-700 flex items-center gap-1">
           <span>Product Name / Item Type</span>
-          {activeBrand?.name && (
-            <span className="text-xs font-semibold text-sky-700 bg-sky-50 px-2 py-0.5 rounded-md border border-sky-200 animate-fadeIn">
-              ({activeBrand.name})
-            </span>
-          )}
           <span className="text-rose-500">*</span>
         </label>
         <div className="flex gap-2">
@@ -204,7 +189,7 @@ export default function ProductCascadingFields({
             onClick={(e) => {
               e.preventDefault();
               e.stopPropagation();
-              openQuickAddModal("product_names");
+              openQuickAddModal("product_names", { parentName: activeBrand?.name, parentType: "Brand" });
             }}
             title={selectedBrand ? `Add new product name for ${activeBrand?.name || 'selected brand'}` : "Select brand first"}
             className="w-10 h-10 border border-sky-300 bg-sky-50 hover:bg-sky-600 hover:text-white text-sky-700 font-bold rounded-lg flex items-center justify-center transition-colors cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed text-lg"
@@ -216,13 +201,8 @@ export default function ProductCascadingFields({
 
       {/* Model */}
       <div className="flex flex-col gap-1.5">
-        <label className="text-sm font-bold text-slate-700 flex items-center gap-1.5 flex-wrap">
+        <label className="text-sm font-bold text-slate-700 flex items-center gap-1">
           <span>Model</span>
-          {activeProductName && (
-            <span className="text-xs font-semibold text-sky-700 bg-sky-50 px-2 py-0.5 rounded-md border border-sky-200 animate-fadeIn">
-              ({activeProductName})
-            </span>
-          )}
           <span className="text-rose-500">*</span>
         </label>
         <div className="flex gap-2">
@@ -256,7 +236,7 @@ export default function ProductCascadingFields({
             onClick={(e) => {
               e.preventDefault();
               e.stopPropagation();
-              openQuickAddModal("models");
+              openQuickAddModal("models", { parentName: activeProductName || activeBrand?.name, parentType: "Product Name" });
             }}
             title={
               !selectedBrand
@@ -274,13 +254,8 @@ export default function ProductCascadingFields({
 
       {/* Series */}
       <div className="flex flex-col gap-1.5">
-        <label className="text-sm font-bold text-slate-700 flex items-center gap-1.5 flex-wrap">
+        <label className="text-sm font-bold text-slate-700 flex items-center gap-1">
           <span>Series</span>
-          {activeModel?.name && (
-            <span className="text-xs font-semibold text-sky-700 bg-sky-50 px-2 py-0.5 rounded-md border border-sky-200 animate-fadeIn">
-              ({activeModel.name})
-            </span>
-          )}
           <span className="text-rose-500">*</span>
         </label>
         <div className="flex gap-2">
@@ -312,7 +287,7 @@ export default function ProductCascadingFields({
             onClick={(e) => {
               e.preventDefault();
               e.stopPropagation();
-              openQuickAddModal("series");
+              openQuickAddModal("series", { parentName: activeModel?.name, parentType: "Model" });
             }}
             title={selectedModel ? `Add new series for ${activeModel?.name || 'selected model'}` : "Select model first"}
             className="w-10 h-10 border border-sky-300 bg-sky-50 hover:bg-sky-600 hover:text-white text-sky-700 font-bold rounded-lg flex items-center justify-center transition-colors cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed text-lg"
