@@ -10,8 +10,54 @@ const CATEGORY_API = `${API_BASE}/categories`;
 export default function useProductsManager({ initialTab = "catalog", initialSearch = "" } = {}) {
   const [activeTab, setActiveTab] = useState(initialTab || "catalog");
 
+  // Callback when a new attribute (e.g. Brand, Category, Model) is created via inline quick add
+  const handleEntityCreated = (entity, item) => {
+    if (!item) return;
+    if (entity === "categories") {
+      formState.setForm((prev) => ({
+        ...prev,
+        category_id: String(item.id),
+        sub_category_id: "",
+        brand_id: "",
+        model_id: "",
+        series_id: "",
+      }));
+    } else if (entity === "sub_categories") {
+      formState.setForm((prev) => ({
+        ...prev,
+        sub_category_id: String(item.id),
+        brand_id: "",
+        model_id: "",
+        series_id: "",
+      }));
+    } else if (entity === "brands") {
+      formState.setForm((prev) => ({
+        ...prev,
+        brand_id: String(item.id),
+        model_id: "",
+        series_id: "",
+      }));
+    } else if (entity === "product_names") {
+      formState.setForm((prev) => ({
+        ...prev,
+        name: item.name,
+      }));
+    } else if (entity === "models") {
+      formState.setForm((prev) => ({
+        ...prev,
+        model_id: String(item.id),
+        series_id: "",
+      }));
+    } else if (entity === "series") {
+      formState.setForm((prev) => ({
+        ...prev,
+        series_id: String(item.id),
+      }));
+    }
+  };
+
   // 1. Attributes & Cascading Category/Brand/Model/Series
-  const attributesState = useProductAttributes();
+  const attributesState = useProductAttributes({ onEntityCreated: handleEntityCreated });
 
   // 2. Form & Image State
   const formState = useProductFormState({

@@ -48,7 +48,11 @@ export default function ProductCascadingFields({
           </select>
           <button
             type="button"
-            onClick={() => openQuickAddModal("categories")}
+            onClick={(e) => {
+              e.preventDefault();
+              e.stopPropagation();
+              openQuickAddModal("categories");
+            }}
             title="Add new category"
             className="w-10 h-10 border border-sky-300 bg-sky-50 hover:bg-sky-600 hover:text-white text-sky-700 font-bold rounded-lg flex items-center justify-center transition-colors cursor-pointer text-lg"
           >
@@ -83,7 +87,11 @@ export default function ProductCascadingFields({
           <button
             type="button"
             disabled={!selectedCategory}
-            onClick={() => openQuickAddModal("sub_categories")}
+            onClick={(e) => {
+              e.preventDefault();
+              e.stopPropagation();
+              openQuickAddModal("sub_categories");
+            }}
             title={selectedCategory ? "Add new sub-category" : "Select category first"}
             className="w-10 h-10 border border-sky-300 bg-sky-50 hover:bg-sky-600 hover:text-white text-sky-700 font-bold rounded-lg flex items-center justify-center transition-colors cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed text-lg"
           >
@@ -118,7 +126,11 @@ export default function ProductCascadingFields({
           <button
             type="button"
             disabled={!selectedSubCategory}
-            onClick={() => openQuickAddModal("brands")}
+            onClick={(e) => {
+              e.preventDefault();
+              e.stopPropagation();
+              openQuickAddModal("brands");
+            }}
             title={selectedSubCategory ? "Add new brand" : "Select sub-category first"}
             className="w-10 h-10 border border-sky-300 bg-sky-50 hover:bg-sky-600 hover:text-white text-sky-700 font-bold rounded-lg flex items-center justify-center transition-colors cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed text-lg"
           >
@@ -157,7 +169,11 @@ export default function ProductCascadingFields({
           <button
             type="button"
             disabled={!selectedBrand}
-            onClick={() => openQuickAddModal("product_names")}
+            onClick={(e) => {
+              e.preventDefault();
+              e.stopPropagation();
+              openQuickAddModal("product_names");
+            }}
             title={selectedBrand ? "Add new product name" : "Select brand first"}
             className="w-10 h-10 border border-sky-300 bg-sky-50 hover:bg-sky-600 hover:text-white text-sky-700 font-bold rounded-lg flex items-center justify-center transition-colors cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed text-lg"
           >
@@ -195,7 +211,11 @@ export default function ProductCascadingFields({
           <button
             type="button"
             disabled={!form.name}
-            onClick={() => openQuickAddModal("models")}
+            onClick={(e) => {
+              e.preventDefault();
+              e.stopPropagation();
+              openQuickAddModal("models");
+            }}
             title={form.name ? "Add new model" : "Select product name first"}
             className="w-10 h-10 border border-sky-300 bg-sky-50 hover:bg-sky-600 hover:text-white text-sky-700 font-bold rounded-lg flex items-center justify-center transition-colors cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed text-lg"
           >
@@ -233,7 +253,11 @@ export default function ProductCascadingFields({
           <button
             type="button"
             disabled={!selectedModel}
-            onClick={() => openQuickAddModal("series")}
+            onClick={(e) => {
+              e.preventDefault();
+              e.stopPropagation();
+              openQuickAddModal("series");
+            }}
             title={selectedModel ? "Add new series" : "Select model first"}
             className="w-10 h-10 border border-sky-300 bg-sky-50 hover:bg-sky-600 hover:text-white text-sky-700 font-bold rounded-lg flex items-center justify-center transition-colors cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed text-lg"
           >

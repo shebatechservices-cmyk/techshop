@@ -4,7 +4,7 @@ import API_BASE from "../../../services/api";
 const API = `${API_BASE}/master`;
 const CATEGORY_API = `${API_BASE}/categories`;
 
-export default function useProductAttributes() {
+export default function useProductAttributes({ onEntityCreated } = {}) {
   const [categories, setCategories] = useState([]);
   const [subCategories, setSubCategories] = useState([]);
   const [brands, setBrands] = useState([]);
@@ -281,10 +281,12 @@ export default function useProductAttributes() {
         if (quickAdd.entity === "brands") setSelectedBrand(String(item.id));
         if (quickAdd.entity === "models") setSelectedModel(String(item.id));
         if (quickAdd.entity === "series") setSelectedSeries(String(item.id));
+        if (typeof onEntityCreated === "function") {
+          onEntityCreated(quickAdd.entity, item);
+        }
       }
 
       setQuickAdd((prev) => ({ ...prev, isOpen: false, loading: false, value: "", error: "" }));
-      await refreshAttributeEntity(quickAdd.entity);
       return item;
     } catch (error) {
       setQuickAdd((prev) => ({ ...prev, loading: false, error: error.message }));
