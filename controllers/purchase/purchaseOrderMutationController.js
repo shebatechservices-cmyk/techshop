@@ -3,6 +3,7 @@ const {
     money,
     ensurePurchaseColumns,
     reversePurchasePayment,
+    applyPurchasePayment,
 } = require('./purchaseHelpers');
 
 const deleteOrder = async (req, res) => {
@@ -424,35 +425,118 @@ const updateOrder = async (req, res) => {
             unitCount = po.unit_count;
         }
 
-        const totalPaid = money(po.total_paid);
+        const targetSupplierId = req.body.supplier_id ? parseInt(req.body.supplier_id, 10) : po.supplier_id;
+        const supplierRes = await client.query('SELECT id, name FROM suppliers WHERE id = $1', [targetSupplierId]);
+        const supplierName = supplierRes.rows[0]?.name || 'Supplier';
+
+        let totalPaid = money(po.total_paid);
+        const { payments } = req.body;
+        let appliedTenders = [];
+
+        if (payments !== undefined) {
+            // 1. Reverse all existing payments on this PO to restore previous accounts/drawers
+            const existingPayments = await client.query(
+                'SELECT * FROM purchase_order_payments WHERE purchase_order_id = $1',
+                [id]
+            );
+            for (const pay of existingPayments.rows) {
+                await reversePurchasePayment(client, {
+                    payment: pay,
+                    poNumber: po.po_number || id,
+                    supplierId: po.supplier_id,
+                    ledgerType: 'purchase_payment_reversal',
+                    reasonNote: `PO #${po.po_number || id} edit payment reversal`,
+                });
+            }
+            await client.query('DELETE FROM purchase_order_payments WHERE purchase_order_id = $1', [id]);
+            await client.query('DELETE FROM payments WHERE purchase_id = $1', [id]).catch(() => null);
+
+            // 2. Validate and apply new payments inside the transaction
+            const tenders = Array.isArray(payments) ? payments.filter(p => money(p.amount) > 0) : [];
+            totalPaid = 0;
+            for (const tender of tenders) {
+                totalPaid += money(tender.amount);
+                await applyPurchasePayment(client, {
+                    orderId: id,
+                    payment: tender,
+                    poNumber: po.po_number || id,
+                    supplierId: targetSupplierId,
+                    supplierName,
+                });
+            }
+            appliedTenders = tenders;
+        }
+
         const newDue = Math.max(0, totalCost - totalPaid);
-        const dueDelta = newDue - money(po.total_due);
+        const paymentStatus = newDue === 0 ? 'PAID' : (totalPaid > 0 ? 'PARTIAL' : 'approved');
 
         await client.query(
             `UPDATE purchase_orders 
-             SET total_cost = $1, total_sale = $2, extra_cost = $3, extra_cost_category = $4, extra_cost_notes = $5,
-                 total_due = $6, unit_count = $7, transaction_reference = $8, updated_at = NOW()
-             WHERE id = $9`,
+             SET supplier_id = $1, total_cost = $2, total_sale = $3, extra_cost = $4, extra_cost_category = $5, extra_cost_notes = $6,
+                 total_paid = $7, total_due = $8, unit_count = $9, transaction_reference = $10, status = $11, updated_at = NOW()
+             WHERE id = $12`,
             [
+                targetSupplierId,
                 totalCost,
                 totalSale,
                 money(extra_cost !== undefined ? extra_cost : po.extra_cost),
                 extra_cost_category !== undefined ? extra_cost_category : po.extra_cost_category,
                 extra_cost_notes !== undefined ? extra_cost_notes : po.extra_cost_notes,
+                totalPaid,
                 newDue,
                 unitCount,
                 transaction_reference !== undefined ? transaction_reference : po.transaction_reference,
+                paymentStatus,
                 id
             ]
         );
 
-        if (dueDelta !== 0 && po.supplier_id) {
-            await client.query(
-                `UPDATE suppliers 
-                 SET payable_balance = GREATEST(0, COALESCE(payable_balance, 0) + $1), updated_at = NOW()
-                 WHERE id = $2`,
-                [dueDelta, po.supplier_id]
-            );
+        if (targetSupplierId !== po.supplier_id) {
+            if (po.supplier_id && money(po.total_due) > 0) {
+                await client.query(
+                    `UPDATE suppliers SET payable_balance = GREATEST(0, COALESCE(payable_balance, 0) - $1), updated_at = NOW() WHERE id = $2`,
+                    [money(po.total_due), po.supplier_id]
+                );
+            }
+            if (targetSupplierId && newDue > 0) {
+                await client.query(
+                    `UPDATE suppliers SET payable_balance = COALESCE(payable_balance, 0) + $1, updated_at = NOW() WHERE id = $2`,
+                    [newDue, targetSupplierId]
+                );
+            }
+        } else {
+            const dueDelta = newDue - money(po.total_due);
+            if (dueDelta !== 0 && po.supplier_id) {
+                await client.query(
+                    `UPDATE suppliers 
+                     SET payable_balance = GREATEST(0, COALESCE(payable_balance, 0) + $1), updated_at = NOW()
+                     WHERE id = $2`,
+                    [dueDelta, po.supplier_id]
+                );
+            }
+        }
+
+        // Sync extra cost as expense if configured
+        const effectiveExtraCost = money(extra_cost !== undefined ? extra_cost : po.extra_cost);
+        if (effectiveExtraCost > 0) {
+            try {
+                const catName = (extra_cost_category !== undefined ? extra_cost_category : po.extra_cost_category) || 'Transportation & Logistics';
+                const payeeName = supplierName || 'Supplier';
+                const expNote = (extra_cost_notes !== undefined ? extra_cost_notes : po.extra_cost_notes)
+                    ? `PO ${po.po_number || id} - ${(extra_cost_notes !== undefined ? extra_cost_notes : po.extra_cost_notes)}`
+                    : `Purchase Order ${po.po_number || id} Extra Cost (${catName})`;
+                await client.query(
+                    `INSERT INTO expenses (voucher_no, category_name, amount, expense_date, payee_name, reference_no, note)
+                     VALUES ($1, $2, $3, CURRENT_DATE, $4, $5, $6)
+                     ON CONFLICT (voucher_no) DO UPDATE 
+                     SET category_name = EXCLUDED.category_name, amount = EXCLUDED.amount, note = EXCLUDED.note`,
+                    [`EXP-${po.po_number || id}`, catName, effectiveExtraCost, payeeName, po.po_number || id, expNote]
+                );
+            } catch (expErr) {
+                console.warn('Expense update for PO extra cost notice:', expErr.message);
+            }
+        } else if (effectiveExtraCost === 0 && money(po.extra_cost) > 0) {
+            await client.query('DELETE FROM expenses WHERE voucher_no = $1', [`EXP-${po.po_number || id}`]).catch(() => null);
         }
 
         await client.query('COMMIT');
@@ -460,6 +544,17 @@ const updateOrder = async (req, res) => {
         res.status(200).json({
             success: true,
             message: `Purchase order #${po.po_number || id} updated successfully!`,
+            data: {
+                ...po,
+                id: Number(id),
+                supplier_id: targetSupplierId,
+                total_cost: totalCost,
+                total_sale: totalSale,
+                total_paid: totalPaid,
+                total_due: newDue,
+                status: paymentStatus,
+                payments: payments !== undefined ? appliedTenders : undefined,
+            },
             hasSales
         });
     } catch (error) {

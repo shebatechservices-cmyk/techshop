@@ -301,6 +301,11 @@ export default function Purchases({ onOpenAddProduct, initialTab = 'history', in
             setIsOrderModalOpen(false);
             setOrderToEdit(null);
             loadAllData();
+            window.dispatchEvent(new CustomEvent('inventory_stock_changed'));
+            window.dispatchEvent(new CustomEvent('data_changed'));
+            window.dispatchEvent(new CustomEvent('account_balance_changed'));
+            window.dispatchEvent(new CustomEvent('cash_drawer_changed'));
+            window.dispatchEvent(new CustomEvent('wallet_balance_changed'));
             showToast(orderToEdit ? 'Purchase order updated successfully' : 'Purchase order saved successfully');
           }}
         />

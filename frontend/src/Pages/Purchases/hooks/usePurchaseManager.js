@@ -129,9 +129,15 @@ export default function usePurchaseManager({ initialTab = 'history', initialSear
     const refresh = () => loadAllData();
     window.addEventListener('inventory_stock_changed', refresh);
     window.addEventListener('data_changed', refresh);
+    window.addEventListener('account_balance_changed', refresh);
+    window.addEventListener('cash_drawer_changed', refresh);
+    window.addEventListener('wallet_balance_changed', refresh);
     return () => {
       window.removeEventListener('inventory_stock_changed', refresh);
       window.removeEventListener('data_changed', refresh);
+      window.removeEventListener('account_balance_changed', refresh);
+      window.removeEventListener('cash_drawer_changed', refresh);
+      window.removeEventListener('wallet_balance_changed', refresh);
     };
   }, []);
 

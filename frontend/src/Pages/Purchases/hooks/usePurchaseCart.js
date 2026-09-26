@@ -907,10 +907,17 @@ export function usePurchaseCart(options = {}) {
 
   const handlePayFull = () => {
     const defaultAcc = cashAccounts[0] || 'Cash Drawer';
+    const accObj =
+      (walletAccounts || []).find((a) =>
+        ['cash', 'drawer'].includes(String(a.account_type || '').toLowerCase())
+      ) || (walletAccounts || [])[0];
+    const amountToPay = payableAmount > 0 ? payableAmount : totalPayable;
     setTenders([
       {
-        ...newTender(totalPayable, true),
+        ...newTender(amountToPay, true),
+        method: 'Cash',
         sub_option: defaultAcc,
+        account_id: accObj?.id || 1,
       },
     ]);
     setPaymentConfirmed(true);
@@ -1182,15 +1189,24 @@ export function usePurchaseCart(options = {}) {
           }),
           payments: tenders
             .filter((t) => t.isAccepted && money(t.amount) > 0)
-            .map((t) => ({
-              payment_method: t.method || 'Cash',
-              payment_method_id: t.payment_method_id || null,
-              account_id: t.sub_option ? accountLabelToId(t.sub_option) : 1,
-              sub_option: t.sub_option || '',
-              receiver_name: t.receiver_name || '',
-              transaction_id: t.transaction_id || '',
-              amount: money(t.amount),
-            })),
+            .map((t) => {
+              let resolvedAccId = t.account_id;
+              if (t.sub_option && accountLabelToId(t.sub_option)) {
+                resolvedAccId = accountLabelToId(t.sub_option);
+              }
+              if (!resolvedAccId && walletAccounts.length > 0) {
+                resolvedAccId = walletAccounts[0].id;
+              }
+              return {
+                payment_method: t.method || 'Cash',
+                payment_method_id: t.payment_method_id || null,
+                account_id: resolvedAccId || 1,
+                sub_option: t.sub_option || '',
+                receiver_name: t.receiver_name || '',
+                transaction_id: t.transaction_id || '',
+                amount: money(t.amount),
+              };
+            }),
         }),
       });
 
@@ -1200,8 +1216,16 @@ export function usePurchaseCart(options = {}) {
       }
 
       const createdOrder = payload.data || payload;
+      if (props.onSaved) props.onSaved(createdOrder);
       if (onSaved) onSaved(createdOrder);
       if (onOrderSaved) onOrderSaved(createdOrder);
+
+      // Dispatch global events so Cash Drawer, Accounts, Inventory, and Supplier Dues update immediately
+      window.dispatchEvent(new CustomEvent('inventory_stock_changed'));
+      window.dispatchEvent(new CustomEvent('data_changed'));
+      window.dispatchEvent(new CustomEvent('account_balance_changed'));
+      window.dispatchEvent(new CustomEvent('cash_drawer_changed'));
+      window.dispatchEvent(new CustomEvent('wallet_balance_changed'));
 
       clearDraft(PURCHASE_DRAFT_KEY);
       setRecoveredDraft(null);

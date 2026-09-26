@@ -256,3 +256,220 @@ describe('updateOrder 15-day time lock', () => {
     });
 });
 
+describe('updateOrder payment & ledger sync', () => {
+    it('updates Due purchase to Full Payment, deducts cash drawer balance, and adjusts supplier due in transaction', async () => {
+        const freshDate = new Date(Date.now() - 2 * 60 * 60 * 1000); // 2 hours old
+        const executedQueries = [];
+
+        const client = setupClient({
+            'SELECT \\* FROM purchase_orders WHERE id =': () => ({
+                rows: [{
+                    id: 10,
+                    po_number: 'PO-DUE-01',
+                    supplier_id: 5,
+                    total_cost: '5000.00',
+                    total_paid: '0.00',
+                    total_due: '5000.00',
+                    status: 'approved',
+                    unit_count: 5,
+                    created_at: freshDate,
+                }],
+            }),
+            'SELECT.*FROM purchase_order_items': () => ({ rows: [] }),
+            'SELECT.*FROM sales_items': () => ({ rows: [] }),
+            'SELECT id, name FROM suppliers': () => ({
+                rows: [{ id: 5, name: 'Acme Supplier' }],
+            }),
+            'SELECT \\* FROM purchase_order_payments': () => ({
+                rows: [],
+            }),
+            'SELECT \\* FROM payment_accounts WHERE id =': () => ({
+                rows: [{ id: 1, name: 'Cash Drawer', balance: '10000.00', account_type: 'drawer' }],
+            }),
+            'UPDATE purchase_orders': () => ({ rowCount: 1 }),
+            'UPDATE suppliers': () => ({ rowCount: 1 }),
+            'UPDATE payment_accounts': () => ({ rowCount: 1 }),
+            'INSERT INTO purchase_order_payments': () => ({ rowCount: 1 }),
+        });
+
+        const originalQuery = client.query;
+        client.query = jest.fn(async (text, params) => {
+            executedQueries.push({ text, params });
+            return originalQuery(text, params);
+        });
+
+        const wallet = require('../controllers/walletController');
+
+        const req = {
+            params: { id: '10' },
+            body: {
+                supplier_id: 5,
+                items: [],
+                payments: [
+                    {
+                        method: 'Cash',
+                        account_id: 1,
+                        sub_option: 'Cash Drawer',
+                        amount: 5000,
+                    },
+                ],
+            },
+        };
+        const res = mockRes();
+
+        await purchase.updateOrder(req, res);
+
+        expect(res.status).toHaveBeenCalledWith(200);
+        expect(res.json).toHaveBeenCalledWith(
+            expect.objectContaining({
+                success: true,
+                data: expect.objectContaining({
+                    total_paid: 5000,
+                    total_due: 0,
+                    status: 'PAID',
+                }),
+            })
+        );
+
+        // Transaction BEGIN and COMMIT check
+        const hasBegin = executedQueries.some(q => /BEGIN/i.test(q.text));
+        const hasCommit = executedQueries.some(q => /COMMIT/i.test(q.text));
+        expect(hasBegin).toBe(true);
+        expect(hasCommit).toBe(true);
+
+        // Verify Cash Drawer balance was deducted
+        const drawerDeduction = executedQueries.find(q =>
+            /UPDATE payment_accounts SET balance = COALESCE\(balance, 0\) - \$1/i.test(q.text)
+        );
+        expect(drawerDeduction).toBeDefined();
+        expect(drawerDeduction.params).toEqual([5000, 1]);
+
+        // Verify Supplier payable_balance was reduced by 5000 (delta: -5000)
+        const supplierUpdate = executedQueries.find(q =>
+            /UPDATE suppliers/i.test(q.text) && /payable_balance = GREATEST\(0, COALESCE\(payable_balance, 0\) \+ \$1\)/i.test(q.text)
+        );
+        expect(supplierUpdate).toBeDefined();
+        expect(supplierUpdate.params).toEqual([-5000, 5]);
+
+        // Verify account transaction ledger was logged
+        expect(wallet.logAccountTxn).toHaveBeenCalledWith(
+            client,
+            1,
+            'purchase_payment',
+            5000,
+            'PO-DUE-01',
+            expect.stringContaining('PO-DUE-01'),
+            expect.objectContaining({
+                sourceType: 'purchase',
+                sourceId: 'PO-DUE-01',
+                transactionType: 'debit',
+            })
+        );
+    });
+
+    it('reverses existing payments, refunds cash drawer balance, and restores supplier due when updating from Paid to Due', async () => {
+        const freshDate = new Date(Date.now() - 1 * 60 * 60 * 1000);
+        const executedQueries = [];
+
+        const client = setupClient({
+            'SELECT \\* FROM purchase_orders WHERE id =': () => ({
+                rows: [{
+                    id: 11,
+                    po_number: 'PO-PAID-01',
+                    supplier_id: 6,
+                    total_cost: '3000.00',
+                    total_paid: '3000.00',
+                    total_due: '0.00',
+                    status: 'PAID',
+                    unit_count: 2,
+                    created_at: freshDate,
+                }],
+            }),
+            'SELECT.*FROM purchase_order_items': () => ({ rows: [] }),
+            'SELECT.*FROM sales_items': () => ({ rows: [] }),
+            'SELECT id, name FROM suppliers': () => ({
+                rows: [{ id: 6, name: 'Supplier B' }],
+            }),
+            'SELECT \\* FROM purchase_order_payments': () => ({
+                rows: [{
+                    id: 101,
+                    purchase_order_id: 11,
+                    payment_method: 'Cash',
+                    account_id: 1,
+                    amount: '3000.00',
+                    sub_option: 'Cash Drawer',
+                }],
+            }),
+            'SELECT \\* FROM payment_accounts WHERE id =': () => ({
+                rows: [{ id: 1, name: 'Cash Drawer', balance: '7000.00', account_type: 'drawer' }],
+            }),
+            'UPDATE purchase_orders': () => ({ rowCount: 1 }),
+            'UPDATE suppliers': () => ({ rowCount: 1 }),
+            'UPDATE payment_accounts': () => ({ rowCount: 1 }),
+            'DELETE FROM purchase_order_payments': () => ({ rowCount: 1 }),
+        });
+
+        const originalQuery = client.query;
+        client.query = jest.fn(async (text, params) => {
+            executedQueries.push({ text, params });
+            return originalQuery(text, params);
+        });
+
+        const wallet = require('../controllers/walletController');
+
+        const req = {
+            params: { id: '11' },
+            body: {
+                supplier_id: 6,
+                items: [],
+                payments: [], // Set to Due (0 payments)
+            },
+        };
+        const res = mockRes();
+
+        await purchase.updateOrder(req, res);
+
+        expect(res.status).toHaveBeenCalledWith(200);
+        expect(res.json).toHaveBeenCalledWith(
+            expect.objectContaining({
+                success: true,
+                data: expect.objectContaining({
+                    total_paid: 0,
+                    total_due: 3000,
+                    status: 'approved',
+                }),
+            })
+        );
+
+        // Verify Cash Drawer balance was refunded (+3000)
+        const drawerRefund = executedQueries.find(q =>
+            /UPDATE payment_accounts SET balance = COALESCE\(balance, 0\) \+ \$1/i.test(q.text)
+        );
+        expect(drawerRefund).toBeDefined();
+        expect(drawerRefund.params).toEqual([3000, 1]);
+
+        // Verify Supplier payable_balance was increased by 3000 (delta: +3000)
+        const supplierUpdate = executedQueries.find(q =>
+            /UPDATE suppliers/i.test(q.text) && /payable_balance = GREATEST\(0, COALESCE\(payable_balance, 0\) \+ \$1\)/i.test(q.text)
+        );
+        expect(supplierUpdate).toBeDefined();
+        expect(supplierUpdate.params).toEqual([3000, 6]);
+
+        // Verify credit transaction logged for refund
+        expect(wallet.logAccountTxn).toHaveBeenCalledWith(
+            client,
+            1,
+            'deposit',
+            3000,
+            'PO-PAID-01',
+            expect.stringContaining('PO-PAID-01'),
+            expect.objectContaining({
+                sourceType: 'purchase_refund',
+                sourceId: 'PO-PAID-01',
+                transactionType: 'credit',
+            })
+        );
+    });
+});
+
+

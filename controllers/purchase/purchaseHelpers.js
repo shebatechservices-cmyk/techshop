@@ -128,9 +128,10 @@ const resolvePaymentAccount = async (client, payment) => {
         if (accRes.rows.length) targetAccount = accRes.rows[0];
     }
     if (!targetAccount && subOption) {
+        const cleanedSubOption = subOption.replace(/\s*\([^)]*\)$/, '').trim();
         const accRes = await client.query(
-            'SELECT * FROM payment_accounts WHERE LOWER(name) = LOWER($1) OR LOWER(account_number) = LOWER($1) LIMIT 1',
-            [subOption]
+            'SELECT * FROM payment_accounts WHERE LOWER(name) = LOWER($1) OR LOWER(name) = LOWER($2) OR LOWER(account_number) = LOWER($1) LIMIT 1',
+            [subOption, cleanedSubOption]
         );
         if (accRes.rows.length) targetAccount = accRes.rows[0];
     }
