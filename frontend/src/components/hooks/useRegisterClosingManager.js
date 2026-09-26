@@ -143,13 +143,13 @@ export function useRegisterClosingManager({ isOpen, currentUser }) {
   const handleCloseShift = async (e) => {
     e.preventDefault();
     if (!actualCashCounted && actualCashCounted !== 0) {
-      setError('দয়া করে ক্যাশ কাউন্ট প্রবেশ করান (Please enter physical cash counted)');
+      setError('Please enter the physical cash counted.');
       return;
     }
 
     if (
       !window.confirm(
-        'আপনি কি নিশ্চিত যে ক্যাশ রেজিস্টার শিফট সমাপ্ত ও লক করতে চান? (Are you sure you want to finalize & close this shift?)'
+        'Are you sure you want to finalize and close this cash register shift?'
       )
     ) {
       return;

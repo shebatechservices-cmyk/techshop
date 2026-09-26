@@ -19,7 +19,7 @@ export default function AddReturnModal({
       <div className="bg-white rounded-2xl w-full max-w-lg p-6 shadow-2xl border border-slate-100 max-h-[90vh] overflow-y-auto animate-scaleUp">
         <div className="flex justify-between items-center mb-4 pb-3 border-b border-slate-100">
           <h3 className="text-base font-bold text-slate-900 flex items-center gap-2">
-            <span>🔄</span> Process Product Return / Exchange (পণ্য ফেরত বা বদল)
+            <span>🔄</span> Process Product Return / Exchange
           </h3>
           <button
             type="button"
@@ -94,9 +94,9 @@ export default function AddReturnModal({
                 onChange={(e) => setReturnForm({ ...returnForm, return_type: e.target.value })}
                 className="w-full px-3 py-2 text-xs rounded-lg border border-slate-300 bg-white focus:ring-2 focus:ring-purple-500/20 focus:border-purple-500 outline-none transition"
               >
-                <option value="Exchange">Exchange (অন্য পণ্য দিয়ে বদল)</option>
-                <option value="Refund">Cash / Digital Refund (টাকা ফেরত)</option>
-                <option value="Store Credit">Store Credit (কাস্টমার লেজারে জমা)</option>
+                <option value="Exchange">Exchange (Replace with item)</option>
+                <option value="Refund">Cash / Digital Refund</option>
+                <option value="Store Credit">Store Credit (Customer Ledger Credit)</option>
               </select>
             </div>
           </div>
@@ -111,8 +111,8 @@ export default function AddReturnModal({
                 onChange={(e) => setReturnForm({ ...returnForm, condition: e.target.value })}
                 className="w-full px-3 py-2 text-xs rounded-lg border border-slate-300 bg-white focus:ring-2 focus:ring-purple-500/20 focus:border-purple-500 outline-none transition"
               >
-                <option value="Good">✓ Good / Intact (দোকানের স্টকে যোগ হবে)</option>
-                <option value="Damaged">⚠️ Damaged / Burnt (ড্যামেজ বিনে যাবে)</option>
+                <option value="Good">✓ Good / Intact (Restock into Inventory)</option>
+                <option value="Damaged">⚠️ Damaged / Defective (Move to Damaged Bin)</option>
               </select>
             </div>
 

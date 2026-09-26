@@ -40,7 +40,7 @@ export default function ManageExpenseCategoriesModal({
             <span className="text-xl">⚙️</span>
             <div>
               <h3 className="m-0 text-base font-extrabold text-slate-900">
-                Manage Expense Categories (খরচের খাতসমূহ)
+                Manage Expense Categories
               </h3>
               <p className="m-0 mt-0.5 text-xs text-slate-500">
                 Edit or delete existing categories. Protected against accidental deletion if in use.

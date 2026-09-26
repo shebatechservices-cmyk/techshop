@@ -744,7 +744,6 @@ export function useNewSale({
       if (
         name.includes('cam') ||
         name.includes('camera') ||
-        name.includes('ক্যামেরা') ||
         name.includes('dome') ||
         name.includes('bullet') ||
         name.includes('cctv')
@@ -826,8 +825,7 @@ export function useNewSale({
     selectedCustomer?.customer_type || selectedCustomer?.customer_group || 'Regular'
   );
   const isTechnician =
-    customerTypeRaw.toLowerCase().includes('tech') ||
-    customerTypeRaw.includes('টেকনি');
+    customerTypeRaw.toLowerCase().includes('tech');
   const isReseller =
     customerTypeRaw.toLowerCase().includes('resell') ||
     customerTypeRaw.toLowerCase().includes('wholesale') ||
@@ -1049,7 +1047,7 @@ export function useNewSale({
 
     if (!customerId)
       return setPopupMsg(
-        '⚠️ অবশ্যই কাস্টমার সিলেক্ট করুন — কাস্টমার ছাড়া sale invoice save হবে না।'
+        '⚠️ Please select a customer — sales invoices cannot be saved without selecting a customer.'
       );
     if (!items.length) return setError('Please add at least one product');
 

@@ -84,7 +84,7 @@ export default function PurchaseShareModal({
           {/* Format Selection */}
           <div>
             <label style={{ display: 'block', fontSize: '0.78rem', fontWeight: 700, color: '#334155', marginBottom: '6px' }}>
-              Select File Format (ফাইল ফরম্যাট নির্বাচন করুন):
+              Select File Format:
             </label>
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px' }}>
               <button

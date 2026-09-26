@@ -312,7 +312,7 @@ export default function AddSupplierModal({ isOpen, onClose, onSupplierCreated })
             {/* Opening Wallet Balance */}
             <div style={{ gridColumn: 'span 2' }}>
               <label style={{ display: 'block', fontSize: '0.85rem', fontWeight: 600, color: '#334155', marginBottom: '6px' }}>
-                Opening Wallet Balance (৳) <span style={{ color: '#94a3b8', fontSize: '0.75rem' }}>(ওয়ালেট ব্যালেন্স)</span>
+                Opening Wallet Balance (৳)
               </label>
               <input
                 type="number"

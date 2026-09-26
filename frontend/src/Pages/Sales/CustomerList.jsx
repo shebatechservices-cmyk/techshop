@@ -234,9 +234,9 @@ export default function CustomerList({
               className="px-3.5 py-2 text-sm border border-slate-300 rounded-lg bg-white text-slate-700 font-medium cursor-pointer outline-none focus:ring-2 focus:ring-sky-500/20 focus:border-sky-500 transition-all"
             >
               <option value="ALL">All Customer Groups</option>
-              <option value="regular">👤 Regular (সাধারণ)</option>
-              <option value="technician">🔧 Technician (টেকনিশিয়ান - 5% Discount)</option>
-              <option value="reseller">🏪 Reseller (রিসেলার)</option>
+              <option value="regular">👤 Regular</option>
+              <option value="technician">🔧 Technician (5% Discount)</option>
+              <option value="reseller">🏪 Reseller</option>
             </select>
 
             {/* Counter Badge */}

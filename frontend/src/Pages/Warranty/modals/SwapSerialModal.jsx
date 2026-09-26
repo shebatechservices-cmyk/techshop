@@ -31,7 +31,7 @@ export default function SwapSerialModal({
         </div>
 
         <p className="text-xs text-slate-500 mb-4 leading-normal">
-          কোম্পানি বা ভেন্ডর যদি নষ্ট মালটির বদলে সম্পূর্ণ নতুন ইউনিট রিপ্লেস করে থাকে, তবে নতুন সিরিয়ালটি বসান:
+          If the vendor or service center has replaced the defective item with a brand new unit, enter the new replacement serial number below:
         </p>
 
         <form onSubmit={handleSaveSwapSerial} className="space-y-3.5 text-xs">

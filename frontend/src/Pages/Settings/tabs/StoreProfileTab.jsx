@@ -58,10 +58,10 @@ export default function StoreProfileTab({
 
       {/* Strict 3-Column Responsive CSS Grid Form Layout */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
-        {/* 1. Shop / Vendor Code (শপ কোড) */}
+        {/* 1. Shop / Vendor Code */}
         <div className="flex flex-col gap-1.5">
           <label className="text-xs font-bold text-slate-700 uppercase tracking-wider flex items-center gap-1">
-            <span>Shop / Vendor Code (শপ কোড)</span>
+            <span>Shop / Vendor Code</span>
             <span className="text-blue-600 font-black">*</span>
           </label>
           <input

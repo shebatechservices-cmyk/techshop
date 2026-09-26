@@ -490,7 +490,7 @@ export default function NewSaleModal({
           >
             <div className="text-3xl mb-1.5">⚠️</div>
             <div className="font-extrabold text-base text-slate-900 mb-1.5">
-              Save করা যাচ্ছে না
+              Unable to Save
             </div>
             <div className="text-sm text-slate-600 mb-4">{popupMsg}</div>
             <button
@@ -498,7 +498,7 @@ export default function NewSaleModal({
               onClick={() => setPopupMsg('')}
               className="py-2 px-6 rounded-lg border-0 bg-slate-900 hover:bg-slate-800 text-white font-bold text-sm cursor-pointer transition-colors"
             >
-              ঠিক আছে
+              OK, Got It
             </button>
           </div>
         </div>

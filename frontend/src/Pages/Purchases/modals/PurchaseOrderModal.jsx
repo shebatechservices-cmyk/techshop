@@ -622,7 +622,7 @@ export default function PurchaseOrderModal(props) {
           >
             <div className="text-3xl mb-1.5">⚠️</div>
             <div className="font-extrabold text-base text-slate-900 mb-1.5">
-              Save করা যাচ্ছে না
+              Unable to Save Purchase
             </div>
             <div className="text-sm text-slate-600 mb-4">{popupMsg}</div>
             <button
@@ -630,7 +630,7 @@ export default function PurchaseOrderModal(props) {
               onClick={() => setPopupMsg('')}
               className="py-2 px-6 rounded-lg border-0 bg-slate-900 text-white font-bold text-sm cursor-pointer hover:bg-slate-800 transition-colors"
             >
-              ঠিক আছে
+              OK, Understood
             </button>
           </div>
         </div>

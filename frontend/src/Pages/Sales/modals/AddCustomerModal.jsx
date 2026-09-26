@@ -227,7 +227,7 @@ export default function AddCustomerModal({ isOpen, onClose, onCustomerCreated })
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
               <div>
                 <label style={{ display: 'block', fontSize: '0.82rem', fontWeight: 700, color: '#334155', marginBottom: '5px' }}>
-                  Customer Group <span style={{ color: '#0284c7', fontSize: '0.75rem' }}>(গ্রাহকের ধরন)</span>
+                  Customer Group
                 </label>
                 <select
                   value={customerType}
@@ -244,9 +244,9 @@ export default function AddCustomerModal({ isOpen, onClose, onCustomerCreated })
                     boxSizing: 'border-box',
                   }}
                 >
-                  <option value="Regular">👤 Regular (সাধারণ গ্রাহক)</option>
-                  <option value="Technician">🔧 Technician (টেকনিশিয়ান - 5% Discount)</option>
-                  <option value="Reseller">🏪 Reseller (রিসেলার / পাইকারি)</option>
+                  <option value="Regular">👤 Regular</option>
+                  <option value="Technician">🔧 Technician (5% Discount)</option>
+                  <option value="Reseller">🏪 Reseller (Wholesale)</option>
                 </select>
               </div>
 
@@ -277,7 +277,7 @@ export default function AddCustomerModal({ isOpen, onClose, onCustomerCreated })
             {/* Opening Wallet Balance */}
             <div>
               <label style={{ display: 'block', fontSize: '0.82rem', fontWeight: 700, color: '#334155', marginBottom: '5px' }}>
-                Opening Wallet Balance ৳ <span style={{ color: '#94a3b8', fontSize: '0.75rem' }}>(ওয়ালেট ব্যালেন্স)</span>
+                Opening Wallet Balance ৳
               </label>
               <input
                 type="number"

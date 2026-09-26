@@ -54,10 +54,10 @@ export default class ErrorBoundary extends React.Component {
           }}>
             <div style={{ fontSize: '3rem', marginBottom: '16px' }}>🛡️</div>
             <h2 style={{ fontSize: '1.4rem', fontWeight: 800, color: '#f1f5f9', margin: '0 0 8px 0' }}>
-              একটি অপ্রত্যাশিত ত্রুটি ঘটেছে (Unexpected Error)
+              An Unexpected Error Occurred
             </h2>
             <p style={{ fontSize: '0.9rem', color: '#94a3b8', lineHeight: 1.5, margin: '0 0 24px 0' }}>
-              সিস্টেমের অন্য অংশগুলো নিরাপদে রয়েছে। আপনি নিচের বাটন চেপে পুনরায় লোড করতে পারেন অথবা রিকভার করতে পারেন।
+              Other parts of the system remain safe and intact. You can reload the page or reset the view below.
             </p>
 
             {this.state.error && (
@@ -94,7 +94,7 @@ export default class ErrorBoundary extends React.Component {
                   boxShadow: '0 4px 12px rgba(37, 99, 235, 0.3)'
                 }}
               >
-                🔄 Reload Page (রিফ্রেশ করুন)
+                🔄 Reload Page
               </button>
               <button
                 type="button"

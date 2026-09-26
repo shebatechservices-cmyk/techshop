@@ -17,7 +17,7 @@ export default function OpenShiftSection({
         <span className="text-3xl">☀️</span>
         <div>
           <h3 className="text-base font-bold text-slate-800">
-            Start / Open Cash Register Shift (নতুন শিফট শুরু করুন)
+            Start / Open Cash Register Shift
           </h3>
           <p className="text-xs text-slate-500">
             Set the opening cash drawer balance to begin tracking sales, collections, and expenses.
@@ -47,7 +47,7 @@ export default function OpenShiftSection({
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-5">
           <div>
             <label className="block text-xs font-bold text-slate-700 mb-1.5">
-              💵 Opening Cash in Drawer (প্রারম্ভিক ক্যাশ) <span className="text-rose-500">*</span>
+              💵 Opening Cash in Drawer <span className="text-rose-500">*</span>
             </label>
             <div className="relative">
               <span className="absolute left-3 top-1/2 -translate-y-1/2 font-bold text-slate-400">৳</span>
@@ -78,7 +78,7 @@ export default function OpenShiftSection({
 
         <div className="mb-5">
           <label className="block text-xs font-bold text-slate-700 mb-1.5">
-            Opening Shift Remarks (ঐচ্ছিক)
+            Opening Shift Remarks (Optional)
           </label>
           <input
             type="text"

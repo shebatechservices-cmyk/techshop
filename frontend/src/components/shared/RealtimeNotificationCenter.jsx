@@ -210,7 +210,7 @@ export default function RealtimeNotificationCenter({ onNavigate, compact = false
           boxShadow: '0 1px 3px rgba(0,0,0,0.06)',
           transition: 'all 0.15s ease'
         }}
-        title="Live System Notifications (রিয়েলটাইম নোটিফিকেশন)"
+        title="Live System Notifications"
       >
         <span style={{ fontSize: compact ? '0.98rem' : '1.15rem' }}>🔔</span>
         <span style={{ fontSize: compact ? '0.76rem' : '0.82rem', fontWeight: '700', display: 'flex', alignItems: 'center', gap: '4px' }}>

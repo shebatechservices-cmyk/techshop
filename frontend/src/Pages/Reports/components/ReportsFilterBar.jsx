@@ -13,7 +13,7 @@ export default function ReportsFilterBar({
   onExportCsv,
 }) {
   const PERIODS = [
-    { id: 'today', label: 'Today (আজ)' },
+    { id: 'today', label: 'Today' },
     { id: 'yesterday', label: 'Yesterday' },
     { id: '7days', label: 'Last 7 Days' },
     { id: '30days', label: 'Last 30 Days' },

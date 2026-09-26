@@ -55,9 +55,9 @@ export default function PartyWalletTab({
         <h4 className="text-xs font-bold text-slate-800 uppercase tracking-wider mb-2">🪙 Wallet Operations</h4>
         <div className="flex flex-wrap gap-2">
           {partyType === 'customer' && [
-            { id: 'deposit', label: '📥 Deposit (ওয়ালেটে জমা)' },
-            { id: 'withdraw', label: '📤 Withdraw / Refund (উত্তোলন)' },
-            { id: 'due_payment', label: '💵 Pay Due From Wallet (দেনা পরিশোধ)' },
+            { id: 'deposit', label: '📥 Deposit into Wallet' },
+            { id: 'withdraw', label: '📤 Withdraw / Refund' },
+            { id: 'due_payment', label: '💵 Pay Due From Wallet' },
           ].map((act) => (
             <button
               key={act.id}
@@ -78,9 +78,9 @@ export default function PartyWalletTab({
             </button>
           ))}
           {partyType === 'supplier' && [
-            { id: 'deposit', label: '📥 Deposit Into Wallet (ওয়ালেটে জমা)' },
-            { id: 'withdraw', label: '📤 Cash Back (ওয়ালেট থেকে ফেরত)' },
-            { id: 'due_payment', label: '💵 Pay Due From Wallet (দেনা পরিশোধ)' },
+            { id: 'deposit', label: '📥 Deposit Into Wallet' },
+            { id: 'withdraw', label: '📤 Cash Back / Refund' },
+            { id: 'due_payment', label: '💵 Pay Due From Wallet' },
           ].map((act) => (
             <button
               key={act.id}
@@ -101,9 +101,9 @@ export default function PartyWalletTab({
             </button>
           ))}
           {partyType === 'staff' && [
-            { id: 'salary', label: '💼 Salary (বেতন → ওয়ালেট)' },
-            { id: 'bonus', label: '🎁 Bonus (বোনাস → ওয়ালেট)' },
-            { id: 'withdraw', label: '📤 Withdraw (উত্তোলন)' },
+            { id: 'salary', label: '💼 Salary Credit' },
+            { id: 'bonus', label: '🎁 Bonus Credit' },
+            { id: 'withdraw', label: '📤 Withdraw' },
           ].map((act) => (
             <button
               key={act.id}
@@ -130,22 +130,22 @@ export default function PartyWalletTab({
       <div className="p-3 rounded-xl mb-3.5 text-xs leading-relaxed bg-purple-50/60 border border-purple-200 text-purple-900">
         {partyType === 'customer' && (
           walletAction === 'deposit'
-            ? '💡 কাস্টমারের ওয়ালেটে জমা হলে টাকা আপনার নির্বাচিত অ্যাকাউন্টে (ক্যাশ ড্রয়ার/ব্যাংক/এমএফএস) জমা হবে। পরে কোনো সেল বা বকেয়া পরিশোধে ওয়ালেট আগে ব্যবহার হবে — তখন ক্যাশ ড্রয়ার অপরিবর্তিত থাকবে, শুধু লেজারে যুক্ত হবে।'
+            ? '💡 Customer wallet deposits increase shop funds and can be used to pay for future sales or outstanding invoices without affecting physical drawer cash again.'
             : walletAction === 'withdraw'
-            ? '💡 কাস্টমার ওয়ালেট থেকে টাকা তুললে তা আপনার নির্বাচিত অ্যাকাউন্ট (ক্যাশ ড্রয়ার/ব্যাংক/এমএফএস) থেকে পরিশোধ হবে এবং ওয়ালেট কমবে।'
-            : '💡 কাস্টমারের বাকি (Receivable Due) তার ওয়ালেট থেকে পরিশোধ হবে। এতে ক্যাশ ড্রয়ার অপরিবর্তিত থাকবে — শুধু ভেতরের ট্রান্সফার ও লেজার হবে।'
+            ? '💡 Customer wallet withdrawals or refunds are paid out from your selected shop account.'
+            : '💡 Settle receivable due using existing customer wallet balance without creating additional drawer cash movements.'
         )}
         {partyType === 'supplier' && (
           walletAction === 'deposit'
-            ? '💡 সাপ্লায়ারের ওয়ালেটে জমা দিলে ক্যাশ ড্রয়ার অপরিবর্তিত থাকবে — শুধু দোকানের মালিকের টাকাকে সাপ্লায়ারের হিসেবে ট্যাগ করা হচ্ছে। কোনো অ্যাকাউন্ট কর্তন হবে না।'
+            ? '💡 Pre-fund supplier wallet for future purchase orders and invoice reconciliations.'
             : walletAction === 'withdraw'
-            ? '💡 সাপ্লায়ার ওয়ালেট থেকে টাকা ফেরত নিলেও ক্যাশ ড্রয়ার অপরিবর্তিত থাকবে — শুধু ওয়ালেট ব্যালেন্স কমবে।'
-            : '💡 সাপ্লায়ারের বকেয়া (Payable Due) তার ওয়ালেট থেকে পরিশোধ হবে — এক্সট্র্যাক্ট অ্যাকাউন্ট (ক্যাশ ড্রয়ার/ব্যাংক/এমএফএস) থেকে সত্যিকারের টাকা কমবে।'
+            ? '💡 Refund or draw down supplier wallet balance into selected shop account.'
+            : '💡 Pay supplier payable due using available supplier advance wallet balance.'
         )}
         {partyType === 'staff' && (
           walletAction === 'salary' || walletAction === 'bonus'
-            ? '💡 বেতন/বোনাস ওয়ালেটে জমা হবে — মেইন ক্যাশ ড্রয়ার আপাতত অপরিবর্তিত থাকবে, শুধু লেজার তৈরি হবে। Bank/MFS অ্যাকাউন্ট বাছাই করলে শুধু সেই অ্যাকাউন্ট থেকে কমবে। স্টাফ ওয়ালেট থেকে উত্তোলন করলেই টাকা ক্যাশ ড্রয়ার/অ্যাকাউন্টে আসবে।'
-            : '💡 স্টাফ ওয়ালেট থেকে উত্তোলন করলে টাকা আপনার নির্বাচিত অ্যাকাউন্টে (ক্যাশ ড্রয়ার/ব্যাংক/এমএফএস) জমা হবে এবং ওয়ালেট কমবে।'
+            ? '💡 Credit salary or performance bonus directly to the staff wallet balance.'
+            : '💡 Disburse staff wallet funds directly from selected shop account.'
         )}
       </div>
 
@@ -199,7 +199,7 @@ export default function PartyWalletTab({
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-3.5 mb-4">
           <div>
-            <label className="block text-xs font-semibold text-slate-700 mb-1">Reference / Voucher (ভাউচার নম্বর)</label>
+            <label className="block text-xs font-semibold text-slate-700 mb-1">Reference / Voucher #</label>
             <input
               type="text"
               placeholder="e.g. DEP-2026-001"
@@ -209,7 +209,7 @@ export default function PartyWalletTab({
             />
           </div>
           <div>
-            <label className="block text-xs font-semibold text-slate-700 mb-1">Note (নোট)</label>
+            <label className="block text-xs font-semibold text-slate-700 mb-1">Note</label>
             <input
               type="text"
               placeholder="e.g. Monthly credit deposit"

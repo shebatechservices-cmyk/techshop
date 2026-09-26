@@ -120,9 +120,9 @@ export default function PartyProfileModal({
             <div className="text-right">
               <div className="text-[10px] text-slate-400 uppercase tracking-wider font-bold">
                 {partyType === 'customer'
-                  ? (balance > 0 ? 'Receivable Due (পাওনা)' : balance < 0 ? 'Advance Credit (অগ্রিম)' : 'Balance')
+                  ? (balance > 0 ? 'Receivable Due' : balance < 0 ? 'Advance Credit' : 'Balance')
                   : partyType === 'supplier'
-                  ? (balance > 0 ? 'Payable Due (সাপ্লায়ারের পাওনা)' : balance < 0 ? 'Advance Given (অগ্রিম প্রদান)' : 'Balance')
+                  ? (balance > 0 ? 'Payable Due' : balance < 0 ? 'Advance Paid' : 'Balance')
                   : 'Account Balance'}
               </div>
               <div

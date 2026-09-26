@@ -20,7 +20,7 @@ export default function PartyFinancialTab({
       {/* Party-Specific Sub Action Buttons */}
       <div className="flex flex-wrap gap-2 mb-3.5">
         {partyType === 'supplier' && [
-          { id: 'due', label: '💸 Pay Due (বকেয়া পরিশোধ)' },
+          { id: 'due', label: '💸 Pay Supplier Due' },
         ].map((act) => (
           <button
             key={act.id}
@@ -46,8 +46,8 @@ export default function PartyFinancialTab({
         ))}
 
         {partyType === 'customer' && [
-          { id: 'due', label: '💵 Collect Due (বকেয়া আদায়)' },
-          { id: 'refund', label: '📤 Refund / Return Payout (রিফান্ড প্রদান)' },
+          { id: 'due', label: '💵 Collect Customer Due' },
+          { id: 'refund', label: '📤 Refund / Return Payout' },
         ].map((act) => (
           <button
             key={act.id}
@@ -73,7 +73,7 @@ export default function PartyFinancialTab({
         ))}
 
         {partyType === 'staff' && [
-          { id: 'salary', label: '💼 Pay Salary / Advance (বেতন বা অগ্রিম প্রদান)' },
+          { id: 'salary', label: '💼 Pay Salary / Advance' },
         ].map((act) => (
           <button
             key={act.id}
@@ -101,15 +101,15 @@ export default function PartyFinancialTab({
         }`}
       >
         {partyType === 'supplier' && (
-          '💡 সাপ্লায়ারের কোনো ওয়ালেট নেই। এই পেমেন্ট আপনার নির্বাচিত শপ অ্যাকাউন্ট (ক্যাশ ড্রয়ার / ব্যাংক / এমএফএস) থেকে সরাসরি পরিশোধ হবে এবং সাপ্লায়ারের বাকি (Payable Due) সমন্বয় হয়ে কমবে।'
+          '💡 Direct payout to supplier from your selected shop account (Cash Drawer / Bank / MFS) which will reduce their Payable Due balance.'
         )}
         {partyType === 'customer' && (
           finAction === 'due'
-            ? '💡 কাস্টমার থেকে প্রাপ্ত বকেয়া টাকা আপনার দোকানের নির্বাচিত অ্যাকাউন্ট (ক্যাশ/ব্যাংক/এমএফএস)-এ জমা হবে এবং কাস্টমারের বাকি (Receivable Due) কমে যাবে।'
-            : '💡 পণ্য ফেরত বা অতিরিক্ত অর্থ কাস্টমারকে ফেরত প্রদান। এই টাকা আপনার নির্বাচিত শপ অ্যাকাউন্ট থেকে কাস্টমারকে পরিশোধ করা হবে।'
+            ? '💡 Received due payment will deposit into your selected shop account (Cash / Bank / MFS) and reduce the customer’s Receivable Due balance.'
+            : '💡 Customer refund or return payout will be deducted from your selected shop account.'
         )}
         {partyType === 'staff' && (
-          '💡 স্টাফের মাসিক বেতন, কমিশন বা কনভেয়েন্স অগ্রিম প্রদান। এটি আপনার নির্বাচিত শপ অ্যাকাউন্ট (ক্যাশ ড্রয়ার/ব্যাংক/এমএফএস) থেকে খরচ হিসেবে কর্তন হবে।'
+          '💡 Staff salary, commission, or conveyance advance payment will be deducted as an expense from your selected shop account.'
         )}
       </div>
 
@@ -130,8 +130,8 @@ export default function PartyFinancialTab({
           <div>
             <label className="block text-xs font-semibold text-slate-700 mb-1">
               {partyType === 'customer' && finAction !== 'refund'
-                ? '📥 Deposit Into Shop Account (জমার অ্যাকাউন্ট) *'
-                : '💸 Pay From Shop Account (পরিশোধের অ্যাকাউন্ট) *'}
+                ? '📥 Deposit Into Shop Account *'
+                : '💸 Pay From Shop Account *'}
             </label>
             <select
               value={finForm.account_id}
@@ -167,7 +167,7 @@ export default function PartyFinancialTab({
 
         <div className="mb-4">
           <label className="block text-xs font-semibold text-slate-700 mb-1">
-            Reference / Note (লেনদেনের নোট বা ভাউচার নম্বর)
+            Reference / Note / Voucher #
           </label>
           <input
             type="text"

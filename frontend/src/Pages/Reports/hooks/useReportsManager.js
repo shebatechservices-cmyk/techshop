@@ -18,21 +18,21 @@ export default function useReportsManager() {
   const periodLabel = useMemo(() => {
     switch (period) {
       case 'today':
-        return 'Today (আজকের)';
+        return 'Today';
       case 'yesterday':
-        return 'Yesterday (গতকালের)';
+        return 'Yesterday';
       case '7days':
-        return 'Last 7 Days (বিগত ৭ দিন)';
+        return 'Last 7 Days';
       case '30days':
-        return 'Last 30 Days (বিগত ৩০ দিন)';
+        return 'Last 30 Days';
       case 'this_month':
-        return 'This Month (চলতি মাস)';
+        return 'This Month';
       case 'last_month':
-        return 'Last Month (গত মাস)';
+        return 'Last Month';
       case 'this_year':
-        return 'This Year (চলতি বছর)';
+        return 'This Year';
       case 'all':
-        return 'All Time (সর্বমোট)';
+        return 'All Time';
       case 'custom':
         return `Custom: ${customFrom || 'Start'} to ${customTo || 'End'}`;
       default:

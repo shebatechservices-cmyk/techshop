@@ -482,7 +482,7 @@ export default function PurchaseCartItemList({
                           placeholder={
                             item.serials && item.serials.length > 0
                               ? `Scan ${item.serials[0].length}-digit barcode...`
-                              : '|এখানে ক্লিক করে স্ক্যান / এন্টার দিন...'
+                              : '| Click here to scan / press Enter...'
                           }
                           className="flex-1 min-w-0 border-0 outline-none text-xs py-1.5 px-1 bg-transparent"
                         />

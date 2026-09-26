@@ -83,7 +83,7 @@ export default function InvoiceShareModal({
           {/* Format Selection Prompt */}
           <div>
             <label style={{ display: 'block', fontSize: '0.78rem', fontWeight: 700, color: '#334155', marginBottom: '6px' }}>
-              Select File Format (ফাইল ফরম্যাট নির্বাচন করুন):
+              Select File Format:
             </label>
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px' }}>
               <button
@@ -154,7 +154,7 @@ export default function InvoiceShareModal({
           {/* Action Destination Buttons */}
           <div>
             <label style={{ display: 'block', fontSize: '0.78rem', fontWeight: 700, color: '#334155', marginBottom: '8px' }}>
-              Choose Destination / Channel (শেয়ার বা ডাউনলোডের অপশন):
+              Choose Destination / Channel:
             </label>
             <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
               {/* WhatsApp Direct */}

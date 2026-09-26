@@ -15,24 +15,24 @@ export default function ForgotPasswordForm({
     <form onSubmit={handleRecovery}>
       <div className="flex items-center justify-between mb-4">
         <h3 className="text-sm font-bold text-slate-800">
-          পাসওয়ার্ড রিকভারি (Password Reset)
+          Password Recovery
         </h3>
         <button
           type="button"
           onClick={() => setMode('login')}
           className="text-xs text-slate-500 hover:text-slate-700 font-medium"
         >
-          ← ব্যাক
+          ← Back to Login
         </button>
       </div>
 
       <p className="text-xs text-slate-500 leading-relaxed mb-3.5">
-        আপনার রেজিস্টার্ড মোবাইল বা ইমেইল প্রদান করুন। অ্যাডমিন বা ডেভলপার প্যানেল থেকে আপনার পাসওয়ার্ড রিসেট করে দেওয়া হবে।
+        Enter your registered phone number or email address. The shop administrator or developer panel will assist in resetting your password.
       </p>
 
       <div className="mb-3.5">
         <label className="block text-xs font-semibold text-slate-700 mb-1.5">
-          ইউজার ক্যাটাগরি
+          User Category
         </label>
         <div className="flex gap-2">
           <button
@@ -44,7 +44,7 @@ export default function ForgotPasswordForm({
                 : 'border-slate-300 bg-white text-slate-600 hover:bg-slate-50'
             }`}
           >
-            স্টাফ / টেকনিশিয়ান
+            Staff / Technician
           </button>
           <button
             type="button"
@@ -55,14 +55,14 @@ export default function ForgotPasswordForm({
                 : 'border-slate-300 bg-white text-slate-600 hover:bg-slate-50'
             }`}
           >
-            শপ অ্যাডমিন
+            Shop Admin
           </button>
         </div>
       </div>
 
       <div className="mb-4">
         <label className="block text-xs font-semibold text-slate-700 mb-1">
-          রেজিস্টার্ড মোবাইল অথবা ইমেইল *
+          Registered Phone or Email *
         </label>
         <input
           type="text"
@@ -91,7 +91,7 @@ export default function ForgotPasswordForm({
         disabled={recoveryLoading}
         className="w-full py-2.5 px-4 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-sm shadow-md transition-all disabled:opacity-50"
       >
-        {recoveryLoading ? 'অনুরোধ পাঠানো হচ্ছে...' : 'রিসেট অনুরোধ পাঠান'}
+        {recoveryLoading ? 'Sending Request...' : 'Send Recovery Request'}
       </button>
     </form>
   );

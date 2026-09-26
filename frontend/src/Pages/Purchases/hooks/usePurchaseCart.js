@@ -43,13 +43,13 @@ export const newTender = (defaultAmount = 0, isAccepted = false) => ({
 export const today = () => new Date().toISOString().slice(0, 10);
 
 export const EXTRA_COST_CATEGORIES = [
-  'Transportation & Logistics (পরিবহন ও ট্রাক ভাড়া)',
-  'Courier & Parcel Charges (কুরিয়ার চার্জ)',
-  'Demurrage / Port / Warehouse Fee (ডেমারেজ / পোর্ট ফি)',
-  'Loading & Labor (লেবার / লোডিং-আনলোডিং)',
-  'Packaging & Handling (প্যাকেজিং খরচ)',
-  'Customs & Clearance (কাস্টমস ও শুল্ক)',
-  'Other Overhead (অন্যান্য খরচ)',
+  'Transportation & Logistics',
+  'Courier & Parcel Charges',
+  'Demurrage / Port / Warehouse Fee',
+  'Loading & Labor',
+  'Packaging & Handling',
+  'Customs & Clearance',
+  'Other Overhead',
 ];
 
 export function computeFinalSale(item) {
@@ -1057,7 +1057,7 @@ export function usePurchaseCart(options = {}) {
     setPopupMsg('');
     if (!supplierId && !selectedSupplierObj)
       return setPopupMsg(
-        '⚠️ অবশ্যই সাপ্লায়ার সিলেক্ট করুন — সাপ্লায়ার ছাড়া purchase invoice save হবে না।'
+        '⚠️ Please select a supplier — purchase invoices cannot be saved without selecting a supplier.'
       );
     if (!items.length) return setError('Please add at least one product');
 

@@ -66,7 +66,7 @@ export function useLoginModalState({ onLoginSuccess }) {
     const targetPass = String(rawPass ?? '').trim();
 
     if (!targetId || !targetPass) {
-      setErrorMsg('মোবাইল নম্বর অথবা ইমেইল এবং পাসওয়ার্ড উভয়ই প্রদান করুন।');
+      setErrorMsg('Please enter both your phone/email and password.');
       return;
     }
 
@@ -105,7 +105,7 @@ export function useLoginModalState({ onLoginSuccess }) {
       }
 
       if (res.ok && data && data.success && data.token) {
-        setSuccessMsg('✓ লগইন সফল হয়েছে! ড্যাশবোর্ডে প্রবেশ করা হচ্ছে...');
+        setSuccessMsg('✓ Login successful! Redirecting to dashboard...');
         const userObj = data.user;
         const sessionToken = data.token;
         if (rememberMe) {
@@ -122,11 +122,11 @@ export function useLoginModalState({ onLoginSuccess }) {
         return;
       }
 
-      setErrorMsg((data && data.message) || 'ইউজার পাওয়া যায়নি অথবা পাসওয়ার্ড ভুল হয়েছে।');
+      setErrorMsg((data && data.message) || 'Invalid username/phone or incorrect password.');
     } catch (err) {
       console.error('Login error:', err);
       setErrorMsg(
-        'সার্ভারের সাথে সংযোগ স্থাপন করা সম্ভব হয়নি। ক্লাউড সার্ভার স্লিপ মোড থেকে চালু হচ্ছে, অনুগ্রহ করে কয়েক সেকেন্ড পর পুনরায় চেষ্টা করুন।'
+        'Unable to connect to the server. If waking from idle, please try again in a few seconds.'
       );
     } finally {
       setLoading(false);
@@ -144,12 +144,12 @@ export function useLoginModalState({ onLoginSuccess }) {
     const pass = String(staffPassword || '').trim();
 
     if (!name || !identifierVal || !pass) {
-      setStaffError('সকল প্রয়োজনীয় তথ্য পূরণ করুন।');
+      setStaffError('Please fill in all required fields.');
       return;
     }
 
     if (pass.length < 6) {
-      setStaffError('পাসওয়ার্ড কমপক্ষে ৬ অক্ষরের হতে হবে।');
+      setStaffError('Password must be at least 6 characters.');
       return;
     }
 
@@ -169,15 +169,15 @@ export function useLoginModalState({ onLoginSuccess }) {
 
       const data = await res.json();
       if (res.ok && data.success) {
-        setStaffSuccess('✓ স্টাফ রেজিস্ট্রেশন সফল হয়েছে! শপ অ্যাডমিন অনুমোদন করলে আপনি লগইন করতে পারবেন।');
+        setStaffSuccess('✓ Staff registration successful! You can log in once the administrator approves your account.');
         setStaffName('');
         setStaffIdentifier('');
         setStaffPassword('');
       } else {
-        setStaffError(data.message || 'রেজিস্ট্রেশন সম্পন্ন করা সম্ভব হয়নি।');
+        setStaffError(data.message || 'Unable to complete registration.');
       }
     } catch (err) {
-      setStaffError('সার্ভারে যোগাযোগ করা সম্ভব হয়নি।');
+      setStaffError('Unable to connect to the server.');
     } finally {
       setStaffLoading(false);
     }
@@ -191,7 +191,7 @@ export function useLoginModalState({ onLoginSuccess }) {
 
     const targetRecId = String(recoveryId || '').trim();
     if (!targetRecId) {
-      setRecoveryError('আপনার রেজিস্টার্ড মোবাইল নম্বর বা ইমেইল দিন।');
+      setRecoveryError('Please enter your registered phone number or email.');
       return;
     }
 
@@ -209,12 +209,12 @@ export function useLoginModalState({ onLoginSuccess }) {
 
       const data = await res.json();
       if (res.ok && data.success) {
-        setRecoverySuccess(data.message || 'পাসওয়ার্ড রিসেট অনুরোধ সফলভাবে পাঠানো হয়েছে।');
+        setRecoverySuccess(data.message || 'Password reset request sent successfully.');
       } else {
-        setRecoveryError(data.message || 'অনুরোধ পাঠাতে ব্যর্থ হয়েছে।');
+        setRecoveryError(data.message || 'Failed to send recovery request.');
       }
     } catch (err) {
-      setRecoveryError('সার্ভারের সাথে সংযোগ পাওয়া যায়নি।');
+      setRecoveryError('Unable to connect to the server.');
     } finally {
       setRecoveryLoading(false);
     }

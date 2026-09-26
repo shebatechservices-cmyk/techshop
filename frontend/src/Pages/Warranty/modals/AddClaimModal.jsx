@@ -19,7 +19,7 @@ export default function AddClaimModal({
       <div className="bg-white rounded-2xl w-full max-w-xl p-6 shadow-2xl border border-slate-100 animate-scaleUp">
         <div className="flex justify-between items-center mb-4 pb-3 border-b border-slate-100">
           <h3 className="text-base font-bold text-slate-900 flex items-center gap-2">
-            <span>🛡️</span> Receive Warranty Item (সার্ভিস ক্লেইম জমা গ্রহণ)
+            <span>🛡️</span> Receive Warranty Item (Intake Service Claim)
           </h3>
           <button
             type="button"

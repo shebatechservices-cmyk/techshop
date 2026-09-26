@@ -33,7 +33,7 @@ export default function TrashHeader({
             </span>
           </div>
           <div className="text-xs text-slate-400 mt-0.5">
-            গ্লোবাল ট্র্যাশ ও ডেটা পুনরুদ্ধার কেন্দ্র • Store and safely restore any deleted user records
+            Centralized data recovery repository • Store and safely restore any deleted user records
           </div>
         </div>
       </div>

@@ -24,7 +24,7 @@ export default function LoginForm({
 
       <div className="mb-4">
         <label htmlFor="login-username" className="block text-xs font-semibold text-slate-700 mb-1.5">
-          মোবাইল নম্বর অথবা ইমেইল (User ID)
+          Phone Number or Email (User ID)
         </label>
         <div className="relative">
           <span className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400">
@@ -37,7 +37,7 @@ export default function LoginForm({
             autoComplete="username"
             value={identifier}
             onChange={(e) => setIdentifier(e.target.value)}
-            placeholder="017xxxxxxxx অথবা user@shebatech.com"
+            placeholder="017xxxxxxxx or user@shebatech.com"
             autoFocus
             required
             className="w-full pl-9 pr-3.5 py-2.5 rounded-xl border border-slate-300 text-sm font-medium text-slate-800 placeholder-slate-400 outline-none focus:border-emerald-500 focus:ring-2 focus:ring-emerald-100 transition-all"
@@ -48,14 +48,14 @@ export default function LoginForm({
       <div className="mb-3.5">
         <div className="flex justify-between items-center mb-1.5">
           <label htmlFor="login-password" className="text-xs font-semibold text-slate-700">
-            পাসওয়ার্ড (Password)
+            Password
           </label>
           <button
             type="button"
             onClick={() => { setMode('forgot_password'); setErrorMsg(''); setSuccessMsg(''); }}
             className="text-xs font-semibold text-sky-600 hover:underline"
           >
-            পাসওয়ার্ড ভুলে গেছেন?
+            Forgot Password?
           </button>
         </div>
         <div className="relative">
@@ -107,7 +107,7 @@ export default function LoginForm({
           className="w-4 h-4 rounded text-emerald-600 focus:ring-emerald-500 cursor-pointer accent-emerald-600"
         />
         <label htmlFor="remember-me" className="ml-2 text-xs text-slate-600 cursor-pointer select-none">
-          এই ব্রাউজারে লগইন মনে রাখুন
+          Remember me on this browser
         </label>
       </div>
 
@@ -128,11 +128,11 @@ export default function LoginForm({
         disabled={loading}
         className="w-full py-3 px-4 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-sm shadow-lg shadow-emerald-600/30 flex items-center justify-center gap-2 transition-all disabled:opacity-50"
       >
-        {loading ? 'লগইন হচ্ছে...' : 'লগইন করুন (Sign In)'}
+        {loading ? 'Signing In...' : 'Sign In'}
       </button>
 
       <div className="mt-4 pt-3.5 border-t border-slate-100 flex justify-center items-center text-center text-xs text-slate-400">
-        <span>🔒 নতুন একাউন্ট শুধুমাত্র শপ অ্যাডমিন কর্তৃক তৈরি করা হয়।</span>
+        <span>🔒 New accounts are created and managed by the shop administrator.</span>
       </div>
     </form>
   );

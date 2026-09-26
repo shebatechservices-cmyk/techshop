@@ -3,10 +3,10 @@ import API from '../../../services/api';
 
 export const STATUS_CONFIG = {
   ALL: { label: 'All Claims', color: '#475569', bg: '#f1f5f9' },
-  Received: { label: '🟡 Received (দোকানে জমা)', color: '#b45309', bg: '#fef3c7' },
-  'Sent to Service': { label: '🔵 Sent to Service (সার্ভিসে পাঠানো)', color: '#0369a1', bg: '#e0f2fe' },
-  'Ready for Delivery': { label: '🟢 Ready for Delivery (প্রস্তুত)', color: '#15803d', bg: '#dcfce7' },
-  Delivered: { label: '⚪ Delivered (ডেলিভারি সম্পন্ন)', color: '#475569', bg: '#f8fafc' },
+  Received: { label: '🟡 Received (In Store)', color: '#b45309', bg: '#fef3c7' },
+  'Sent to Service': { label: '🔵 Sent to Service Center', color: '#0369a1', bg: '#e0f2fe' },
+  'Ready for Delivery': { label: '🟢 Ready for Delivery', color: '#15803d', bg: '#dcfce7' },
+  Delivered: { label: '⚪ Delivered to Customer', color: '#475569', bg: '#f8fafc' },
 };
 
 const DEFAULT_CLAIMS = [];

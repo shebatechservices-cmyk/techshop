@@ -94,7 +94,7 @@ export default function DayCloseModal({ isOpen, onClose }) {
               </h3>
             </div>
             <p style={{ margin: '4px 0 0', fontSize: '0.82rem', color: '#94a3b8' }}>
-              দিন শেষে ক্যাশ ড্রয়ার ও বিক্রয় হিসাবের সমন্বিত রিপোর্ট
+              Comprehensive end-of-day cash drawer, sales, and expense reconciliation report
             </p>
           </div>
 
@@ -159,7 +159,7 @@ export default function DayCloseModal({ isOpen, onClose }) {
                   <div style={{ fontSize: '1.6rem', fontWeight: 800, color: '#15803d', marginTop: '4px' }}>
                     ৳ {Number(summary.current_cash_in_drawer || 0).toLocaleString('en-BD', { minimumFractionDigits: 2 })}
                   </div>
-                  <small style={{ color: '#16a34a', fontWeight: 600 }}>ক্যাশ ড্রয়ারে বর্তমান থাকার কথা</small>
+                  <small style={{ color: '#16a34a', fontWeight: 600 }}>Calculated physical drawer cash</small>
                 </div>
 
                 {/* Today's Gross Sales */}
@@ -194,30 +194,30 @@ export default function DayCloseModal({ isOpen, onClose }) {
                 {/* Cash & Inflow Sources */}
                 <div style={{ background: '#ffffff', border: '1px solid #e2e8f0', borderRadius: '12px', padding: '16px' }}>
                   <h4 style={{ margin: '0 0 12px', fontSize: '0.92rem', color: '#0f172a', fontWeight: 700, display: 'flex', alignItems: 'center', gap: '6px' }}>
-                    📥 Inflow Receipts (টাকা প্রাপ্তি)
+                    📥 Inflow Receipts
                   </h4>
                   <table style={{ width: '100%', fontSize: '0.84rem', borderCollapse: 'collapse' }}>
                     <tbody>
                       <tr style={{ borderBottom: '1px solid #f1f5f9' }}>
-                        <td style={{ padding: '8px 0', color: '#64748b' }}>ক্যাশ সেলস কালেকশন:</td>
+                        <td style={{ padding: '8px 0', color: '#64748b' }}>Cash Sales Collection:</td>
                         <td style={{ padding: '8px 0', textAlign: 'right', fontWeight: 700, color: '#16a34a' }}>
                           ৳ {Number(sales.total_collected || 0).toLocaleString()}
                         </td>
                       </tr>
                       <tr style={{ borderBottom: '1px solid #f1f5f9' }}>
-                        <td style={{ padding: '8px 0', color: '#64748b' }}>কাস্টমার বকেয়া আদায় (Due Collection):</td>
+                        <td style={{ padding: '8px 0', color: '#64748b' }}>Customer Due Collections:</td>
                         <td style={{ padding: '8px 0', textAlign: 'right', fontWeight: 700, color: '#16a34a' }}>
                           ৳ {Number(summary.total_dues_collected || 0).toLocaleString()}
                         </td>
                       </tr>
                       <tr style={{ borderBottom: '1px solid #f1f5f9' }}>
-                        <td style={{ padding: '8px 0', color: '#64748b' }}>ব্যাংক ও এমএফএস (বিকাশ/নগদ) ইনভয়েস:</td>
+                        <td style={{ padding: '8px 0', color: '#64748b' }}>Bank & MFS (bKash/Nagad) Inflow:</td>
                         <td style={{ padding: '8px 0', textAlign: 'right', fontWeight: 700, color: '#0284c7' }}>
                           ৳ {Number(summary.bank_mfs_inflow || 0).toLocaleString()}
                         </td>
                       </tr>
                       <tr>
-                        <td style={{ padding: '8px 0', fontWeight: 700, color: '#0f172a' }}>মোট আজকের ক্যাশ ইনফ্লো:</td>
+                        <td style={{ padding: '8px 0', fontWeight: 700, color: '#0f172a' }}>Total Today's Cash Inflow:</td>
                         <td style={{ padding: '8px 0', textAlign: 'right', fontWeight: 800, color: '#15803d', fontSize: '0.95rem' }}>
                           ৳ {Number(summary.cash_inflow || 0).toLocaleString()}
                         </td>
@@ -229,30 +229,30 @@ export default function DayCloseModal({ isOpen, onClose }) {
                 {/* Cash Outflow Sources */}
                 <div style={{ background: '#ffffff', border: '1px solid #e2e8f0', borderRadius: '12px', padding: '16px' }}>
                   <h4 style={{ margin: '0 0 12px', fontSize: '0.92rem', color: '#0f172a', fontWeight: 700, display: 'flex', alignItems: 'center', gap: '6px' }}>
-                    📤 Outflow Disbursements (টাকা প্রদান)
+                    📤 Outflow Disbursements
                   </h4>
                   <table style={{ width: '100%', fontSize: '0.84rem', borderCollapse: 'collapse' }}>
                     <tbody>
                       <tr style={{ borderBottom: '1px solid #f1f5f9' }}>
-                        <td style={{ padding: '8px 0', color: '#64748b' }}>সাপ্লায়ারকে পরিশোধ (Due & Advance):</td>
+                        <td style={{ padding: '8px 0', color: '#64748b' }}>Supplier Payouts (Due & Advance):</td>
                         <td style={{ padding: '8px 0', textAlign: 'right', fontWeight: 700, color: '#dc2626' }}>
                           ৳ {Number(summary.total_supplier_paid || 0).toLocaleString()}
                         </td>
                       </tr>
                       <tr style={{ borderBottom: '1px solid #f1f5f9' }}>
-                        <td style={{ padding: '8px 0', color: '#64748b' }}>আজকের পারচেজ অর্ডার মূল্য ({purchases.total_pos || 0} POs):</td>
+                        <td style={{ padding: '8px 0', color: '#64748b' }}>Today's Purchase Orders ({purchases.total_pos || 0} POs):</td>
                         <td style={{ padding: '8px 0', textAlign: 'right', fontWeight: 700, color: '#475569' }}>
                           ৳ {Number(purchases.total_purchased || 0).toLocaleString()}
                         </td>
                       </tr>
                       <tr style={{ borderBottom: '1px solid #f1f5f9' }}>
-                        <td style={{ padding: '8px 0', color: '#64748b' }}>স্টাফ বেতন / কনভেয়েন্স / অফিস খরচ:</td>
+                        <td style={{ padding: '8px 0', color: '#64748b' }}>Operating Expenses & Allowances:</td>
                         <td style={{ padding: '8px 0', textAlign: 'right', fontWeight: 700, color: '#dc2626' }}>
                           ৳ {Number(summary.total_expenses || 0).toLocaleString()}
                         </td>
                       </tr>
                       <tr>
-                        <td style={{ padding: '8px 0', fontWeight: 700, color: '#0f172a' }}>মোট আজকের ক্যাশ আউটফ্লো:</td>
+                        <td style={{ padding: '8px 0', fontWeight: 700, color: '#0f172a' }}>Total Today's Cash Outflow:</td>
                         <td style={{ padding: '8px 0', textAlign: 'right', fontWeight: 800, color: '#b91c1c', fontSize: '0.95rem' }}>
                           ৳ {Number(summary.cash_outflow || 0).toLocaleString()}
                         </td>
@@ -265,7 +265,7 @@ export default function DayCloseModal({ isOpen, onClose }) {
               {/* CURRENT WALLETS SNAPSHOT */}
               <div style={{ background: '#f8fafc', border: '1px solid #e2e8f0', borderRadius: '12px', padding: '16px' }}>
                 <h4 style={{ margin: '0 0 10px', fontSize: '0.9rem', color: '#0f172a', fontWeight: 700 }}>
-                  💼 End-of-Day Wallet Balances (দিন শেষের স্থিতি)
+                  💼 End-of-Day Wallet Balances
                 </h4>
                 <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(200px, 1fr))', gap: '10px' }}>
                   {accounts.map((acc) => (

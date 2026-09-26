@@ -64,7 +64,7 @@ export default function StaffLoginsTab({
             staffSubTab === "approvals" ? "bg-sky-600 text-white" : "bg-slate-100 text-slate-600 hover:bg-slate-200"
           }`}
         >
-          <span>📋 Pending Staff Approvals (নতুন রেজিস্ট্রেশন অনুমোদন)</span>
+          <span>📋 Pending Staff Approvals</span>
           {pendingStaffList.length > 0 && (
             <span className="bg-rose-600 text-white rounded-full px-2 py-0.25 text-xs font-extrabold">
               {pendingStaffList.length}
@@ -416,10 +416,10 @@ export default function StaffLoginsTab({
           <div className="flex justify-between items-center mb-4 flex-wrap gap-2.5">
             <div>
               <h4 className="m-0 text-slate-900 text-base font-extrabold">
-                📋 নতুন স্টাফ ও টেকনিশিয়ান অনুমোদন (Staff Registrations Approval)
+                📋 Staff & Technician Approvals
               </h4>
               <p className="mt-1 mb-0 text-slate-500 text-xs">
-                অনলাইন সাইন-আপের মাধ্যমে রেজিস্ট্রেশন করা স্টাফ ও টেকনিশিয়ানদের তালিকা। শপ এডমিন অনুমোদন (Approve) করলে তারা সিস্টেমে লগইন করতে পারবে।
+                List of staff and technicians registered via online sign-up. Once approved by the shop administrator, they will be granted system access.
               </p>
             </div>
             <button
@@ -434,20 +434,20 @@ export default function StaffLoginsTab({
           {pendingStaffList.length === 0 ? (
             <div className="text-center py-12 px-5 bg-white rounded-xl border border-dashed border-slate-300 shadow-sm">
               <div className="text-3xl mb-2">✅</div>
-              <div className="font-bold text-slate-800 text-sm">কোনো অপেক্ষমান স্টাফ নেই (No Pending Registrations)</div>
-              <div className="text-slate-500 text-xs mt-1">নতুন কোনো স্টাফ রেজিস্ট্রেশন করলে এখানে তাৎক্ষণিকভাবে তালিকা প্রদর্শিত হবে।</div>
+              <div className="font-bold text-slate-800 text-sm">No Pending Registrations</div>
+              <div className="text-slate-500 text-xs mt-1">When a new staff member registers, their application will appear here immediately for review.</div>
             </div>
           ) : (
             <div className="bg-white rounded-xl border border-slate-200 overflow-x-auto shadow-sm">
               <table className="w-full border-collapse text-left text-sm">
                 <thead>
                   <tr className="bg-slate-50 border-b border-slate-200 text-slate-600 text-xs font-bold">
-                    <th className="px-4 py-3">নাম (Name)</th>
-                    <th className="px-4 py-3">মোবাইল নম্বর</th>
-                    <th className="px-4 py-3">ইমেইল</th>
-                    <th className="px-4 py-3">আবেদিত পদবী (Role)</th>
-                    <th className="px-4 py-3">রেজিস্ট্রেশন তারিখ</th>
-                    <th className="px-4 py-3 text-center">একশন (Action)</th>
+                    <th className="px-4 py-3">Name</th>
+                    <th className="px-4 py-3">Phone Number</th>
+                    <th className="px-4 py-3">Email</th>
+                    <th className="px-4 py-3">Applied Role</th>
+                    <th className="px-4 py-3">Registration Date</th>
+                    <th className="px-4 py-3 text-center">Action</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -482,20 +482,20 @@ export default function StaffLoginsTab({
                             className="bg-emerald-600 hover:bg-emerald-700 text-white border-0 px-3 py-1.5 rounded-md font-bold text-xs cursor-pointer flex items-center gap-1 transition-colors"
                           >
                             <span>✓</span>
-                            <span>অনুমোদন (Approve)</span>
+                            <span>Approve</span>
                           </button>
                           <button
                             type="button"
                             disabled={processingStaffId === st.id}
                             onClick={() => {
-                              if (window.confirm(`${st.name} এর রেজিস্ট্রেশন বাতিল করতে চান?`)) {
+                              if (window.confirm(`Are you sure you want to reject registration for ${st.name}?`)) {
                                 handleApproveOrRejectStaff(st.id, "reject");
                               }
                             }}
                             className="bg-rose-600 hover:bg-rose-700 text-white border-0 px-3 py-1.5 rounded-md font-bold text-xs cursor-pointer flex items-center gap-1 transition-colors"
                           >
                             <span>✕</span>
-                            <span>বাতিল (Reject)</span>
+                            <span>Reject</span>
                           </button>
                         </div>
                       </td>

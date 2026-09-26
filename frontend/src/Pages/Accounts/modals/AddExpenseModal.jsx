@@ -24,13 +24,13 @@ export default function AddExpenseModal({
         onClick={(e) => e.stopPropagation()}
       >
         <h3 className="m-0 mb-4 text-lg font-extrabold text-slate-900">
-          + Record Expense (দৈনিক খরচ এন্ট্রি)
+          + Record Daily Expense
         </h3>
         <form onSubmit={handleCreateExpense}>
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mb-3">
             <div>
               <label className="block text-xs font-bold text-slate-700 mb-1">
-                Expense Category (খাত) *
+                Expense Category *
               </label>
               <div className="flex items-center gap-2">
                 <select
@@ -75,7 +75,7 @@ export default function AddExpenseModal({
 
             <div>
               <label className="block text-xs font-bold text-slate-700 mb-1">
-                Paid From Account (টাকা প্রদান) *
+                Paid From Account (Debit Source) *
               </label>
               <select
                 required
@@ -136,7 +136,7 @@ export default function AddExpenseModal({
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mb-3">
             <div>
               <label className="block text-xs font-bold text-slate-700 mb-1">
-                Paid To (প্রাপক / ব্যক্তি / প্রতিষ্ঠান)
+                Paid To (Payee / Vendor / Person)
               </label>
               <input
                 type="text"

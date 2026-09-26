@@ -309,7 +309,7 @@ export default function SalePrintModal({
           <span style={{ fontSize: '1.1rem' }}>{isQuotation ? '📋' : '🧾'}</span>
           <div>
             <strong style={{ fontSize: '0.92rem', display: 'block' }}>
-              {isQuotation ? 'Sales Quotation Preview' : (isChalan ? 'Delivery Challan (চালান) Preview' : 'Sales Invoice Receipt')}
+              {isQuotation ? 'Sales Quotation Preview' : (isChalan ? 'Delivery Challan Preview' : 'Sales Invoice Receipt')}
             </strong>
             <span style={{ fontSize: '0.74rem', color: '#94a3b8' }}>
               {docNumber} · {paperSize.toUpperCase()} · Margin: {pageMargin}

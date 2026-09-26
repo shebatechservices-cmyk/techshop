@@ -27,7 +27,7 @@ export default function ClaimPrintSlipModal({ claimToPrint, setClaimToPrint }) {
               Mobile: 01711-000000 · Dhaka, Bangladesh
             </div>
             <div className="inline-block bg-slate-900 text-white px-2.5 py-0.5 rounded text-[10px] font-bold mt-1.5 uppercase">
-              WARRANTY SERVICE TOKEN (গ্রাহক কপি)
+              WARRANTY SERVICE TOKEN (Customer Copy)
             </div>
           </div>
 
@@ -83,7 +83,7 @@ export default function ClaimPrintSlipModal({ claimToPrint, setClaimToPrint }) {
           </div>
 
           <div className="text-center text-[10px] text-slate-500 border-t border-dashed border-slate-900 pt-2">
-            * পণ্য ডেলিভারি নেওয়ার সময় অবশ্যই এই টোকেন স্লিপটি কাউন্টারে সাথে নিয়ে আসবেন।
+            * Please present this token slip at the counter when collecting your serviced item.
           </div>
         </div>
 

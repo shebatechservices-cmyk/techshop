@@ -41,7 +41,7 @@ export default function ActiveShiftClosingSection({
       <div className="bg-sky-50 border border-sky-200 rounded-xl p-3.5 mb-5 flex items-center gap-3">
         <span className="text-2xl">🛡️</span>
         <div className="text-xs text-sky-900 leading-relaxed">
-          <strong>Blind Close Mode Active:</strong> কাউন্ট করার সময় সিস্টেম প্রত্যাশিত ব্যালেন্স প্রকাশ করে না। আপনার ক্যাশ ড্রয়ারের প্রকৃত টাকা গুণে এন্ট্রি করুন। সমাপ্ত করার পর স্বয়ংক্রিয়ভাবে অডিট রিপোর্ট ও এসএমএস প্রেরিত হবে।
+          <strong>Blind Close Mode Active:</strong> The expected system balance is hidden during counting for audit security. Count and enter the physical cash in your drawer. Upon closing, the reconciliation report will be saved.
         </div>
       </div>
 
@@ -50,7 +50,7 @@ export default function ActiveShiftClosingSection({
         <div className="bg-white border border-slate-200 rounded-2xl p-4 sm:p-5 mb-5 shadow-sm">
           <div className="flex items-center justify-between mb-3.5 pb-2.5 border-b border-slate-100">
             <h4 className="text-xs font-bold text-slate-800 uppercase tracking-wider">
-              💵 Currency Denomination Counter (নোট ও কয়েন কাউন্টার)
+              💵 Currency Denomination Counter
             </h4>
             <span className="text-xs text-slate-400">Bangladeshi Taka (৳)</span>
           </div>
@@ -90,7 +90,7 @@ export default function ActiveShiftClosingSection({
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-5">
           <div className="bg-white border border-slate-200 rounded-2xl p-4 shadow-sm">
             <label className="block text-xs font-bold text-slate-800 mb-1.5">
-              🎯 Total Actual Cash Counted (মোট গণনা করা ক্যাশ) <span className="text-rose-500">*</span>
+              🎯 Total Actual Cash Counted <span className="text-rose-500">*</span>
             </label>
             <div className="relative">
               <span className="absolute left-3 top-1/2 -translate-y-1/2 font-bold text-slate-400">৳</span>
@@ -111,7 +111,7 @@ export default function ActiveShiftClosingSection({
 
           <div className="bg-white border border-slate-200 rounded-2xl p-4 shadow-sm">
             <label className="block text-xs font-bold text-slate-800 mb-1.5">
-              📝 Shift Closing Notes / Remarks (মন্তব্য)
+              📝 Shift Closing Notes / Remarks
             </label>
             <textarea
               rows="3"

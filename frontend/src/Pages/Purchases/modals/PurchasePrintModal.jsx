@@ -399,7 +399,7 @@ export default function PurchasePrintModal({
               letterSpacing: '0.05em',
               textTransform: 'uppercase',
             }}>
-              Purchase {isChalan ? 'Delivery Challan (চালান)' : 'Order'}
+              Purchase {isChalan ? 'Delivery Challan' : 'Order'}
             </div>
             <div style={{ marginTop: '8px', fontSize: '0.82rem', color: '#0f172a', fontWeight: 700 }}>
               {isChalan ? 'Chalan No: ' : 'PO No: '}<span style={{ color: '#0284c7' }}>{poNumber}</span>

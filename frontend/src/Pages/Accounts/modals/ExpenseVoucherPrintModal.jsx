@@ -32,7 +32,7 @@ export default function ExpenseVoucherPrintModal({
               Dhaka, Bangladesh · Phone: 01711-000000
             </div>
             <div className="inline-block bg-slate-900 text-white py-0.5 px-3 rounded text-xs font-extrabold mt-2 font-sans">
-              OFFICIAL DEBIT PAYMENT VOUCHER (খরচ ভাউচার)
+              OFFICIAL DEBIT PAYMENT VOUCHER
             </div>
           </div>
 
@@ -49,10 +49,10 @@ export default function ExpenseVoucherPrintModal({
           {/* Payee and Source */}
           <div className="border-t border-b border-dashed border-slate-300 py-2.5 mb-3 text-xs sm:text-sm font-sans space-y-1">
             <div>
-              Paid To (প্রাপক): <strong>{voucherToPrint.payee_name || 'General'}</strong>
+              Paid To (Payee): <strong>{voucherToPrint.payee_name || 'General'}</strong>
             </div>
             <div>
-              Expense Head (খাত): <strong>{voucherToPrint.category_name}</strong>
+              Expense Category: <strong>{voucherToPrint.category_name}</strong>
             </div>
             <div>
               Disbursed From: <strong>{voucherToPrint.account_name}</strong>

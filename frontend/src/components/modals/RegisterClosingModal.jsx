@@ -55,7 +55,7 @@ export default function RegisterClosingModal({ isOpen, onClose, currentUser, sho
                 End-of-Day (EOD) / Register Shift Closing
               </h2>
               <p className="text-xs text-slate-400">
-                ক্যাশ রেজিস্টার সমাপনী, ব্লাইন্ড ক্লোজ ও হিসাব মেলানো
+                Cash register end-of-day reconciliation, blind audit count & shift settlement
               </p>
             </div>
           </div>

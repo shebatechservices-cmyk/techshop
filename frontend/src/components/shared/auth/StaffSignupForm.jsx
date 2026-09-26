@@ -19,20 +19,20 @@ export default function StaffSignupForm({
     <form onSubmit={handleStaffSignup}>
       <div className="flex items-center justify-between mb-4">
         <h3 className="text-sm font-bold text-slate-800">
-          স্টাফ রেজিস্ট্রেশন (Staff Registration)
+          Staff Registration
         </h3>
         <button
           type="button"
           onClick={() => setMode('login')}
           className="text-xs text-slate-500 hover:text-slate-700 font-medium"
         >
-          ← ব্যাক
+          ← Back to Login
         </button>
       </div>
 
       <div className="mb-3.5">
         <label className="block text-xs font-semibold text-slate-700 mb-1">
-          পূর্ণ নাম (Full Name) *
+          Full Name *
         </label>
         <input
           type="text"
@@ -46,7 +46,7 @@ export default function StaffSignupForm({
 
       <div className="mb-3.5">
         <label className="block text-xs font-semibold text-slate-700 mb-1">
-          মোবাইল নম্বর অথবা ইমেইল *
+          Phone Number or Email *
         </label>
         <input
           type="text"
@@ -60,29 +60,29 @@ export default function StaffSignupForm({
 
       <div className="mb-3.5">
         <label className="block text-xs font-semibold text-slate-700 mb-1">
-          স্টাফ পদবী (Role)
+          Staff Role
         </label>
         <select
           value={staffRole}
           onChange={(e) => setStaffRole(e.target.value)}
           className="w-full px-3 py-2 rounded-lg border border-slate-300 text-sm font-medium text-slate-800 outline-none focus:border-sky-500 focus:ring-2 focus:ring-sky-100 transition-all bg-white"
         >
-          <option value="Sales Executive">Sales Executive (বিক্রয় প্রতিনিধি)</option>
-          <option value="Field Technician">Field Technician (মাঠ টেকনিশিয়ান)</option>
-          <option value="Inventory Officer">Inventory Officer (স্টক ইনচার্জ)</option>
-          <option value="Accountant">Accountant (হিসাবরক্ষক)</option>
+          <option value="Sales Executive">Sales Executive</option>
+          <option value="Field Technician">Field Technician</option>
+          <option value="Inventory Officer">Inventory Officer</option>
+          <option value="Accountant">Accountant</option>
         </select>
       </div>
 
       <div className="mb-4">
         <label className="block text-xs font-semibold text-slate-700 mb-1">
-          পাসওয়ার্ড (Password) *
+          Password *
         </label>
         <input
           type="password"
           value={staffPassword}
           onChange={(e) => setStaffPassword(e.target.value)}
-          placeholder="কমপক্ষে ৬ অক্ষরের পাসওয়ার্ড"
+          placeholder="At least 6 characters"
           required
           className="w-full px-3 py-2 rounded-lg border border-slate-300 text-sm font-medium text-slate-800 placeholder-slate-400 outline-none focus:border-sky-500 focus:ring-2 focus:ring-sky-100 transition-all"
         />
@@ -105,7 +105,7 @@ export default function StaffSignupForm({
         disabled={staffLoading}
         className="w-full py-2.5 px-4 rounded-xl bg-sky-600 hover:bg-sky-700 text-white font-bold text-sm shadow-md transition-all disabled:opacity-50"
       >
-        {staffLoading ? 'রেজিস্ট্রেশন হচ্ছে...' : 'আবেদন জমা দিন (Submit)'}
+        {staffLoading ? 'Submitting Application...' : 'Submit Application'}
       </button>
     </form>
   );
