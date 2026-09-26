@@ -13,8 +13,8 @@ export default function ProjectsTable({
   if (loading) {
     return (
       <div className="bg-white rounded-xl border border-slate-200 p-16 text-center shadow-xs">
-        <div className="inline-block animate-spin rounded-full h-8 w-8 border-4 border-blue-600 border-t-transparent mb-3" />
-        <p className="text-slate-500 font-medium text-xs">প্রজেক্ট ডাটা লোড হচ্ছে...</p>
+        <div className="inline-block animate-spin rounded-full h-8 w-8 border-4 border-sky-600 border-t-transparent mb-3" />
+        <p className="text-slate-500 font-medium text-xs">Loading project data...</p>
       </div>
     );
   }
@@ -23,8 +23,8 @@ export default function ProjectsTable({
     return (
       <div className="bg-white rounded-xl border border-slate-200 p-16 text-center shadow-xs">
         <div className="text-4xl mb-2">📋</div>
-        <p className="font-bold text-slate-700 text-sm mb-1">কোনো প্রজেক্ট বা সার্ভিস পাওয়া যায়নি।</p>
-        <small className="text-slate-400 text-xs">উপরের "+ নতুন প্রজেক্ট / সার্ভিস" বাটনে ক্লিক করে কাজ তৈরি করুন।</small>
+        <p className="font-bold text-slate-700 text-sm mb-1">No projects or services found.</p>
+        <small className="text-slate-400 text-xs">Click "+ New Project / Service" above to create a project.</small>
       </div>
     );
   }
@@ -35,13 +35,13 @@ export default function ProjectsTable({
         <table className="w-full border-collapse text-left text-xs">
           <thead>
             <tr className="bg-slate-50 border-b border-slate-200 text-slate-600 font-semibold uppercase tracking-wider text-[11px]">
-              <th className="py-3 px-3.5">প্রজেক্ট ও সোর্স</th>
-              <th className="py-3 px-3.5">কাস্টমার ও সাইট</th>
-              <th className="py-3 px-3.5">অ্যাসাইনড টেকনিশিয়ান</th>
-              <th className="py-3 px-3.5">পারিশ্রমিক ব্রেকডাউন</th>
-              <th className="py-3 px-3.5">কাস্টমার বিল</th>
-              <th className="py-3 px-3.5">স্ট্যাটাস পাইপলাইন</th>
-              <th className="py-3 px-3.5 text-right">একশন</th>
+              <th className="py-3 px-3.5">Project & Source</th>
+              <th className="py-3 px-3.5">Customer & Site</th>
+              <th className="py-3 px-3.5">Assigned Technician</th>
+              <th className="py-3 px-3.5">Payout Breakdown</th>
+              <th className="py-3 px-3.5">Customer Bill</th>
+              <th className="py-3 px-3.5">Status Pipeline</th>
+              <th className="py-3 px-3.5 text-right">Actions</th>
             </tr>
           </thead>
           <tbody className="divide-y divide-slate-100">
@@ -77,21 +77,21 @@ export default function ProjectsTable({
                             : 'bg-amber-100 text-amber-800'
                         }`}
                       >
-                        {p.invoice_id ? '📦 নতুন সেটাপ' : '🔧 পুরাতন রিপেয়ার'}
+                        {p.invoice_id ? '📦 New Setup' : '🔧 Service / Repair'}
                       </span>
                       <strong className="text-slate-900 font-extrabold">{p.project_code}</strong>
                     </div>
                     <div className="font-semibold text-slate-800 text-xs">{p.title}</div>
                     {p.invoice_no && (
-                      <div className="text-[11px] text-blue-600 mt-0.5">
-                        ইনভয়েস: <strong>{p.invoice_no}</strong>
+                      <div className="text-[11px] text-sky-600 mt-0.5">
+                        Invoice: <strong>{p.invoice_no}</strong>
                       </div>
                     )}
                     {p.equipment_details &&
                       Array.isArray(p.equipment_details) &&
                       p.equipment_details.length > 0 && (
                         <div className="text-[11px] text-slate-500 mt-1 max-w-xs">
-                          ডিভাইস:{' '}
+                          Equipment:{' '}
                           {p.equipment_details
                             .map((it) => `${it.product_name} (${it.quantity})`)
                             .join(', ')}
@@ -132,20 +132,20 @@ export default function ProjectsTable({
                     )}
                     {p.admin_confirmed && (
                       <div className="text-[11px] text-emerald-600 mt-1 font-bold">
-                        ✓ ইনচার্জ অনুমোদিত
+                        ✓ In-Charge Confirmed
                       </div>
                     )}
                   </td>
 
                   {/* Remuneration Breakdown */}
                   <td className="py-3.5 px-3.5 align-top">
-                    <div className="font-extrabold text-blue-600 text-sm">
+                    <div className="font-extrabold text-sky-600 text-sm">
                       ৳ {totalTechPayout.toLocaleString('en-IN')}
                     </div>
                     <div className="text-[11px] text-slate-500 mt-0.5 flex flex-col gap-0.5">
-                      <span>সেটাপ ফি: ৳{setup}</span>
-                      <span>যাতায়াত: ৳{conv}</span>
-                      <span>মিল ভাতা: ৳{meal}</span>
+                      <span>Setup Fee: ৳{setup}</span>
+                      <span>Conveyance: ৳{conv}</span>
+                      <span>Meal Allowance: ৳{meal}</span>
                     </div>
                   </td>
 
@@ -154,26 +154,26 @@ export default function ProjectsTable({
                     <strong className="text-emerald-700 font-extrabold text-sm block">
                       ৳ {customerBill.toLocaleString('en-IN')}
                     </strong>
-                    <div className="text-[11px] text-slate-400">ধার্যকৃত সার্ভিস বিল</div>
+                    <div className="text-[11px] text-slate-400">Service Charges</div>
                   </td>
 
                   {/* Pipeline Status */}
                   <td className="py-3.5 px-3.5 align-top">
                     {isCompleted ? (
                       <span className="bg-emerald-100 text-emerald-800 px-2.5 py-1 rounded-md text-[11px] font-extrabold inline-flex items-center gap-1">
-                        ✓ সম্পন্ন ও পেইড
+                        ✓ Completed & Paid
                       </span>
                     ) : isInProgress ? (
                       <span className="bg-blue-100 text-blue-800 px-2.5 py-1 rounded-md text-[11px] font-extrabold inline-flex items-center gap-1">
-                        ⏳ কাজ চলমান
+                        ⏳ In Progress
                       </span>
                     ) : isAccepted ? (
                       <span className="bg-amber-100 text-amber-800 px-2.5 py-1 rounded-md text-[11px] font-extrabold inline-flex items-center gap-1">
-                        🔵 টেক একসেপ্ট করেছে
+                        🔵 Tech Accepted
                       </span>
                     ) : (
                       <span className="bg-slate-100 text-slate-700 px-2.5 py-1 rounded-md text-[11px] font-extrabold inline-flex items-center gap-1">
-                        🟡 একসেপ্টের অপেক্ষায়
+                        🟡 Awaiting Acceptance
                       </span>
                     )}
 
@@ -194,7 +194,7 @@ export default function ProjectsTable({
                           onClick={() => onTechPrompt(p)}
                           className="px-2.5 py-1 bg-amber-100 text-amber-900 border border-amber-300 hover:bg-amber-200 rounded-md text-[11px] font-bold cursor-pointer whitespace-nowrap transition-colors"
                         >
-                          📲 টেক একসেপ্ট প্রম্পট
+                          📲 Accept Prompt
                         </button>
                       )}
 
@@ -203,9 +203,9 @@ export default function ProjectsTable({
                         <button
                           type="button"
                           onClick={() => onInchargeConfirm(p)}
-                          className="px-2.5 py-1 bg-blue-600 hover:bg-blue-700 text-white rounded-md text-[11px] font-bold cursor-pointer whitespace-nowrap shadow-xs transition-colors"
+                          className="px-2.5 py-1 bg-sky-600 hover:bg-sky-700 text-white rounded-md text-[11px] font-bold cursor-pointer whitespace-nowrap shadow-xs transition-colors"
                         >
-                          🛡️ ইনচার্জ কনফার্মেশন
+                          🛡️ In-Charge Confirm
                         </button>
                       )}
 
@@ -217,7 +217,7 @@ export default function ProjectsTable({
                             onClick={() => onAddProgress(p)}
                             className="px-2 py-1 bg-slate-100 hover:bg-slate-200 text-slate-700 border border-slate-300 rounded-md text-[11px] font-semibold cursor-pointer transition-colors"
                           >
-                            📝 নোট যোগ করুন
+                            📝 Add Note
                           </button>
 
                           <button
@@ -225,7 +225,7 @@ export default function ProjectsTable({
                             onClick={() => onComplete(p)}
                             className="px-2.5 py-1 bg-emerald-600 hover:bg-emerald-700 text-white rounded-md text-[11px] font-bold cursor-pointer whitespace-nowrap shadow-xs transition-colors"
                           >
-                            🏁 সম্পন্ন ও ওয়ালেট পে
+                            🏁 Complete & Pay Wallet
                           </button>
                         </>
                       )}
@@ -235,10 +235,10 @@ export default function ProjectsTable({
                         type="button"
                         onClick={() => onPrint(p)}
                         className="px-2.5 py-1 bg-white hover:bg-slate-50 text-slate-800 border border-slate-300 rounded-md text-[11px] font-semibold cursor-pointer flex items-center gap-1 whitespace-nowrap transition-colors"
-                        title="জব কার্ড ও সার্ভিস স্লিপ প্রিন্ট করুন"
+                        title="Print Job Card & Service Slip"
                       >
                         <span>🖨️</span>
-                        <span>প্রিন্ট জব কার্ড</span>
+                        <span>Print Job Card</span>
                       </button>
 
                       {/* Delete */}
@@ -246,9 +246,9 @@ export default function ProjectsTable({
                         type="button"
                         onClick={() => onDelete(p.id)}
                         className="text-slate-400 hover:text-rose-600 text-[11px] font-medium cursor-pointer p-0.5 transition-colors"
-                        title="মুছে ফেলুন"
+                        title="Delete Project"
                       >
-                        🗑️ ডিলিট
+                        🗑️ Delete
                       </button>
                     </div>
                   </td>

@@ -6,15 +6,23 @@ export default function ProjectsFilterBar({
   stageFilter,
   setStageFilter,
 }) {
+  const STAGE_LABELS = {
+    all: 'All',
+    assigned: 'Assigned',
+    accepted: 'Accepted',
+    in_progress: 'In Progress',
+    completed: 'Completed',
+  };
+
   return (
     <div className="bg-white p-3 rounded-xl border border-slate-200 shadow-xs flex justify-between items-center flex-wrap gap-2.5">
       <div className="relative flex-1 min-w-[260px] max-w-md">
         <input
           type="text"
-          placeholder="সার্চ করুন: প্রজেক্ট কোড, টাইটেল, কাস্টমার, ইনভয়েস নং, টেকনিশিয়ান..."
+          placeholder="Search projects: Code, Title, Customer, Invoice No, Technician..."
           value={searchQuery}
           onChange={(e) => setSearchQuery(e.target.value)}
-          className="w-full pl-3 pr-8 py-2 rounded-lg border border-slate-300 text-xs focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all shadow-xs"
+          className="w-full pl-3 pr-8 py-2 rounded-lg border border-slate-300 text-xs focus:outline-none focus:ring-2 focus:ring-sky-500 focus:border-transparent transition-all shadow-xs"
         />
         {searchQuery && (
           <button
@@ -35,11 +43,11 @@ export default function ProjectsFilterBar({
             onClick={() => setStageFilter(st)}
             className={`px-3 py-1 rounded-md text-xs font-semibold uppercase tracking-wider transition-all cursor-pointer ${
               stageFilter === st
-                ? 'border border-blue-600 bg-blue-50 text-blue-700 shadow-xs'
+                ? 'border border-sky-600 bg-sky-50 text-sky-700 shadow-xs'
                 : 'border border-slate-200 bg-white text-slate-500 hover:bg-slate-50 hover:text-slate-700'
             }`}
           >
-            {st}
+            {STAGE_LABELS[st] || st}
           </button>
         ))}
       </div>

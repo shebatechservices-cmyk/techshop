@@ -24,11 +24,11 @@ export default function TechnicianWallet({ currentUser }) {
           setWalletData(json.data);
         }
       } else {
-        showToast("ওয়ালেট তথ্য লোড করা যায়নি", "error");
+        showToast("Failed to load wallet data", "error");
       }
     } catch (err) {
       console.error("Error fetching technician wallet:", err);
-      showToast("সার্ভার এরর", "error");
+      showToast("Server error occurred", "error");
     } finally {
       setLoading(false);
     }

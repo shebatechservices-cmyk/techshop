@@ -9,16 +9,16 @@ export default function ProjectsMetrics({
     {
       id: 'all',
       label: 'Total Projects',
-      sublabel: 'সকল রেকর্ড',
+      sublabel: 'All Records',
       count: counts.all || 0,
-      activeBg: 'bg-blue-50 border-blue-600 text-slate-900',
+      activeBg: 'bg-sky-50 border-sky-600 text-slate-900',
       numColor: 'text-slate-900',
       textColor: 'text-slate-500',
     },
     {
       id: 'assigned',
-      label: '1. একসেপ্টের অপেক্ষায়',
-      sublabel: 'প্রম্পট পাঠানো',
+      label: '1. Pending Acceptance',
+      sublabel: 'Prompt Sent to Tech',
       count: counts.assigned || 0,
       activeBg: 'bg-amber-50 border-amber-500 text-amber-900',
       numColor: 'text-amber-600',
@@ -26,8 +26,8 @@ export default function ProjectsMetrics({
     },
     {
       id: 'accepted',
-      label: '2. অনুমোদন প্রয়োজন',
-      sublabel: 'একসেপ্টেড',
+      label: '2. Approval Required',
+      sublabel: 'Accepted by Tech',
       count: counts.accepted || 0,
       activeBg: 'bg-blue-50 border-blue-500 text-blue-900',
       numColor: 'text-blue-600',
@@ -35,8 +35,8 @@ export default function ProjectsMetrics({
     },
     {
       id: 'in_progress',
-      label: '3. কাজ চলমান',
-      sublabel: 'In Progress',
+      label: '3. In Progress',
+      sublabel: 'Ongoing Work',
       count: counts.in_progress || 0,
       activeBg: 'bg-emerald-50 border-emerald-500 text-emerald-900',
       numColor: 'text-emerald-600',
@@ -44,8 +44,8 @@ export default function ProjectsMetrics({
     },
     {
       id: 'completed',
-      label: '4. সম্পন্ন ও পেইড',
-      sublabel: 'ওয়ালেট ক্রেডিটেড',
+      label: '4. Completed & Paid',
+      sublabel: 'Wallet Credited',
       count: counts.completed || 0,
       activeBg: 'bg-purple-50 border-purple-500 text-purple-900',
       numColor: 'text-purple-600',
@@ -63,7 +63,7 @@ export default function ProjectsMetrics({
             onClick={() => setStageFilter(card.id)}
             className={`p-3 rounded-xl border transition-all cursor-pointer shadow-xs ${
               isActive
-                ? `${card.activeBg} border-2 ring-2 ring-blue-500/10`
+                ? `${card.activeBg} border-2 ring-2 ring-sky-500/10`
                 : 'bg-white border-slate-200 hover:border-slate-300'
             }`}
           >

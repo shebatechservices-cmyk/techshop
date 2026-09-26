@@ -12,7 +12,7 @@ export default function ProjectsHeader({
           <span className="text-2xl">📹</span>
           <div>
             <h2 className="text-xl font-extrabold text-slate-900 tracking-tight leading-tight">
-              Projects & Services (ক্যামেরা সেটাপ ও সার্ভিসিং)
+              Projects & Services (Installation & Maintenance)
             </h2>
           </div>
         </div>
@@ -24,16 +24,16 @@ export default function ProjectsHeader({
             className="bg-white text-slate-800 border border-slate-300 hover:bg-slate-50 px-3 py-1.5 rounded-lg font-bold text-xs flex items-center gap-1.5 shadow-xs transition-colors cursor-pointer"
           >
             <span>💼</span>
-            <span>টেকনিশিয়ান ওয়ালেট</span>
+            <span>Technician Wallet</span>
           </button>
 
           <button
             type="button"
             onClick={onOpenNewProject}
-            className="bg-blue-600 hover:bg-blue-700 text-white px-3.5 py-1.5 rounded-lg font-bold text-xs flex items-center gap-1.5 shadow-sm transition-colors cursor-pointer"
+            className="bg-sky-600 hover:bg-sky-700 text-white px-3.5 py-1.5 rounded-lg font-bold text-xs flex items-center gap-1.5 shadow-sm transition-colors cursor-pointer"
           >
             <span className="text-sm font-black">+</span>
-            <span>নতুন প্রজেক্ট / সার্ভিস</span>
+            <span>New Project / Service</span>
           </button>
         </div>
       </div>

@@ -159,10 +159,10 @@ export default function ProjectPrintModal({ isOpen, onClose, project }) {
             <span style={{ fontSize: '1.4rem' }}>🖨️</span>
             <div>
               <h3 style={{ margin: 0, fontSize: '1.15rem', fontWeight: 700, color: '#f8fafc' }}>
-                প্রজেক্ট ও সার্ভিস প্রিন্ট সেন্টার
+                Project & Service Print Center
               </h3>
               <p style={{ margin: 0, fontSize: '0.78rem', color: '#94a3b8' }}>
-                টেকনিশিয়ান জব কার্ড ও কাস্টমার ডেলিভারি স্লিপ প্রিন্ট করুন
+                Print technician job cards and customer delivery slips
               </p>
             </div>
           </div>
@@ -183,7 +183,7 @@ export default function ProjectPrintModal({ isOpen, onClose, project }) {
                 cursor: 'pointer'
               }}
             >
-              📄 A4 অফিশিয়াল জব কার্ড
+              📄 A4 Official Job Card
             </button>
             <button
               type="button"
@@ -199,7 +199,7 @@ export default function ProjectPrintModal({ isOpen, onClose, project }) {
                 cursor: 'pointer'
               }}
             >
-              🧾 80mm থার্মাল কাউন্টার স্লিপ
+              🧾 80mm Thermal Counter Slip
             </button>
           </div>
 
@@ -223,7 +223,7 @@ export default function ProjectPrintModal({ isOpen, onClose, project }) {
                 boxShadow: '0 2px 4px rgba(22, 163, 74, 0.3)'
               }}
             >
-              🖨️ প্রিন্ট করুন
+              🖨️ Print
             </button>
             <button
               type="button"
@@ -239,7 +239,7 @@ export default function ProjectPrintModal({ isOpen, onClose, project }) {
                 cursor: 'pointer'
               }}
             >
-              ✕ বন্ধ করুন
+              ✕ Close
             </button>
           </div>
         </div>
@@ -286,7 +286,7 @@ export default function ProjectPrintModal({ isOpen, onClose, project }) {
                       Job Code: {project.project_code}
                     </div>
                     <div style={{ fontSize: '0.76rem', color: '#64748b' }}>
-                      তারিখ: {new Date(project.created_at || new Date()).toLocaleDateString('en-GB')}
+                      Date: {new Date(project.created_at || new Date()).toLocaleDateString('en-GB')}
                     </div>
                   </div>
                 </div>
@@ -294,7 +294,7 @@ export default function ProjectPrintModal({ isOpen, onClose, project }) {
                 {/* Scope & Source Badge */}
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', background: '#f8fafc', border: '1px solid #e2e8f0', borderRadius: '8px', padding: '10px 14px', marginBottom: '18px' }}>
                   <div>
-                    <span style={{ fontSize: '0.72rem', color: '#64748b', textTransform: 'uppercase', fontWeight: 700 }}>কাজের শিরোনাম</span>
+                    <span style={{ fontSize: '0.72rem', color: '#64748b', textTransform: 'uppercase', fontWeight: 700 }}>Job / Project Title</span>
                     <div style={{ fontSize: '1.05rem', fontWeight: 800, color: '#1e293b' }}>{project.title}</div>
                   </div>
                   <div style={{ textAlign: 'right' }}>
@@ -307,7 +307,7 @@ export default function ProjectPrintModal({ isOpen, onClose, project }) {
                       color: project.invoice_id ? '#1e40af' : '#92400e',
                       border: project.invoice_id ? '1px solid #bfdbfe' : '1px solid #fde68a'
                     }}>
-                      {project.invoice_id ? `📦 নতুন সেটাপ (ইনভয়েস: ${project.invoice_no})` : '🔧 পুরাতন রিপেয়ার ও সার্ভিস'}
+                      {project.invoice_id ? `📦 New Setup (Invoice: ${project.invoice_no})` : '🔧 Service & Repair'}
                     </span>
                   </div>
                 </div>
@@ -317,26 +317,26 @@ export default function ProjectPrintModal({ isOpen, onClose, project }) {
                   {/* Client Info */}
                   <div style={{ border: '1px solid #e2e8f0', borderRadius: '8px', padding: '12px 14px', background: '#ffffff' }}>
                     <h4 style={{ margin: '0 0 8px 0', fontSize: '0.82rem', fontWeight: 700, color: '#0f172a', textTransform: 'uppercase', borderBottom: '1px solid #f1f5f9', paddingBottom: '4px' }}>
-                      👤 কাস্টমার ও সাইট তথ্য
+                      👤 Customer & Site Information
                     </h4>
                     <div style={{ display: 'flex', flexDirection: 'column', gap: '4px', fontSize: '0.82rem' }}>
-                      <div>মালিকের নাম: <strong>{project.customer_name}</strong></div>
-                      <div>মোবাইল: <strong style={{ color: '#16a34a' }}>{project.site_phone || project.customer_phone || 'N/A'}</strong></div>
-                      <div>সাইটের ঠিকানা: <strong>{project.site_address || 'Not specified'}</strong></div>
-                      <div>কাজের ধরণ: <strong>{project.project_type}</strong></div>
+                      <div>Customer Name: <strong>{project.customer_name}</strong></div>
+                      <div>Phone: <strong style={{ color: '#16a34a' }}>{project.site_phone || project.customer_phone || 'N/A'}</strong></div>
+                      <div>Site Address: <strong>{project.site_address || 'Not specified'}</strong></div>
+                      <div>Service Type: <strong>{project.project_type}</strong></div>
                     </div>
                   </div>
 
                   {/* Technician Info */}
                   <div style={{ border: '1px solid #e2e8f0', borderRadius: '8px', padding: '12px 14px', background: '#ffffff' }}>
                     <h4 style={{ margin: '0 0 8px 0', fontSize: '0.82rem', fontWeight: 700, color: '#0f172a', textTransform: 'uppercase', borderBottom: '1px solid #f1f5f9', paddingBottom: '4px' }}>
-                      👷 টেকনিশিয়ান ও শিডিউল তথ্য
+                      👷 Technician & Schedule
                     </h4>
                     <div style={{ display: 'flex', flexDirection: 'column', gap: '4px', fontSize: '0.82rem' }}>
-                      <div>টেকনিশিয়ান: <strong>{project.technician_name}</strong></div>
-                      <div>যোগাযোগ: <strong>{project.technician_contact || 'N/A'}</strong></div>
-                      <div>শুরুর তারিখ: <strong>{project.start_date ? new Date(project.start_date).toLocaleDateString('en-GB') : 'Immediate'}</strong></div>
-                      <div>ইনচার্জ অনুমোদন: <strong style={{ color: project.admin_confirmed ? '#16a34a' : '#d97706' }}>{project.admin_confirmed ? `অনুমোদিত (${project.confirmed_by_name || 'Admin'})` : 'অপেক্ষমান'}</strong></div>
+                      <div>Technician: <strong>{project.technician_name}</strong></div>
+                      <div>Contact: <strong>{project.technician_contact || 'N/A'}</strong></div>
+                      <div>Start Date: <strong>{project.start_date ? new Date(project.start_date).toLocaleDateString('en-GB') : 'Immediate'}</strong></div>
+                      <div>In-Charge Approval: <strong style={{ color: project.admin_confirmed ? '#16a34a' : '#d97706' }}>{project.admin_confirmed ? `Approved (${project.confirmed_by_name || 'Admin'})` : 'Pending'}</strong></div>
                     </div>
                   </div>
                 </div>
@@ -345,15 +345,15 @@ export default function ProjectPrintModal({ isOpen, onClose, project }) {
                 {equipmentList.length > 0 && (
                   <div style={{ marginBottom: '18px' }}>
                     <h4 style={{ margin: '0 0 8px 0', fontSize: '0.82rem', fontWeight: 700, color: '#0f172a', textTransform: 'uppercase' }}>
-                      📋 ইনস্টলেশন ইকুইপমেন্ট ও ডিভাইস তালিকা (Equipment Checklist)
+                      📋 Installation Equipment & Device Checklist
                     </h4>
                     <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '0.8rem', border: '1px solid #e2e8f0' }}>
                       <thead>
                         <tr style={{ background: '#f1f5f9', color: '#475569' }}>
                           <th style={{ padding: '6px 10px', textAlign: 'left', width: '40px' }}>#</th>
-                          <th style={{ padding: '6px 10px', textAlign: 'left' }}>ডিভাইস / পার্টসের নাম</th>
-                          <th style={{ padding: '6px 10px', textAlign: 'center', width: '80px' }}>পরিমাণ</th>
-                          <th style={{ padding: '6px 10px', textAlign: 'center', width: '120px' }}>ইনস্টলেশন স্ট্যাটাস</th>
+                          <th style={{ padding: '6px 10px', textAlign: 'left' }}>Device / Product Name</th>
+                          <th style={{ padding: '6px 10px', textAlign: 'center', width: '80px' }}>Qty</th>
+                          <th style={{ padding: '6px 10px', textAlign: 'center', width: '120px' }}>Installation Status</th>
                         </tr>
                       </thead>
                       <tbody>
@@ -361,8 +361,8 @@ export default function ProjectPrintModal({ isOpen, onClose, project }) {
                           <tr key={i} style={{ borderBottom: '1px solid #f1f5f9' }}>
                             <td style={{ padding: '6px 10px', color: '#64748b' }}>{i + 1}</td>
                             <td style={{ padding: '6px 10px', fontWeight: 600 }}>{eq.product_name}</td>
-                            <td style={{ padding: '6px 10px', textAlign: 'center', fontWeight: 700 }}>{eq.quantity} টি</td>
-                            <td style={{ padding: '6px 10px', textAlign: 'center', color: '#64748b' }}>[ &nbsp; ] সম্পন্ন</td>
+                            <td style={{ padding: '6px 10px', textAlign: 'center', fontWeight: 700 }}>{eq.quantity} pcs</td>
+                            <td style={{ padding: '6px 10px', textAlign: 'center', color: '#64748b' }}>[ &nbsp; ] Installed</td>
                           </tr>
                         ))}
                       </tbody>
@@ -373,7 +373,7 @@ export default function ProjectPrintModal({ isOpen, onClose, project }) {
                 {/* Job Description & Special Instructions */}
                 {project.description && (
                   <div style={{ marginBottom: '18px', background: '#fafafa', border: '1px solid #e2e8f0', borderRadius: '6px', padding: '10px 12px' }}>
-                    <span style={{ fontSize: '0.74rem', fontWeight: 700, color: '#64748b', textTransform: 'uppercase' }}>কাজের বিবরণ ও নির্দেশনা:</span>
+                    <span style={{ fontSize: '0.74rem', fontWeight: 700, color: '#64748b', textTransform: 'uppercase' }}>Description & Special Instructions:</span>
                     <p style={{ margin: '4px 0 0', fontSize: '0.82rem', color: '#1e293b', whiteSpace: 'pre-line' }}>
                       {project.description}
                     </p>
@@ -383,31 +383,31 @@ export default function ProjectPrintModal({ isOpen, onClose, project }) {
                 {/* Financial Summary & Remuneration Table */}
                 <div style={{ marginBottom: '24px' }}>
                   <h4 style={{ margin: '0 0 8px 0', fontSize: '0.82rem', fontWeight: 700, color: '#0f172a', textTransform: 'uppercase' }}>
-                    💰 পারিশ্রমিক ও সার্ভিস বিল হিসাব (Financial Terms)
+                    💰 Remuneration & Service Billing (Financial Terms)
                   </h4>
                   <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '14px' }}>
                     {/* Technician Payout breakdown */}
                     <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '0.8rem', border: '1px solid #e2e8f0' }}>
                       <thead>
                         <tr style={{ background: '#eff6ff', color: '#1e40af' }}>
-                          <th colSpan="2" style={{ padding: '6px 10px', textAlign: 'left', fontWeight: 700 }}>টেকনিশিয়ান পারিশ্রমিক ব্রেকডাউন</th>
+                          <th colSpan="2" style={{ padding: '6px 10px', textAlign: 'left', fontWeight: 700 }}>Technician Compensation Breakdown</th>
                         </tr>
                       </thead>
                       <tbody>
                         <tr style={{ borderBottom: '1px solid #f1f5f9' }}>
-                          <td style={{ padding: '5px 10px' }}>সেটাপ চার্জ (Setup Fee)</td>
+                          <td style={{ padding: '5px 10px' }}>Setup Fee</td>
                           <td style={{ padding: '5px 10px', textAlign: 'right', fontWeight: 600 }}>৳ {setup.toLocaleString('en-IN')}</td>
                         </tr>
                         <tr style={{ borderBottom: '1px solid #f1f5f9' }}>
-                          <td style={{ padding: '5px 10px' }}>যাতায়াত খরচ (Conveyance)</td>
+                          <td style={{ padding: '5px 10px' }}>Conveyance Cost</td>
                           <td style={{ padding: '5px 10px', textAlign: 'right', fontWeight: 600 }}>৳ {conv.toLocaleString('en-IN')}</td>
                         </tr>
                         <tr style={{ borderBottom: '1px solid #f1f5f9' }}>
-                          <td style={{ padding: '5px 10px' }}>মিলের হিসাব (Meal Allowance)</td>
+                          <td style={{ padding: '5px 10px' }}>Meal Allowance</td>
                           <td style={{ padding: '5px 10px', textAlign: 'right', fontWeight: 600 }}>৳ {meal.toLocaleString('en-IN')}</td>
                         </tr>
                         <tr style={{ background: '#f8fafc', fontWeight: 800 }}>
-                          <td style={{ padding: '6px 10px', color: '#1e3a8a' }}>মোট টেকনিশিয়ান প্রাপ্য (ওয়ালেট)</td>
+                          <td style={{ padding: '6px 10px', color: '#1e3a8a' }}>Total Technician Receivable (Wallet)</td>
                           <td style={{ padding: '6px 10px', textAlign: 'right', color: '#1d4ed8' }}>৳ {totalTechPayout.toLocaleString('en-IN')}</td>
                         </tr>
                       </tbody>
@@ -415,12 +415,12 @@ export default function ProjectPrintModal({ isOpen, onClose, project }) {
 
                     {/* Customer Bill */}
                     <div style={{ border: '1px solid #bbf7d0', background: '#f0fdf4', borderRadius: '8px', padding: '12px', display: 'flex', flexDirection: 'column', justifyContent: 'center' }}>
-                      <span style={{ fontSize: '0.74rem', color: '#166534', fontWeight: 700, textTransform: 'uppercase' }}>কাস্টমার সার্ভিস বিল</span>
+                      <span style={{ fontSize: '0.74rem', color: '#166534', fontWeight: 700, textTransform: 'uppercase' }}>Customer Service Bill</span>
                       <div style={{ fontSize: '1.4rem', fontWeight: 800, color: '#15803d', margin: '4px 0' }}>
                         ৳ {customerBill.toLocaleString('en-IN')}
                       </div>
                       <small style={{ fontSize: '0.72rem', color: '#166534' }}>
-                        * কাজ সফলভাবে সম্পন্ন হওয়ার পর এই বিল কাস্টমার থেকে দোকান গ্রহণ করবে।
+                        * This amount is billed to the customer upon successful completion.
                       </small>
                     </div>
                   </div>
@@ -430,26 +430,26 @@ export default function ProjectPrintModal({ isOpen, onClose, project }) {
                 <div style={{ marginTop: '40px', display: 'flex', justifyContent: 'space-between', paddingTop: '10px' }}>
                   <div style={{ textAlign: 'center', width: '170px' }}>
                     <div style={{ borderTop: '1px solid #94a3b8', paddingTop: '4px', fontSize: '0.78rem', fontWeight: 600, color: '#334155' }}>
-                      কাস্টমার স্বাক্ষর
+                      Customer Signature
                     </div>
-                    <span style={{ fontSize: '0.68rem', color: '#94a3b8' }}>কাজ বুঝে পেয়েছি ও সন্তুষ্ট</span>
+                    <span style={{ fontSize: '0.68rem', color: '#94a3b8' }}>Received and satisfied with service</span>
                   </div>
                   <div style={{ textAlign: 'center', width: '170px' }}>
                     <div style={{ borderTop: '1px solid #94a3b8', paddingTop: '4px', fontSize: '0.78rem', fontWeight: 600, color: '#334155' }}>
-                      টেকনিশিয়ান স্বাক্ষর
+                      Technician Signature
                     </div>
                     <span style={{ fontSize: '0.68rem', color: '#94a3b8' }}>{project.technician_name}</span>
                   </div>
                   <div style={{ textAlign: 'center', width: '170px' }}>
                     <div style={{ borderTop: '1px solid #94a3b8', paddingTop: '4px', fontSize: '0.78rem', fontWeight: 700, color: '#0f172a' }}>
-                      সেটাপ ইনচার্জ / এডমিন
+                      In-Charge / Admin Signature
                     </div>
-                    <span style={{ fontSize: '0.68rem', color: '#94a3b8' }}>অনুমোদিত কর্মাদেশ</span>
+                    <span style={{ fontSize: '0.68rem', color: '#94a3b8' }}>Authorized Work Order</span>
                   </div>
                 </div>
 
                 <div style={{ textAlign: 'center', marginTop: '24px', fontSize: '0.68rem', color: '#94a3b8' }}>
-                  প্রিন্ট সময়: {printDateStr} &nbsp;|&nbsp; Sheba POS & ERP Systems
+                  Print Time: {printDateStr} &nbsp;|&nbsp; Sheba POS & ERP Systems
                 </div>
               </div>
             )}

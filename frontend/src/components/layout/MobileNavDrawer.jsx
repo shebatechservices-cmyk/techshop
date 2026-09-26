@@ -196,7 +196,7 @@ export default function MobileNavDrawer({
               }}
             >
               <span>🚪</span>
-              <span>Log Out (লগআউট)</span>
+              <span>Log Out</span>
             </button>
           </div>
         )}

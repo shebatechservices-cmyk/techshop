@@ -59,7 +59,7 @@ export default function useProjectsManager() {
       });
       const data = await res.json();
       if (res.ok && data.success) {
-        alert(data.message);
+        alert(data.message || 'Response submitted successfully');
         setTechPromptProject(null);
         setTechResponseNote('');
         loadData();
@@ -83,7 +83,7 @@ export default function useProjectsManager() {
       });
       const data = await res.json();
       if (res.ok && data.success) {
-        alert(data.message);
+        alert(data.message || 'Handover confirmed successfully');
         setInchargeConfirmProject(null);
         setInchargeNote('');
         loadData();
@@ -107,7 +107,7 @@ export default function useProjectsManager() {
       });
       const data = await res.json();
       if (res.ok && data.success) {
-        alert('কাজের অগ্রগতি আপডেট হয়েছে!');
+        alert('Project progress updated successfully!');
         setProgressProject(null);
         setNewProgressNote('');
         loadData();
@@ -128,9 +128,9 @@ export default function useProjectsManager() {
       Number(project.meal_allowance || 0) ||
       Number(project.charges || 0);
 
-    const confirmMsg = `আপনি কি নিশ্চিত যে কাজ সম্পন্ন হয়েছে?\n\nটেকনিশিয়ান (${project.technician_name})-এর ওয়ালেটে মোট ৳ ${totalPayout.toLocaleString(
-      'en-IN'
-    )} (সেটাপ + যাতায়াত + মিল) স্বয়ংক্রিয়ভাবে জমা হবে।`;
+    const confirmMsg = `Are you sure this project is completed?\n\nA total payout of ৳ ${totalPayout.toLocaleString(
+      'en-BD'
+    )} (Setup + Conveyance + Meal) will be automatically credited to technician (${project.technician_name})'s wallet.`;
 
     if (!window.confirm(confirmMsg)) return;
 
@@ -140,7 +140,7 @@ export default function useProjectsManager() {
       });
       const data = await res.json();
       if (res.ok && data.success) {
-        alert(data.message);
+        alert(data.message || 'Project marked as completed');
         loadData();
       } else {
         alert(data.message || 'Failed to complete project');
@@ -159,7 +159,7 @@ export default function useProjectsManager() {
       if (res.ok) {
         setProjects((prev) => prev.filter((p) => p.id !== id));
       } else {
-        alert('Failed to delete');
+        alert('Failed to delete project');
       }
     } catch (err) {
       console.error(err);
