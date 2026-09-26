@@ -982,10 +982,15 @@ export default function useProductsManager({ initialTab = "catalog", initialSear
     }
   };
 
-  const openAddProduct = () => {
+  const openAddProduct = (options = {}) => {
     handleResetForm();
+    if (options && options.is_bundle) {
+      setForm((p) => ({ ...p, is_bundle: true }));
+    }
     setIsAddProductOpen(true);
   };
+
+  const openAddBundle = () => openAddProduct({ is_bundle: true });
 
   const productLabel = (product) =>
     [product.brand_name, product.name, product.model_name, product.series_name]
@@ -1225,6 +1230,7 @@ export default function useProductsManager({ initialTab = "catalog", initialSear
     handleEditProduct,
     handleSubmit,
     openAddProduct,
+    openAddBundle,
     toggleProduct,
     toggleAllProducts,
     deleteProduct,

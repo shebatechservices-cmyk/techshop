@@ -149,32 +149,32 @@ export default function AddProductModal({
         </div>
 
         {/* Product Type Tabs (Standard vs Bundle Kit) */}
-        {!editingProductId && (
-          <div className="flex bg-slate-100 p-1 rounded-xl mb-4 text-xs font-bold">
-            <button
-              type="button"
-              onClick={() => setForm((p) => ({ ...p, is_bundle: false }))}
-              className={`flex-1 py-2 rounded-lg transition-all flex items-center justify-center gap-1.5 cursor-pointer ${
-                !isBundle
-                  ? "bg-white text-sky-700 shadow-xs border border-slate-200"
-                  : "text-slate-600 hover:text-slate-900"
-              }`}
-            >
-              <span>📦 Standard Single Product</span>
-            </button>
-            <button
-              type="button"
-              onClick={() => setForm((p) => ({ ...p, is_bundle: true }))}
-              className={`flex-1 py-2 rounded-lg transition-all flex items-center justify-center gap-1.5 cursor-pointer ${
-                isBundle
-                  ? "bg-purple-600 text-white shadow-xs"
-                  : "text-slate-600 hover:text-purple-700"
-              }`}
-            >
-              <span>🎁 Bundle / Kit Package SKU</span>
-            </button>
-          </div>
-        )}
+        <div className="flex bg-slate-100 p-1.5 rounded-xl mb-4 text-xs font-bold gap-1 border border-slate-200">
+          <button
+            type="button"
+            onClick={() => setForm((p) => ({ ...p, is_bundle: false }))}
+            className={`flex-1 py-2.5 rounded-lg transition-all flex items-center justify-center gap-2 cursor-pointer ${
+              !isBundle
+                ? "bg-white text-sky-700 shadow-sm border border-slate-200 font-extrabold"
+                : "text-slate-600 hover:text-slate-900 hover:bg-slate-200/60"
+            }`}
+          >
+            <span className="text-sm">📦</span>
+            <span>Standard Product (Single SKU)</span>
+          </button>
+          <button
+            type="button"
+            onClick={() => setForm((p) => ({ ...p, is_bundle: true }))}
+            className={`flex-1 py-2.5 rounded-lg transition-all flex items-center justify-center gap-2 cursor-pointer ${
+              isBundle
+                ? "bg-purple-600 text-white shadow-sm font-extrabold"
+                : "text-purple-700 hover:text-purple-900 hover:bg-purple-100/60 font-bold"
+            }`}
+          >
+            <span className="text-sm">🎁</span>
+            <span>Bundle / Kit Package (Combine Items)</span>
+          </button>
+        </div>
 
         <form onSubmit={handleSubmit} className="space-y-4">
           {/* Live Preview Bar */}

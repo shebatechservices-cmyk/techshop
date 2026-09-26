@@ -77,6 +77,7 @@ export default function Products({ initialTab = "catalog", initialSearch = "" } 
     handleEditProduct,
     handleSubmit,
     openAddProduct,
+    openAddBundle,
     toggleProduct,
     toggleAllProducts,
     deleteProduct,
@@ -118,6 +119,14 @@ export default function Products({ initialTab = "catalog", initialSearch = "" } 
             onClick={() => setActiveTab("attributes")}
           >
             🏷️ Categories & Attributes
+          </button>
+          <button
+            type="button"
+            className="px-3.5 py-2 bg-purple-600 hover:bg-purple-700 text-white rounded-xl text-xs font-extrabold shadow-sm transition-colors cursor-pointer flex items-center gap-1.5"
+            onClick={openAddBundle}
+          >
+            <span>🎁</span>
+            <span>+ Bundle Kit Package</span>
           </button>
           <button
             type="button"
