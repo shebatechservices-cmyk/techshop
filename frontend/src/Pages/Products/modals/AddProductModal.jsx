@@ -56,24 +56,24 @@ export default function AddProductModal({
 
   return (
     <div
-      className="fixed inset-0 bg-slate-900/60 backdrop-blur-xs flex items-center justify-center z-50 p-4"
+      className="fixed inset-0 bg-slate-900/60 backdrop-blur-xs flex items-center justify-center z-50 p-4 sm:p-6"
       role="dialog"
       aria-modal="true"
       aria-labelledby="add-product-title"
     >
-      <div className="bg-white w-full max-w-3xl rounded-2xl p-6 max-h-[92vh] overflow-y-auto shadow-2xl border border-slate-200 animate-in fade-in zoom-in duration-150">
+      <div className="bg-white w-full max-w-5xl rounded-2xl p-6 sm:p-8 max-h-[92vh] overflow-y-auto shadow-2xl border border-slate-200 animate-in fade-in zoom-in duration-150">
         {/* Modal Heading */}
-        <div className="flex justify-between items-center pb-4 mb-4 border-b border-slate-200">
+        <div className="flex justify-between items-center pb-4 mb-5 border-b border-slate-200">
           <div>
-            <h2 id="add-product-title" className="text-xl font-extrabold text-slate-900 flex items-center gap-2">
+            <h2 id="add-product-title" className="text-xl sm:text-2xl font-extrabold text-slate-900 flex items-center gap-2.5">
               <span>{editingProductId ? "Edit Item" : "Add New Item"}</span>
               {isBundle && (
-                <span className="text-xs bg-purple-100 text-purple-700 font-bold px-2.5 py-0.5 rounded-full border border-purple-200">
+                <span className="text-xs bg-purple-100 text-purple-700 font-bold px-3 py-1 rounded-full border border-purple-200">
                   🎁 Bundle Kit Package
                 </span>
               )}
             </h2>
-            <p className="text-xs text-slate-500 mt-0.5">
+            <p className="text-sm text-slate-500 mt-1">
               {editingProductId
                 ? "Update product specifications and settings in catalog"
                 : "Fill in product specifications or bundle components to register into catalog"}
@@ -81,7 +81,7 @@ export default function AddProductModal({
           </div>
           <button
             type="button"
-            className="w-8 h-8 rounded-lg border border-slate-200 bg-slate-50 text-slate-500 hover:bg-rose-50 hover:border-rose-300 hover:text-rose-600 flex items-center justify-center font-bold text-sm transition-colors cursor-pointer"
+            className="w-9 h-9 rounded-lg border border-slate-200 bg-slate-50 text-slate-500 hover:bg-rose-50 hover:border-rose-300 hover:text-rose-600 flex items-center justify-center font-bold text-base transition-colors cursor-pointer"
             onClick={onClose}
             aria-label="Close"
             title="Close"
@@ -91,41 +91,41 @@ export default function AddProductModal({
         </div>
 
         {/* Product Type Tabs (Standard vs Bundle Kit) */}
-        <div className="flex bg-slate-100 p-1.5 rounded-xl mb-4 text-xs font-bold gap-1 border border-slate-200">
+        <div className="flex bg-slate-100 p-1.5 rounded-xl mb-5 text-sm font-bold gap-1.5 border border-slate-200">
           <button
             type="button"
             onClick={() => setForm((p) => ({ ...p, is_bundle: false }))}
-            className={`flex-1 py-2.5 rounded-lg transition-all flex items-center justify-center gap-2 cursor-pointer ${
+            className={`flex-1 py-3 rounded-lg transition-all flex items-center justify-center gap-2 cursor-pointer ${
               !isBundle
                 ? "bg-white text-sky-700 shadow-sm border border-slate-200 font-extrabold"
-                : "text-slate-600 hover:text-slate-900 hover:bg-slate-200/60"
+                : "text-slate-600 hover:text-slate-900 hover:bg-slate-200/60 font-semibold"
             }`}
           >
-            <span className="text-sm">📦</span>
+            <span className="text-base">📦</span>
             <span>Standard Product (Single SKU)</span>
           </button>
           <button
             type="button"
             onClick={() => setForm((p) => ({ ...p, is_bundle: true }))}
-            className={`flex-1 py-2.5 rounded-lg transition-all flex items-center justify-center gap-2 cursor-pointer ${
+            className={`flex-1 py-3 rounded-lg transition-all flex items-center justify-center gap-2 cursor-pointer ${
               isBundle
                 ? "bg-purple-600 text-white shadow-sm font-extrabold"
-                : "text-purple-700 hover:text-purple-900 hover:bg-purple-100/60 font-bold"
+                : "text-purple-700 hover:text-purple-900 hover:bg-purple-100/60 font-semibold"
             }`}
           >
-            <span className="text-sm">🎁</span>
+            <span className="text-base">🎁</span>
             <span>Bundle / Kit Package (Combine Items)</span>
           </button>
         </div>
 
-        <form onSubmit={handleSubmit} className="space-y-4">
+        <form onSubmit={handleSubmit} className="space-y-5">
           {/* Live Preview Bar */}
           {!isBundle && (
             <div
-              className={`w-full min-h-[40px] px-4 py-2 rounded-xl border flex items-center justify-center text-center text-xs font-bold transition-all shadow-xs ${
+              className={`w-full min-h-[44px] px-5 py-2.5 rounded-xl border flex items-center justify-center text-center text-sm font-bold transition-all shadow-xs ${
                 livePreviewTitle
                   ? "bg-emerald-50 border-emerald-300 text-emerald-800"
-                  : "bg-slate-50 border-slate-200 text-slate-400"
+                  : "bg-slate-50 border-slate-200 text-slate-400 font-medium"
               }`}
               aria-live="polite"
             >
@@ -196,31 +196,31 @@ export default function AddProductModal({
           />
 
           {/* Form Actions */}
-          <div className="flex justify-between items-center pt-4 border-t border-slate-200 flex-wrap gap-3">
+          <div className="flex justify-between items-center pt-5 border-t border-slate-200 flex-wrap gap-3">
             <button
               type="button"
               onClick={handleResetForm}
               title="Reset all form fields"
-              className="px-3 py-1.5 border border-slate-300 bg-slate-50 hover:bg-rose-50 hover:border-rose-300 hover:text-rose-600 text-slate-600 rounded-lg text-xs font-semibold transition-colors cursor-pointer"
+              className="px-4 py-2 border border-slate-300 bg-slate-50 hover:bg-rose-50 hover:border-rose-300 hover:text-rose-600 text-slate-600 rounded-lg text-sm font-semibold transition-colors cursor-pointer"
             >
               🧹 Clear Fields
             </button>
 
-            <div className="flex items-center gap-2">
-              {saveError && <span className="text-xs text-rose-600 font-bold mr-2">{saveError}</span>}
+            <div className="flex items-center gap-3">
+              {saveError && <span className="text-sm text-rose-600 font-bold mr-2">{saveError}</span>}
               <button
                 type="button"
                 onClick={() => {
                   onClose();
                   handleResetForm();
                 }}
-                className="px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-lg text-xs font-semibold transition-colors cursor-pointer"
+                className="px-5 py-2.5 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-lg text-sm font-semibold transition-colors cursor-pointer"
               >
                 Cancel
               </button>
               <button
                 type="submit"
-                className={`px-5 py-2 text-white rounded-lg text-xs font-bold shadow-sm transition-colors cursor-pointer ${
+                className={`px-6 py-2.5 text-white rounded-lg text-sm font-bold shadow-sm transition-colors cursor-pointer ${
                   isBundle ? "bg-purple-600 hover:bg-purple-700" : "bg-sky-600 hover:bg-sky-700"
                 }`}
               >

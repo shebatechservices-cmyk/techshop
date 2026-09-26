@@ -25,18 +25,18 @@ export default function ProductCascadingFields({
   generateAutoSku,
 }) {
   return (
-    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
+    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
       {/* Category */}
       <div className="flex flex-col gap-1.5">
-        <label className="text-xs font-bold text-slate-700 flex items-center gap-1">
+        <label className="text-sm font-bold text-slate-700 flex items-center gap-1">
           <span>Category</span>
           <span className="text-rose-500">*</span>
         </label>
-        <div className="flex gap-1.5">
+        <div className="flex gap-2">
           <select
             value={selectedCategory}
             onChange={handleCategoryChange}
-            className="flex-1 px-3 py-2 border border-slate-300 rounded-lg text-xs bg-white focus:outline-none focus:ring-2 focus:ring-sky-500"
+            className="flex-1 px-3.5 py-2.5 border border-slate-300 rounded-lg text-sm bg-white focus:outline-none focus:ring-2 focus:ring-sky-500 text-slate-800"
             required
           >
             <option value="">Select category</option>
@@ -50,7 +50,7 @@ export default function ProductCascadingFields({
             type="button"
             onClick={() => openQuickAddModal("categories")}
             title="Add new category"
-            className="w-9 h-9 border border-sky-300 bg-sky-50 hover:bg-sky-600 hover:text-white text-sky-700 font-bold rounded-lg flex items-center justify-center transition-colors cursor-pointer text-base"
+            className="w-10 h-10 border border-sky-300 bg-sky-50 hover:bg-sky-600 hover:text-white text-sky-700 font-bold rounded-lg flex items-center justify-center transition-colors cursor-pointer text-lg"
           >
             +
           </button>
@@ -59,16 +59,16 @@ export default function ProductCascadingFields({
 
       {/* Sub-Category */}
       <div className="flex flex-col gap-1.5">
-        <label className="text-xs font-bold text-slate-700 flex items-center gap-1">
+        <label className="text-sm font-bold text-slate-700 flex items-center gap-1">
           <span>Sub-category</span>
           <span className="text-rose-500">*</span>
         </label>
-        <div className="flex gap-1.5">
+        <div className="flex gap-2">
           <select
             value={selectedSubCategory}
             disabled={!selectedCategory}
             onChange={handleSubCategoryChange}
-            className="flex-1 px-3 py-2 border border-slate-300 rounded-lg text-xs bg-white focus:outline-none focus:ring-2 focus:ring-sky-500 disabled:bg-slate-100 disabled:opacity-60"
+            className="flex-1 px-3.5 py-2.5 border border-slate-300 rounded-lg text-sm bg-white focus:outline-none focus:ring-2 focus:ring-sky-500 disabled:bg-slate-100 disabled:opacity-60 text-slate-800"
             required
           >
             <option value="">
@@ -85,7 +85,7 @@ export default function ProductCascadingFields({
             disabled={!selectedCategory}
             onClick={() => openQuickAddModal("sub_categories")}
             title={selectedCategory ? "Add new sub-category" : "Select category first"}
-            className="w-9 h-9 border border-sky-300 bg-sky-50 hover:bg-sky-600 hover:text-white text-sky-700 font-bold rounded-lg flex items-center justify-center transition-colors cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed text-base"
+            className="w-10 h-10 border border-sky-300 bg-sky-50 hover:bg-sky-600 hover:text-white text-sky-700 font-bold rounded-lg flex items-center justify-center transition-colors cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed text-lg"
           >
             +
           </button>
@@ -94,16 +94,16 @@ export default function ProductCascadingFields({
 
       {/* Brand */}
       <div className="flex flex-col gap-1.5">
-        <label className="text-xs font-bold text-slate-700 flex items-center gap-1">
+        <label className="text-sm font-bold text-slate-700 flex items-center gap-1">
           <span>Brand</span>
           <span className="text-rose-500">*</span>
         </label>
-        <div className="flex gap-1.5">
+        <div className="flex gap-2">
           <select
             value={selectedBrand}
             disabled={!selectedSubCategory}
             onChange={handleBrandChange}
-            className="flex-1 px-3 py-2 border border-slate-300 rounded-lg text-xs bg-white focus:outline-none focus:ring-2 focus:ring-sky-500 disabled:bg-slate-100 disabled:opacity-60"
+            className="flex-1 px-3.5 py-2.5 border border-slate-300 rounded-lg text-sm bg-white focus:outline-none focus:ring-2 focus:ring-sky-500 disabled:bg-slate-100 disabled:opacity-60 text-slate-800"
             required
           >
             <option value="">
@@ -120,7 +120,7 @@ export default function ProductCascadingFields({
             disabled={!selectedSubCategory}
             onClick={() => openQuickAddModal("brands")}
             title={selectedSubCategory ? "Add new brand" : "Select sub-category first"}
-            className="w-9 h-9 border border-sky-300 bg-sky-50 hover:bg-sky-600 hover:text-white text-sky-700 font-bold rounded-lg flex items-center justify-center transition-colors cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed text-base"
+            className="w-10 h-10 border border-sky-300 bg-sky-50 hover:bg-sky-600 hover:text-white text-sky-700 font-bold rounded-lg flex items-center justify-center transition-colors cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed text-lg"
           >
             +
           </button>
@@ -129,18 +129,18 @@ export default function ProductCascadingFields({
 
       {/* Product Name */}
       <div className="flex flex-col gap-1.5">
-        <label className="text-xs font-bold text-slate-700 flex items-center gap-1">
+        <label className="text-sm font-bold text-slate-700 flex items-center gap-1">
           <span>Product Name / Item Type</span>
           <span className="text-rose-500">*</span>
         </label>
-        <div className="flex gap-1.5">
+        <div className="flex gap-2">
           <select
             name="name"
             value={form.name}
             disabled={!selectedBrand}
             onChange={handleProductNameChange}
             required
-            className="flex-1 px-3 py-2 border border-slate-300 rounded-lg text-xs bg-white focus:outline-none focus:ring-2 focus:ring-sky-500 disabled:bg-slate-100 disabled:opacity-60"
+            className="flex-1 px-3.5 py-2.5 border border-slate-300 rounded-lg text-sm bg-white focus:outline-none focus:ring-2 focus:ring-sky-500 disabled:bg-slate-100 disabled:opacity-60 text-slate-800"
           >
             <option value="">
               {selectedBrand ? "Select product name" : "Select brand first"}
@@ -159,7 +159,7 @@ export default function ProductCascadingFields({
             disabled={!selectedBrand}
             onClick={() => openQuickAddModal("product_names")}
             title={selectedBrand ? "Add new product name" : "Select brand first"}
-            className="w-9 h-9 border border-sky-300 bg-sky-50 hover:bg-sky-600 hover:text-white text-sky-700 font-bold rounded-lg flex items-center justify-center transition-colors cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed text-base"
+            className="w-10 h-10 border border-sky-300 bg-sky-50 hover:bg-sky-600 hover:text-white text-sky-700 font-bold rounded-lg flex items-center justify-center transition-colors cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed text-lg"
           >
             +
           </button>
@@ -168,16 +168,16 @@ export default function ProductCascadingFields({
 
       {/* Model */}
       <div className="flex flex-col gap-1.5">
-        <label className="text-xs font-bold text-slate-700 flex items-center gap-1">
+        <label className="text-sm font-bold text-slate-700 flex items-center gap-1">
           <span>Model</span>
           <span className="text-rose-500">*</span>
         </label>
-        <div className="flex gap-1.5">
+        <div className="flex gap-2">
           <select
             value={selectedModel}
             disabled={!form.name}
             onChange={handleModelChange}
-            className="flex-1 px-3 py-2 border border-slate-300 rounded-lg text-xs bg-white focus:outline-none focus:ring-2 focus:ring-sky-500 disabled:bg-slate-100 disabled:opacity-60"
+            className="flex-1 px-3.5 py-2.5 border border-slate-300 rounded-lg text-sm bg-white focus:outline-none focus:ring-2 focus:ring-sky-500 disabled:bg-slate-100 disabled:opacity-60 text-slate-800"
             required
           >
             <option value="">
@@ -197,7 +197,7 @@ export default function ProductCascadingFields({
             disabled={!form.name}
             onClick={() => openQuickAddModal("models")}
             title={form.name ? "Add new model" : "Select product name first"}
-            className="w-9 h-9 border border-sky-300 bg-sky-50 hover:bg-sky-600 hover:text-white text-sky-700 font-bold rounded-lg flex items-center justify-center transition-colors cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed text-base"
+            className="w-10 h-10 border border-sky-300 bg-sky-50 hover:bg-sky-600 hover:text-white text-sky-700 font-bold rounded-lg flex items-center justify-center transition-colors cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed text-lg"
           >
             +
           </button>
@@ -206,16 +206,16 @@ export default function ProductCascadingFields({
 
       {/* Series */}
       <div className="flex flex-col gap-1.5">
-        <label className="text-xs font-bold text-slate-700 flex items-center gap-1">
+        <label className="text-sm font-bold text-slate-700 flex items-center gap-1">
           <span>Series</span>
           <span className="text-rose-500">*</span>
         </label>
-        <div className="flex gap-1.5">
+        <div className="flex gap-2">
           <select
             value={selectedSeries}
             disabled={!selectedModel}
             onChange={handleSeriesChange}
-            className="flex-1 px-3 py-2 border border-slate-300 rounded-lg text-xs bg-white focus:outline-none focus:ring-2 focus:ring-sky-500 disabled:bg-slate-100 disabled:opacity-60"
+            className="flex-1 px-3.5 py-2.5 border border-slate-300 rounded-lg text-sm bg-white focus:outline-none focus:ring-2 focus:ring-sky-500 disabled:bg-slate-100 disabled:opacity-60 text-slate-800"
             required
           >
             <option value="">
@@ -235,7 +235,7 @@ export default function ProductCascadingFields({
             disabled={!selectedModel}
             onClick={() => openQuickAddModal("series")}
             title={selectedModel ? "Add new series" : "Select model first"}
-            className="w-9 h-9 border border-sky-300 bg-sky-50 hover:bg-sky-600 hover:text-white text-sky-700 font-bold rounded-lg flex items-center justify-center transition-colors cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed text-base"
+            className="w-10 h-10 border border-sky-300 bg-sky-50 hover:bg-sky-600 hover:text-white text-sky-700 font-bold rounded-lg flex items-center justify-center transition-colors cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed text-lg"
           >
             +
           </button>
@@ -244,21 +244,21 @@ export default function ProductCascadingFields({
 
       {/* SKU */}
       <div className="flex flex-col gap-1.5">
-        <label className="text-xs font-bold text-slate-700">SKU (Auto Generated)</label>
-        <div className="flex gap-1.5">
+        <label className="text-sm font-bold text-slate-700">SKU (Auto Generated)</label>
+        <div className="flex gap-2">
           <input
             name="sku"
             value={form.sku || ""}
             onChange={handleFieldChange}
             placeholder="e.g. SKU-123456"
             required
-            className="flex-1 px-3 py-2 border border-slate-300 rounded-lg text-xs focus:outline-none focus:ring-2 focus:ring-sky-500 font-mono"
+            className="flex-1 px-3.5 py-2.5 border border-slate-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-sky-500 font-mono text-slate-800"
           />
           <button
             type="button"
             onClick={() => setForm((p) => ({ ...p, sku: generateAutoSku() }))}
             title="Generate New SKU Code"
-            className="px-3 border border-slate-300 bg-slate-50 hover:bg-slate-100 rounded-lg cursor-pointer text-sm font-bold"
+            className="px-3.5 border border-slate-300 bg-slate-50 hover:bg-slate-100 rounded-lg cursor-pointer text-base font-bold"
           >
             🎲
           </button>
@@ -267,19 +267,19 @@ export default function ProductCascadingFields({
 
       {/* Primary Barcode */}
       <div className="flex flex-col gap-1.5">
-        <label className="text-xs font-bold text-slate-700">Main Barcode (Optional)</label>
+        <label className="text-sm font-bold text-slate-700">Main Barcode (Optional)</label>
         <input
           name="barcode"
           value={form.barcode || ""}
           onChange={handleFieldChange}
           placeholder="e.g. Box Barcode / Item Barcode"
-          className="w-full px-3 py-2 border border-slate-300 rounded-lg text-xs focus:outline-none focus:ring-2 focus:ring-sky-500 font-mono"
+          className="w-full px-3.5 py-2.5 border border-slate-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-sky-500 font-mono text-slate-800"
         />
       </div>
 
       {/* Min Stock */}
       <div className="flex flex-col gap-1.5">
-        <label className="text-xs font-bold text-slate-700 flex items-center gap-1">
+        <label className="text-sm font-bold text-slate-700 flex items-center gap-1">
           <span>Min Stock Alert (Low Stock Threshold)</span>
           <span className="text-rose-500">*</span>
         </label>
@@ -291,18 +291,18 @@ export default function ProductCascadingFields({
           min="0"
           required
           placeholder="e.g. 5"
-          className="w-full px-3 py-2 border border-slate-300 rounded-lg text-xs focus:outline-none focus:ring-2 focus:ring-sky-500"
+          className="w-full px-3.5 py-2.5 border border-slate-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-sky-500 text-slate-800"
         />
       </div>
 
       {/* Condition */}
       <div className="flex flex-col gap-1.5">
-        <label className="text-xs font-bold text-slate-700">Condition</label>
+        <label className="text-sm font-bold text-slate-700">Condition</label>
         <select
           name="condition"
           value={form.condition}
           onChange={handleFieldChange}
-          className="w-full px-3 py-2 border border-slate-300 rounded-lg text-xs bg-white focus:outline-none focus:ring-2 focus:ring-sky-500"
+          className="w-full px-3.5 py-2.5 border border-slate-300 rounded-lg text-sm bg-white focus:outline-none focus:ring-2 focus:ring-sky-500 text-slate-800"
         >
           <option>New</option>
           <option>Used</option>

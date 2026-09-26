@@ -18,10 +18,10 @@ export default function ProductMediaAndTrackingSection({
   return (
     <div className="space-y-4">
       {/* Image Uploads */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5 pt-2 border-t border-slate-200">
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-3 border-t border-slate-200">
         {/* Feature Image */}
         <div className="flex flex-col gap-1.5">
-          <label className="text-xs font-bold text-slate-700">
+          <label className="text-sm font-bold text-slate-700">
             📸 Feature Image (Inventory & POS)
           </label>
           <input
@@ -29,13 +29,13 @@ export default function ProductMediaAndTrackingSection({
             type="file"
             accept="image/png, image/jpeg, image/webp"
             onChange={(event) => setFeatureImageFile(event.target.files?.[0] || null)}
-            className="text-xs text-slate-500 file:mr-2 file:py-1 file:px-2.5 file:rounded-md file:border-0 file:text-xs file:font-semibold file:bg-sky-50 file:text-sky-700 hover:file:bg-sky-100"
+            className="text-sm text-slate-500 file:mr-2.5 file:py-1.5 file:px-3 file:rounded-md file:border-0 file:text-xs file:font-semibold file:bg-sky-50 file:text-sky-700 hover:file:bg-sky-100"
           />
-          <small className="text-[11px] text-slate-400">
+          <small className="text-xs text-slate-400">
             Format: JPG, PNG, or WebP | Max 2MB (1:1 square)
           </small>
           {(featureImagePreview || form.image_url) && (
-            <div className="flex items-center gap-3 bg-slate-50 p-2 rounded-lg border border-slate-200 mt-1">
+            <div className="flex items-center gap-3 bg-slate-50 p-2.5 rounded-lg border border-slate-200 mt-1">
               <img
                 src={
                   featureImagePreview ||
@@ -44,10 +44,10 @@ export default function ProductMediaAndTrackingSection({
                     : `${API_BASE}${form.image_url}`)
                 }
                 alt="Feature Preview"
-                className="w-12 h-12 object-cover rounded-md border border-emerald-500"
+                className="w-14 h-14 object-cover rounded-md border border-emerald-500"
               />
               <div>
-                <span className="text-xs font-bold text-slate-800 block">Uploaded</span>
+                <span className="text-sm font-bold text-slate-800 block">Uploaded</span>
                 <button
                   type="button"
                   onClick={() => {
@@ -56,7 +56,7 @@ export default function ProductMediaAndTrackingSection({
                     setForm((p) => ({ ...p, image_url: "" }));
                     setFileInputKey((k) => k + 1);
                   }}
-                  className="text-[11px] text-rose-600 hover:underline font-semibold cursor-pointer"
+                  className="text-xs text-rose-600 hover:underline font-semibold cursor-pointer"
                 >
                   ✕ Remove
                 </button>
@@ -67,7 +67,7 @@ export default function ProductMediaAndTrackingSection({
 
         {/* Gallery Images */}
         <div className="flex flex-col gap-1.5">
-          <label className="text-xs font-bold text-slate-700">
+          <label className="text-sm font-bold text-slate-700">
             🖼️ Gallery Images (E-Commerce)
           </label>
           <input
@@ -76,13 +76,13 @@ export default function ProductMediaAndTrackingSection({
             accept="image/png, image/jpeg, image/webp"
             multiple
             onChange={(event) => setGalleryImageFiles(Array.from(event.target.files || []))}
-            className="text-xs text-slate-500 file:mr-2 file:py-1 file:px-2.5 file:rounded-md file:border-0 file:text-xs file:font-semibold file:bg-sky-50 file:text-sky-700 hover:file:bg-sky-100"
+            className="text-sm text-slate-500 file:mr-2.5 file:py-1.5 file:px-3 file:rounded-md file:border-0 file:text-xs file:font-semibold file:bg-sky-50 file:text-sky-700 hover:file:bg-sky-100"
           />
-          <small className="text-[11px] text-slate-400">Multiple product angles for online shop</small>
+          <small className="text-xs text-slate-400">Multiple product angles for online shop</small>
           {galleryImagePreviews.length > 0 && (
-            <div className="flex flex-wrap gap-1.5 mt-1">
+            <div className="flex flex-wrap gap-2 mt-1">
               {galleryImagePreviews.map((previewUrl, idx) => (
-                <div key={idx} className="relative w-11 h-11">
+                <div key={idx} className="relative w-12 h-12">
                   <img
                     src={previewUrl}
                     alt={`Gallery ${idx + 1}`}
@@ -93,7 +93,7 @@ export default function ProductMediaAndTrackingSection({
                     onClick={() =>
                       setGalleryImageFiles((prev) => prev.filter((_, i) => i !== idx))
                     }
-                    className="absolute -top-1.5 -right-1.5 bg-rose-500 text-white rounded-full w-4 h-4 text-[9px] flex items-center justify-center font-bold shadow-xs cursor-pointer"
+                    className="absolute -top-1.5 -right-1.5 bg-rose-500 text-white rounded-full w-4.5 h-4.5 text-[10px] flex items-center justify-center font-bold shadow-xs cursor-pointer"
                   >
                     ✕
                   </button>
@@ -106,22 +106,22 @@ export default function ProductMediaAndTrackingSection({
 
       {/* Description */}
       <div className="flex flex-col gap-1.5 pt-1">
-        <label className="text-xs font-bold text-slate-700">Description</label>
+        <label className="text-sm font-bold text-slate-700">Description</label>
         <textarea
           name="description"
           value={form.description || ""}
           onChange={handleFieldChange}
-          rows={2}
+          rows={3}
           placeholder="Product specifications, key highlights, etc."
-          className="w-full px-3 py-2 border border-slate-300 rounded-lg text-xs focus:outline-none focus:ring-2 focus:ring-sky-500 resize-none"
+          className="w-full px-3.5 py-2.5 border border-slate-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-sky-500 resize-none text-slate-800"
         />
       </div>
 
       {/* Tracking Options */}
-      <div className="space-y-2 pt-2 border-t border-slate-200">
+      <div className="space-y-2.5 pt-3 border-t border-slate-200">
         {/* Serial / Barcode Tracking */}
         <label
-          className={`flex justify-between items-center p-3 rounded-xl border text-xs cursor-pointer transition-all ${
+          className={`flex justify-between items-center p-3.5 rounded-xl border text-sm cursor-pointer transition-all ${
             form.is_serial_required || form.isSerialRequired || form.tracks_serial
               ? "bg-emerald-50/70 border-emerald-300"
               : "bg-slate-50 border-slate-200"
@@ -137,7 +137,7 @@ export default function ProductMediaAndTrackingSection({
             >
               📦 Requires Serial / Barcode Tracking
             </strong>
-            <p className="text-[11px] text-slate-500 mt-0.5">
+            <p className="text-xs text-slate-500 mt-0.5">
               Strictly enforced in Purchase & Sale forms. Auto-calculates quantities from barcode scans.
             </p>
           </div>
@@ -165,7 +165,7 @@ export default function ProductMediaAndTrackingSection({
 
         {/* Warranty Tracking */}
         <label
-          className={`flex justify-between items-center p-3 rounded-xl border text-xs cursor-pointer transition-all ${
+          className={`flex justify-between items-center p-3.5 rounded-xl border text-sm cursor-pointer transition-all ${
             form.is_warranty_required || form.isWarrantyRequired
               ? "bg-blue-50/70 border-blue-300"
               : "bg-slate-50 border-slate-200"
@@ -181,7 +181,7 @@ export default function ProductMediaAndTrackingSection({
             >
               🛡️ Requires Warranty Tracking
             </strong>
-            <p className="text-[11px] text-slate-500 mt-0.5">
+            <p className="text-xs text-slate-500 mt-0.5">
               Enforces warranty duration in Purchase and prints warranty policy on Customer Invoices.
             </p>
           </div>
@@ -211,16 +211,16 @@ export default function ProductMediaAndTrackingSection({
 
         {/* Warranty Duration Input */}
         {(form.isWarrantyRequired || Number(form.warranty_months || 0) > 0) && (
-          <div className="p-3 bg-blue-50/50 rounded-xl border border-blue-200 flex items-center justify-between gap-3 text-xs">
+          <div className="p-3.5 bg-blue-50/50 rounded-xl border border-blue-200 flex items-center justify-between gap-3 text-sm">
             <span className="font-bold text-blue-900">Default Warranty Duration:</span>
-            <div className="flex items-center gap-1.5">
+            <div className="flex items-center gap-2">
               <input
                 type="number"
                 min="0"
                 value={form.warranty_months || ""}
                 onChange={(e) => setForm((c) => ({ ...c, warranty_months: e.target.value }))}
                 placeholder="12"
-                className="w-20 px-2.5 py-1 rounded-md border border-blue-300 bg-white text-center font-bold text-xs"
+                className="w-24 px-3 py-1.5 rounded-md border border-blue-300 bg-white text-center font-bold text-sm"
               />
               <span className="font-semibold text-slate-600">Months</span>
             </div>

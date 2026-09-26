@@ -63,49 +63,18 @@ export default function AddCustomerModal({ isOpen, onClose, onCustomerCreated })
 
   return (
     <div
-      style={{
-        position: 'fixed',
-        inset: 0,
-        zIndex: 99999,
-        backgroundColor: 'rgba(15, 23, 42, 0.7)',
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'center',
-        padding: '16px',
-        backdropFilter: 'blur(3px)',
-      }}
+      className="fixed inset-0 z-[99999] bg-slate-900/60 backdrop-blur-xs flex items-center justify-center p-4 sm:p-6"
+      role="dialog"
+      aria-modal="true"
     >
-      <div
-        style={{
-          background: '#ffffff',
-          borderRadius: '16px',
-          width: '100%',
-          maxWidth: '520px',
-          boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.25)',
-          overflow: 'hidden',
-          display: 'flex',
-          flexDirection: 'column',
-          animation: 'scaleUp 0.15s ease-out',
-        }}
-      >
+      <div className="bg-white w-full max-w-2xl rounded-2xl shadow-2xl overflow-hidden border border-slate-200 animate-in fade-in zoom-in duration-150 flex flex-col">
         {/* Header */}
-        <div
-          style={{
-            padding: '18px 24px',
-            background: 'linear-gradient(135deg, #0f172a 0%, #1e293b 100%)',
-            display: 'flex',
-            justifyContent: 'space-between',
-            alignItems: 'center',
-            color: '#ffffff',
-          }}
-        >
-          <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-            <span style={{ fontSize: '1.4rem' }}>👤</span>
+        <div className="px-6 py-5 bg-slate-900 border-b border-slate-800 flex justify-between items-center text-white">
+          <div className="flex items-center gap-3">
+            <span className="text-2xl">👤</span>
             <div>
-              <h3 style={{ margin: 0, fontSize: '1.15rem', fontWeight: 700 }}>
-                Add New Customer
-              </h3>
-              <p style={{ margin: 0, fontSize: '0.8rem', color: '#94a3b8' }}>
+              <h3 className="m-0 text-lg font-bold">Add New Customer</h3>
+              <p className="m-0 text-xs text-slate-400 mt-0.5">
                 Register customer for sales, POS, and quotations
               </p>
             </div>
@@ -113,51 +82,26 @@ export default function AddCustomerModal({ isOpen, onClose, onCustomerCreated })
           <button
             type="button"
             onClick={onClose}
-            style={{
-              background: 'rgba(255,255,255,0.1)',
-              border: 'none',
-              borderRadius: '50%',
-              width: '32px',
-              height: '32px',
-              color: '#fff',
-              fontSize: '1.2rem',
-              cursor: 'pointer',
-              display: 'grid',
-              placeItems: 'center',
-            }}
+            className="w-8 h-8 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-300 hover:text-white flex items-center justify-center font-bold text-sm cursor-pointer transition-colors"
           >
             ✕
           </button>
         </div>
 
         {/* Form Body */}
-        <form onSubmit={handleSubmit} style={{ padding: '24px' }}>
+        <form onSubmit={handleSubmit} className="p-6 sm:p-7 space-y-4">
           {error && (
-            <div
-              style={{
-                padding: '10px 14px',
-                background: '#fef2f2',
-                border: '1px solid #fecaca',
-                color: '#dc2626',
-                borderRadius: '8px',
-                fontSize: '0.85rem',
-                fontWeight: 600,
-                marginBottom: '16px',
-                display: 'flex',
-                alignItems: 'center',
-                gap: '8px',
-              }}
-            >
+            <div className="p-3 bg-rose-50 border border-rose-200 text-rose-700 rounded-lg text-sm font-semibold flex items-center gap-2">
               <span>⚠️</span>
               <span>{error}</span>
             </div>
           )}
 
-          <div style={{ display: 'grid', gap: '14px' }}>
+          <div className="grid grid-cols-1 gap-4">
             {/* Customer Name */}
-            <div>
-              <label style={{ display: 'block', fontSize: '0.82rem', fontWeight: 700, color: '#334155', marginBottom: '5px' }}>
-                Customer Name <span style={{ color: '#ef4444' }}>*</span>
+            <div className="flex flex-col gap-1.5">
+              <label className="text-sm font-bold text-slate-700">
+                Customer Name <span className="text-rose-500">*</span>
               </label>
               <input
                 type="text"
@@ -165,23 +109,15 @@ export default function AddCustomerModal({ isOpen, onClose, onCustomerCreated })
                 value={name}
                 onChange={(e) => setName(e.target.value)}
                 required
-                style={{
-                  width: '100%',
-                  padding: '9px 12px',
-                  borderRadius: '8px',
-                  border: '1px solid #cbd5e1',
-                  fontSize: '0.9rem',
-                  outline: 'none',
-                  boxSizing: 'border-box',
-                }}
+                className="w-full px-3.5 py-2.5 border border-slate-300 rounded-lg text-sm text-slate-800 focus:outline-none focus:ring-2 focus:ring-green-500"
               />
             </div>
 
             {/* Phone & Email Grid */}
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
-              <div>
-                <label style={{ display: 'block', fontSize: '0.82rem', fontWeight: 700, color: '#334155', marginBottom: '5px' }}>
-                  Phone Number <span style={{ color: '#ef4444' }}>*</span>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div className="flex flex-col gap-1.5">
+                <label className="text-sm font-bold text-slate-700">
+                  Phone Number <span className="text-rose-500">*</span>
                 </label>
                 <input
                   type="tel"
@@ -189,20 +125,12 @@ export default function AddCustomerModal({ isOpen, onClose, onCustomerCreated })
                   value={phone}
                   onChange={(e) => setPhone(e.target.value)}
                   required
-                  style={{
-                    width: '100%',
-                    padding: '9px 12px',
-                    borderRadius: '8px',
-                    border: '1px solid #cbd5e1',
-                    fontSize: '0.9rem',
-                    outline: 'none',
-                    boxSizing: 'border-box',
-                  }}
+                  className="w-full px-3.5 py-2.5 border border-slate-300 rounded-lg text-sm text-slate-800 focus:outline-none focus:ring-2 focus:ring-green-500"
                 />
               </div>
 
-              <div>
-                <label style={{ display: 'block', fontSize: '0.82rem', fontWeight: 700, color: '#334155', marginBottom: '5px' }}>
+              <div className="flex flex-col gap-1.5">
+                <label className="text-sm font-bold text-slate-700">
                   Email Address
                 </label>
                 <input
@@ -210,39 +138,21 @@ export default function AddCustomerModal({ isOpen, onClose, onCustomerCreated })
                   placeholder="optional"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
-                  style={{
-                    width: '100%',
-                    padding: '9px 12px',
-                    borderRadius: '8px',
-                    border: '1px solid #cbd5e1',
-                    fontSize: '0.9rem',
-                    outline: 'none',
-                    boxSizing: 'border-box',
-                  }}
+                  className="w-full px-3.5 py-2.5 border border-slate-300 rounded-lg text-sm text-slate-800 focus:outline-none focus:ring-2 focus:ring-green-500"
                 />
               </div>
             </div>
 
             {/* Customer Type & Initial Balance Grid */}
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
-              <div>
-                <label style={{ display: 'block', fontSize: '0.82rem', fontWeight: 700, color: '#334155', marginBottom: '5px' }}>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div className="flex flex-col gap-1.5">
+                <label className="text-sm font-bold text-slate-700">
                   Customer Group
                 </label>
                 <select
                   value={customerType}
                   onChange={(e) => setCustomerType(e.target.value)}
-                  style={{
-                    width: '100%',
-                    padding: '9px 12px',
-                    borderRadius: '8px',
-                    border: '1.5px solid #0284c7',
-                    fontSize: '0.9rem',
-                    fontWeight: 600,
-                    background: '#ffffff',
-                    outline: 'none',
-                    boxSizing: 'border-box',
-                  }}
+                  className="w-full px-3.5 py-2.5 border border-slate-300 rounded-lg text-sm font-semibold bg-white text-slate-800 focus:outline-none focus:ring-2 focus:ring-green-500"
                 >
                   <option value="Regular">👤 Regular</option>
                   <option value="Technician">🔧 Technician (5% Discount)</option>
@@ -250,8 +160,8 @@ export default function AddCustomerModal({ isOpen, onClose, onCustomerCreated })
                 </select>
               </div>
 
-              <div>
-                <label style={{ display: 'block', fontSize: '0.82rem', fontWeight: 700, color: '#334155', marginBottom: '5px' }}>
+              <div className="flex flex-col gap-1.5">
+                <label className="text-sm font-bold text-slate-700">
                   Opening Due Balance ৳
                 </label>
                 <input
@@ -261,22 +171,14 @@ export default function AddCustomerModal({ isOpen, onClose, onCustomerCreated })
                   placeholder="0.00"
                   value={receivableBalance}
                   onChange={(e) => setReceivableBalance(e.target.value)}
-                  style={{
-                    width: '100%',
-                    padding: '9px 12px',
-                    borderRadius: '8px',
-                    border: '1px solid #cbd5e1',
-                    fontSize: '0.9rem',
-                    outline: 'none',
-                    boxSizing: 'border-box',
-                  }}
+                  className="w-full px-3.5 py-2.5 border border-slate-300 rounded-lg text-sm text-slate-800 focus:outline-none focus:ring-2 focus:ring-green-500"
                 />
               </div>
             </div>
 
             {/* Opening Wallet Balance */}
-            <div>
-              <label style={{ display: 'block', fontSize: '0.82rem', fontWeight: 700, color: '#334155', marginBottom: '5px' }}>
+            <div className="flex flex-col gap-1.5">
+              <label className="text-sm font-bold text-slate-700">
                 Opening Wallet Balance ৳
               </label>
               <input
@@ -286,21 +188,13 @@ export default function AddCustomerModal({ isOpen, onClose, onCustomerCreated })
                 placeholder="0.00"
                 value={openingWallet}
                 onChange={(e) => setOpeningWallet(e.target.value)}
-                style={{
-                  width: '100%',
-                  padding: '9px 12px',
-                  borderRadius: '8px',
-                  border: '1px solid #cbd5e1',
-                  fontSize: '0.9rem',
-                  outline: 'none',
-                  boxSizing: 'border-box',
-                }}
+                className="w-full px-3.5 py-2.5 border border-slate-300 rounded-lg text-sm text-slate-800 focus:outline-none focus:ring-2 focus:ring-green-500"
               />
             </div>
 
             {/* Address */}
-            <div>
-              <label style={{ display: 'block', fontSize: '0.82rem', fontWeight: 700, color: '#334155', marginBottom: '5px' }}>
+            <div className="flex flex-col gap-1.5">
+              <label className="text-sm font-bold text-slate-700">
                 Address / Delivery Location
               </label>
               <textarea
@@ -308,61 +202,24 @@ export default function AddCustomerModal({ isOpen, onClose, onCustomerCreated })
                 placeholder="e.g. Road 4, Dhanmondi, Dhaka"
                 value={address}
                 onChange={(e) => setAddress(e.target.value)}
-                style={{
-                  width: '100%',
-                  padding: '8px 12px',
-                  borderRadius: '8px',
-                  border: '1px solid #cbd5e1',
-                  fontSize: '0.88rem',
-                  outline: 'none',
-                  resize: 'vertical',
-                  boxSizing: 'border-box',
-                }}
+                className="w-full px-3.5 py-2.5 border border-slate-300 rounded-lg text-sm text-slate-800 focus:outline-none focus:ring-2 focus:ring-green-500 resize-none"
               />
             </div>
           </div>
 
           {/* Footer Actions */}
-          <div
-            style={{
-              display: 'flex',
-              justifyContent: 'flex-end',
-              gap: '10px',
-              marginTop: '22px',
-              borderTop: '1px solid #f1f5f9',
-              paddingTop: '16px',
-            }}
-          >
+          <div className="flex justify-end gap-3 pt-4 border-t border-slate-200">
             <button
               type="button"
               onClick={onClose}
-              style={{
-                padding: '9px 18px',
-                borderRadius: '8px',
-                border: '1px solid #cbd5e1',
-                background: '#ffffff',
-                color: '#475569',
-                fontSize: '0.9rem',
-                fontWeight: 600,
-                cursor: 'pointer',
-              }}
+              className="px-5 py-2.5 border border-slate-300 bg-white hover:bg-slate-50 text-slate-700 rounded-lg text-sm font-semibold transition-colors cursor-pointer"
             >
               Cancel
             </button>
             <button
               type="submit"
               disabled={saving}
-              style={{
-                padding: '9px 22px',
-                borderRadius: '8px',
-                border: 'none',
-                background: '#16a34a',
-                color: '#ffffff',
-                fontSize: '0.9rem',
-                fontWeight: 700,
-                cursor: 'pointer',
-                boxShadow: '0 2px 6px rgba(22, 163, 74, 0.3)',
-              }}
+              className="px-6 py-2.5 bg-green-600 hover:bg-green-700 text-white rounded-lg text-sm font-bold shadow-sm transition-colors cursor-pointer disabled:opacity-50"
             >
               {saving ? 'Saving...' : '✓ Save Customer'}
             </button>
