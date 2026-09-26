@@ -1,5 +1,15 @@
 import React from 'react';
 
+function isChunkLoadError(error) {
+  const msg = String(error?.message || error || '');
+  return (
+    msg.includes('Failed to fetch dynamically imported module') ||
+    msg.includes('Expected a JavaScript-or-Wasm module script') ||
+    msg.includes('error loading dynamically imported module') ||
+    msg.includes('Loading chunk')
+  );
+}
+
 export default class ErrorBoundary extends React.Component {
   constructor(props) {
     super(props);
@@ -7,23 +17,39 @@ export default class ErrorBoundary extends React.Component {
   }
 
   static getDerivedStateFromError(error) {
+    if (isChunkLoadError(error)) {
+      const lastReload = Number(window.sessionStorage.getItem('last_chunk_reload') || '0');
+      const now = Date.now();
+      if (now - lastReload > 10000) {
+        window.sessionStorage.setItem('last_chunk_reload', String(now));
+        window.location.reload();
+      }
+    }
     return { hasError: true, error };
   }
 
   componentDidCatch(error, errorInfo) {
     this.setState({ errorInfo });
+    if (isChunkLoadError(error)) {
+      const lastReload = Number(window.sessionStorage.getItem('last_chunk_reload') || '0');
+      const now = Date.now();
+      if (now - lastReload > 10000) {
+        window.sessionStorage.setItem('last_chunk_reload', String(now));
+        window.location.reload();
+      }
+    }
   }
 
   handleReload = () => {
     try {
-      sessionStorage.removeItem('page-has-been-force-refreshed');
+      sessionStorage.removeItem('last_chunk_reload');
     } catch {}
     window.location.reload();
   };
 
   handleReset = () => {
     try {
-      sessionStorage.removeItem('page-has-been-force-refreshed');
+      sessionStorage.removeItem('last_chunk_reload');
     } catch {}
     this.setState({ hasError: false, error: null, errorInfo: null });
     window.location.hash = '';
@@ -32,83 +58,34 @@ export default class ErrorBoundary extends React.Component {
   render() {
     if (this.state.hasError) {
       return (
-        <div style={{
-          minHeight: '100vh',
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-          background: '#0a0f1d',
-          color: '#f8fafc',
-          padding: '24px',
-          fontFamily: "'Inter', sans-serif"
-        }}>
-          <div style={{
-            maxWidth: '560px',
-            width: '100%',
-            background: '#111827',
-            border: '1px solid #1f2937',
-            borderRadius: '16px',
-            padding: '32px',
-            boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.7)',
-            textAlign: 'center'
-          }}>
-            <div style={{ fontSize: '3rem', marginBottom: '16px' }}>🛡️</div>
-            <h2 style={{ fontSize: '1.4rem', fontWeight: 800, color: '#f1f5f9', margin: '0 0 8px 0' }}>
+        <div className="min-h-screen flex items-center justify-center bg-gray-50 text-gray-800 p-6">
+          <div className="max-w-lg w-full bg-white border border-gray-200 rounded-2xl p-8 shadow-xl text-center">
+            <div className="text-4xl mb-4">🛡️</div>
+            <h2 className="text-xl font-bold text-gray-900 mb-2">
               An Unexpected Error Occurred
             </h2>
-            <p style={{ fontSize: '0.9rem', color: '#94a3b8', lineHeight: 1.5, margin: '0 0 24px 0' }}>
+            <p className="text-sm text-gray-600 leading-relaxed mb-6">
               Other parts of the system remain safe and intact. You can reload the page or reset the view below.
             </p>
 
             {this.state.error && (
-              <div style={{
-                background: '#090d16',
-                border: '1px solid #374151',
-                borderRadius: '8px',
-                padding: '12px',
-                marginBottom: '24px',
-                textAlign: 'left',
-                fontSize: '0.8rem',
-                color: '#f87171',
-                fontFamily: 'monospace',
-                overflowX: 'auto',
-                maxHeight: '120px'
-              }}>
+              <div className="bg-red-50 border border-red-200 rounded-lg p-3.5 mb-6 text-left text-xs text-red-700 font-mono overflow-x-auto max-h-32">
                 <strong>Error:</strong> {this.state.error?.message || String(this.state.error)}
               </div>
             )}
 
-            <div style={{ display: 'flex', gap: '12px', justifyContent: 'center' }}>
+            <div className="flex gap-3 justify-center">
               <button
                 type="button"
                 onClick={this.handleReload}
-                style={{
-                  background: '#2563eb',
-                  color: '#fff',
-                  border: 'none',
-                  borderRadius: '8px',
-                  padding: '10px 20px',
-                  fontWeight: 700,
-                  fontSize: '0.9rem',
-                  cursor: 'pointer',
-                  boxShadow: '0 4px 12px rgba(37, 99, 235, 0.3)'
-                }}
+                className="px-5 py-2.5 bg-blue-600 hover:bg-blue-700 text-white font-semibold text-sm rounded-lg shadow-sm transition-colors cursor-pointer"
               >
                 🔄 Reload Page
               </button>
               <button
                 type="button"
                 onClick={this.handleReset}
-                style={{
-                  background: 'rgba(255, 255, 255, 0.1)',
-                  color: '#e2e8f0',
-                  border: '1px solid rgba(255, 255, 255, 0.2)',
-                  borderRadius: '8px',
-                  padding: '10px 20px',
-                  fontWeight: 700,
-                  fontSize: '0.9rem',
-                  cursor: 'pointer'
-                }}
+                className="px-5 py-2.5 bg-gray-100 hover:bg-gray-200 text-gray-700 border border-gray-300 font-semibold text-sm rounded-lg transition-colors cursor-pointer"
               >
                 🏠 Try Recovering
               </button>

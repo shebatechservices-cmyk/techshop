@@ -4,7 +4,18 @@ import App from './App';
 import ErrorBoundary from './components/shared/ErrorBoundary';
 import './style.css';
 
-// Suppress harmless browser/DevTools internal instrumentation errors (e.g. Chromium Soft Navigation Heuristics / requestIdleCallback 'startTime' bugs in VM scripts)
+// Handle Vite dynamic import chunk preload failures when new deployments occur
+window.addEventListener('vite:preloadError', (event) => {
+  event.preventDefault();
+  const lastReload = sessionStorage.getItem('last_chunk_reload');
+  const now = Date.now();
+  if (!lastReload || now - Number(lastReload) > 10000) {
+    sessionStorage.setItem('last_chunk_reload', String(now));
+    window.location.reload();
+  }
+});
+
+// Suppress harmless browser/DevTools internal instrumentation errors and auto-recover on stale chunk imports
 window.addEventListener(
   'error',
   (event) => {
@@ -16,6 +27,20 @@ window.addEventListener(
     ) {
       event.preventDefault();
       event.stopImmediatePropagation();
+      return;
+    }
+    if (
+      msg.includes('Failed to fetch dynamically imported module') ||
+      msg.includes('Expected a JavaScript-or-Wasm module script') ||
+      msg.includes('error loading dynamically imported module')
+    ) {
+      event.preventDefault();
+      const lastReload = sessionStorage.getItem('last_chunk_reload');
+      const now = Date.now();
+      if (!lastReload || now - Number(lastReload) > 10000) {
+        sessionStorage.setItem('last_chunk_reload', String(now));
+        window.location.reload();
+      }
     }
   },
   true
@@ -32,6 +57,21 @@ window.addEventListener(
     ) {
       event.preventDefault();
       event.stopImmediatePropagation();
+      return;
+    }
+    if (
+      msg.includes('Failed to fetch dynamically imported module') ||
+      msg.includes('Expected a JavaScript-or-Wasm module script') ||
+      msg.includes('error loading dynamically imported module') ||
+      msg.includes('Loading chunk')
+    ) {
+      event.preventDefault();
+      const lastReload = sessionStorage.getItem('last_chunk_reload');
+      const now = Date.now();
+      if (!lastReload || now - Number(lastReload) > 10000) {
+        sessionStorage.setItem('last_chunk_reload', String(now));
+        window.location.reload();
+      }
     }
   },
   true

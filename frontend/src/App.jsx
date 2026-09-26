@@ -22,15 +22,13 @@ const lazyWithRetry = (componentImport) =>
         await new Promise((r) => setTimeout(r, 250));
         return await componentImport();
       } catch (retryError) {
-        const pageHasAlreadyBeenForceRefreshed = JSON.parse(
-          window.sessionStorage.getItem("page-has-been-force-refreshed") || "false"
-        );
-        if (!pageHasAlreadyBeenForceRefreshed) {
-          window.sessionStorage.setItem("page-has-been-force-refreshed", "true");
+        const lastReload = Number(window.sessionStorage.getItem("last_chunk_reload") || "0");
+        const now = Date.now();
+        if (now - lastReload > 10000) {
+          window.sessionStorage.setItem("last_chunk_reload", String(now));
           window.location.reload();
           return { default: () => null };
         }
-        window.sessionStorage.removeItem("page-has-been-force-refreshed");
         throw retryError;
       }
     }
