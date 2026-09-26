@@ -187,7 +187,7 @@ export default function App() {
           isSidebarCollapsed ? "md:pl-16" : "md:pl-60"
         }`}
       >
-        <div className="page-shell w-full max-w-7xl mx-auto p-3 sm:p-5 lg:p-6 pb-20 md:pb-8 flex-1 flex flex-col">
+        <div className="page-shell w-full max-w-[1600px] mx-auto p-4 sm:p-6 lg:p-7 pb-20 md:pb-8 flex-1 flex flex-col">
           {/* Classic Top Navigation Bar */}
           <TopWelcomeBar
             shopName={shopInfo.shop_name || "Sheba Technology"}

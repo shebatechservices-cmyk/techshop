@@ -72,80 +72,45 @@ export default function AddSupplierModal({ isOpen, onClose, onSupplierCreated })
   };
 
   return (
-    <div style={{
-      position: 'fixed',
-      inset: 0,
-      background: 'rgba(15, 23, 42, 0.65)',
-      backdropFilter: 'blur(3px)',
-      display: 'flex',
-      alignItems: 'center',
-      justifyContent: 'center',
-      zIndex: 10050,
-      padding: '16px',
-    }}>
-      <div style={{
-        background: '#ffffff',
-        borderRadius: '16px',
-        width: '100%',
-        maxWidth: '560px',
-        boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.25)',
-        overflow: 'hidden',
-        border: '1px solid #e2e8f0',
-      }}>
+    <div
+      className="fixed inset-0 z-[10050] bg-slate-900/60 backdrop-blur-xs flex items-center justify-center p-4 sm:p-6"
+      role="dialog"
+      aria-modal="true"
+    >
+      <div className="bg-white rounded-2xl w-full max-w-2xl shadow-2xl overflow-hidden border border-slate-200 animate-in fade-in zoom-in duration-150 flex flex-col">
         {/* Header */}
-        <div style={{
-          padding: '18px 24px',
-          borderBottom: '1px solid #f1f5f9',
-          display: 'flex',
-          justifyContent: 'space-between',
-          alignItems: 'center',
-          background: '#f8fafc',
-        }}>
+        <div className="px-6 py-5 border-b border-slate-100 flex justify-between items-center bg-slate-50">
           <div>
-            <h3 style={{ margin: 0, fontSize: '1.25rem', fontWeight: 700, color: '#0f172a' }}>
+            <h3 className="m-0 text-lg font-bold text-slate-900">
               Add New Supplier
             </h3>
-            <p style={{ margin: '4px 0 0', fontSize: '0.85rem', color: '#64748b' }}>
+            <p className="m-0 text-xs text-slate-500 mt-0.5">
               Create a new vendor profile for purchasing and payable tracking
             </p>
           </div>
           <button
             type="button"
             onClick={onClose}
-            style={{
-              background: 'transparent',
-              border: 'none',
-              fontSize: '1.4rem',
-              cursor: 'pointer',
-              color: '#94a3b8',
-              lineHeight: 1,
-            }}
+            className="w-8 h-8 rounded-lg text-slate-400 hover:text-slate-700 hover:bg-slate-200/60 flex items-center justify-center transition-colors text-lg"
           >
-            ×
+            ✕
           </button>
         </div>
 
         {/* Body */}
-        <form onSubmit={handleSubmit} style={{ padding: '24px' }}>
+        <form onSubmit={handleSubmit} className="p-6 sm:p-7 space-y-4">
           {error && (
-            <div style={{
-              background: '#fef2f2',
-              border: '1px solid #fecaca',
-              color: '#b91c1c',
-              padding: '10px 14px',
-              borderRadius: '8px',
-              fontSize: '0.875rem',
-              marginBottom: '16px',
-            }}>
-              {error}
+            <div className="p-3 bg-rose-50 border border-rose-200 text-rose-700 rounded-lg text-sm font-semibold flex items-center gap-2">
+              <span>⚠️</span>
+              <span>{error}</span>
             </div>
           )}
 
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '14px' }}>
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             {/* Supplier Name */}
-            <div style={{ gridColumn: 'span 2' }}>
-              <label style={{ display: 'block', fontSize: '0.85rem', fontWeight: 600, color: '#334155', marginBottom: '6px' }}>
-                Supplier / Company Name <span style={{ color: '#ef4444' }}>*</span>
+            <div className="sm:col-span-2 flex flex-col gap-1.5">
+              <label className="text-sm font-bold text-slate-700">
+                Supplier / Company Name <span className="text-rose-500">*</span>
               </label>
               <input
                 type="text"
@@ -154,21 +119,13 @@ export default function AddSupplierModal({ isOpen, onClose, onSupplierCreated })
                 onChange={handleChange}
                 placeholder="e.g. Smart Technologies Ltd."
                 required
-                style={{
-                  width: '100%',
-                  padding: '9px 12px',
-                  borderRadius: '8px',
-                  border: '1px solid #cbd5e1',
-                  fontSize: '0.9rem',
-                  outline: 'none',
-                  boxSizing: 'border-box',
-                }}
+                className="w-full px-3.5 py-2.5 border border-slate-300 rounded-lg text-sm text-slate-800 focus:outline-none focus:ring-2 focus:ring-sky-500"
               />
             </div>
 
             {/* Contact Person */}
-            <div>
-              <label style={{ display: 'block', fontSize: '0.85rem', fontWeight: 600, color: '#334155', marginBottom: '6px' }}>
+            <div className="flex flex-col gap-1.5">
+              <label className="text-sm font-bold text-slate-700">
                 Contact Person
               </label>
               <input
@@ -177,21 +134,13 @@ export default function AddSupplierModal({ isOpen, onClose, onSupplierCreated })
                 value={formData.contact_person}
                 onChange={handleChange}
                 placeholder="e.g. Tanvir Ahmed"
-                style={{
-                  width: '100%',
-                  padding: '9px 12px',
-                  borderRadius: '8px',
-                  border: '1px solid #cbd5e1',
-                  fontSize: '0.9rem',
-                  outline: 'none',
-                  boxSizing: 'border-box',
-                }}
+                className="w-full px-3.5 py-2.5 border border-slate-300 rounded-lg text-sm text-slate-800 focus:outline-none focus:ring-2 focus:ring-sky-500"
               />
             </div>
 
             {/* Phone */}
-            <div>
-              <label style={{ display: 'block', fontSize: '0.85rem', fontWeight: 600, color: '#334155', marginBottom: '6px' }}>
+            <div className="flex flex-col gap-1.5">
+              <label className="text-sm font-bold text-slate-700">
                 Phone Number
               </label>
               <input
@@ -200,21 +149,13 @@ export default function AddSupplierModal({ isOpen, onClose, onSupplierCreated })
                 value={formData.phone}
                 onChange={handleChange}
                 placeholder="e.g. 01711000000"
-                style={{
-                  width: '100%',
-                  padding: '9px 12px',
-                  borderRadius: '8px',
-                  border: '1px solid #cbd5e1',
-                  fontSize: '0.9rem',
-                  outline: 'none',
-                  boxSizing: 'border-box',
-                }}
+                className="w-full px-3.5 py-2.5 border border-slate-300 rounded-lg text-sm text-slate-800 focus:outline-none focus:ring-2 focus:ring-sky-500"
               />
             </div>
 
             {/* Mobile */}
-            <div>
-              <label style={{ display: 'block', fontSize: '0.85rem', fontWeight: 600, color: '#334155', marginBottom: '6px' }}>
+            <div className="flex flex-col gap-1.5">
+              <label className="text-sm font-bold text-slate-700">
                 Alternative Mobile
               </label>
               <input
@@ -223,21 +164,13 @@ export default function AddSupplierModal({ isOpen, onClose, onSupplierCreated })
                 value={formData.mobile}
                 onChange={handleChange}
                 placeholder="e.g. 01811000000"
-                style={{
-                  width: '100%',
-                  padding: '9px 12px',
-                  borderRadius: '8px',
-                  border: '1px solid #cbd5e1',
-                  fontSize: '0.9rem',
-                  outline: 'none',
-                  boxSizing: 'border-box',
-                }}
+                className="w-full px-3.5 py-2.5 border border-slate-300 rounded-lg text-sm text-slate-800 focus:outline-none focus:ring-2 focus:ring-sky-500"
               />
             </div>
 
             {/* Email */}
-            <div>
-              <label style={{ display: 'block', fontSize: '0.85rem', fontWeight: 600, color: '#334155', marginBottom: '6px' }}>
+            <div className="flex flex-col gap-1.5">
+              <label className="text-sm font-bold text-slate-700">
                 Email Address
               </label>
               <input
@@ -246,21 +179,13 @@ export default function AddSupplierModal({ isOpen, onClose, onSupplierCreated })
                 value={formData.email}
                 onChange={handleChange}
                 placeholder="e.g. info@supplier.com"
-                style={{
-                  width: '100%',
-                  padding: '9px 12px',
-                  borderRadius: '8px',
-                  border: '1px solid #cbd5e1',
-                  fontSize: '0.9rem',
-                  outline: 'none',
-                  boxSizing: 'border-box',
-                }}
+                className="w-full px-3.5 py-2.5 border border-slate-300 rounded-lg text-sm text-slate-800 focus:outline-none focus:ring-2 focus:ring-sky-500"
               />
             </div>
 
             {/* Address */}
-            <div style={{ gridColumn: 'span 2' }}>
-              <label style={{ display: 'block', fontSize: '0.85rem', fontWeight: 600, color: '#334155', marginBottom: '6px' }}>
+            <div className="sm:col-span-2 flex flex-col gap-1.5">
+              <label className="text-sm font-bold text-slate-700">
                 Office / Store Address
               </label>
               <input
@@ -269,21 +194,13 @@ export default function AddSupplierModal({ isOpen, onClose, onSupplierCreated })
                 value={formData.address}
                 onChange={handleChange}
                 placeholder="e.g. Computer City Center, Level 4, Dhaka"
-                style={{
-                  width: '100%',
-                  padding: '9px 12px',
-                  borderRadius: '8px',
-                  border: '1px solid #cbd5e1',
-                  fontSize: '0.9rem',
-                  outline: 'none',
-                  boxSizing: 'border-box',
-                }}
+                className="w-full px-3.5 py-2.5 border border-slate-300 rounded-lg text-sm text-slate-800 focus:outline-none focus:ring-2 focus:ring-sky-500"
               />
             </div>
 
             {/* Opening Payable Due */}
-            <div style={{ gridColumn: 'span 2' }}>
-              <label style={{ display: 'block', fontSize: '0.85rem', fontWeight: 600, color: '#334155', marginBottom: '6px' }}>
+            <div className="sm:col-span-2 flex flex-col gap-1.5">
+              <label className="text-sm font-bold text-slate-700">
                 Opening Payable Balance (৳)
               </label>
               <input
@@ -294,24 +211,16 @@ export default function AddSupplierModal({ isOpen, onClose, onSupplierCreated })
                 min="0"
                 step="any"
                 placeholder="0.00"
-                style={{
-                  width: '100%',
-                  padding: '9px 12px',
-                  borderRadius: '8px',
-                  border: '1px solid #cbd5e1',
-                  fontSize: '0.9rem',
-                  outline: 'none',
-                  boxSizing: 'border-box',
-                }}
+                className="w-full px-3.5 py-2.5 border border-slate-300 rounded-lg text-sm text-slate-800 focus:outline-none focus:ring-2 focus:ring-sky-500"
               />
-              <span style={{ fontSize: '0.78rem', color: '#64748b' }}>
+              <span className="text-xs text-slate-500">
                 Initial amount you currently owe this supplier, if any.
               </span>
             </div>
 
             {/* Opening Wallet Balance */}
-            <div style={{ gridColumn: 'span 2' }}>
-              <label style={{ display: 'block', fontSize: '0.85rem', fontWeight: 600, color: '#334155', marginBottom: '6px' }}>
+            <div className="sm:col-span-2 flex flex-col gap-1.5">
+              <label className="text-sm font-bold text-slate-700">
                 Opening Wallet Balance (৳)
               </label>
               <input
@@ -322,62 +231,28 @@ export default function AddSupplierModal({ isOpen, onClose, onSupplierCreated })
                 min="0"
                 step="any"
                 placeholder="0.00"
-                style={{
-                  width: '100%',
-                  padding: '9px 12px',
-                  borderRadius: '8px',
-                  border: '1px solid #cbd5e1',
-                  fontSize: '0.9rem',
-                  outline: 'none',
-                  boxSizing: 'border-box',
-                }}
+                className="w-full px-3.5 py-2.5 border border-slate-300 rounded-lg text-sm text-slate-800 focus:outline-none focus:ring-2 focus:ring-sky-500"
               />
-              <span style={{ fontSize: '0.78rem', color: '#64748b' }}>
+              <span className="text-xs text-slate-500">
                 Pre-funded wallet balance for this supplier, if any.
               </span>
             </div>
           </div>
 
           {/* Actions */}
-          <div style={{
-            display: 'flex',
-            justifyContent: 'flex-end',
-            gap: '12px',
-            marginTop: '24px',
-            paddingTop: '16px',
-            borderTop: '1px solid #f1f5f9',
-          }}>
+          <div className="flex justify-end gap-3 pt-4 border-t border-slate-100">
             <button
               type="button"
               onClick={onClose}
               disabled={loading}
-              style={{
-                padding: '9px 18px',
-                borderRadius: '8px',
-                border: '1px solid #cbd5e1',
-                background: '#ffffff',
-                color: '#475569',
-                fontWeight: 600,
-                fontSize: '0.9rem',
-                cursor: 'pointer',
-              }}
+              className="px-5 py-2.5 rounded-lg border border-slate-300 bg-white text-slate-700 font-semibold text-sm hover:bg-slate-50 transition-colors cursor-pointer"
             >
               Cancel
             </button>
             <button
               type="submit"
               disabled={loading}
-              style={{
-                padding: '9px 22px',
-                borderRadius: '8px',
-                border: 'none',
-                background: '#0284c7',
-                color: '#ffffff',
-                fontWeight: 600,
-                fontSize: '0.9rem',
-                cursor: loading ? 'not-allowed' : 'pointer',
-                opacity: loading ? 0.7 : 1,
-              }}
+              className="px-6 py-2.5 rounded-lg border-0 bg-sky-600 hover:bg-sky-700 text-white font-bold text-sm shadow-sm transition-colors cursor-pointer disabled:opacity-50"
             >
               {loading ? 'Saving...' : 'Save Supplier'}
             </button>
