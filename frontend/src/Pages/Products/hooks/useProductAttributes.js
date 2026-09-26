@@ -178,11 +178,12 @@ export default function useProductAttributes() {
     });
     const result = await res.json();
     if (!res.ok) throw new Error(result?.message || result?.error || `Failed to create ${entity}`);
-    return result;
+    return result?.data || result;
   };
 
   const refreshAttributeEntity = async (entity) => {
     const data = await fetchJson(`${API}/${entity}`);
+    const items = Array.isArray(data) ? data : (data?.data || []);
     const setters = {
       categories: setCategories,
       sub_categories: setSubCategories,
@@ -191,7 +192,7 @@ export default function useProductAttributes() {
       models: setModels,
       series: setSeries,
     };
-    if (setters[entity]) setters[entity](data);
+    if (setters[entity]) setters[entity](items);
   };
 
   const saveAttributeItem = async (entity) => {
@@ -202,13 +203,15 @@ export default function useProductAttributes() {
           ? { name: attributeDraft.sub_categories, category_id: Number(attributeDraft.sub_category_parent) }
           : { name: attributeDraft.categories };
       const created = await persistMasterItem(entity, payload);
-      mergeCreatedItem(entity, created);
+      const item = created?.data || created;
+      mergeCreatedItem(entity, item);
       setAttributeDraft((prev) => ({
         ...prev,
         [entity]: "",
         ...(entity === "sub_categories" ? { sub_category_parent: "" } : {}),
       }));
       setShowAttributeAdd((prev) => ({ ...prev, [entity]: false }));
+      await refreshAttributeEntity(entity);
     } catch (error) {
       setAttributeError(error.message);
     }
@@ -239,7 +242,11 @@ export default function useProductAttributes() {
   };
 
   const handleQuickAddSave = async (customValue) => {
-    const val = (customValue !== undefined ? customValue : quickAdd.value).trim();
+    if (customValue && typeof customValue.preventDefault === "function") {
+      customValue.preventDefault();
+      customValue = undefined;
+    }
+    const val = (typeof customValue === "string" ? customValue : (quickAdd.value || "")).trim();
     if (!val) {
       setQuickAdd((prev) => ({ ...prev, error: "Please enter a name." }));
       return null;
@@ -247,7 +254,7 @@ export default function useProductAttributes() {
     setQuickAdd((prev) => ({ ...prev, loading: true, error: "" }));
     try {
       const payload = { name: val };
-      if (quickAdd.entity === "sub_categories") payload.category_id = Number(selectedCategory);
+      if (quickAdd.entity === "sub_categories" && selectedCategory) payload.category_id = Number(selectedCategory);
       if (quickAdd.entity === "brands" && selectedSubCategory) payload.sub_category_id = Number(selectedSubCategory);
       if (quickAdd.entity === "product_names") {
         if (selectedBrand) payload.brand_id = Number(selectedBrand);
@@ -255,26 +262,30 @@ export default function useProductAttributes() {
         if (selectedSubCategory) payload.sub_category_id = Number(selectedSubCategory);
       }
       if (quickAdd.entity === "models") {
-        payload.brand_id = Number(selectedBrand);
+        if (selectedBrand) payload.brand_id = Number(selectedBrand);
         if (selectedCategory) payload.category_id = Number(selectedCategory);
         if (selectedSubCategory) payload.sub_category_id = Number(selectedSubCategory);
       }
       if (quickAdd.entity === "series") {
-        payload.model_id = Number(selectedModel);
+        if (selectedModel) payload.model_id = Number(selectedModel);
         if (selectedBrand) payload.brand_id = Number(selectedBrand);
       }
 
       const created = await persistMasterItem(quickAdd.entity, payload);
-      mergeCreatedItem(quickAdd.entity, created);
+      const item = created?.data || created;
+      mergeCreatedItem(quickAdd.entity, item);
 
-      if (quickAdd.entity === "categories") setSelectedCategory(String(created.id));
-      if (quickAdd.entity === "sub_categories") setSelectedSubCategory(String(created.id));
-      if (quickAdd.entity === "brands") setSelectedBrand(String(created.id));
-      if (quickAdd.entity === "models") setSelectedModel(String(created.id));
-      if (quickAdd.entity === "series") setSelectedSeries(String(created.id));
+      if (item && item.id) {
+        if (quickAdd.entity === "categories") setSelectedCategory(String(item.id));
+        if (quickAdd.entity === "sub_categories") setSelectedSubCategory(String(item.id));
+        if (quickAdd.entity === "brands") setSelectedBrand(String(item.id));
+        if (quickAdd.entity === "models") setSelectedModel(String(item.id));
+        if (quickAdd.entity === "series") setSelectedSeries(String(item.id));
+      }
 
-      setQuickAdd((prev) => ({ ...prev, isOpen: false, loading: false }));
-      return created;
+      setQuickAdd((prev) => ({ ...prev, isOpen: false, loading: false, value: "", error: "" }));
+      await refreshAttributeEntity(quickAdd.entity);
+      return item;
     } catch (error) {
       setQuickAdd((prev) => ({ ...prev, loading: false, error: error.message }));
       return null;
@@ -303,7 +314,8 @@ export default function useProductAttributes() {
     });
   };
 
-  const handleQuickEditSave = async () => {
+  const handleQuickEditSave = async (e) => {
+    if (e && typeof e.preventDefault === "function") e.preventDefault();
     const val = (quickEdit.value || "").trim();
     if (!val) {
       setQuickEdit((prev) => ({ ...prev, error: "Name cannot be empty." }));
@@ -317,7 +329,7 @@ export default function useProductAttributes() {
         body: JSON.stringify({ name: val }),
       });
       const data = await res.json();
-      if (!res.ok) throw new Error(data.message || "Failed to update item");
+      if (!res.ok) throw new Error(data.message || data.error || "Failed to update item");
 
       await refreshAttributeEntity(quickEdit.entity);
       setQuickEdit({ isOpen: false, entity: "", id: null, title: "", subtitle: "", label: "Name", value: "", loading: false, error: "" });
@@ -326,11 +338,16 @@ export default function useProductAttributes() {
     }
   };
 
-  const deleteAttribute = async (entity, id) => {
+  const deleteAttribute = async (entity, target) => {
+    const id = typeof target === "object" && target !== null ? target.id : target;
+    if (!id) return;
     if (!window.confirm("Are you sure you want to delete this item?")) return;
     try {
       const res = await fetch(`${API}/${entity}/${id}`, { method: "DELETE" });
-      if (!res.ok) throw new Error("Delete failed");
+      if (!res.ok) {
+        const data = await res.json().catch(() => ({}));
+        throw new Error(data.message || data.error || "Delete failed");
+      }
       await refreshAttributeEntity(entity);
     } catch (err) {
       alert("Error deleting item: " + err.message);

@@ -182,6 +182,15 @@ registerRoute('/devices', require('./routes/deviceRoute'));
 registerRoute('/staff', require('./routes/staffRoute'));
 registerRoute('/dev', require('./routes/devRoute'));
 
+const createEntityRouter = require('./routes/entityRouteFactory');
+registerRoute('/brands', createEntityRouter('brands'));
+registerRoute('/models', createEntityRouter('models'));
+registerRoute('/series', createEntityRouter('series'));
+registerRoute('/product-names', createEntityRouter('product_names'));
+registerRoute('/product_names', createEntityRouter('product_names'));
+registerRoute('/sub-categories', createEntityRouter('sub_categories'));
+registerRoute('/sub_categories', createEntityRouter('sub_categories'));
+
 // Serve frontend static files in production if built
 const distPath = path.join(__dirname, 'frontend/dist');
 if (fs.existsSync(distPath)) {

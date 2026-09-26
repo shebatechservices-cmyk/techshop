@@ -34,7 +34,12 @@ export default function QuickAddModal({
           </button>
         </div>
 
-        <form onSubmit={onSave}>
+        <form
+          onSubmit={(e) => {
+            e.preventDefault();
+            onSave(e);
+          }}
+        >
           <div className="p-6 flex flex-col gap-4">
             {quickAdd.extraInfo && (
               <p className="text-xs text-amber-800 bg-amber-50 p-3 rounded-lg border border-amber-200">

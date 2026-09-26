@@ -34,7 +34,12 @@ export default function QuickEditModal({
           </button>
         </div>
 
-        <form onSubmit={onSave}>
+        <form
+          onSubmit={(e) => {
+            e.preventDefault();
+            onSave(e);
+          }}
+        >
           <div className="p-6 flex flex-col gap-4">
             <div className="flex flex-col gap-1.5">
               <label className="text-sm font-bold text-slate-700">
