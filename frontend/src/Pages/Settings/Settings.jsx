@@ -506,15 +506,17 @@ export default function Settings({ onLogout, currentUser }) {
         handleApplyProviderPreset={handleApplyProviderPreset}
       />
 
-      {/* Clear Dummy / Test Data Confirmation Modal */}
-      <ClearDataConfirmModal
-        isOpen={showClearModal}
-        onClose={() => setShowClearModal(false)}
-        onSuccess={() => {
-          showToast('All demo and test data cleared successfully!');
-          loadSettingsData();
-        }}
-      />
+      {/* Clear Dummy / Test Data Confirmation Modal (Strictly Development Environment Only) */}
+      {(import.meta.env?.DEV || (typeof process !== 'undefined' && process.env?.NODE_ENV === 'development')) && (
+        <ClearDataConfirmModal
+          isOpen={showClearModal}
+          onClose={() => setShowClearModal(false)}
+          onSuccess={() => {
+            showToast('All demo and test data cleared successfully!');
+            loadSettingsData();
+          }}
+        />
+      )}
 
       {/* Restore Database Backup Modal */}
       <RestoreConfirmModal

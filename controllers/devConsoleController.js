@@ -201,6 +201,12 @@ exports.runMaintenance = async (req, res) => {
 
 // 5. Force Clean Inventory Stock (Emergency Developer Tool)
 exports.cleanInventoryStock = async (req, res) => {
+    if (process.env.NODE_ENV === 'production') {
+        return res.status(403).json({
+            success: false,
+            message: 'Stock cleanup feature is disabled in production environment.'
+        });
+    }
     try {
         const { mode = 'zero_stock', reason = 'Dev Console Emergency Stock Reset' } = req.body;
 

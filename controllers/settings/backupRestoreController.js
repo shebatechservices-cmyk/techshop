@@ -198,6 +198,14 @@ exports.triggerBackup = async (req, res) => {
 
 // Secure Admin Clear Dummy / User Data
 exports.cleanDummyData = async (req, res) => {
+    // Strictly forbid database cleanup in production environment to prevent data loss
+    if (process.env.NODE_ENV === 'production') {
+        return res.status(403).json({
+            success: false,
+            message: 'ডাটাবেজ ক্লিনআপ / টেস্ট ডাটা মুছে ফেলার ফিচারটি প্রোডাকশন পরিবেশে সম্পূর্ণ নিষিদ্ধ ও নিষ্ক্রিয়!'
+        });
+    }
+
     const client = await pool.connect();
     try {
         const { confirmationText, backupFirst = true, scope = 'transactions', resetShopToDummy = false } = req.body;
