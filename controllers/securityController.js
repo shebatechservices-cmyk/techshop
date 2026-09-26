@@ -511,7 +511,7 @@ exports.createDevice = async (req, res) => {
         await ensureSecurityTables();
         const { device_id, device_name, device_type, user_id, browser_info, ip_address } = req.body;
         if (!device_id || !device_name) {
-            return res.status(400).json({ success: false, message: "ডিভাইস আইডি এবং নাম প্রদান করুন।" });
+            return res.status(400).json({ success: false, message: "Device ID and device name are required." });
         }
 
         const query = `
@@ -532,7 +532,7 @@ exports.createDevice = async (req, res) => {
             ip_address || null
         ]);
 
-        return res.status(201).json({ success: true, message: "ডিভাইস সফলভাবে অথরাইজ করা হয়েছে!", data: result.rows[0] });
+        return res.status(201).json({ success: true, message: "Device authorized successfully!", data: result.rows[0] });
     } catch (error) {
         console.error('Create device error:', error);
         return res.status(500).json({ success: false, message: error.message });
@@ -552,9 +552,9 @@ exports.updateDeviceStatus = async (req, res) => {
         );
 
         if (result.rows.length === 0) {
-            return res.status(404).json({ success: false, message: "ডিভাইস পাওয়া যায়নি।" });
+            return res.status(404).json({ success: false, message: "Device not found." });
         }
-        return res.status(200).json({ success: true, message: `ডিভাইসটি ${is_authorized ? 'অথরাইজ' : 'ব্লক/রিভোক'} করা হয়েছে।`, data: result.rows[0] });
+        return res.status(200).json({ success: true, message: `Device has been ${is_authorized ? 'authorized' : 'blocked/revoked'}.`, data: result.rows[0] });
     } catch (error) {
         console.error('Update device status error:', error);
         return res.status(500).json({ success: false, message: error.message });
@@ -567,7 +567,7 @@ exports.deleteDevice = async (req, res) => {
         await ensureSecurityTables();
         const { id } = req.params;
         await pool.query("DELETE FROM trusted_devices WHERE id = $1", [id]);
-        return res.status(200).json({ success: true, message: "ডিভাইস তালিকা থেকে মুছে ফেলা হয়েছে।" });
+        return res.status(200).json({ success: true, message: "Device removed from list successfully." });
     } catch (error) {
         console.error('Delete device error:', error);
         return res.status(500).json({ success: false, message: error.message });
@@ -592,7 +592,7 @@ exports.createIpRule = async (req, res) => {
         await ensureSecurityTables();
         const { ip_address, rule_type = 'block', reason } = req.body;
         if (!ip_address) {
-            return res.status(400).json({ success: false, message: "আইপি অ্যাড্রেস দিন।" });
+            return res.status(400).json({ success: false, message: "IP address is required." });
         }
 
         const query = `
@@ -604,7 +604,7 @@ exports.createIpRule = async (req, res) => {
             RETURNING *;
         `;
         const result = await pool.query(query, [ip_address.trim(), rule_type, reason || null]);
-        return res.status(201).json({ success: true, message: `IP Rule (${rule_type.toUpperCase()}) সফলভাবে সংরক্ষণ হয়েছে!`, data: result.rows[0] });
+        return res.status(201).json({ success: true, message: `IP Rule (${rule_type.toUpperCase()}) saved successfully!`, data: result.rows[0] });
     } catch (error) {
         console.error('Create IP rule error:', error);
         return res.status(500).json({ success: false, message: error.message });
@@ -617,7 +617,7 @@ exports.deleteIpRule = async (req, res) => {
         await ensureSecurityTables();
         const { id } = req.params;
         await pool.query("DELETE FROM ip_rules WHERE id = $1", [id]);
-        return res.status(200).json({ success: true, message: "IP রুল মুছে ফেলা হয়েছে।" });
+        return res.status(200).json({ success: true, message: "IP rule deleted successfully." });
     } catch (error) {
         console.error('Delete IP rule error:', error);
         return res.status(500).json({ success: false, message: error.message });
@@ -635,7 +635,7 @@ exports.login = async (req, res) => {
         if (!rawIdentifier || !pass) {
             return res.status(400).json({
                 success: false,
-                message: 'মোবাইল নম্বর অথবা ইমেইল এবং পাসওয়ার্ড প্রদান করুন।'
+                message: 'Please enter your phone number or email and password.'
             });
         }
 
@@ -668,7 +668,7 @@ exports.login = async (req, res) => {
         if (result.rows.length === 0) {
             return res.status(401).json({
                 success: false,
-                message: 'ইউজার পাওয়া যায়নি! আপনার মোবাইল নম্বর অথবা ইমেইল সঠিকভাবে যাচাই করুন।'
+                message: 'User not found! Please check your mobile number or email address.'
             });
         }
 
@@ -679,14 +679,14 @@ exports.login = async (req, res) => {
         if (user.approval_status === 'pending_approval') {
             return res.status(403).json({
                 success: false,
-                message: 'আপনার স্টাফ/টেকনিশিয়ান একাউন্টটি শপ এডমিন কর্তৃক অনুমোদনের অপেক্ষায় রয়েছে। এডমিন অনুমোদন দিলে লগইন করতে পারবেন।'
+                message: 'Your staff/technician registration is pending approval by the shop administrator. You will be able to log in once approved.'
             });
         }
 
         if (!user.is_active) {
             return res.status(403).json({
                 success: false,
-                message: 'এই একাউন্টটি নিষ্ক্রিয় করা হয়েছে। অ্যাডমিনের সাথে যোগাযোগ করুন।'
+                message: 'This account has been deactivated. Please contact your administrator.'
             });
         }
 
@@ -694,7 +694,7 @@ exports.login = async (req, res) => {
         if (user.is_locked && !isSuperAdmin) {
             return res.status(403).json({
                 success: false,
-                message: 'অতিরিক্ত ভুল চেষ্টার কারণে একাউন্ট সাময়িক লক করা হয়েছে। অ্যাডমিনের সাহায্য নিন।'
+                message: 'Account temporarily locked due to excessive failed attempts. Please contact your administrator.'
             });
         }
 
@@ -711,8 +711,8 @@ exports.login = async (req, res) => {
             return res.status(401).json({
                 success: false,
                 message: shouldLock
-                    ? 'টানা ৫ বার ভুল পাসওয়ার্ড দেওয়ার কারণে একাউন্ট লক করা হয়েছে।'
-                    : `ভুল পাসওয়ার্ড! অনুগ্রহ করে সঠিক পাসওয়ার্ড দিন। (ভুল চেষ্টা: ${newFailCount}/5)`
+                    ? 'Account locked due to 5 consecutive failed password attempts.'
+                    : `Incorrect password! Please enter the correct password. (Attempts: ${newFailCount}/5)`
             });
         }
 
@@ -756,7 +756,7 @@ exports.login = async (req, res) => {
 
         return res.status(200).json({
             success: true,
-            message: 'লগইন সফল হয়েছে!',
+            message: 'Login successful!',
             token,
             user: {
                 id: user.id,
@@ -772,7 +772,7 @@ exports.login = async (req, res) => {
         });
     } catch (error) {
         console.error('Login error:', error);
-        return res.status(500).json({ success: false, message: 'সার্ভার ত্রুটি: ' + error.message });
+        return res.status(500).json({ success: false, message: 'Server error: ' + error.message });
     }
 };
 
@@ -788,7 +788,7 @@ exports.signup = async (req, res) => {
         if (!cleanName || !rawId || !pass) {
             return res.status(400).json({
                 success: false,
-                message: 'নাম, মোবাইল/ইমেইল এবং পাসওয়ার্ড আবশ্যক।'
+                message: 'Full name, phone/email, and password are required.'
             });
         }
 
@@ -813,7 +813,7 @@ exports.signup = async (req, res) => {
         if (dupCheck.rows.length > 0) {
             return res.status(409).json({
                 success: false,
-                message: 'এই মোবাইল নম্বর বা ইমেইল দিয়ে ইতোমধ্যে একটি একাউন্ট তৈরি করা আছে!'
+                message: 'An account already exists with this phone number or email!'
             });
         }
 
@@ -846,7 +846,7 @@ exports.signup = async (req, res) => {
             return res.status(201).json({
                 success: true,
                 auto_login: true,
-                message: 'অনলাইন ইউজার হিসেবে রেজিস্ট্রেশন সফল হয়েছে!',
+                message: 'Registration as online user was successful!',
                 token,
                 user: {
                     id: newUser.id,
@@ -861,13 +861,13 @@ exports.signup = async (req, res) => {
             return res.status(201).json({
                 success: true,
                 auto_login: false,
-                message: 'স্টাফ/টেকনিশিয়ান রেজিস্ট্রেশন সম্পন্ন হয়েছে! শপ এডমিন অনুমোদন (Approve) করলে আপনি লগইন করতে পারবেন।',
+                message: 'Staff/technician registration submitted! You will be able to log in once approved by the shop administrator.',
                 user: newUser
             });
         }
     } catch (err) {
         console.error('Signup error:', err);
-        return res.status(500).json({ success: false, message: 'রেজিস্ট্রেশন ত্রুটি: ' + err.message });
+        return res.status(500).json({ success: false, message: 'Registration error: ' + err.message });
     }
 };
 
@@ -878,7 +878,7 @@ exports.logout = async (req, res) => {
         if (token) {
             await pool.query('UPDATE users SET current_session_token = NULL WHERE current_session_token = $1', [hashSessionToken(token)]);
         }
-        return res.status(200).json({ success: true, message: 'সফলভাবে লগআউট করা হয়েছে।' });
+        return res.status(200).json({ success: true, message: 'Logged out successfully.' });
     } catch (err) {
         return res.status(500).json({ success: false, message: err.message });
     }
@@ -923,14 +923,14 @@ exports.approveStaff = async (req, res) => {
                 SET approval_status = 'approved', is_active = true
                 WHERE id = $1
             `, [userId]);
-            return res.status(200).json({ success: true, message: 'স্টাফের একাউন্ট সফলভাবে অনুমোদন করা হয়েছে।' });
+            return res.status(200).json({ success: true, message: 'Staff account approved successfully.' });
         } else {
             await pool.query(`
                 UPDATE users
                 SET approval_status = 'rejected', is_active = false, deleted_at = NOW()
                 WHERE id = $1
             `, [userId]);
-            return res.status(200).json({ success: true, message: 'স্টাফের একাউন্ট বাতিল করা হয়েছে।' });
+            return res.status(200).json({ success: true, message: 'Staff account rejected.' });
         }
     } catch (err) {
         return res.status(500).json({ success: false, message: err.message });
@@ -952,7 +952,7 @@ exports.submitRecoveryRequest = async (req, res) => {
         if (!cleanId) {
             return res.status(400).json({
                 success: false,
-                message: 'অনুগ্রহ করে আপনার মোবাইল নম্বর অথবা ইমেইল প্রদান করুন।'
+                message: 'Please enter your registered mobile number or email.'
             });
         }
 
@@ -992,8 +992,8 @@ exports.submitRecoveryRequest = async (req, res) => {
         return res.status(201).json({
             success: true,
             message: isAdmin
-                ? 'এডমিন পাসওয়ার্ড রিকভারি অনুরোধটি সিস্টেম ডেভেলপারের কাছে সফলভাবে পাঠানো হয়েছে। ডেভেলপার এটি যাচাই করে রিসেট করবেন।'
-                : 'স্টাফ পাসওয়ার্ড রিকভারি অনুরোধটি শপ এডমিনের কাছে সফলভাবে পাঠানো হয়েছে। এডমিন প্যানেল থেকে পাসওয়ার্ড রিসেট করবেন।',
+                ? 'Admin password recovery request sent to developer successfully. The developer will review and reset your password.'
+                : 'Staff password recovery request sent to shop administrator successfully. The administrator will reset your password from the control panel.',
             target_role: targetRole,
             data: insRes.rows[0]
         });
@@ -1060,7 +1060,7 @@ exports.resolveStaffRecovery = async (req, res) => {
 
         return res.status(200).json({
             success: true,
-            message: 'স্টাফের পাসওয়ার্ড সফলভাবে রিসেট করা হয়েছে!',
+            message: 'Staff password has been reset successfully!',
             data: updatedReq.rows[0]
         });
     } catch (err) {

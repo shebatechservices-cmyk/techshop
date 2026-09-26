@@ -17,7 +17,7 @@ const authLimiter = rateLimit({
     },
     standardHeaders: true,
     legacyHeaders: false,
-    message: { success: false, message: 'অনেক বেশি লগইন চেষ্টা করা হয়েছে। কিছুক্ষণ পরে আবার চেষ্টা করুন।' },
+    message: { success: false, message: 'Too many login attempts. Please try again in a few moments.' },
 });
 
 const otpLimiter = rateLimit({
@@ -25,7 +25,7 @@ const otpLimiter = rateLimit({
     max: 5,
     standardHeaders: true,
     legacyHeaders: false,
-    message: { success: false, message: 'অনেক বেশি অনুরোধ করা হয়েছে। ১ মিনিট পরে আবার চেষ্টা করুন।' },
+    message: { success: false, message: 'Too many requests. Please try again in 1 minute.' },
 });
 
 const defaultOrigins = [

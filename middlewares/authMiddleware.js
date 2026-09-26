@@ -120,13 +120,13 @@ const checkPermission = (requiredPermission) => {
             const result = await pool.query(query, [roleId, requiredPermission]);
 
             if (result.rows.length === 0) {
-                return res.status(403).json({ success: false, message: 'অ্যাক্সেস ডিনাইড! আপনার এই কাজটি করার পারমিশন নেই।' });
+                return res.status(403).json({ success: false, message: 'Access Denied! You do not have permission to perform this action.' });
             }
 
-            next(); // পারমিশন থাকলে পরবর্তী ধাপে যাবে
+            next();
         } catch (error) {
             console.error('Permission check error:', error);
-            return res.status(500).json({ success: false, message: 'সার্ভার এরর!' });
+            return res.status(500).json({ success: false, message: 'Internal server error while verifying permissions.' });
         }
     };
 };

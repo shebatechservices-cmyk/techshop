@@ -17,10 +17,10 @@ export function useDeveloperConsoleManager({ isOpen, onClose, onDeveloperLogin }
 
   // App Admin Management & Recovery State
   const [adminCreds, setAdminCreds] = useState({
-    name: 'Sheba Technology Super Admin',
-    email: 'shebatechservices@gmail.com',
-    phone: '01700000000',
-    password: '123456',
+    name: '',
+    email: '',
+    phone: '',
+    password: '',
     is_active: true,
   });
   const [adminRecoveryRequests, setAdminRecoveryRequests] = useState([]);
