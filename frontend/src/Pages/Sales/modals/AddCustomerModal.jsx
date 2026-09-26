@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { createPortal } from 'react-dom';
 import API from '../../../services/api';
 import BangladeshiPhoneInput from '../../../components/ui/BangladeshiPhoneInput';
 import { isValidBDPhone } from '../../../utils/phoneUtils';
@@ -67,11 +68,16 @@ export default function AddCustomerModal({ isOpen, onClose, onCustomerCreated })
     }
   };
 
-  return (
+  return createPortal(
     <div
-      className="fixed inset-0 z-[99999] bg-slate-900/60 backdrop-blur-xs flex items-center justify-center p-4 sm:p-6"
+      className="fixed inset-0 z-[100000] bg-slate-900/70 backdrop-blur-xs flex items-center justify-center p-4 sm:p-6"
       role="dialog"
       aria-modal="true"
+      onClick={(e) => {
+        if (e.target === e.currentTarget) {
+          onClose();
+        }
+      }}
     >
       <div className="bg-white w-full max-w-2xl rounded-2xl shadow-2xl overflow-hidden border border-slate-200 animate-in fade-in zoom-in duration-150 flex flex-col">
         {/* Header */}
@@ -226,6 +232,8 @@ export default function AddCustomerModal({ isOpen, onClose, onCustomerCreated })
           </div>
         </form>
       </div>
-    </div>
+    </div>,
+    document.body
   );
 }
+

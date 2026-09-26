@@ -1,5 +1,6 @@
-import React from 'react';
+import React, { useState } from 'react';
 import SalePrintModal from './SalePrintModal';
+import AddCustomerModal from './AddCustomerModal';
 import SaleCustomerSidebar from '../components/SaleCustomerSidebar';
 import SaleProductTable from '../components/SaleProductTable';
 import SalePaymentSection from '../components/SalePaymentSection';
@@ -13,10 +14,12 @@ export default function NewSaleModal({
   products = [],
   newlyCreatedCustomer,
   onOpenAddCustomer,
+  onCustomerCreated,
   onSaleCreated,
   editSale = null,
   onSaleUpdated = null,
 }) {
+  const [isAddCustomerOpen, setIsAddCustomerOpen] = useState(false);
   const {
     // States & Refs
     customerId,
@@ -280,7 +283,11 @@ export default function NewSaleModal({
               <button
                 type="button"
                 onClick={() => {
-                  if (onOpenAddCustomer) onOpenAddCustomer();
+                  if (onOpenAddCustomer) {
+                    onOpenAddCustomer();
+                  } else {
+                    setIsAddCustomerOpen(true);
+                  }
                 }}
                 className="py-2 px-3.5 rounded-lg border-[1.5px] border-emerald-600 bg-emerald-50 hover:bg-emerald-100 text-emerald-600 font-bold text-sm cursor-pointer whitespace-nowrap transition-colors"
               >
@@ -518,6 +525,25 @@ export default function NewSaleModal({
         sale={printSale}
         isQuotation={false}
       />
+
+      {/* Embedded Add Customer Modal for New Sale POS */}
+      {isAddCustomerOpen && (
+        <AddCustomerModal
+          isOpen={isAddCustomerOpen}
+          onClose={() => setIsAddCustomerOpen(false)}
+          onCustomerCreated={(newCust) => {
+            setIsAddCustomerOpen(false);
+            if (newCust && newCust.id) {
+              setCustomerId(String(newCust.id));
+              setCustomerSearch('');
+              setIsCustomerOpen(false);
+            }
+            if (onCustomerCreated) {
+              onCustomerCreated(newCust);
+            }
+          }}
+        />
+      )}
     </div>
   );
 }

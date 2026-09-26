@@ -1,5 +1,6 @@
-import React from 'react';
+import React, { useState } from 'react';
 import NewSaleModal from './modals/NewSaleModal';
+import AddCustomerModal from './modals/AddCustomerModal';
 import SalePrintModal from './modals/SalePrintModal';
 import SaleExchangeModal from './modals/SaleExchangeModal';
 import AdminOverrideModal from './modals/AdminOverrideModal';
@@ -16,6 +17,7 @@ export default function Sales({
   navKey = 0,
   currentUser,
 }) {
+  const [isAddCustomerModalOpen, setIsAddCustomerModalOpen] = useState(false);
   const {
     activeTab,
     setActiveTab,
@@ -176,15 +178,23 @@ export default function Sales({
           customers={modalCustomers}
           products={products}
           newlyCreatedCustomer={newlyCreatedCustomer}
-          onOpenAddCustomer={() => {
-            setActiveTab('customers');
-            setTimeout(() => {
-              window.dispatchEvent(new CustomEvent('sales:open_modal', { detail: 'customer' }));
-            }, 50);
-          }}
+          onOpenAddCustomer={() => setIsAddCustomerModalOpen(true)}
+          onCustomerCreated={handleCustomerCreated}
           onSaleCreated={handleSaleCreated}
           editSale={editingSale}
           onSaleUpdated={handleSaleUpdated}
+        />
+      )}
+
+      {/* Embedded / Standalone Add Customer Modal */}
+      {isAddCustomerModalOpen && (
+        <AddCustomerModal
+          isOpen={isAddCustomerModalOpen}
+          onClose={() => setIsAddCustomerModalOpen(false)}
+          onCustomerCreated={(newCust) => {
+            handleCustomerCreated(newCust);
+            setIsAddCustomerModalOpen(false);
+          }}
         />
       )}
 
