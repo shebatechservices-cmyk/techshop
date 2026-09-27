@@ -1,7 +1,5 @@
 import React, { useState, useEffect } from 'react';
 import API from '../../../services/api';
-import BangladeshiPhoneInput from '../../../components/ui/BangladeshiPhoneInput';
-import { isValidBDPhone } from '../../../utils/phoneUtils';
 import AddTechnicianModal from './AddTechnicianModal';
 
 export default function NewProjectModal({ isOpen, onClose, onSuccess }) {
@@ -69,7 +67,15 @@ export default function NewProjectModal({ isOpen, onClose, onSuccess }) {
       setSelectedInvoice(inv);
       setTitle(`${inv.customer_name} - New CCTV Setup (${inv.invoice_no})`);
       setCustomerName(inv.customer_name || '');
-      setSitePhone(inv.customer_phone || '');
+      
+      // Auto normalize phone to standard 11-digit local format (e.g. 017XXXXXXXX)
+      let rawP = inv.customer_phone || '';
+      let cleanDigits = rawP.replace(/\D/g, '');
+      if (cleanDigits.startsWith('880')) cleanDigits = '0' + cleanDigits.slice(3);
+      else if (cleanDigits.startsWith('88')) cleanDigits = cleanDigits.slice(2);
+      if (cleanDigits.length > 11) cleanDigits = cleanDigits.slice(-11);
+      setSitePhone(cleanDigits);
+
       setSiteAddress(inv.customer_address || '');
       
       // Auto-populate customer billing amount if billed in invoice
@@ -132,10 +138,15 @@ export default function NewProjectModal({ isOpen, onClose, onSuccess }) {
       alert('Please enter a project title.');
       return;
     }
-    if (sitePhone && !isValidBDPhone(sitePhone)) {
-      alert('Please enter a valid 10-digit site phone number after +880 (e.g. 17-XXXXXXXX).');
-      return;
+
+    const cleanPhoneDigits = sitePhone ? String(sitePhone).replace(/\D/g, '') : '';
+    if (cleanPhoneDigits) {
+      if (cleanPhoneDigits.length !== 11 || !cleanPhoneDigits.startsWith('0')) {
+        alert('Please enter a valid 11-digit Bangladeshi phone number starting with 0 (e.g. 017XXXXXXXX).');
+        return;
+      }
     }
+    const formattedSitePhone = cleanPhoneDigits ? `+88${cleanPhoneDigits}` : '';
 
     try {
       setSubmitting(true);
@@ -147,7 +158,7 @@ export default function NewProjectModal({ isOpen, onClose, onSuccess }) {
         invoice_no: selectedInvoice ? selectedInvoice.invoice_no : null,
         customer_id: selectedInvoice ? selectedInvoice.customer_id : null,
         customer_name: customerName,
-        site_phone: sitePhone,
+        site_phone: formattedSitePhone,
         site_address: siteAddress,
         technician_id: technicianId ? Number(technicianId) : null,
         setup_charge: Number(setupCharge || 0),
@@ -376,12 +387,48 @@ export default function NewProjectModal({ isOpen, onClose, onSuccess }) {
               </div>
 
               <div>
-                <BangladeshiPhoneInput
-                  label="Site Phone Number"
-                  placeholder="1X-XXXXXXXX"
-                  value={sitePhone}
-                  onChange={(e) => setSitePhone(e.target.value)}
-                />
+                <label style={{ display: 'block', fontSize: '0.82rem', fontWeight: 600, color: '#334155', marginBottom: '4px' }}>
+                  Site Phone Number
+                </label>
+                <div style={{ display: 'flex', alignItems: 'center' }}>
+                  <span
+                    style={{
+                      background: '#f1f5f9',
+                      border: '1px solid #cbd5e1',
+                      borderRight: 'none',
+                      borderRadius: '6px 0 0 6px',
+                      padding: '8px 12px',
+                      fontSize: '0.85rem',
+                      fontWeight: 700,
+                      color: '#475569',
+                      userSelect: 'none'
+                    }}
+                  >
+                    +88
+                  </span>
+                  <input
+                    type="tel"
+                    maxLength={11}
+                    placeholder="017XXXXXXXX"
+                    value={sitePhone}
+                    onChange={(e) => {
+                      const val = e.target.value.replace(/\D/g, '').slice(0, 11);
+                      setSitePhone(val);
+                    }}
+                    style={{
+                      flex: 1,
+                      minWidth: 0,
+                      padding: '8px 12px',
+                      borderRadius: '0 6px 6px 0',
+                      border: '1px solid #cbd5e1',
+                      fontSize: '0.85rem',
+                      boxSizing: 'border-box'
+                    }}
+                  />
+                </div>
+                <span style={{ fontSize: '0.72rem', color: '#64748b', marginTop: '2px', display: 'block' }}>
+                  Standard 11-digit number (e.g. 017XXXXXXXX)
+                </span>
               </div>
 
               <div>
@@ -488,49 +535,60 @@ export default function NewProjectModal({ isOpen, onClose, onSuccess }) {
             </div>
 
             {/* SECTION 4: ASSIGN TECHNICIAN & SCHEDULE */}
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: '14px', marginBottom: '14px' }}>
+            <div style={{ display: 'grid', gridTemplateColumns: 'minmax(220px, 1.8fr) minmax(130px, 1fr) minmax(160px, 1.3fr)', gap: '14px', marginBottom: '14px', alignItems: 'start' }}>
               <div>
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '4px' }}>
-                  <label style={{ fontSize: '0.82rem', fontWeight: 600, color: '#334155' }}>
-                    Assign Technician *
-                  </label>
+                <label style={{ display: 'block', fontSize: '0.82rem', fontWeight: 600, color: '#334155', marginBottom: '4px' }}>
+                  Assign Technician *
+                </label>
+                <div style={{ display: 'flex', gap: '6px', alignItems: 'center' }}>
+                  <select
+                    value={technicianId}
+                    onChange={(e) => setTechnicianId(e.target.value)}
+                    style={{
+                      flex: 1,
+                      minWidth: 0,
+                      padding: '8px 12px',
+                      borderRadius: '6px',
+                      border: '1px solid #cbd5e1',
+                      fontSize: '0.85rem',
+                      boxSizing: 'border-box',
+                      background: '#fff'
+                    }}
+                  >
+                    <option value="">-- Select Technician --</option>
+                    {technicians.map(t => (
+                      <option key={t.id} value={t.id}>
+                        {t.name} ({t.contact || t.role_title})
+                      </option>
+                    ))}
+                  </select>
                   <button
                     type="button"
                     onClick={() => setIsAddTechOpen(true)}
+                    title="Quick Add New Technician"
                     style={{
-                      background: '#f0f9ff',
-                      border: '1px solid #bae6fd',
-                      borderRadius: '4px',
-                      padding: '2px 8px',
-                      fontSize: '0.75rem',
-                      fontWeight: 600,
-                      color: '#0284c7',
-                      cursor: 'pointer',
-                      display: 'inline-flex',
+                      width: '36px',
+                      height: '36px',
+                      borderRadius: '6px',
+                      border: '1px solid #0284c7',
+                      background: '#0284c7',
+                      color: '#ffffff',
+                      fontSize: '1.25rem',
+                      fontWeight: 700,
+                      display: 'flex',
                       alignItems: 'center',
-                      gap: '3px',
-                      transition: 'all 0.15s ease'
+                      justifyContent: 'center',
+                      cursor: 'pointer',
+                      flexShrink: 0,
+                      transition: 'all 0.15s ease',
+                      lineHeight: 1
                     }}
-                    onMouseEnter={(e) => { e.currentTarget.style.background = '#e0f2fe'; }}
-                    onMouseLeave={(e) => { e.currentTarget.style.background = '#f0f9ff'; }}
-                    title="Quick register a new staff member with technician role"
+                    onMouseEnter={(e) => { e.currentTarget.style.background = '#0369a1'; }}
+                    onMouseLeave={(e) => { e.currentTarget.style.background = '#0284c7'; }}
                   >
-                    <span>➕</span>
-                    <span>Add Technician</span>
+                    +
                   </button>
                 </div>
-                <select
-                  value={technicianId}
-                  onChange={(e) => setTechnicianId(e.target.value)}
-                  style={{ width: '100%', padding: '8px 12px', borderRadius: '6px', border: '1px solid #cbd5e1', fontSize: '0.85rem', boxSizing: 'border-box' }}
-                >
-                  <option value="">-- Select Technician --</option>
-                  {technicians.map(t => (
-                    <option key={t.id} value={t.id}>
-                      {t.name} ({t.contact || t.role_title})
-                    </option>
-                  ))}
-                </select>
               </div>
 
               <div>
@@ -541,19 +599,19 @@ export default function NewProjectModal({ isOpen, onClose, onSuccess }) {
                   type="date"
                   value={startDate}
                   onChange={(e) => setStartDate(e.target.value)}
-                  style={{ width: '100%', padding: '8px 12px', borderRadius: '6px', border: '1px solid #cbd5e1', fontSize: '0.85rem', boxSizing: 'border-box' }}
+                  style={{ width: '100%', padding: '8px 10px', borderRadius: '6px', border: '1px solid #cbd5e1', fontSize: '0.85rem', boxSizing: 'border-box' }}
                 />
               </div>
 
               <div>
                 <label style={{ display: 'block', fontSize: '0.82rem', fontWeight: 600, color: '#334155', marginBottom: '4px' }}>
-                  Estimated Completion Date (Deadline)
+                  Estimated Completion (Deadline)
                 </label>
                 <input
                   type="date"
                   value={deadline}
                   onChange={(e) => setDeadline(e.target.value)}
-                  style={{ width: '100%', padding: '8px 12px', borderRadius: '6px', border: '1px solid #cbd5e1', fontSize: '0.85rem', boxSizing: 'border-box' }}
+                  style={{ width: '100%', padding: '8px 10px', borderRadius: '6px', border: '1px solid #cbd5e1', fontSize: '0.85rem', boxSizing: 'border-box' }}
                 />
               </div>
             </div>
