@@ -90,6 +90,43 @@ async function autoInitDatabase() {
                 );
                 CREATE INDEX IF NOT EXISTS idx_reset_req_target_status ON password_reset_requests(target_role, status);
 
+                CREATE TABLE IF NOT EXISTS project_services (
+                    id SERIAL PRIMARY KEY,
+                    project_id INTEGER NOT NULL REFERENCES service_projects(id) ON DELETE CASCADE,
+                    service_name VARCHAR(150) NOT NULL,
+                    quantity INTEGER DEFAULT 1,
+                    unit_rate NUMERIC(12,2) DEFAULT 0,
+                    line_total NUMERIC(12,2) DEFAULT 0,
+                    notes TEXT,
+                    created_at TIMESTAMP DEFAULT NOW(),
+                    updated_at TIMESTAMP DEFAULT NOW()
+                );
+                CREATE INDEX IF NOT EXISTS idx_project_services_project_id ON project_services(project_id);
+
+                -- Dynamic Service Presets Table
+                CREATE TABLE IF NOT EXISTS service_presets (
+                    id SERIAL PRIMARY KEY,
+                    name VARCHAR(150) NOT NULL,
+                    default_rate NUMERIC(12,2) DEFAULT 0,
+                    is_active BOOLEAN DEFAULT true,
+                    created_at TIMESTAMP DEFAULT NOW(),
+                    updated_at TIMESTAMP DEFAULT NOW()
+                );
+                CREATE INDEX IF NOT EXISTS idx_service_presets_is_active ON service_presets(is_active);
+
+                -- Seed Essential Default Service Presets if table is empty
+                INSERT INTO service_presets (name, default_rate, is_active)
+                SELECT name, default_rate, is_active FROM (
+                    VALUES 
+                    ('CCTV Camera Setup', 350.00, true),
+                    ('Router Configuration', 300.00, true),
+                    ('ONU Setup & Fiber Splicing', 250.00, true),
+                    ('WiFi Access Point Setup', 400.00, true),
+                    ('TV / Display Mounting', 500.00, true),
+                    ('General Troubleshooting', 500.00, true)
+                ) AS defaults(name, default_rate, is_active)
+                WHERE NOT EXISTS (SELECT 1 FROM service_presets);
+
                 CREATE TABLE IF NOT EXISTS tenders (
                     id SERIAL PRIMARY KEY,
                     name VARCHAR(100) UNIQUE NOT NULL,

@@ -61,6 +61,17 @@ model project_services {
   @@index([project_id], map: "idx_project_services_project_id")
 }
 
+model service_presets {
+  id           Int       @id @default(autoincrement())
+  name         String    @db.VarChar(150)
+  default_rate Decimal   @default(0) @db.Decimal(12, 2)
+  is_active    Boolean   @default(true)
+  created_at   DateTime? @default(now()) @db.Timestamp(6)
+  updated_at   DateTime? @default(now()) @db.Timestamp(6)
+
+  @@index([is_active], map: "idx_service_presets_is_active")
+}
+
 model warranty_claims {
   id                      Int        @id @default(autoincrement())
   claim_no                String     @unique @db.VarChar(50)

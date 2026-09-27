@@ -22,8 +22,15 @@ describe('Technician Workflow, Dynamic Services & Work Order Editing', () => {
     let mockRoles = [];
     let mockProjects = [];
     let mockProjectServices = [];
+    let mockServicePresets = [];
 
     beforeEach(() => {
+        mockServicePresets = [
+            { id: 1, name: 'CCTV Camera Setup', default_rate: 350, is_active: true, created_at: new Date(), updated_at: new Date() },
+            { id: 2, name: 'Router Configuration', default_rate: 300, is_active: true, created_at: new Date(), updated_at: new Date() },
+            { id: 3, name: 'Legacy Inactive Service', default_rate: 200, is_active: false, created_at: new Date(), updated_at: new Date() }
+        ];
+
         mockRoles = [
             { id: 1, name: 'Admin', permissions: [] },
             { id: 2, name: 'Manager', permissions: [] },
@@ -312,6 +319,57 @@ describe('Technician Workflow, Dynamic Services & Work Order Editing', () => {
                 return { rows: [newProj], rowCount: 1 };
             }
 
+            // Service Presets SELECT
+            if (queryStr.includes('FROM service_presets')) {
+                if (queryStr.includes('WHERE id = $1')) {
+                    const found = mockServicePresets.find(p => p.id === Number(params[0]));
+                    return { rows: found ? [found] : [], rowCount: found ? 1 : 0 };
+                }
+                if (queryStr.includes('WHERE is_active = true')) {
+                    const active = mockServicePresets.filter(p => p.is_active);
+                    return { rows: active, rowCount: active.length };
+                }
+                return { rows: mockServicePresets, rowCount: mockServicePresets.length };
+            }
+
+            // Service Presets INSERT
+            if (queryStr.includes('INSERT INTO service_presets')) {
+                const newPreset = {
+                    id: mockServicePresets.length + 1,
+                    name: params[0],
+                    default_rate: params[1],
+                    is_active: params[2],
+                    created_at: new Date(),
+                    updated_at: new Date()
+                };
+                mockServicePresets.push(newPreset);
+                return { rows: [newPreset], rowCount: 1 };
+            }
+
+            // Service Presets UPDATE
+            if (queryStr.includes('UPDATE service_presets')) {
+                const id = Number(params[params.length - 1]);
+                const existing = mockServicePresets.find(p => p.id === id);
+                if (existing) {
+                    if (params[0] !== undefined) existing.name = params[0];
+                    if (params[1] !== undefined) existing.default_rate = params[1];
+                    if (params[2] !== undefined) existing.is_active = params[2];
+                    return { rows: [existing], rowCount: 1 };
+                }
+                return { rows: [], rowCount: 0 };
+            }
+
+            // Service Presets DELETE
+            if (queryStr.includes('DELETE FROM service_presets WHERE id = $1')) {
+                const id = Number(params[0]);
+                const idx = mockServicePresets.findIndex(p => p.id === id);
+                if (idx !== -1) {
+                    const deleted = mockServicePresets.splice(idx, 1)[0];
+                    return { rows: [deleted], rowCount: 1 };
+                }
+                return { rows: [], rowCount: 0 };
+            }
+
             return { rows: [], rowCount: 0 };
         };
 
@@ -508,5 +566,60 @@ describe('Technician Workflow, Dynamic Services & Work Order Editing', () => {
         const totalPayout = calculateTotalTechnicianPayout(totalSetupFee, conveyanceInput, mealAllowanceInput);
         expect(totalPayout).toBe(2750); // 2250 + 300 + 200 (Numeric sum, not "2250300200")
         expect(typeof totalPayout).toBe('number');
+    });
+
+    test('RULE 1 & 2 & 3 (Service Presets CRUD): API supports fetching, adding, updating, and deleting service presets', async () => {
+        // 1. GET all presets vs active only
+        const reqAll = { query: {} };
+        const resAll = mockRes();
+        await projectController.getServicePresets(reqAll, resAll);
+        expect(resAll.status).toHaveBeenCalledWith(200);
+        expect(resAll.json.mock.calls[0][0].data.length).toBe(3);
+
+        const reqActive = { query: { active_only: 'true' } };
+        const resActive = mockRes();
+        await projectController.getServicePresets(reqActive, resActive);
+        expect(resActive.status).toHaveBeenCalledWith(200);
+        expect(resActive.json.mock.calls[0][0].data.length).toBe(2);
+
+        // 2. POST create new preset
+        const reqCreate = {
+            body: {
+                name: 'TV Wall Mounting',
+                default_rate: '650',
+                is_active: true
+            }
+        };
+        const resCreate = mockRes();
+        await projectController.createServicePreset(reqCreate, resCreate);
+        expect(resCreate.status).toHaveBeenCalledWith(201);
+        const created = resCreate.json.mock.calls[0][0].data;
+        expect(created.name).toBe('TV Wall Mounting');
+        expect(created.default_rate).toBe(650);
+        expect(created.is_active).toBe(true);
+
+        // 3. PUT update preset
+        const reqUpdate = {
+            params: { id: created.id },
+            body: {
+                name: 'TV Wall Mounting (Heavy Bracket)',
+                default_rate: 800,
+                is_active: false
+            }
+        };
+        const resUpdate = mockRes();
+        await projectController.updateServicePreset(reqUpdate, resUpdate);
+        expect(resUpdate.status).toHaveBeenCalledWith(200);
+        const updated = resUpdate.json.mock.calls[0][0].data;
+        expect(updated.name).toBe('TV Wall Mounting (Heavy Bracket)');
+        expect(updated.default_rate).toBe(800);
+        expect(updated.is_active).toBe(false);
+
+        // 4. DELETE preset
+        const reqDelete = { params: { id: created.id } };
+        const resDelete = mockRes();
+        await projectController.deleteServicePreset(reqDelete, resDelete);
+        expect(resDelete.status).toHaveBeenCalledWith(200);
+        expect(resDelete.json.mock.calls[0][0].success).toBe(true);
     });
 });

@@ -1,5 +1,6 @@
 import React from 'react';
 import AddTechnicianModal from './AddTechnicianModal';
+import ManageServicePresetsModal from './ManageServicePresetsModal';
 import useNewProjectForm from '../hooks/useNewProjectForm';
 import NewProjectModalHeader from '../components/new-project/NewProjectModalHeader';
 import NewProjectCategorySelector from '../components/new-project/NewProjectCategorySelector';
@@ -17,8 +18,12 @@ export default function NewProjectModal({ isOpen, onClose, onSuccess, projectToE
     setProjectCategory,
     invoices,
     technicians,
+    servicePresets,
+    fetchServicePresets,
     isAddTechOpen,
     setIsAddTechOpen,
+    isManagePresetsOpen,
+    setIsManagePresetsOpen,
     title,
     setTitle,
     projectType,
@@ -136,10 +141,12 @@ export default function NewProjectModal({ isOpen, onClose, onSuccess, projectToE
             {/* Dynamic Services & Tasks Table */}
             <NewProjectServiceTasksTable
               services={services}
+              servicePresets={servicePresets}
               totalSetupFee={totalSetupFee}
               onAddServiceRow={handleAddServiceRow}
               onUpdateServiceRow={handleUpdateServiceRow}
               onRemoveServiceRow={handleRemoveServiceRow}
+              onOpenManagePresets={() => setIsManagePresetsOpen(true)}
             />
 
             {/* Remunerations & Billing Summary */}
@@ -182,6 +189,13 @@ export default function NewProjectModal({ isOpen, onClose, onSuccess, projectToE
         isOpen={isAddTechOpen}
         onClose={() => setIsAddTechOpen(false)}
         onTechnicianAdded={handleTechAdded}
+      />
+
+      {/* Manage Service Presets Modal (RULE 3) */}
+      <ManageServicePresetsModal
+        isOpen={isManagePresetsOpen}
+        onClose={() => setIsManagePresetsOpen(false)}
+        onPresetsUpdated={() => fetchServicePresets()}
       />
     </div>
   );

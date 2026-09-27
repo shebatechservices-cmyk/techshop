@@ -3,6 +3,7 @@ import React from 'react';
 export default function ProjectsHeader({
   error,
   onOpenTechWallet,
+  onOpenManagePresets,
   onOpenNewProject,
 }) {
   return (
@@ -18,6 +19,18 @@ export default function ProjectsHeader({
         </div>
 
         <div className="flex gap-2 items-center flex-wrap">
+          {onOpenManagePresets && (
+            <button
+              type="button"
+              onClick={onOpenManagePresets}
+              className="bg-white text-slate-800 border border-slate-300 hover:bg-slate-50 px-3 py-1.5 rounded-lg font-bold text-xs flex items-center gap-1.5 shadow-xs transition-colors cursor-pointer"
+              title="Manage Service Task Presets"
+            >
+              <span>⚙️</span>
+              <span>Service Presets</span>
+            </button>
+          )}
+
           <button
             type="button"
             onClick={onOpenTechWallet}

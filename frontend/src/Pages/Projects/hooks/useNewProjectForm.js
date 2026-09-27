@@ -16,8 +16,10 @@ export default function useNewProjectForm({ isOpen, onClose, onSuccess, projectT
   const [projectCategory, setProjectCategory] = useState('new_setup'); // 'new_setup' | 'old_repair'
   const [invoices, setInvoices] = useState([]);
   const [technicians, setTechnicians] = useState([]);
+  const [servicePresets, setServicePresets] = useState([]);
   const [loadingLookups, setLoadingLookups] = useState(true);
   const [isAddTechOpen, setIsAddTechOpen] = useState(false);
+  const [isManagePresetsOpen, setIsManagePresetsOpen] = useState(false);
 
   // Form field states
   const [title, setTitle] = useState('');
@@ -27,7 +29,7 @@ export default function useNewProjectForm({ isOpen, onClose, onSuccess, projectT
   const [sitePhone, setSitePhone] = useState('');
   const [siteAddress, setSiteAddress] = useState('');
   const [technicianId, setTechnicianId] = useState('');
-  
+
   // Dynamic Services / Tasks array
   const [services, setServices] = useState([
     { id: 1, service_name: 'CCTV Camera Setup', quantity: 1, unit_rate: 1500, line_total: 1500, notes: '' }
@@ -41,6 +43,23 @@ export default function useNewProjectForm({ isOpen, onClose, onSuccess, projectT
   const [startDate, setStartDate] = useState(new Date().toISOString().split('T')[0]);
   const [deadline, setDeadline] = useState('');
   const [submitting, setSubmitting] = useState(false);
+
+  // Fetch service presets from backend (RULE 2)
+  const fetchServicePresets = useCallback(async () => {
+    try {
+      const res = await fetch(`${API}/projects/service-presets?active_only=true`);
+      if (res.ok) {
+        const json = await res.json();
+        if (json.success && Array.isArray(json.data)) {
+          setServicePresets(json.data);
+          return json.data;
+        }
+      }
+    } catch (err) {
+      console.error('Error fetching service presets:', err);
+    }
+    return null;
+  }, []);
 
   // Fetch technicians lookup from backend
   const fetchTechnicians = useCallback(async () => {
@@ -65,7 +84,8 @@ export default function useNewProjectForm({ isOpen, onClose, onSuccess, projectT
       setLoadingLookups(true);
       Promise.all([
         fetch(`${API}/projects/invoices-lookup`).catch(() => null),
-        fetchTechnicians()
+        fetchTechnicians(),
+        fetchServicePresets()
       ])
         .then(async ([invRes]) => {
           if (invRes && invRes.ok) {
@@ -332,9 +352,13 @@ export default function useNewProjectForm({ isOpen, onClose, onSuccess, projectT
     setProjectCategory,
     invoices,
     technicians,
+    servicePresets,
+    fetchServicePresets,
     loadingLookups,
     isAddTechOpen,
     setIsAddTechOpen,
+    isManagePresetsOpen,
+    setIsManagePresetsOpen,
     title,
     setTitle,
     projectType,

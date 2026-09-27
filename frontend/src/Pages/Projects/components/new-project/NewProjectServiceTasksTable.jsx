@@ -3,11 +3,17 @@ import { SERVICE_PRESETS } from '../../utils/projectHelpers';
 
 export default function NewProjectServiceTasksTable({
   services = [],
+  servicePresets = [],
   totalSetupFee = 0,
   onAddServiceRow,
   onUpdateServiceRow,
-  onRemoveServiceRow
+  onRemoveServiceRow,
+  onOpenManagePresets
 }) {
+  const activePresets = (servicePresets && servicePresets.length > 0)
+    ? servicePresets.map(p => ({ name: p.name, rate: p.default_rate }))
+    : SERVICE_PRESETS;
+
   return (
     <div style={{ background: '#f8fafc', border: '1px solid #e2e8f0', borderRadius: '12px', padding: '16px', marginBottom: '16px' }}>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px', flexWrap: 'wrap', gap: '8px' }}>
@@ -19,31 +25,55 @@ export default function NewProjectServiceTasksTable({
             Add multiple tasks (e.g. CCTV, Router, ONU, TV setup). Setup fee is dynamically summed.
           </span>
         </div>
-        <button
-          type="button"
-          onClick={() => onAddServiceRow('', 500)}
-          style={{
-            padding: '6px 12px',
-            borderRadius: '6px',
-            border: '1px solid #0284c7',
-            background: '#0284c7',
-            color: '#fff',
-            fontSize: '0.78rem',
-            fontWeight: 700,
-            cursor: 'pointer',
-            display: 'flex',
-            alignItems: 'center',
-            gap: '4px'
-          }}
-        >
-          <span>+</span> Add Service Row
-        </button>
+        <div style={{ display: 'flex', gap: '6px', alignItems: 'center' }}>
+          {onOpenManagePresets && (
+            <button
+              type="button"
+              onClick={onOpenManagePresets}
+              title="Manage Service Task Presets & Rates"
+              style={{
+                padding: '6px 10px',
+                borderRadius: '6px',
+                border: '1px solid #cbd5e1',
+                background: '#fff',
+                color: '#334155',
+                fontSize: '0.76rem',
+                fontWeight: 600,
+                cursor: 'pointer',
+                display: 'flex',
+                alignItems: 'center',
+                gap: '4px'
+              }}
+            >
+              <span>⚙️</span> Presets
+            </button>
+          )}
+          <button
+            type="button"
+            onClick={() => onAddServiceRow('', 500)}
+            style={{
+              padding: '6px 12px',
+              borderRadius: '6px',
+              border: '1px solid #0284c7',
+              background: '#0284c7',
+              color: '#fff',
+              fontSize: '0.78rem',
+              fontWeight: 700,
+              cursor: 'pointer',
+              display: 'flex',
+              alignItems: 'center',
+              gap: '4px'
+            }}
+          >
+            <span>+</span> Add Service Row
+          </button>
+        </div>
       </div>
 
-      {/* Quick Presets Bar */}
+      {/* Dynamic Quick Presets Bar (RULE 2) */}
       <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px', marginBottom: '12px', alignItems: 'center' }}>
         <span style={{ fontSize: '0.72rem', color: '#64748b', fontWeight: 600 }}>Quick Presets:</span>
-        {SERVICE_PRESETS.map((preset, idx) => (
+        {activePresets.map((preset, idx) => (
           <button
             key={idx}
             type="button"
@@ -56,8 +86,11 @@ export default function NewProjectServiceTasksTable({
               borderRadius: '12px',
               fontSize: '0.72rem',
               fontWeight: 600,
-              cursor: 'pointer'
+              cursor: 'pointer',
+              transition: 'all 0.15s ease'
             }}
+            onMouseEnter={(e) => { e.currentTarget.style.background = '#bae6fd'; }}
+            onMouseLeave={(e) => { e.currentTarget.style.background = '#e0f2fe'; }}
           >
             + {preset.name} (৳{preset.rate})
           </button>

@@ -9,6 +9,12 @@ router.get('/tech-wallets', projectController.getTechWallets);
 router.post('/tech-payout', projectController.payoutTechWallet);
 router.get('/tech-wallet-history/:wallet_id', projectController.getTechWalletHistory);
 
+// Service Presets CRUD routes (RULE 1)
+router.get('/service-presets', projectController.getServicePresets);
+router.post('/service-presets', projectController.createServicePreset);
+router.put('/service-presets/:id', projectController.updateServicePreset);
+router.delete('/service-presets/:id', projectController.deleteServicePreset);
+
 // Core CRUD and Workflow routes
 router.get('/', projectController.getProjects);
 router.get('/:id', projectController.getProjectById);

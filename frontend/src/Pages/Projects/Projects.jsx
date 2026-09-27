@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import useProjectsManager from './hooks/useProjectsManager';
 import ProjectsHeader from './components/ProjectsHeader';
 import ProjectsMetrics from './components/ProjectsMetrics';
@@ -10,8 +10,10 @@ import ProgressNoteModal from './modals/ProgressNoteModal';
 import NewProjectModal from './modals/NewProjectModal';
 import ProjectPrintModal from './modals/ProjectPrintModal';
 import TechWalletModal from './modals/TechWalletModal';
+import ManageServicePresetsModal from './modals/ManageServicePresetsModal';
 
 export default function Projects() {
+  const [isManagePresetsOpen, setIsManagePresetsOpen] = useState(false);
   const {
     loading,
     error,
@@ -55,6 +57,7 @@ export default function Projects() {
       <ProjectsHeader
         error={error}
         onOpenTechWallet={() => setIsTechWalletOpen(true)}
+        onOpenManagePresets={() => setIsManagePresetsOpen(true)}
         onOpenNewProject={() => {
           setEditingProject(null);
           setIsNewProjectOpen(true);
@@ -147,6 +150,12 @@ export default function Projects() {
         isOpen={isTechWalletOpen}
         onClose={() => setIsTechWalletOpen(false)}
         onRefreshProjects={loadData}
+      />
+
+      {/* Manage Service Presets Modal (RULE 3) */}
+      <ManageServicePresetsModal
+        isOpen={isManagePresetsOpen}
+        onClose={() => setIsManagePresetsOpen(false)}
       />
     </div>
   );
