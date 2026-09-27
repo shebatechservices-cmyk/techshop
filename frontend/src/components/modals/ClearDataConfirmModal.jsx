@@ -4,8 +4,6 @@ import API from '../../services/api';
 export default function ClearDataConfirmModal({ isOpen, onClose, onSuccess }) {
   const isDevelopment = import.meta.env?.DEV || (typeof process !== 'undefined' && process.env?.NODE_ENV === 'development');
 
-  if (!isOpen || !isDevelopment) return null;
-
   const [confirmPhrase, setConfirmPhrase] = useState('');
   const [backupFirst, setBackupFirst] = useState(true);
   const [resetShopToDummy, setResetShopToDummy] = useState(false);
@@ -13,6 +11,8 @@ export default function ClearDataConfirmModal({ isOpen, onClose, onSuccess }) {
   const [isProcessing, setIsProcessing] = useState(false);
   const [errorMsg, setErrorMsg] = useState('');
   const [successInfo, setSuccessInfo] = useState(null);
+
+  if (!isOpen || !isDevelopment) return null;
 
   const targetPhrase = 'CLEAR-DUMMY-DATA';
   const isPhraseMatched = confirmPhrase.trim().toUpperCase() === targetPhrase;

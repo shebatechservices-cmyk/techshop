@@ -23,6 +23,11 @@ export default function PurchasePrintModal({
 }) {
   const [mode, setMode] = useState('po'); // 'po' | 'chalan'
   const [shop, setShop] = useState({});
+  const [showShareModal, setShowShareModal] = useState(false);
+  const [selectedFormat, setSelectedFormat] = useState('pdf'); // 'pdf' | 'jpg'
+  const [shareLoading, setShareLoading] = useState(false);
+  const [shareStep, setShareStep] = useState('');
+  const [activeAction, setActiveAction] = useState(null);
 
   useEffect(() => {
     if (isOpen) {
@@ -81,12 +86,6 @@ export default function PurchasePrintModal({
   const totalPayable = previousDue + currentTotal;
   const totalPaid = Number(order.total_paid || payments.reduce((sum, p) => sum + Number(p.amount || 0), 0));
   const remainingDue = Math.max(0, totalPayable - totalPaid);
-
-  const [showShareModal, setShowShareModal] = useState(false);
-  const [selectedFormat, setSelectedFormat] = useState('pdf'); // 'pdf' | 'jpg'
-  const [shareLoading, setShareLoading] = useState(false);
-  const [shareStep, setShareStep] = useState('');
-  const [activeAction, setActiveAction] = useState(null);
 
   const handlePrint = () => {
     window.print();

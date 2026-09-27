@@ -21,6 +21,10 @@ export default function SalePrintModal({
   const [mode, setMode] = useState('invoice'); // 'invoice' | 'chalan'
   const [fetchedSettings, setFetchedSettings] = useState({});
   const [printTime, setPrintTime] = useState(() => new Date());
+  const [showShareModal, setShowShareModal] = useState(false);
+  const [shareLoading, setShareLoading] = useState(false);
+  const [selectedFormat, setSelectedFormat] = useState('pdf');
+  const [shareStep, setShareStep] = useState(null);
 
   useEffect(() => {
     if (isOpen) {
@@ -162,12 +166,6 @@ export default function SalePrintModal({
   const paymentTenders = Array.isArray(invoice.payments) ? invoice.payments : (
     Array.isArray(invoice.payment_tenders) ? invoice.payment_tenders : []
   );
-
-  // Sharing states
-  const [showShareModal, setShowShareModal] = useState(false);
-  const [shareLoading, setShareLoading] = useState(false);
-  const [selectedFormat, setSelectedFormat] = useState('pdf');
-  const [shareStep, setShareStep] = useState(null);
 
   const handlePrint = () => {
     window.print();
