@@ -45,6 +45,8 @@ export default function Projects() {
     handleDeleteProject,
     counts,
     filteredProjects,
+    editingProject,
+    setEditingProject,
   } = useProjectsManager();
 
   return (
@@ -53,7 +55,10 @@ export default function Projects() {
       <ProjectsHeader
         error={error}
         onOpenTechWallet={() => setIsTechWalletOpen(true)}
-        onOpenNewProject={() => setIsNewProjectOpen(true)}
+        onOpenNewProject={() => {
+          setEditingProject(null);
+          setIsNewProjectOpen(true);
+        }}
       />
 
       {/* Pipeline Stage Metrics */}
@@ -79,16 +84,23 @@ export default function Projects() {
         onInchargeConfirm={setInchargeConfirmProject}
         onAddProgress={setProgressProject}
         onComplete={handleCompleteProject}
+        onEdit={(p) => setEditingProject(p)}
         onPrint={setPrintProject}
         onDelete={handleDeleteProject}
       />
 
-      {/* New Project Modal */}
-      <NewProjectModal
-        isOpen={isNewProjectOpen}
-        onClose={() => setIsNewProjectOpen(false)}
-        onSuccess={loadData}
-      />
+      {/* New Project / Edit Work Order Modal */}
+      {(isNewProjectOpen || Boolean(editingProject)) && (
+        <NewProjectModal
+          isOpen={isNewProjectOpen || Boolean(editingProject)}
+          onClose={() => {
+            setIsNewProjectOpen(false);
+            setEditingProject(null);
+          }}
+          onSuccess={loadData}
+          projectToEdit={editingProject}
+        />
+      )}
 
       {/* Tech Response Modal */}
       {techPromptProject && (

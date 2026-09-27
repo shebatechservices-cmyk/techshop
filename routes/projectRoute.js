@@ -11,7 +11,9 @@ router.get('/tech-wallet-history/:wallet_id', projectController.getTechWalletHis
 
 // Core CRUD and Workflow routes
 router.get('/', projectController.getProjects);
+router.get('/:id', projectController.getProjectById);
 router.post('/', projectController.createProject);
+router.put('/:id', projectController.updateProject);
 router.put('/:id/technician-respond', projectController.technicianRespond);
 router.put('/:id/incharge-confirm', projectController.confirmByIncharge);
 router.put('/:id/progress', projectController.updateProgress);

@@ -7,6 +7,7 @@ export default function ProjectsTable({
   onInchargeConfirm,
   onAddProgress,
   onComplete,
+  onEdit,
   onPrint,
   onDelete,
 }) {
@@ -46,8 +47,8 @@ export default function ProjectsTable({
           </thead>
           <tbody className="divide-y divide-slate-100">
             {projects.map((p) => {
-              const setup = parseFloat(p.setup_charge || 0);
-              const conv = parseFloat(p.conveyance_cost || 0);
+              const setup = parseFloat(p.setup_fee || p.setup_charge || 0);
+              const conv = parseFloat(p.conveyance || p.conveyance_cost || 0);
               const meal = parseFloat(p.meal_allowance || 0);
               const totalTechPayout =
                 setup + conv + meal > 0
@@ -87,7 +88,21 @@ export default function ProjectsTable({
                         Invoice: <strong>{p.invoice_no}</strong>
                       </div>
                     )}
-                    {p.equipment_details &&
+                    
+                    {/* Dynamic Services Chips */}
+                    {p.services && Array.isArray(p.services) && p.services.length > 0 ? (
+                      <div className="mt-1 flex flex-wrap gap-1 max-w-xs">
+                        {p.services.map((srv, sIdx) => (
+                          <span
+                            key={sIdx}
+                            className="bg-sky-50 text-sky-800 border border-sky-200 px-1.5 py-0.5 rounded text-[10px] font-medium"
+                          >
+                            ⚡ {srv.service_name} (x{srv.quantity})
+                          </span>
+                        ))}
+                      </div>
+                    ) : (
+                      p.equipment_details &&
                       Array.isArray(p.equipment_details) &&
                       p.equipment_details.length > 0 && (
                         <div className="text-[11px] text-slate-500 mt-1 max-w-xs">
@@ -96,7 +111,8 @@ export default function ProjectsTable({
                             .map((it) => `${it.product_name} (${it.quantity})`)
                             .join(', ')}
                         </div>
-                      )}
+                      )
+                    )}
                   </td>
 
                   {/* Customer & Site */}
@@ -187,6 +203,19 @@ export default function ProjectsTable({
                   {/* Actions */}
                   <td className="py-3.5 px-3.5 align-top text-right">
                     <div className="flex flex-col gap-1.5 items-end">
+                      {/* Edit Work Order (Allowed before completion) */}
+                      {!isCompleted && onEdit && (
+                        <button
+                          type="button"
+                          onClick={() => onEdit(p)}
+                          className="px-2.5 py-1 bg-sky-50 hover:bg-sky-100 text-sky-800 border border-sky-300 rounded-md text-[11px] font-bold cursor-pointer whitespace-nowrap transition-colors flex items-center gap-1"
+                          title="Edit Work Order, Technician & Services"
+                        >
+                          <span>✏️</span>
+                          <span>Edit Work Order</span>
+                        </button>
+                      )}
+
                       {/* 1. If assigned: Technician Accept Prompt */}
                       {isAssigned && (
                         <button

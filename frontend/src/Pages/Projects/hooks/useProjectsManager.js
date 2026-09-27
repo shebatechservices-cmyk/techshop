@@ -216,6 +216,9 @@ export default function useProjectsManager() {
     });
   }, [projects, searchQuery, stageFilter]);
 
+  // Edit Project Modal State
+  const [editingProject, setEditingProject] = useState(null);
+
   return {
     projects,
     loading,
@@ -228,6 +231,8 @@ export default function useProjectsManager() {
     setIsNewProjectOpen,
     isTechWalletOpen,
     setIsTechWalletOpen,
+    editingProject,
+    setEditingProject,
     printProject,
     setPrintProject,
     techPromptProject,
