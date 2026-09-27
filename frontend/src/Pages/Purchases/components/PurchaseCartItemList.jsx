@@ -6,6 +6,21 @@ import {
   isProductSerialTracked,
 } from '../hooks/usePurchaseCart';
 
+const CameraIcon = ({ className = 'w-4 h-4' }) => (
+  <svg
+    className={className}
+    viewBox="0 0 24 24"
+    fill="none"
+    stroke="currentColor"
+    strokeWidth="2"
+    strokeLinecap="round"
+    strokeLinejoin="round"
+  >
+    <path d="M14.5 4h-5L7 7H4a2 2 0 0 0-2 2v9a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2h-3l-2.5-3z" />
+    <circle cx="12" cy="13" r="3" />
+  </svg>
+);
+
 function PurchaseCartItemRow({
   item,
   isExpanded,
@@ -19,6 +34,7 @@ function PurchaseCartItemRow({
   handleRemoveItem,
 }) {
   const [tempBarcode, setTempBarcode] = useState('');
+  const [isCameraScannerOpen, setIsCameraScannerOpen] = useState(false);
   const inputRef = useRef(null);
 
   const cost = money(item.cost_price);
@@ -454,22 +470,7 @@ function PurchaseCartItemRow({
                     </span>
                   )}
                 </div>
-                <div
-                  className={`flex items-center gap-1.5 rounded-lg py-0.5 pr-1 pl-2 ${
-                    barcodeScanErrors[item.localId] || barcodesList.length === 0
-                      ? 'border-2 border-rose-500 bg-rose-50'
-                      : 'border-[1.5px] border-emerald-500 bg-white'
-                  }`}
-                >
-                  <span
-                    className={`text-xs ${
-                      barcodeScanErrors[item.localId] || barcodesList.length === 0
-                        ? 'text-rose-500'
-                        : 'text-emerald-500'
-                    }`}
-                  >
-                    [ ]
-                  </span>
+                <div className="relative flex items-center w-full">
                   <input
                     ref={inputRef}
                     type="text"
@@ -484,27 +485,39 @@ function PurchaseCartItemRow({
                         onAdd(e);
                       }
                     }}
-                    placeholder={
-                      barcodesList.length > 0
-                        ? `Scan ${barcodesList[0].length}-digit barcode...`
-                        : '| Click here to scan / press Enter...'
-                    }
-                    className="flex-1 min-w-0 border-0 outline-none text-xs py-1.5 px-1 bg-transparent"
+                    placeholder="Scan or type barcode..."
+                    className={`w-full py-1.5 pl-3 pr-16 rounded-lg text-xs text-slate-800 placeholder:text-slate-400 focus:outline-none transition-all bg-white ${
+                      barcodeScanErrors[item.localId] || barcodesList.length === 0
+                        ? 'border-2 border-rose-400 focus:border-rose-500 focus:ring-1 focus:ring-rose-400'
+                        : 'border border-slate-300 focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500'
+                    }`}
                   />
-                  <button
-                    type="button"
-                    onClick={(e) => {
-                      e.preventDefault();
-                      e.stopPropagation();
-                      const currentInputValue = tempBarcode.trim();
-                      console.log('Triggered Add Barcode with value:', currentInputValue);
-                      onAdd(e);
-                    }}
-                    title="Add Serial / Barcode"
-                    className="w-7 h-7 bg-emerald-500 text-white border-0 rounded font-bold text-base cursor-pointer flex items-center justify-center leading-none hover:bg-emerald-600 transition-colors shrink-0"
-                  >
-                    +
-                  </button>
+                  
+                  <div className="absolute right-1.5 flex items-center gap-1">
+                    <button
+                      type="button"
+                      onClick={() => setIsCameraScannerOpen(true)}
+                      title="Open Camera Scanner"
+                      className="w-6 h-6 rounded flex items-center justify-center text-slate-500 hover:text-emerald-600 hover:bg-emerald-50 transition-colors cursor-pointer border-0 bg-transparent p-0"
+                    >
+                      <CameraIcon className="w-4 h-4" />
+                    </button>
+
+                    <button
+                      type="button"
+                      onClick={(e) => {
+                        e.preventDefault();
+                        e.stopPropagation();
+                        const currentInputValue = tempBarcode.trim();
+                        console.log('Triggered Add Barcode with value:', currentInputValue);
+                        onAdd(e);
+                      }}
+                      title="Add Serial / Barcode"
+                      className="w-6 h-6 bg-emerald-500 hover:bg-emerald-600 text-white rounded font-bold text-xs flex items-center justify-center border-0 cursor-pointer transition-colors"
+                    >
+                      +
+                    </button>
+                  </div>
                 </div>
                 {barcodeScanErrors[item.localId] && (
                   <div className="text-xs text-rose-600 mt-1 font-semibold truncate">
@@ -515,6 +528,45 @@ function PurchaseCartItemRow({
             )}
           </div>
         </div>
+
+        {/* Camera Barcode Scanner Modal Placeholder */}
+        {isCameraScannerOpen && (
+          <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-[10000] flex items-center justify-center p-4">
+            <div className="bg-white rounded-2xl max-w-md w-full p-6 shadow-2xl border border-slate-200">
+              <div className="flex justify-between items-center mb-4 pb-2 border-b border-slate-100">
+                <div className="flex items-center gap-2">
+                  <span className="text-xl">📷</span>
+                  <h3 className="font-extrabold text-base text-slate-900 m-0">Camera Barcode Scanner</h3>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => setIsCameraScannerOpen(false)}
+                  className="text-slate-400 hover:text-slate-600 text-lg border-0 bg-transparent cursor-pointer p-1"
+                >
+                  ✕
+                </button>
+              </div>
+              
+              <div className="bg-slate-900 rounded-xl aspect-video flex flex-col items-center justify-center text-slate-400 relative overflow-hidden border border-slate-800">
+                <div className="w-48 h-32 border-2 border-dashed border-emerald-400/80 rounded-lg flex items-center justify-center animate-pulse">
+                  <span className="text-xs text-emerald-300 font-semibold">Align Barcode within Frame</span>
+                </div>
+                <p className="text-[0.75rem] text-slate-400 mt-3 mb-0">Web / Mobile Camera Preview</p>
+              </div>
+
+              <div className="mt-4 flex justify-between items-center text-xs text-slate-500">
+                <span>Product: <strong className="text-slate-700">{displayName}</strong></span>
+                <button
+                  type="button"
+                  onClick={() => setIsCameraScannerOpen(false)}
+                  className="py-1.5 px-4 rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold cursor-pointer border-0 transition-colors"
+                >
+                  Close Scanner
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
 
         {/* Serial Chips */}
         {barcodesList.length > 0 && (

@@ -147,6 +147,21 @@ export default function PurchaseOrderModal(props) {
     savePurchase,
   } = usePurchaseCart(props);
 
+  React.useEffect(() => {
+    const handleOutsideClick = (e) => {
+      if (searchContainerRef?.current && !searchContainerRef.current.contains(e.target)) {
+        setIsSearchOpen(false);
+      }
+      if (supplierSelectRef?.current && !supplierSelectRef.current.contains(e.target)) {
+        setIsSupplierOpen(false);
+      }
+    };
+    document.addEventListener('mousedown', handleOutsideClick);
+    return () => {
+      document.removeEventListener('mousedown', handleOutsideClick);
+    };
+  }, [searchContainerRef, supplierSelectRef, setIsSearchOpen, setIsSupplierOpen]);
+
   return (
     <>
       <div className="fixed inset-0 bg-slate-900/70 backdrop-blur-sm z-[9999] flex items-center justify-center p-4">
