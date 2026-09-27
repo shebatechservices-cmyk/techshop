@@ -2,12 +2,14 @@ import React, { useState, useEffect } from 'react';
 import API from '../../../services/api';
 import BangladeshiPhoneInput from '../../../components/ui/BangladeshiPhoneInput';
 import { isValidBDPhone } from '../../../utils/phoneUtils';
+import AddTechnicianModal from './AddTechnicianModal';
 
 export default function NewProjectModal({ isOpen, onClose, onSuccess }) {
   const [projectCategory, setProjectCategory] = useState('new_setup'); // 'new_setup' | 'old_repair'
   const [invoices, setInvoices] = useState([]);
   const [technicians, setTechnicians] = useState([]);
   const [loadingLookups, setLoadingLookups] = useState(true);
+  const [isAddTechOpen, setIsAddTechOpen] = useState(false);
 
   // Form states
   const [title, setTitle] = useState('');
@@ -74,6 +76,24 @@ export default function NewProjectModal({ isOpen, onClose, onSuccess }) {
     } else {
       setSelectedInvoice(null);
     }
+  };
+
+  // Handle newly created technician from Quick Add modal
+  const handleTechAdded = (newTech) => {
+    if (!newTech) return;
+    const techObj = {
+      id: newTech.id,
+      name: newTech.name,
+      contact: newTech.phone || newTech.email || '',
+      role_title: newTech.role_name || newTech.designation || 'Technician',
+      designation: newTech.designation || 'Field Technician',
+      wallet_balance: 0
+    };
+    setTechnicians(prev => {
+      const exists = prev.some(t => String(t.id) === String(newTech.id));
+      return exists ? prev : [techObj, ...prev];
+    });
+    setTechnicianId(newTech.id);
   };
 
   const totalTechnicianPayout = Number(setupCharge || 0) + Number(conveyanceCost || 0) + Number(mealAllowance || 0);
@@ -442,9 +462,35 @@ export default function NewProjectModal({ isOpen, onClose, onSuccess }) {
             {/* SECTION 4: ASSIGN TECHNICIAN & SCHEDULE */}
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: '14px', marginBottom: '14px' }}>
               <div>
-                <label style={{ display: 'block', fontSize: '0.82rem', fontWeight: 600, color: '#334155', marginBottom: '4px' }}>
-                  Assign Technician *
-                </label>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '4px' }}>
+                  <label style={{ fontSize: '0.82rem', fontWeight: 600, color: '#334155' }}>
+                    Assign Technician *
+                  </label>
+                  <button
+                    type="button"
+                    onClick={() => setIsAddTechOpen(true)}
+                    style={{
+                      background: '#f0f9ff',
+                      border: '1px solid #bae6fd',
+                      borderRadius: '4px',
+                      padding: '2px 8px',
+                      fontSize: '0.75rem',
+                      fontWeight: 600,
+                      color: '#0284c7',
+                      cursor: 'pointer',
+                      display: 'inline-flex',
+                      alignItems: 'center',
+                      gap: '3px',
+                      transition: 'all 0.15s ease'
+                    }}
+                    onMouseEnter={(e) => { e.currentTarget.style.background = '#e0f2fe'; }}
+                    onMouseLeave={(e) => { e.currentTarget.style.background = '#f0f9ff'; }}
+                    title="Quick register a new staff member with technician role"
+                  >
+                    <span>➕</span>
+                    <span>Add Technician</span>
+                  </button>
+                </div>
                 <select
                   value={technicianId}
                   onChange={(e) => setTechnicianId(e.target.value)}
@@ -528,6 +574,13 @@ export default function NewProjectModal({ isOpen, onClose, onSuccess }) {
           </form>
         </div>
       </div>
+
+      {/* Quick Add Technician Modal */}
+      <AddTechnicianModal
+        isOpen={isAddTechOpen}
+        onClose={() => setIsAddTechOpen(false)}
+        onSuccess={handleTechAdded}
+      />
     </div>
   );
 }

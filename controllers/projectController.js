@@ -43,29 +43,32 @@ exports.getInvoicesLookup = async (req, res) => {
     }
 };
 
-// ২. উপলব্ধ টেকনিশিয়ানদের তালিকা
+// ২. উপলব্ধ টেকনিশিয়ানদের তালিকা (শুধুমাত্র অ্যাক্টিভ স্টাফ/ইউজার যাদের টেকনিশিয়ান রোল রয়েছে)
 exports.getTechniciansLookup = async (req, res) => {
     try {
         const query = `
             SELECT 
-                'user' AS tech_source,
                 u.id,
                 u.name,
-                u.email AS contact,
-                r.name AS role_title
+                COALESCE(u.phone, u.email, '') AS phone,
+                COALESCE(u.phone, u.email, '') AS contact,
+                u.email,
+                COALESCE(r.name, u.role_name, u.designation, 'Technician') AS role_title,
+                COALESCE(u.designation, 'Field Technician') AS designation,
+                COALESCE(u.wallet_balance, 0) AS wallet_balance
             FROM users u
-            JOIN roles r ON r.id = u.role_id
-            WHERE r.id = 4 OR r.name ILIKE '%technician%'
-            UNION ALL
-            SELECT 
-                'customer' AS tech_source,
-                c.id,
-                c.name,
-                c.phone AS contact,
-                'External Technician' AS role_title
-            FROM customers c
-            WHERE c.customer_type = 'technician' OR c.user_role = 'technician'
-            ORDER BY name ASC;
+            LEFT JOIN roles r ON r.id = u.role_id
+            WHERE u.deleted_at IS NULL
+              AND (u.is_active IS NOT FALSE AND u.is_locked IS NOT TRUE)
+              AND (
+                  UPPER(COALESCE(u.role, '')) = 'TECHNICIAN'
+                  OR u.role_id = 4
+                  OR COALESCE(u.role_name, '') ILIKE '%technician%'
+                  OR COALESCE(r.name, '') ILIKE '%technician%'
+                  OR COALESCE(u.designation, '') ILIKE '%technician%'
+                  OR COALESCE(u.designation, '') ILIKE '%tech%'
+              )
+            ORDER BY u.name ASC;
         `;
         const result = await pool.query(query);
         return res.status(200).json({ success: true, data: result.rows });
@@ -346,16 +349,11 @@ exports.completeProject = async (req, res) => {
         const totalPayout = setupCharge + conveyance + meal > 0 ? (setupCharge + conveyance + meal) : parseFloat(project.charges || 0);
 
         if (project.technician_id && totalPayout > 0) {
-            // ১. টেকনিশিয়ানের নাম সংগ্রহ (customers বা users টেবিল থেকে)
+            // ১. টেকনিশিয়ানের নাম সংগ্রহ (users টেবিল থেকে - কঠোর এনটিটি বিভাজন)
             let techName = 'Technician';
-            const techCust = await client.query('SELECT name FROM customers WHERE id = $1', [project.technician_id]);
-            if (techCust.rows.length > 0) {
-                techName = techCust.rows[0].name;
-            } else {
-                const techUser = await client.query('SELECT name FROM users WHERE id = $1', [project.technician_id]);
-                if (techUser.rows.length > 0) {
-                    techName = techUser.rows[0].name;
-                }
+            const techUser = await client.query('SELECT name FROM users WHERE id = $1', [project.technician_id]);
+            if (techUser.rows.length > 0) {
+                techName = techUser.rows[0].name;
             }
 
             // ২. ক্যাশ ড্রয়ার (বা প্রধান ক্যাশ অ্যাকাউন্ট) থেকে টাকা কর্তন (Debit / Expense)
@@ -434,13 +432,12 @@ exports.getProjects = async (req, res) => {
                 COALESCE(c.name, 'Walking / Direct Client') AS customer_name,
                 c.phone AS customer_phone,
                 c.address AS customer_base_address,
-                COALESCE(u.name, tech_cust.name, 'Unassigned') AS technician_name,
-                COALESCE(u.email, tech_cust.phone, '') AS technician_contact,
+                COALESCE(u.name, 'Unassigned') AS technician_name,
+                COALESCE(u.phone, u.email, '') AS technician_contact,
                 conf_user.name AS confirmed_by_name
             FROM service_projects p
             LEFT JOIN customers c ON p.customer_id = c.id
-            LEFT JOIN users u ON p.technician_id = u.id AND (u.role_id = 4 OR u.role_id = 3)
-            LEFT JOIN customers tech_cust ON p.technician_id = tech_cust.id AND (tech_cust.customer_type = 'technician' OR tech_cust.user_role = 'technician')
+            LEFT JOIN users u ON p.technician_id = u.id
             LEFT JOIN users conf_user ON p.confirmed_by = conf_user.id
             WHERE p.deleted_at IS NULL
             ORDER BY p.id DESC;
@@ -511,11 +508,23 @@ exports.getTechWallets = async (req, res) => {
                     WHERE at.account_id = pa.id AND at.type = 'withdraw'
                 ), 0) AS total_withdrawn
             FROM (
-                SELECT id AS tech_id, name AS tech_name, 'user' AS tech_source, email AS contact
-                FROM users WHERE role_id = 4 OR name ILIKE '%technician%'
-                UNION ALL
-                SELECT id AS tech_id, name AS tech_name, 'customer' AS tech_source, phone AS contact
-                FROM customers WHERE customer_type = 'technician' OR user_role = 'technician'
+                SELECT 
+                    u.id AS tech_id, 
+                    u.name AS tech_name, 
+                    'user' AS tech_source, 
+                    COALESCE(u.phone, u.email, '') AS contact
+                FROM users u
+                LEFT JOIN roles r ON r.id = u.role_id
+                WHERE u.deleted_at IS NULL
+                  AND (u.is_active IS NOT FALSE AND u.is_locked IS NOT TRUE)
+                  AND (
+                      UPPER(COALESCE(u.role, '')) = 'TECHNICIAN'
+                      OR u.role_id = 4
+                      OR COALESCE(u.role_name, '') ILIKE '%technician%'
+                      OR COALESCE(r.name, '') ILIKE '%technician%'
+                      OR COALESCE(u.designation, '') ILIKE '%technician%'
+                      OR COALESCE(u.designation, '') ILIKE '%tech%'
+                  )
             ) t
             LEFT JOIN payment_accounts pa ON pa.name = ('Tech Wallet: ' || t.tech_name) AND pa.account_type = 'wallet'
             ORDER BY balance DESC, tech_name ASC;
