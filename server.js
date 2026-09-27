@@ -209,6 +209,7 @@ app.use((req, res, next) => {
     if (req.method === 'GET') {
         const indexPath = path.join(__dirname, 'frontend/dist/index.html');
         if (fs.existsSync(indexPath)) {
+            res.setHeader('Cache-Control', 'no-cache, no-store, must-revalidate');
             return res.sendFile(indexPath);
         }
         return res.status(404).send('Frontend build not found. Please build the frontend application.');
