@@ -323,9 +323,35 @@ const getAll = async (req, res) => {
                 if (!bundleMap[row.bundle_id]) bundleMap[row.bundle_id] = [];
                 bundleMap[row.bundle_id].push(row);
             }
+
+            // Fetch available (in-stock) serial numbers for products
+            const serialsRes = await pool.query(`
+                SELECT 
+                    poi.product_id,
+                    ARRAY_AGG(pos.serial_code ORDER BY pos.id ASC) AS available_serials
+                FROM purchase_order_serials pos
+                JOIN purchase_order_items poi ON poi.id = pos.purchase_order_item_id
+                JOIN purchase_orders po ON po.id = poi.purchase_order_id
+                WHERE po.deleted_at IS NULL
+                  AND NOT EXISTS (
+                      SELECT 1 
+                      FROM sales_item_serials sis 
+                      JOIN sales_items si ON si.id = sis.sales_item_id
+                      LEFT JOIN sales s ON s.id = si.sale_id
+                      WHERE LOWER(TRIM(sis.serial_code)) = LOWER(TRIM(pos.serial_code))
+                        AND (s.id IS NULL OR s.deleted_at IS NULL)
+                  )
+                GROUP BY poi.product_id;
+            `).catch(() => ({ rows: [] }));
+            const serialsMap = {};
+            for (const row of serialsRes.rows) {
+                serialsMap[row.product_id] = row.available_serials || [];
+            }
+
             const rows = result.rows.map((row) => {
                 const p = formatProductResponse(row);
                 p.bundle_items = bundleMap[row.id] || [];
+                p.available_serials = serialsMap[row.id] || [];
                 if (p.is_bundle) {
                     if (p.bundle_items.length > 0) {
                         const maxKits = Math.min(

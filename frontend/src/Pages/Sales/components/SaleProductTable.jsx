@@ -82,6 +82,9 @@ export default function SaleProductTable({
                 <div className="pl-1.5">
                   <div className="font-bold text-slate-800 text-xs leading-snug flex items-center gap-1.5 flex-wrap">
                     <span>{it.full_name || it.name}</span>
+                    <span className="text-[0.66rem] font-bold py-px px-1.5 rounded text-emerald-700 bg-emerald-50 border border-emerald-200">
+                      Stock: {it.stock || 0}
+                    </span>
                     {it.is_bundle && (
                       <span className="text-[0.66rem] font-extrabold py-px px-1.5 rounded text-purple-700 bg-purple-100 border border-purple-200">
                         🎁 Bundle Kit
@@ -94,6 +97,11 @@ export default function SaleProductTable({
                           : 'text-indigo-600 bg-indigo-50 border-0'
                       }`}>
                         {isSerialMissing ? '⚠️ Serial Required' : 'Serial Tracked'}
+                      </span>
+                    )}
+                    {isTracked && it.available_serials && (
+                      <span className="text-[0.66rem] text-sky-700 bg-sky-50 border border-sky-200 py-px px-1.5 rounded font-semibold">
+                        {it.available_serials.length} Available
                       </span>
                     )}
                     {it.is_warranty_required && isWarrantyMissing && (
@@ -211,11 +219,17 @@ export default function SaleProductTable({
                       <input
                         type="number"
                         min="0.01"
+                        max={it.stock || 99999}
                         step="any"
                         value={it.quantity !== undefined ? it.quantity : 1}
                         onChange={(e) => {
                           const val = parseFloat(e.target.value);
-                          updateItem(it.localId, { quantity: isNaN(val) ? '' : val });
+                          const maxStock = Number(it.stock || 0);
+                          if (!isNaN(val) && maxStock > 0 && val > maxStock) {
+                            updateItem(it.localId, { quantity: maxStock });
+                          } else {
+                            updateItem(it.localId, { quantity: isNaN(val) ? '' : val });
+                          }
                         }}
                         className="w-20 py-1.5 px-2 rounded-md border border-slate-300 text-center text-xs font-bold text-slate-800 outline-none bg-white focus:border-sky-500 focus:ring-1 focus:ring-sky-500"
                       />

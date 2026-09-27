@@ -27,9 +27,21 @@ const mockRes = () => {
 
 // Build a pool mock where client.query dispatches per SQL pattern.
 const setupClient = (handlers = {}) => {
+    const defaultHandlers = {
+        'FROM products': (text, params) => {
+            const id = params && params[0] ? params[0] : 5;
+            return { rows: [{ id, name: 'Test Product', stock: 100, is_serial_tracked: false, is_bundle: false }] };
+        },
+        'FROM payment_accounts': () => ({ rows: [{ id: 1 }] }),
+    };
     const runQuery = (text, params) => {
         if (/nextval/.test(text)) return Promise.resolve({ rows: [{ seq: 1001 }] });
         for (const [pattern, handler] of Object.entries(handlers)) {
+            if (new RegExp(pattern).test(text)) {
+                return Promise.resolve(handler(text, params));
+            }
+        }
+        for (const [pattern, handler] of Object.entries(defaultHandlers)) {
             if (new RegExp(pattern).test(text)) {
                 return Promise.resolve(handler(text, params));
             }
@@ -74,7 +86,6 @@ describe('createSale', () => {
         const client = setupClient({
             'INSERT INTO sales [(]': () => ({ rows: [{ id: 77, invoice_no: 'INV-20250101-1001' }] }),
             'INSERT INTO sales_items': () => ({ rows: [{ id: 900 }] }),
-            '^SELECT id, is_serial_tracked': () => ({ rows: [{ id: 5, is_serial_tracked: false }] }),
             'FROM payment_accounts': () => ({ rows: [{ id: 1 }] }),
         });
         const res = mockRes();
@@ -88,7 +99,7 @@ describe('createSale', () => {
 
     test('serial-missing failure: tracked product without serial returns 400 and rolls back', async () => {
         const client = setupClient({
-            '^SELECT id, is_serial_tracked': () => ({ rows: [{ id: 5, is_serial_tracked: true }] }),
+            'FROM products': () => ({ rows: [{ id: 5, name: 'Tracked Product', stock: 10, is_serial_tracked: true, is_bundle: false }] }),
         });
         const body = validSaleBody();
         body.items = [{ product_id: 5, quantity: 1, unit_price: 500, serials: [] }];
@@ -98,7 +109,7 @@ describe('createSale', () => {
         expect(res.status).toHaveBeenCalledWith(400);
         expect(res.json).toHaveBeenCalledWith(expect.objectContaining({
             success: false,
-            message: expect.stringContaining('serial/barcode-tracked'),
+            message: expect.stringMatching(/serial.*tracked/),
         }));
         expect(client.query).toHaveBeenCalledWith('ROLLBACK');
         expect(client.query).not.toHaveBeenCalledWith('COMMIT');
@@ -106,7 +117,6 @@ describe('createSale', () => {
 
     test('wallet-insufficient failure: throws, rolls back and returns 500', async () => {
         setupClient({
-            '^SELECT id, is_serial_tracked': () => ({ rows: [{ id: 5, is_serial_tracked: false }] }),
             'INSERT INTO sales [(]': () => ({ rows: [{ id: 78 }] }),
             'SELECT wallet_balance': () => ({ rows: [{ wallet_balance: 10 }] }), // far below tender
             'FROM payment_accounts': () => ({ rows: [{ id: 1 }] }),
@@ -121,6 +131,72 @@ describe('createSale', () => {
             success: false,
             message: expect.stringContaining('insufficient balance'),
         }));
+    });
+
+    test('out-of-stock failure: ordering quantity exceeding stock returns 400 and rolls back', async () => {
+        const client = setupClient({
+            'FROM products': () => ({
+                rows: [{ id: 5, name: 'Test Cam', stock: 1, is_serial_tracked: false, is_bundle: false }],
+            }),
+        });
+        const body = validSaleBody();
+        body.items = [{ product_id: 5, quantity: 5, unit_price: 500 }];
+        const res = mockRes();
+        await sales.createSale({ body }, res);
+
+        expect(res.status).toHaveBeenCalledWith(400);
+        expect(res.json).toHaveBeenCalledWith(expect.objectContaining({
+            success: false,
+            message: expect.stringContaining('Insufficient stock'),
+        }));
+        expect(client.query).toHaveBeenCalledWith('ROLLBACK');
+    });
+
+    test('phantom serial failure: non-existent serial returns 400 and rolls back', async () => {
+        const client = setupClient({
+            'FROM products': () => ({
+                rows: [{ id: 5, name: 'Tracked Cam', stock: 5, is_serial_tracked: true, is_bundle: false }],
+            }),
+            'purchase_order_serials': () => ({
+                rows: [], // serial does not exist in PO inventory
+            }),
+        });
+        const body = validSaleBody();
+        body.items = [{ product_id: 5, quantity: 1, unit_price: 500, serials: ['PHANTOM-99'] }];
+        const res = mockRes();
+        await sales.createSale({ body }, res);
+
+        expect(res.status).toHaveBeenCalledWith(400);
+        expect(res.json).toHaveBeenCalledWith(expect.objectContaining({
+            success: false,
+            message: expect.stringContaining('does not exist in inventory'),
+        }));
+        expect(client.query).toHaveBeenCalledWith('ROLLBACK');
+    });
+
+    test('already sold serial failure: serial sold previously returns 400 and rolls back', async () => {
+        const client = setupClient({
+            'FROM products': () => ({
+                rows: [{ id: 5, name: 'Tracked Cam', stock: 5, is_serial_tracked: true, is_bundle: false }],
+            }),
+            'purchase_order_serials': () => ({
+                rows: [{ id: 1, serial_code: 'SN-100' }],
+            }),
+            'sales_item_serials': () => ({
+                rows: [{ invoice_no: 'INV-OLD-01', sale_id: 10 }], // already sold!
+            }),
+        });
+        const body = validSaleBody();
+        body.items = [{ product_id: 5, quantity: 1, unit_price: 500, serials: ['SN-100'] }];
+        const res = mockRes();
+        await sales.createSale({ body }, res);
+
+        expect(res.status).toHaveBeenCalledWith(400);
+        expect(res.json).toHaveBeenCalledWith(expect.objectContaining({
+            success: false,
+            message: expect.stringContaining('has already been sold in Invoice #INV-OLD-01'),
+        }));
+        expect(client.query).toHaveBeenCalledWith('ROLLBACK');
     });
 });
 
@@ -233,7 +309,7 @@ describe('updateSale', () => {
         const client = setupClient({
             'SELECT \\* FROM sales WHERE': () => ({ rows: [existingSale()] }),
             'SELECT \\* FROM sales_items WHERE': () => ({ rows: [{ product_id: 5, quantity: 2 }] }),
-            'SELECT id, is_serial_tracked': () => ({ rows: [{ id: 5, is_serial_tracked: true }] }),
+            'FROM products': () => ({ rows: [{ id: 5, name: 'Tracked Product', stock: 10, is_serial_tracked: true, is_bundle: false }] }),
         });
         const res = mockRes();
         await sales.updateSale(
@@ -244,7 +320,7 @@ describe('updateSale', () => {
         expect(res.status).toHaveBeenCalledWith(400);
         expect(res.json).toHaveBeenCalledWith(expect.objectContaining({
             success: false,
-            message: expect.stringContaining('serial/barcode-tracked'),
+            message: expect.stringMatching(/serial.*tracked/),
         }));
         expect(client.query).toHaveBeenCalledWith('ROLLBACK');
         expect(client.query).not.toHaveBeenCalledWith('COMMIT');
@@ -367,7 +443,6 @@ describe('createExchangeSale', () => {
         const client = setupClient({
             'INSERT INTO sales [(]': () => ({ rows: [{ id: 88, invoice_no: 'INV-EXC-20260101-1001' }] }),
             'INSERT INTO sales_items': () => ({ rows: [{ id: 950 }] }),
-            '^SELECT id, is_serial_tracked': () => ({ rows: [{ id: 12, is_serial_tracked: false }] }),
             'FROM payment_accounts': () => ({ rows: [{ id: 1 }] }),
         });
 
@@ -398,7 +473,7 @@ describe('createExchangeSale', () => {
 
     test('serial-missing on new replacement item returns 400 and rolls back', async () => {
         const client = setupClient({
-            '^SELECT id, is_serial_tracked': () => ({ rows: [{ id: 15, is_serial_tracked: true }] }),
+            'FROM products': () => ({ rows: [{ id: 15, name: 'Replacement Cam', stock: 10, is_serial_tracked: true, is_bundle: false }] }),
         });
 
         const body = {

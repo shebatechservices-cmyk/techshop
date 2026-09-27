@@ -5,6 +5,7 @@ const {
     ensureSalesColumns,
     formatProductFullName,
     normalizeAndValidateItems,
+    validateAvailableStockAndSerials,
     applySaleTender,
     reverseSaleTender,
     validateSaleDeletable,
@@ -60,6 +61,9 @@ exports.createSale = async (req, res) => {
                 message: `"${missing.name || 'Product'}" is serial/barcode-tracked — attach at least one barcode/serial before saving.`,
             });
         }
+
+        // RULE 1: Strict available stock & serial database verification
+        await validateAvailableStockAndSerials(client, normalizedItems);
 
         const subtotal = rawSubtotal !== undefined ? money(rawSubtotal) : calculatedSubtotal;
         const discount = money(rawDiscount);
@@ -325,7 +329,7 @@ exports.createSale = async (req, res) => {
     } catch (error) {
         await client.query('ROLLBACK');
         console.error('Create sale error:', error);
-        return res.status(500).json({ success: false, message: error.message || 'Failed to create sale' });
+        return res.status(error.status || 500).json({ success: false, message: error.message || 'Failed to create sale', error: error.message });
     } finally {
         client.release();
     }
@@ -636,6 +640,9 @@ exports.updateSale = async (req, res) => {
                 message: `"${missing.name || 'Product'}" is serial/barcode-tracked — attach at least one barcode/serial before saving.`,
             });
         }
+
+        // RULE 1: Strict available stock & serial database verification
+        await validateAvailableStockAndSerials(client, normalizedItems, id);
         const subtotal = rawSubtotal !== undefined ? money(rawSubtotal) : calculatedSubtotal;
         const discount = money(rawDiscount);
         const vat = money(rawVat);
@@ -866,6 +873,6 @@ exports.updateSale = async (req, res) => {
         await client.query('ROLLBACK').catch(() => null);
         client.release();
         console.error('Update sale error:', error);
-        return res.status(500).json({ success: false, message: error.message || 'Failed to update sale' });
+        return res.status(error.status || 500).json({ success: false, message: error.message || 'Failed to update sale', error: error.message });
     }
 };

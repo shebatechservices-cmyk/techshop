@@ -198,6 +198,7 @@ export default function useSaleItemCart({ products = [], setError = () => {} }) 
       full_name: fullName,
       brand_name: prod.brand_name || '',
       stock: Number(prod.stock || 0),
+      available_serials: Array.isArray(prod.available_serials) ? prod.available_serials : [],
       quantity: isTracked ? startSerials.length : 1,
       unit_price: activePrice,
       cost_price:
@@ -264,7 +265,21 @@ export default function useSaleItemCart({ products = [], setError = () => {} }) 
 
   const updateItem = (localId, patch) => {
     setItems((prev) =>
-      prev.map((it) => (it.localId === localId ? { ...it, ...patch } : it))
+      prev.map((it) => {
+        if (it.localId !== localId) return it;
+        let safePatch = { ...patch };
+        if (safePatch.quantity !== undefined && safePatch.quantity !== '') {
+          const maxStock = Number(it.stock || 0);
+          const numQty = Number(safePatch.quantity);
+          if (numQty > maxStock) {
+            safePatch.quantity = maxStock;
+            if (setError) setError(`Cannot exceed available stock (${maxStock}) for "${it.name}".`);
+          } else if (numQty <= 0) {
+            safePatch.quantity = 1;
+          }
+        }
+        return { ...it, ...safePatch };
+      })
     );
   };
 
@@ -292,12 +307,14 @@ export default function useSaleItemCart({ products = [], setError = () => {} }) 
       return;
     }
 
-    // 2. Check for exact primary barcode or SKU match
+    // 2. Check for exact primary barcode, SKU, or serial number match
     const exact = (products || []).find(
       (p) =>
         Number(p.stock || 0) > 0 &&
         ((p.barcode && p.barcode.toLowerCase() === lowerQ) ||
-          (p.sku && p.sku.toLowerCase() === lowerQ))
+          (p.sku && p.sku.toLowerCase() === lowerQ) ||
+          (Array.isArray(p.available_serials) &&
+            p.available_serials.some((s) => String(s).trim().toLowerCase() === lowerQ)))
     );
     if (exact) {
       addProduct(exact, q, 'base_unit');
@@ -350,6 +367,14 @@ export default function useSaleItemCart({ products = [], setError = () => {} }) 
     const targetItem = items.find((it) => it.localId === localId);
     if (!targetItem) return;
 
+    const isTracked = isProductSerialTracked(targetItem);
+    const availableStock = Number(targetItem.stock || 0);
+    const currentSerials = targetItem.serials || [];
+
+    const availableSerialsList = Array.isArray(targetItem.available_serials)
+      ? targetItem.available_serials.map((s) => String(s).trim().toLowerCase())
+      : null;
+
     const existingMap = new Map();
     items.forEach((it) => {
       (it.serials || []).forEach((s) => existingMap.set(s.toLowerCase(), it.name));
@@ -357,9 +382,17 @@ export default function useSaleItemCart({ products = [], setError = () => {} }) 
 
     const toAdd = [];
     const duplicates = [];
+    const notFoundSerials = [];
 
     candidates.forEach((code) => {
       const lower = code.toLowerCase();
+
+      // RULE 2: Validate against available serials in inventory if serial-tracked
+      if (isTracked && availableSerialsList && !availableSerialsList.includes(lower)) {
+        notFoundSerials.push(code);
+        return;
+      }
+
       if (existingMap.has(lower) || toAdd.some((c) => c.toLowerCase() === lower)) {
         duplicates.push(code);
       } else {
@@ -368,25 +401,43 @@ export default function useSaleItemCart({ products = [], setError = () => {} }) 
       }
     });
 
+    // If phantom / invalid serial scanned:
+    if (notFoundSerials.length > 0) {
+      setBarcodeInput('');
+      const msg = `Error: Serial "${notFoundSerials.join(', ')}" not found in inventory`;
+      setBarcodeError((prev) => ({ ...prev, [localId]: msg }));
+      if (setError) setError(msg);
+      return;
+    }
+
     if (duplicates.length > 0) {
-      setBarcodeError((prev) => ({
-        ...prev,
-        [localId]: `Duplicate barcode rejected: ${duplicates.join(', ')}`,
-      }));
-    } else {
-      setBarcodeError((prev) => ({ ...prev, [localId]: '' }));
+      setBarcodeInput('');
+      const msg = `Duplicate barcode rejected: ${duplicates.join(', ')}`;
+      setBarcodeError((prev) => ({ ...prev, [localId]: msg }));
+      if (setError) setError(msg);
+      return;
+    }
+
+    // RULE 3: Ensure total QTY cannot exceed available stock count
+    if (currentSerials.length + toAdd.length > availableStock) {
+      setBarcodeInput('');
+      const msg = `Cannot exceed available stock (${availableStock}) for "${targetItem.name}".`;
+      setBarcodeError((prev) => ({ ...prev, [localId]: msg }));
+      if (setError) setError(msg);
+      return;
     }
 
     if (toAdd.length > 0) {
-      const newSerials = [...(targetItem.serials || []), ...toAdd];
-      const newQty = targetItem.is_serial_tracked
+      const newSerials = [...currentSerials, ...toAdd];
+      const newQty = isTracked
         ? newSerials.length
-        : Math.max(Number(targetItem.quantity || 1), newSerials.length);
+        : Math.min(availableStock, Math.max(Number(targetItem.quantity || 1), newSerials.length));
       updateItem(localId, {
         serials: newSerials,
         quantity: newQty,
       });
       setBarcodeInput('');
+      setBarcodeError((prev) => ({ ...prev, [localId]: '' }));
     }
   };
 

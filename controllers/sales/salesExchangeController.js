@@ -5,6 +5,7 @@ const {
     formatProductFullName,
     normalizeSaleItems,
     validateSerialTracking,
+    validateAvailableStockAndSerials,
     getDrawerAccountId,
     depositToDrawer,
     reverseCashFromDrawer,
@@ -101,6 +102,9 @@ exports.createExchangeSale = async (req, res) => {
                 message: `"${missingSerial.full_name || missingSerial.name || 'Product'}" is serial-tracked — attach at least one serial number.`
             });
         }
+
+        // RULE 1: Strict available stock & serial database verification
+        await validateAvailableStockAndSerials(client, normalizedItems);
 
         // 3. Financial calculations for Exchange
         const newSubtotal = calculatedSubtotal;
@@ -270,7 +274,7 @@ exports.createExchangeSale = async (req, res) => {
     } catch (error) {
         await client.query('ROLLBACK').catch(() => null);
         console.error('Create exchange sale error:', error);
-        return res.status(500).json({ success: false, message: error.message || 'Failed to process exchange' });
+        return res.status(error.status || 500).json({ success: false, message: error.message || 'Failed to process exchange', error: error.message });
     } finally {
         client.release();
     }

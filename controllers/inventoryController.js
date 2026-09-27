@@ -297,9 +297,10 @@ exports.getProductWarranty = async (req, res) => {
             JOIN purchase_orders po ON po.id = poi.purchase_order_id
             JOIN products p ON p.id = poi.product_id
             LEFT JOIN suppliers sup ON sup.id = po.supplier_id
-            LEFT JOIN sales_item_serials sis ON sis.serial_code = pos.serial_code
+            LEFT JOIN sales_item_serials sis ON LOWER(TRIM(sis.serial_code)) = LOWER(TRIM(pos.serial_code))
             LEFT JOIN sales_items si_item ON si_item.id = sis.sales_item_id
-            LEFT JOIN sales_invoices si ON si.id = si_item.sales_invoice_id
+            LEFT JOIN sales si ON si.id = si_item.sale_id AND si.deleted_at IS NULL
+            LEFT JOIN sales_invoices sinv ON sinv.id = si_item.sales_invoice_id
             WHERE poi.product_id = $1
               AND po.deleted_at IS NULL
             ORDER BY pos.id DESC
