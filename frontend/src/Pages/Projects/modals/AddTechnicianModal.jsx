@@ -4,16 +4,78 @@ import BangladeshiPhoneInput from '../../../components/ui/BangladeshiPhoneInput'
 import { isValidBDPhone } from '../../../utils/phoneUtils';
 
 export default function AddTechnicianModal({ isOpen, onClose, onSuccess }) {
+  // Form field states
   const [name, setName] = useState('');
   const [phone, setPhone] = useState('');
   const [email, setEmail] = useState('');
+  const [address, setAddress] = useState('');
   const [password, setPassword] = useState('123456');
   const [designation, setDesignation] = useState('Field Technician');
   const [loading, setLoading] = useState(false);
   const [errorMsg, setErrorMsg] = useState('');
 
+  // Customer search & lookup states
+  const [searchPhone, setSearchPhone] = useState('');
+  const [searchingCustomer, setSearchingCustomer] = useState(false);
+  const [customerResults, setCustomerResults] = useState([]);
+  const [searched, setSearched] = useState(false);
+  const [importedCustomer, setImportedCustomer] = useState(null);
+
   if (!isOpen) return null;
 
+  // RULE 1: Customer Lookup by phone or search keyword
+  const handleSearchCustomer = async (e) => {
+    if (e) e.preventDefault();
+    const query = searchPhone.trim();
+    if (!query) return;
+
+    try {
+      setSearchingCustomer(true);
+      setErrorMsg('');
+      const res = await fetch(`${API}/sales/customers?phone=${encodeURIComponent(query)}`);
+      if (res.ok) {
+        const json = await res.json();
+        if (json.success) {
+          setCustomerResults(json.data || []);
+        } else {
+          setCustomerResults([]);
+        }
+      } else {
+        setCustomerResults([]);
+      }
+    } catch (err) {
+      console.error('Error searching customer:', err);
+      setErrorMsg('Failed to search customer database');
+    } finally {
+      setSearchingCustomer(false);
+      setSearched(true);
+    }
+  };
+
+  // RULE 2: Auto-fill customer details into staff form
+  const handleAutoFillCustomer = (cust) => {
+    if (!cust) return;
+    setName(cust.name || '');
+    
+    // Normalize phone for BangladeshiPhoneInput (strip +880 or leading 0 if needed)
+    let p = cust.phone || '';
+    if (p.startsWith('+880')) p = p.slice(4);
+    else if (p.startsWith('880')) p = p.slice(3);
+    else if (p.startsWith('0')) p = p.slice(1);
+    setPhone(p);
+
+    setAddress(cust.address || '');
+    if (cust.email) setEmail(cust.email);
+    setImportedCustomer(cust);
+    setCustomerResults([]);
+    setSearched(false);
+  };
+
+  const handleClearImport = () => {
+    setImportedCustomer(null);
+  };
+
+  // RULE 3: Strict Data Integrity & Distinct users (Staff) payload
   const handleSubmit = async (e) => {
     e.preventDefault();
     setErrorMsg('');
@@ -47,6 +109,7 @@ export default function AddTechnicianModal({ isOpen, onClose, onSuccess }) {
           name: name.trim(),
           phone: phone.trim() || undefined,
           email: email.trim() || undefined,
+          address: address.trim() || undefined,
           password: password.trim(),
           role: 'TECHNICIAN',
           role_id: 4,
@@ -64,9 +127,11 @@ export default function AddTechnicianModal({ isOpen, onClose, onSuccess }) {
       setName('');
       setPhone('');
       setEmail('');
+      setAddress('');
       setPassword('123456');
       setDesignation('Field Technician');
       setErrorMsg('');
+      setImportedCustomer(null);
 
       if (onSuccess) {
         onSuccess(data.data);
@@ -94,7 +159,8 @@ export default function AddTechnicianModal({ isOpen, onClose, onSuccess }) {
         alignItems: 'center',
         justifyContent: 'center',
         zIndex: 1000,
-        padding: '16px'
+        padding: '16px',
+        overflowY: 'auto'
       }}
       onClick={(e) => {
         if (e.target === e.currentTarget) onClose();
@@ -105,12 +171,14 @@ export default function AddTechnicianModal({ isOpen, onClose, onSuccess }) {
           background: '#ffffff',
           borderRadius: '16px',
           width: '100%',
-          maxWidth: '480px',
+          maxWidth: '520px',
           boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.25)',
           overflow: 'hidden',
           display: 'flex',
           flexDirection: 'column',
-          animation: 'fadeIn 0.2s ease-out'
+          animation: 'fadeIn 0.2s ease-out',
+          margin: 'auto',
+          maxHeight: '94vh'
         }}
         onClick={(e) => e.stopPropagation()}
       >
@@ -158,7 +226,7 @@ export default function AddTechnicianModal({ isOpen, onClose, onSuccess }) {
         </div>
 
         {/* Modal Body / Form */}
-        <form onSubmit={handleSubmit} style={{ padding: '20px' }}>
+        <div style={{ padding: '20px', overflowY: 'auto' }}>
           {errorMsg && (
             <div
               style={{
@@ -179,70 +247,170 @@ export default function AddTechnicianModal({ isOpen, onClose, onSuccess }) {
             </div>
           )}
 
-          {/* Name */}
-          <div style={{ marginBottom: '14px' }}>
-            <label style={{ display: 'block', fontSize: '0.82rem', fontWeight: 600, color: '#334155', marginBottom: '4px' }}>
-              Technician Full Name *
-            </label>
-            <input
-              type="text"
-              required
-              placeholder="e.g. Md. Sohel Rana"
-              value={name}
-              onChange={(e) => setName(e.target.value)}
-              style={{
-                width: '100%',
-                padding: '8px 12px',
-                borderRadius: '6px',
-                border: '1px solid #cbd5e1',
-                fontSize: '0.85rem',
-                boxSizing: 'border-box'
-              }}
-            />
+          {/* RULE 1 & 2: Search from Existing Customers (Auto-fill section) */}
+          <div
+            style={{
+              background: '#f8fafc',
+              border: '1px solid #e2e8f0',
+              borderRadius: '12px',
+              padding: '12px 14px',
+              marginBottom: '18px'
+            }}
+          >
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '8px' }}>
+              <label style={{ fontSize: '0.8rem', fontWeight: 700, color: '#334155', display: 'flex', alignItems: 'center', gap: '6px' }}>
+                <span>🔍</span> Search from Existing Customers
+              </label>
+              <span style={{ fontSize: '0.72rem', color: '#64748b' }}>
+                Auto-fill details without re-typing
+              </span>
+            </div>
+
+            <div style={{ display: 'flex', gap: '8px' }}>
+              <input
+                type="text"
+                placeholder="Enter customer phone number..."
+                value={searchPhone}
+                onChange={(e) => setSearchPhone(e.target.value)}
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter') {
+                    e.preventDefault();
+                    handleSearchCustomer();
+                  }
+                }}
+                style={{
+                  flex: 1,
+                  padding: '7px 12px',
+                  borderRadius: '8px',
+                  border: '1px solid #cbd5e1',
+                  fontSize: '0.82rem',
+                  background: '#fff'
+                }}
+              />
+              <button
+                type="button"
+                onClick={handleSearchCustomer}
+                disabled={searchingCustomer || !searchPhone.trim()}
+                style={{
+                  padding: '7px 14px',
+                  borderRadius: '8px',
+                  border: 'none',
+                  background: '#0284c7',
+                  color: '#fff',
+                  fontSize: '0.8rem',
+                  fontWeight: 600,
+                  cursor: (searchingCustomer || !searchPhone.trim()) ? 'not-allowed' : 'pointer',
+                  whiteSpace: 'nowrap'
+                }}
+              >
+                {searchingCustomer ? 'Searching...' : 'Search'}
+              </button>
+            </div>
+
+            {/* Search Results List */}
+            {searched && customerResults.length > 0 && (
+              <div style={{ marginTop: '10px', borderTop: '1px dashed #cbd5e1', paddingTop: '8px', display: 'flex', flexDirection: 'column', gap: '6px' }}>
+                <span style={{ fontSize: '0.72rem', fontWeight: 600, color: '#475569' }}>
+                  Matching Customers ({customerResults.length}):
+                </span>
+                {customerResults.map((cust) => (
+                  <div
+                    key={cust.id}
+                    style={{
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'space-between',
+                      background: '#ffffff',
+                      border: '1px solid #bfdbfe',
+                      padding: '8px 10px',
+                      borderRadius: '8px'
+                    }}
+                  >
+                    <div>
+                      <div style={{ fontSize: '0.82rem', fontWeight: 700, color: '#0f172a' }}>
+                        {cust.name}
+                      </div>
+                      <div style={{ fontSize: '0.74rem', color: '#64748b' }}>
+                        📞 {cust.phone} {cust.address ? `• 📍 ${cust.address}` : ''}
+                      </div>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() => handleAutoFillCustomer(cust)}
+                      style={{
+                        padding: '4px 10px',
+                        background: '#e0f2fe',
+                        border: '1px solid #7dd3fc',
+                        borderRadius: '6px',
+                        color: '#0369a1',
+                        fontSize: '0.75rem',
+                        fontWeight: 700,
+                        cursor: 'pointer'
+                      }}
+                    >
+                      ⚡ Auto-fill
+                    </button>
+                  </div>
+                ))}
+              </div>
+            )}
+
+            {searched && customerResults.length === 0 && (
+              <div style={{ marginTop: '8px', fontSize: '0.75rem', color: '#94a3b8', textAlign: 'center' }}>
+                No customer found with phone &quot;{searchPhone}&quot;. You can manually type below.
+              </div>
+            )}
+
+            {/* Active Auto-fill Alert Banner */}
+            {importedCustomer && (
+              <div
+                style={{
+                  marginTop: '10px',
+                  background: '#ecfdf5',
+                  border: '1px solid #a7f3d0',
+                  borderRadius: '8px',
+                  padding: '8px 10px',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'space-between',
+                  fontSize: '0.76rem',
+                  color: '#065f46'
+                }}
+              >
+                <span>
+                  ✓ Auto-filled from Customer: <strong>{importedCustomer.name}</strong> ({importedCustomer.phone})
+                </span>
+                <button
+                  type="button"
+                  onClick={handleClearImport}
+                  style={{
+                    background: 'none',
+                    border: 'none',
+                    color: '#059669',
+                    fontWeight: 700,
+                    cursor: 'pointer',
+                    fontSize: '0.72rem'
+                  }}
+                >
+                  Clear
+                </button>
+              </div>
+            )}
           </div>
 
-          {/* Phone Input with Bangladesh prefix */}
-          <div style={{ marginBottom: '14px' }}>
-            <BangladeshiPhoneInput
-              label="Phone Number *"
-              placeholder="1X-XXXXXXXX"
-              value={phone}
-              onChange={(e) => setPhone(e.target.value)}
-            />
-          </div>
-
-          {/* Email / Username */}
-          <div style={{ marginBottom: '14px' }}>
-            <label style={{ display: 'block', fontSize: '0.82rem', fontWeight: 600, color: '#334155', marginBottom: '4px' }}>
-              Email / Login ID <span style={{ fontSize: '0.75rem', color: '#64748b' }}>(Optional)</span>
-            </label>
-            <input
-              type="email"
-              placeholder="sohel.tech@example.com"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              style={{
-                width: '100%',
-                padding: '8px 12px',
-                borderRadius: '6px',
-                border: '1px solid #cbd5e1',
-                fontSize: '0.85rem',
-                boxSizing: 'border-box'
-              }}
-            />
-          </div>
-
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px', marginBottom: '16px' }}>
-            {/* Password */}
-            <div>
+          {/* Registration Form */}
+          <form onSubmit={handleSubmit}>
+            {/* Name */}
+            <div style={{ marginBottom: '14px' }}>
               <label style={{ display: 'block', fontSize: '0.82rem', fontWeight: 600, color: '#334155', marginBottom: '4px' }}>
-                Default Password *
+                Technician Full Name *
               </label>
               <input
                 type="text"
                 required
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
+                placeholder="e.g. Md. Sohel Rana"
+                value={name}
+                onChange={(e) => setName(e.target.value)}
                 style={{
                   width: '100%',
                   padding: '8px 12px',
@@ -254,15 +422,26 @@ export default function AddTechnicianModal({ isOpen, onClose, onSuccess }) {
               />
             </div>
 
-            {/* Designation */}
-            <div>
+            {/* Phone Input with Bangladesh prefix */}
+            <div style={{ marginBottom: '14px' }}>
+              <BangladeshiPhoneInput
+                label="Phone Number *"
+                placeholder="1X-XXXXXXXX"
+                value={phone}
+                onChange={(e) => setPhone(e.target.value)}
+              />
+            </div>
+
+            {/* Address */}
+            <div style={{ marginBottom: '14px' }}>
               <label style={{ display: 'block', fontSize: '0.82rem', fontWeight: 600, color: '#334155', marginBottom: '4px' }}>
-                Designation
+                Address / Work Location
               </label>
               <input
                 type="text"
-                value={designation}
-                onChange={(e) => setDesignation(e.target.value)}
+                placeholder="e.g. House 12, Road 4, Sector 7, Uttara"
+                value={address}
+                onChange={(e) => setAddress(e.target.value)}
                 style={{
                   width: '100%',
                   padding: '8px 12px',
@@ -273,67 +452,131 @@ export default function AddTechnicianModal({ isOpen, onClose, onSuccess }) {
                 }}
               />
             </div>
-          </div>
 
-          {/* Role Pill Indicator */}
-          <div
-            style={{
-              background: '#f0fdf4',
-              border: '1px solid #bbf7d0',
-              borderRadius: '8px',
-              padding: '8px 12px',
-              fontSize: '0.78rem',
-              color: '#166534',
-              display: 'flex',
-              alignItems: 'center',
-              gap: '6px',
-              marginBottom: '20px'
-            }}
-          >
-            <span>🛡️</span>
-            <span>Assigned Role: <strong>Field Technician (Staff Role ID: 4)</strong></span>
-          </div>
+            {/* Email / Username */}
+            <div style={{ marginBottom: '14px' }}>
+              <label style={{ display: 'block', fontSize: '0.82rem', fontWeight: 600, color: '#334155', marginBottom: '4px' }}>
+                Email / Login ID <span style={{ fontSize: '0.75rem', color: '#64748b' }}>(Optional)</span>
+              </label>
+              <input
+                type="email"
+                placeholder="sohel.tech@example.com"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                style={{
+                  width: '100%',
+                  padding: '8px 12px',
+                  borderRadius: '6px',
+                  border: '1px solid #cbd5e1',
+                  fontSize: '0.85rem',
+                  boxSizing: 'border-box'
+                }}
+              />
+            </div>
 
-          {/* Action Buttons */}
-          <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '10px' }}>
-            <button
-              type="button"
-              onClick={onClose}
-              disabled={loading}
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px', marginBottom: '16px' }}>
+              {/* Password */}
+              <div>
+                <label style={{ display: 'block', fontSize: '0.82rem', fontWeight: 600, color: '#334155', marginBottom: '4px' }}>
+                  Default Password *
+                </label>
+                <input
+                  type="text"
+                  required
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  style={{
+                    width: '100%',
+                    padding: '8px 12px',
+                    borderRadius: '6px',
+                    border: '1px solid #cbd5e1',
+                    fontSize: '0.85rem',
+                    boxSizing: 'border-box'
+                  }}
+                />
+              </div>
+
+              {/* Designation */}
+              <div>
+                <label style={{ display: 'block', fontSize: '0.82rem', fontWeight: 600, color: '#334155', marginBottom: '4px' }}>
+                  Designation
+                </label>
+                <input
+                  type="text"
+                  value={designation}
+                  onChange={(e) => setDesignation(e.target.value)}
+                  style={{
+                    width: '100%',
+                    padding: '8px 12px',
+                    borderRadius: '6px',
+                    border: '1px solid #cbd5e1',
+                    fontSize: '0.85rem',
+                    boxSizing: 'border-box'
+                  }}
+                />
+              </div>
+            </div>
+
+            {/* Role Pill Indicator */}
+            <div
               style={{
-                padding: '8px 16px',
+                background: '#f0fdf4',
+                border: '1px solid #bbf7d0',
                 borderRadius: '8px',
-                border: '1px solid #cbd5e1',
-                background: '#ffffff',
-                color: '#475569',
-                fontSize: '0.85rem',
-                fontWeight: 600,
-                cursor: 'pointer'
-              }}
-            >
-              Cancel
-            </button>
-            <button
-              type="submit"
-              disabled={loading}
-              style={{
-                padding: '8px 20px',
-                borderRadius: '8px',
-                border: 'none',
-                background: loading ? '#93c5fd' : '#0284c7',
-                color: '#ffffff',
-                fontSize: '0.85rem',
-                fontWeight: 600,
-                cursor: loading ? 'not-allowed' : 'pointer',
+                padding: '8px 12px',
+                fontSize: '0.78rem',
+                color: '#166534',
                 display: 'flex',
                 alignItems: 'center',
-                gap: '6px'
+                gap: '6px',
+                marginBottom: '20px'
               }}
             >
-              {loading ? 'Creating...' : '✓ Add Technician'}
-            </button>
-          </div>
-        </form>
+              <span>🛡️</span>
+              <span>Assigned Role: <strong>Field Technician (Staff Role ID: 4)</strong></span>
+            </div>
+
+            {/* Action Buttons */}
+            <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '10px' }}>
+              <button
+                type="button"
+                onClick={onClose}
+                disabled={loading}
+                style={{
+                  padding: '8px 16px',
+                  borderRadius: '8px',
+                  border: '1px solid #cbd5e1',
+                  background: '#ffffff',
+                  color: '#475569',
+                  fontSize: '0.85rem',
+                  fontWeight: 600,
+                  cursor: 'pointer'
+                }}
+              >
+                Cancel
+              </button>
+              <button
+                type="submit"
+                disabled={loading}
+                style={{
+                  padding: '8px 20px',
+                  borderRadius: '8px',
+                  border: 'none',
+                  background: loading ? '#93c5fd' : '#0284c7',
+                  color: '#ffffff',
+                  fontSize: '0.85rem',
+                  fontWeight: 600,
+                  cursor: loading ? 'not-allowed' : 'pointer',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '6px'
+                }}
+              >
+                {loading ? 'Creating...' : '✓ Add Technician'}
+              </button>
+            </div>
+          </form>
+        </div>
       </div>
     </div>
   );

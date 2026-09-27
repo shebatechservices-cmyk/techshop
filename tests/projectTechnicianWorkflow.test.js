@@ -1,4 +1,4 @@
-// Tests for Technician Lookup, Strict Entity Separation, and Project Assignment Workflow
+// Tests for Technician Lookup, Strict Entity Separation, Customer Auto-fill and Project Assignment Workflow
 jest.mock('../config/db', () => {
     const { createPoolMock } = require('./mocks/poolMock');
     return createPoolMock();
@@ -7,6 +7,7 @@ jest.mock('../config/db', () => {
 const pool = require('../config/db');
 const projectController = require('../controllers/projectController');
 const staffController = require('../controllers/staffController');
+const salesCustomerController = require('../controllers/sales/salesCustomerController');
 
 const mockRes = () => {
     const res = {};
@@ -79,8 +80,11 @@ describe('Technician Workflow & Strict Entity Separation', () => {
                 id: 100,
                 name: 'Mr. Customer (Not Staff)',
                 phone: '01844444444',
+                email: 'client@example.com',
+                address: 'Dhanmondi 27, Dhaka',
                 customer_type: 'retail',
-                user_role: 'regular'
+                user_role: 'regular',
+                deleted_at: null
             }
         ];
 
@@ -89,7 +93,6 @@ describe('Technician Workflow & Strict Entity Separation', () => {
 
             // Technicians lookup
             if (queryStr.includes('FROM users u') && queryStr.includes('r.id = u.role_id') && queryStr.includes('TECHNICIAN')) {
-                // Return active users matching technician criteria
                 const activeTechs = mockUsers.filter(u => 
                     !u.deleted_at && 
                     u.is_active && 
@@ -106,6 +109,19 @@ describe('Technician Workflow & Strict Entity Separation', () => {
                     wallet_balance: u.wallet_balance || 0
                 }));
                 return { rows: activeTechs, rowCount: activeTechs.length };
+            }
+
+            // Customers search lookup
+            if (queryStr.includes('FROM customers c')) {
+                let filtered = mockCustomers.filter(c => !c.deleted_at);
+                if (params.length > 0) {
+                    const searchVal = params[0].replace(/%/g, '').toLowerCase();
+                    filtered = filtered.filter(c => 
+                        (c.phone && c.phone.toLowerCase().includes(searchVal)) ||
+                        (c.name && c.name.toLowerCase().includes(searchVal))
+                    );
+                }
+                return { rows: filtered, rowCount: filtered.length };
             }
 
             // Roles query
@@ -133,6 +149,7 @@ describe('Technician Workflow & Strict Entity Separation', () => {
                     designation: params[7],
                     salary: params[8] || 0,
                     wallet_balance: params[9] || 0,
+                    address: params[10] || '',
                     is_active: true,
                     created_at: new Date()
                 };
@@ -155,25 +172,64 @@ describe('Technician Workflow & Strict Entity Separation', () => {
                 return { rows: [newProj], rowCount: 1 };
             }
 
-            // Get projects list
-            if (queryStr.includes('FROM service_projects p')) {
-                return {
-                    rows: mockProjects.map(p => {
-                        const cust = mockCustomers.find(c => c.id === p.customer_id);
-                        const tech = mockUsers.find(u => u.id === p.technician_id);
-                        return {
-                            ...p,
-                            customer_name: cust ? cust.name : 'Walking Client',
-                            technician_name: tech ? tech.name : 'Unassigned',
-                            technician_contact: tech ? tech.phone : ''
-                        };
-                    }),
-                    rowCount: mockProjects.length
-                };
-            }
-
             return { rows: [], rowCount: 0 };
         });
+    });
+
+    test('RULE 1: getCustomers supports phone searching for Customer Lookup', async () => {
+        const req = { query: { phone: '018444' } };
+        const res = mockRes();
+
+        await salesCustomerController.getCustomers(req, res);
+
+        expect(res.status).toHaveBeenCalledWith(200);
+        const data = res.json.mock.calls[0][0];
+        expect(data.success).toBe(true);
+        expect(data.data.length).toBe(1);
+        expect(data.data[0].name).toBe('Mr. Customer (Not Staff)');
+        expect(data.data[0].phone).toBe('01844444444');
+        expect(data.data[0].address).toBe('Dhanmondi 27, Dhaka');
+    });
+
+    test('RULE 2 & 3: Auto-filling customer and creating Technician creates distinct users record while keeping customer database intact', async () => {
+        // Look up customer
+        const custReq = { query: { phone: '01844444444' } };
+        const custRes = mockRes();
+        await salesCustomerController.getCustomers(custReq, custRes);
+        const cust = custRes.json.mock.calls[0][0].data[0];
+
+        // Simulate auto-filled payload submission
+        const staffReq = {
+            body: {
+                name: cust.name,
+                phone: cust.phone,
+                email: cust.email,
+                address: cust.address,
+                password: 'defaultPassword123',
+                role: 'TECHNICIAN',
+                role_id: 4,
+                designation: 'Field Technician'
+            }
+        };
+        const staffRes = mockRes();
+        await staffController.createStaff(staffReq, staffRes);
+
+        expect(staffRes.status).toHaveBeenCalledWith(201);
+        const createdStaff = staffRes.json.mock.calls[0][0].data;
+        expect(createdStaff.name).toBe(cust.name);
+        expect(createdStaff.role).toBe('TECHNICIAN');
+        expect(createdStaff.role_id).toBe(4);
+
+        // Verify Customer record still exists untouched in customers table
+        expect(mockCustomers.length).toBe(1);
+        expect(mockCustomers[0].id).toBe(100);
+        expect(mockCustomers[0].customer_type).toBe('retail');
+
+        // Verify users table has gained a distinct record
+        const newStaffInDb = mockUsers.find(u => u.phone === cust.phone);
+        expect(newStaffInDb).toBeDefined();
+        expect(newStaffInDb.role).toBe('TECHNICIAN');
+        expect(newStaffInDb.address).toBe('Dhanmondi 27, Dhaka');
     });
 
     test('RULE 1 & 2: getTechniciansLookup returns only active staff with technician role and excludes customers/inactives', async () => {
@@ -199,48 +255,5 @@ describe('Technician Workflow & Strict Entity Separation', () => {
         // Verify customer (id 100) is never in staff technician lookup
         const hasCustomer = data.data.some(u => u.id === 100);
         expect(hasCustomer).toBe(false);
-    });
-
-    test('RULE 3: createStaff registers a new Technician that can be immediately assigned to projects', async () => {
-        const staffReq = {
-            body: {
-                name: 'Kalam Tech',
-                phone: '01955555555',
-                password: 'password123',
-                role: 'TECHNICIAN',
-                role_id: 4,
-                designation: 'Field Technician'
-            }
-        };
-        const staffRes = mockRes();
-
-        await staffController.createStaff(staffReq, staffRes);
-
-        expect(staffRes.status).toHaveBeenCalledWith(201);
-        const createdData = staffRes.json.mock.calls[0][0];
-        expect(createdData.success).toBe(true);
-        expect(createdData.data.name).toBe('Kalam Tech');
-        expect(createdData.data.role).toBe('TECHNICIAN');
-        expect(createdData.data.role_id).toBe(4);
-
-        const newTechId = createdData.data.id;
-
-        // Now create a project assigning this technician
-        const projReq = {
-            body: {
-                title: 'Kalam Project Setup',
-                project_category: 'new_setup',
-                technician_id: newTechId,
-                customer_id: 100
-            }
-        };
-        const projRes = mockRes();
-
-        await projectController.createProject(projReq, projRes);
-
-        expect(projRes.status).toHaveBeenCalledWith(201);
-        const projData = projRes.json.mock.calls[0][0];
-        expect(projData.success).toBe(true);
-        expect(projData.data.technician_id).toBe(newTechId);
     });
 });

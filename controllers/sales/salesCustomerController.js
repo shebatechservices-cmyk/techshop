@@ -6,16 +6,32 @@ const { money, ensureSalesColumns } = require('./salesHelpers');
 // CUSTOMER MANAGEMENT
 // ==========================================================
 
-exports.getCustomers = async (_req, res) => {
+exports.getCustomers = async (req, res) => {
     try {
-        const result = await pool.query(
-            `SELECT c.*,
-                    COALESCE((SELECT COUNT(*) FROM sales WHERE customer_id = c.id AND deleted_at IS NULL), 0) AS total_sales_count,
-                    COALESCE((SELECT SUM(total_amount) FROM sales WHERE customer_id = c.id AND deleted_at IS NULL), 0) AS total_purchased_amount
-             FROM customers c
-             WHERE c.deleted_at IS NULL
-             ORDER BY c.id DESC;`
-        );
+        const { search, phone } = req.query || {};
+        let query = `
+            SELECT c.*,
+                   COALESCE((SELECT COUNT(*) FROM sales WHERE customer_id = c.id AND deleted_at IS NULL), 0) AS total_sales_count,
+                   COALESCE((SELECT SUM(total_amount) FROM sales WHERE customer_id = c.id AND deleted_at IS NULL), 0) AS total_purchased_amount
+            FROM customers c
+            WHERE c.deleted_at IS NULL
+        `;
+        const params = [];
+
+        if (phone && phone.trim()) {
+            params.push(`%${phone.trim()}%`);
+            query += ` AND c.phone ILIKE $${params.length}`;
+        } else if (search && search.trim()) {
+            params.push(`%${search.trim()}%`);
+            query += ` AND (c.name ILIKE $${params.length} OR c.phone ILIKE $${params.length} OR c.email ILIKE $${params.length})`;
+        }
+
+        query += ` ORDER BY c.id DESC`;
+        if (params.length > 0) {
+            query += ` LIMIT 30`;
+        }
+
+        const result = await pool.query(query, params);
         return res.status(200).json({ success: true, data: result.rows });
     } catch (error) {
         console.error('Get customers error:', error);
