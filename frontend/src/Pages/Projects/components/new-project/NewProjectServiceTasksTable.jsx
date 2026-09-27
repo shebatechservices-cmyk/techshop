@@ -108,7 +108,7 @@ export default function NewProjectServiceTasksTable({
                   />
                 </td>
                 <td style={{ padding: '6px 10px', fontWeight: 700, color: '#0284c7' }}>
-                  ৳ {Number(s.line_total || 0).toLocaleString('en-BD')}
+                  ৳ {((parseFloat(s.quantity) || 0) * (parseFloat(s.unit_rate) || 0)).toLocaleString('en-BD')}
                 </td>
                 <td style={{ padding: '6px 10px', textAlign: 'center' }}>
                   <button

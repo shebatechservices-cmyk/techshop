@@ -60,32 +60,39 @@ export function formatToE164Phone(digits) {
 }
 
 /**
- * Calculates sum of dynamic service task line totals.
- * @param {Array<{ line_total: number }>} services 
+ * Calculates sum of dynamic service task line totals derived dynamically by summing (qty * rate).
+ * @param {Array<{ quantity: number|string, unit_rate: number|string, line_total?: number }>} services 
  * @returns {number}
  */
 export function calculateServicesTotal(services = []) {
   if (!Array.isArray(services)) return 0;
-  return services.reduce((acc, s) => acc + (Number(s.line_total) || 0), 0);
+  return services.reduce((acc, s) => {
+    const qty = parseFloat(s.quantity) || 0;
+    const rate = parseFloat(s.unit_rate) || 0;
+    return acc + (qty * rate);
+  }, 0);
 }
 
 /**
  * Calculates total quantity of devices/tasks in the service list.
- * @param {Array<{ quantity: number }>} services 
+ * @param {Array<{ quantity: number|string }>} services 
  * @returns {number}
  */
 export function calculateTotalDeviceCount(services = []) {
   if (!Array.isArray(services)) return 0;
-  return services.reduce((acc, s) => acc + (Number(s.quantity) || 0), 0);
+  return services.reduce((acc, s) => acc + (parseFloat(s.quantity) || 0), 0);
 }
 
 /**
- * Calculates total technician payout (Services Total + Conveyance + Meal Allowance).
- * @param {number} totalSetupFee 
- * @param {number} conveyance 
- * @param {number} mealAllowance 
+ * Calculates total technician payout (Services Total + Conveyance + Meal Allowance) with strict numeric type conversion.
+ * @param {number|string} totalSetupFee 
+ * @param {number|string} conveyance 
+ * @param {number|string} mealAllowance 
  * @returns {number}
  */
 export function calculateTotalTechnicianPayout(totalSetupFee = 0, conveyance = 0, mealAllowance = 0) {
-  return Number(totalSetupFee || 0) + Number(conveyance || 0) + Number(mealAllowance || 0);
+  const fee = parseFloat(totalSetupFee) || 0;
+  const conv = parseFloat(conveyance) || 0;
+  const meal = parseFloat(mealAllowance) || 0;
+  return fee + conv + meal;
 }

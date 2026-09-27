@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useMemo } from 'react';
 import API from '../../../services/api';
 import {
   cleanSitePhone,
@@ -244,10 +244,13 @@ export default function useNewProjectForm({ isOpen, onClose, onSuccess, projectT
     }
   };
 
-  // Calculated values
-  const totalSetupFee = calculateServicesTotal(services);
-  const totalDeviceCount = calculateTotalDeviceCount(services);
-  const totalTechnicianPayout = calculateTotalTechnicianPayout(totalSetupFee, conveyanceCost, mealAllowance);
+  // Calculated values derived dynamically in real-time
+  const totalSetupFee = useMemo(() => calculateServicesTotal(services), [services]);
+  const totalDeviceCount = useMemo(() => calculateTotalDeviceCount(services), [services]);
+  const totalTechnicianPayout = useMemo(
+    () => calculateTotalTechnicianPayout(totalSetupFee, conveyanceCost, mealAllowance),
+    [totalSetupFee, conveyanceCost, mealAllowance]
+  );
 
   // Form submit handler
   const handleSubmit = async (e) => {

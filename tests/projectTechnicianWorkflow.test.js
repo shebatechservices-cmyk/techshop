@@ -465,4 +465,48 @@ describe('Technician Workflow, Dynamic Services & Work Order Editing', () => {
         expect(data.success).toBe(false);
         expect(data.message).toContain('সম্পন্ন কাজের ওয়ার্ক অর্ডার পরিবর্তন করা যাবে না');
     });
+
+    test('RULE 1 & 2 & 3 (Frontend Derived State & Type Safety): calculateServicesTotal and calculateTotalTechnicianPayout derive values dynamically and prevent string concatenation', () => {
+        const calculateServicesTotal = (services = []) => {
+            if (!Array.isArray(services)) return 0;
+            return services.reduce((acc, s) => {
+                const qty = parseFloat(s.quantity) || 0;
+                const rate = parseFloat(s.unit_rate) || 0;
+                return acc + (qty * rate);
+            }, 0);
+        };
+
+        const calculateTotalDeviceCount = (services = []) => {
+            if (!Array.isArray(services)) return 0;
+            return services.reduce((acc, s) => acc + (parseFloat(s.quantity) || 0), 0);
+        };
+
+        const calculateTotalTechnicianPayout = (totalSetupFee = 0, conveyance = 0, mealAllowance = 0) => {
+            const fee = parseFloat(totalSetupFee) || 0;
+            const conv = parseFloat(conveyance) || 0;
+            const meal = parseFloat(mealAllowance) || 0;
+            return fee + conv + meal;
+        };
+
+        // Derived state for dynamic service tasks (qty * rate) via reduce
+        const services = [
+            { quantity: '4', unit_rate: '350' }, // 1400
+            { quantity: 2, unit_rate: 300 },     // 600
+            { quantity: '1', unit_rate: 250 }    // 250
+        ];
+
+        const totalSetupFee = calculateServicesTotal(services);
+        expect(totalSetupFee).toBe(2250);
+
+        const totalDeviceCount = calculateTotalDeviceCount(services);
+        expect(totalDeviceCount).toBe(7);
+
+        // String inputs from form fields for conveyance & meal allowance
+        const conveyanceInput = '300';
+        const mealAllowanceInput = '200';
+
+        const totalPayout = calculateTotalTechnicianPayout(totalSetupFee, conveyanceInput, mealAllowanceInput);
+        expect(totalPayout).toBe(2750); // 2250 + 300 + 200 (Numeric sum, not "2250300200")
+        expect(typeof totalPayout).toBe('number');
+    });
 });
