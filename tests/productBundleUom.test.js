@@ -5,6 +5,7 @@ jest.mock('../config/db', () => {
 
 const pool = require('../config/db');
 const productController = require('../controllers/productController');
+const uomController = require('../controllers/uomController');
 
 const mockRes = () => {
     const res = {};
@@ -357,5 +358,130 @@ describe('Product Bundle and UoM Features', () => {
         expect(data.sub_unit_name).toBe('Feet');
         expect(data.conversion_rate).toBe(1000);
         expect(data.sub_unit_selling_price).toBe(3.5);
+    });
+
+    test('RULE 1 & 3: uomController supports full CRUD with fractional flag and delete protection', async () => {
+        const mockUoms = [
+            { id: 1, name: 'Piece', code: 'PCS', is_fractional_allowed: false, is_active: true },
+            { id: 2, name: 'Meter', code: 'MTR', is_fractional_allowed: true, is_active: true },
+            { id: 3, name: 'Archived Unit', code: 'ARC', is_fractional_allowed: false, is_active: false }
+        ];
+
+        pool.query.mockImplementation((sql, params) => {
+            const q = String(sql);
+            if (/CREATE TABLE IF NOT EXISTS units_of_measurement/.test(q)) {
+                return Promise.resolve({ rows: [] });
+            }
+            if (/SELECT COUNT\(\*\) FROM units_of_measurement/.test(q)) {
+                return Promise.resolve({ rows: [{ count: '3' }] });
+            }
+            if (/WHERE LOWER\(TRIM\(name\)\)/.test(q)) {
+                const found = mockUoms.find(u => 
+                    u.name.toLowerCase() === String(params[0]).toLowerCase() && 
+                    (!params[1] || u.id !== Number(params[1]))
+                );
+                return Promise.resolve({ rows: found ? [found] : [] });
+            }
+            if (/FROM units_of_measurement/.test(q)) {
+                if (/WHERE id = \$1/.test(q)) {
+                    const found = mockUoms.find(u => u.id === Number(params[0]));
+                    return Promise.resolve({ rows: found ? [found] : [] });
+                }
+                if (/is_active = true/.test(q)) {
+                    return Promise.resolve({ rows: mockUoms.filter(u => u.is_active) });
+                }
+                return Promise.resolve({ rows: mockUoms });
+            }
+            if (/INSERT INTO units_of_measurement/.test(q)) {
+                const newUom = {
+                    id: 4,
+                    name: params[0],
+                    code: params[1],
+                    is_fractional_allowed: params[2],
+                    is_active: params[3]
+                };
+                mockUoms.push(newUom);
+                return Promise.resolve({ rows: [newUom] });
+            }
+            if (/UPDATE units_of_measurement/.test(q)) {
+                return Promise.resolve({
+                    rows: [{
+                        id: 4,
+                        name: 'Kilogram',
+                        code: 'KG',
+                        is_fractional_allowed: true,
+                        is_active: true
+                    }]
+                });
+            }
+            if (/SELECT COUNT\(\*\) FROM products WHERE unit_name = \$1/.test(q)) {
+                // If checking 'Piece', pretend 5 products use it; if 'Kilogram', 0 products
+                if (params[0] === 'Piece') {
+                    return Promise.resolve({ rows: [{ count: '5' }] });
+                }
+                return Promise.resolve({ rows: [{ count: '0' }] });
+            }
+            if (/DELETE FROM units_of_measurement WHERE id = \$1/.test(q)) {
+                return Promise.resolve({ rows: [{ id: params[0] }] });
+            }
+            return Promise.resolve({ rows: [], rowCount: 0 });
+        });
+
+        // 1. GET all UOMs vs active only
+        const reqAll = { query: {} };
+        const resAll = mockRes();
+        await uomController.getAllUom(reqAll, resAll);
+        expect(resAll.status).toHaveBeenCalledWith(200);
+        expect(resAll.json.mock.calls[0][0].data.length).toBe(3);
+
+        const reqActive = { query: { active_only: 'true' } };
+        const resActive = mockRes();
+        await uomController.getAllUom(reqActive, resActive);
+        expect(resActive.status).toHaveBeenCalledWith(200);
+        expect(resActive.json.mock.calls[0][0].data.length).toBe(2);
+
+        // 2. POST create new UOM
+        const reqCreate = {
+            body: {
+                name: 'Kilogram',
+                code: 'KG',
+                is_fractional_allowed: true,
+                is_active: true
+            }
+        };
+        const resCreate = mockRes();
+        await uomController.createUom(reqCreate, resCreate);
+        expect(resCreate.status).toHaveBeenCalledWith(201);
+        const created = resCreate.json.mock.calls[0][0].data;
+        expect(created.name).toBe('Kilogram');
+        expect(created.code).toBe('KG');
+        expect(created.is_fractional_allowed).toBe(true);
+
+        // 3. PUT update UOM
+        const reqUpdate = {
+            params: { id: 4 },
+            body: {
+                name: 'Kilogram',
+                code: 'KG',
+                is_fractional_allowed: true,
+                is_active: true
+            }
+        };
+        const resUpdate = mockRes();
+        await uomController.updateUom(reqUpdate, resUpdate);
+        expect(resUpdate.status).toHaveBeenCalledWith(200);
+
+        // 4. DELETE UOM in use -> rejection
+        const reqDeleteInUse = { params: { id: 1 } }; // Piece (in use)
+        const resDeleteInUse = mockRes();
+        await uomController.deleteUom(reqDeleteInUse, resDeleteInUse);
+        expect(resDeleteInUse.status).toHaveBeenCalledWith(400);
+
+        // 5. DELETE unused UOM -> success
+        const reqDeleteUnused = { params: { id: 4 } }; // Kilogram (not in use)
+        const resDeleteUnused = mockRes();
+        await uomController.deleteUom(reqDeleteUnused, resDeleteUnused);
+        expect(resDeleteUnused.status).toHaveBeenCalledWith(200);
+        expect(resDeleteUnused.json.mock.calls[0][0].success).toBe(true);
     });
 });

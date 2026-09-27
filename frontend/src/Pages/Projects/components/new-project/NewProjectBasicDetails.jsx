@@ -1,5 +1,5 @@
 import React from 'react';
-import { JOB_TYPES } from '../../utils/projectHelpers';
+import { DEFAULT_JOB_TYPES } from '../../utils/projectHelpers';
 
 export default function NewProjectBasicDetails({
   title,
@@ -11,8 +11,17 @@ export default function NewProjectBasicDetails({
   projectType,
   setProjectType,
   siteAddress,
-  setSiteAddress
+  setSiteAddress,
+  jobTypes = [],
+  onOpenManageJobTypes
 }) {
+  const dynamicJobTypes = jobTypes && jobTypes.length > 0
+    ? jobTypes.map(jt => ({
+        value: jt.name,
+        label: jt.description ? `${jt.name} (${jt.description})` : jt.name
+      }))
+    : DEFAULT_JOB_TYPES;
+
   return (
     <>
       {/* Project Title */}
@@ -91,15 +100,35 @@ export default function NewProjectBasicDetails({
         </div>
 
         <div>
-          <label style={{ display: 'block', fontSize: '0.82rem', fontWeight: 600, color: '#334155', marginBottom: '4px' }}>
-            Job / Service Type
-          </label>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '4px' }}>
+            <label style={{ display: 'block', fontSize: '0.82rem', fontWeight: 600, color: '#334155' }}>
+              Job / Service Type
+            </label>
+            {onOpenManageJobTypes && (
+              <button
+                type="button"
+                onClick={onOpenManageJobTypes}
+                style={{
+                  background: 'none',
+                  border: 'none',
+                  color: '#0284c7',
+                  fontSize: '0.75rem',
+                  fontWeight: 700,
+                  cursor: 'pointer',
+                  padding: '0 2px'
+                }}
+                title="Manage Job Types"
+              >
+                ⚙️ Manage
+              </button>
+            )}
+          </div>
           <select
             value={projectType}
             onChange={(e) => setProjectType(e.target.value)}
             style={{ width: '100%', padding: '8px 12px', borderRadius: '6px', border: '1px solid #cbd5e1', fontSize: '0.85rem', boxSizing: 'border-box' }}
           >
-            {JOB_TYPES.map(jt => (
+            {dynamicJobTypes.map(jt => (
               <option key={jt.value} value={jt.value}>
                 {jt.label}
               </option>

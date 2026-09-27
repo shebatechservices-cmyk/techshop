@@ -179,6 +179,8 @@ registerRoute('/register', require('./routes/registerRoute'));
 registerRoute('/devices', require('./routes/deviceRoute'));
 registerRoute('/staff', require('./routes/staffRoute'));
 registerRoute('/dev', require('./routes/devRoute'));
+registerRoute('/uom', require('./routes/uomRoute'));
+registerRoute('/units-of-measurement', require('./routes/uomRoute'));
 
 const createEntityRouter = require('./routes/entityRouteFactory');
 registerRoute('/brands', createEntityRouter('brands'));

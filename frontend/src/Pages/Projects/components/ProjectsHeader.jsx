@@ -4,6 +4,7 @@ export default function ProjectsHeader({
   error,
   onOpenTechWallet,
   onOpenManagePresets,
+  onOpenManageJobTypes,
   onOpenNewProject,
 }) {
   return (
@@ -19,6 +20,18 @@ export default function ProjectsHeader({
         </div>
 
         <div className="flex gap-2 items-center flex-wrap">
+          {onOpenManageJobTypes && (
+            <button
+              type="button"
+              onClick={onOpenManageJobTypes}
+              className="bg-white text-slate-800 border border-slate-300 hover:bg-slate-50 px-3 py-1.5 rounded-lg font-bold text-xs flex items-center gap-1.5 shadow-xs transition-colors cursor-pointer"
+              title="Manage Project / Job Types"
+            >
+              <span>📋</span>
+              <span>Job Types</span>
+            </button>
+          )}
+
           {onOpenManagePresets && (
             <button
               type="button"

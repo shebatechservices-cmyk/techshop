@@ -15,6 +15,12 @@ router.post('/service-presets', projectController.createServicePreset);
 router.put('/service-presets/:id', projectController.updateServicePreset);
 router.delete('/service-presets/:id', projectController.deleteServicePreset);
 
+// Project / Job Types CRUD routes (RULE 1)
+router.get('/job-types', projectController.getJobTypes);
+router.post('/job-types', projectController.createJobType);
+router.put('/job-types/:id', projectController.updateJobType);
+router.delete('/job-types/:id', projectController.deleteJobType);
+
 // Core CRUD and Workflow routes
 router.get('/', projectController.getProjects);
 router.get('/:id', projectController.getProjectById);

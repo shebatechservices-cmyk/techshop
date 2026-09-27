@@ -1,6 +1,7 @@
 import React from 'react';
 import AddTechnicianModal from './AddTechnicianModal';
 import ManageServicePresetsModal from './ManageServicePresetsModal';
+import ManageJobTypesModal from './ManageJobTypesModal';
 import useNewProjectForm from '../hooks/useNewProjectForm';
 import NewProjectModalHeader from '../components/new-project/NewProjectModalHeader';
 import NewProjectCategorySelector from '../components/new-project/NewProjectCategorySelector';
@@ -20,10 +21,14 @@ export default function NewProjectModal({ isOpen, onClose, onSuccess, projectToE
     technicians,
     servicePresets,
     fetchServicePresets,
+    jobTypes,
+    fetchJobTypes,
     isAddTechOpen,
     setIsAddTechOpen,
     isManagePresetsOpen,
     setIsManagePresetsOpen,
+    isManageJobTypesOpen,
+    setIsManageJobTypesOpen,
     title,
     setTitle,
     projectType,
@@ -40,6 +45,7 @@ export default function NewProjectModal({ isOpen, onClose, onSuccess, projectToE
     services,
     handleAddServiceRow,
     handleUpdateServiceRow,
+    handleApplyPresetToRow,
     handleRemoveServiceRow,
     conveyanceCost,
     setConveyanceCost,
@@ -136,6 +142,8 @@ export default function NewProjectModal({ isOpen, onClose, onSuccess, projectToE
               setProjectType={setProjectType}
               siteAddress={siteAddress}
               setSiteAddress={setSiteAddress}
+              jobTypes={jobTypes}
+              onOpenManageJobTypes={() => setIsManageJobTypesOpen(true)}
             />
 
             {/* Dynamic Services & Tasks Table */}
@@ -145,6 +153,7 @@ export default function NewProjectModal({ isOpen, onClose, onSuccess, projectToE
               totalSetupFee={totalSetupFee}
               onAddServiceRow={handleAddServiceRow}
               onUpdateServiceRow={handleUpdateServiceRow}
+              onApplyPresetToRow={handleApplyPresetToRow}
               onRemoveServiceRow={handleRemoveServiceRow}
               onOpenManagePresets={() => setIsManagePresetsOpen(true)}
             />
@@ -196,6 +205,13 @@ export default function NewProjectModal({ isOpen, onClose, onSuccess, projectToE
         isOpen={isManagePresetsOpen}
         onClose={() => setIsManagePresetsOpen(false)}
         onPresetsUpdated={() => fetchServicePresets()}
+      />
+
+      {/* Manage Job Types Modal (RULE 3) */}
+      <ManageJobTypesModal
+        isOpen={isManageJobTypesOpen}
+        onClose={() => setIsManageJobTypesOpen(false)}
+        onJobTypesUpdated={() => fetchJobTypes()}
       />
     </div>
   );

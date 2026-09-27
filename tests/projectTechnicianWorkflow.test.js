@@ -23,12 +23,19 @@ describe('Technician Workflow, Dynamic Services & Work Order Editing', () => {
     let mockProjects = [];
     let mockProjectServices = [];
     let mockServicePresets = [];
+    let mockJobTypes = [];
 
     beforeEach(() => {
         mockServicePresets = [
             { id: 1, name: 'CCTV Camera Setup', default_rate: 350, is_active: true, created_at: new Date(), updated_at: new Date() },
             { id: 2, name: 'Router Configuration', default_rate: 300, is_active: true, created_at: new Date(), updated_at: new Date() },
             { id: 3, name: 'Legacy Inactive Service', default_rate: 200, is_active: false, created_at: new Date(), updated_at: new Date() }
+        ];
+
+        mockJobTypes = [
+            { id: 1, name: 'CCTV Installation', description: 'New camera setup', is_active: true, created_at: new Date(), updated_at: new Date() },
+            { id: 2, name: 'Repair & Servicing', description: 'Troubleshooting', is_active: true, created_at: new Date(), updated_at: new Date() },
+            { id: 3, name: 'Legacy Inactive Type', description: 'Old archived type', is_active: false, created_at: new Date(), updated_at: new Date() }
         ];
 
         mockRoles = [
@@ -370,6 +377,57 @@ describe('Technician Workflow, Dynamic Services & Work Order Editing', () => {
                 return { rows: [], rowCount: 0 };
             }
 
+            // Job Types SELECT
+            if (queryStr.includes('FROM project_job_types')) {
+                if (queryStr.includes('WHERE id = $1')) {
+                    const found = mockJobTypes.find(j => j.id === Number(params[0]));
+                    return { rows: found ? [found] : [], rowCount: found ? 1 : 0 };
+                }
+                if (queryStr.includes('WHERE is_active = true')) {
+                    const active = mockJobTypes.filter(j => j.is_active);
+                    return { rows: active, rowCount: active.length };
+                }
+                return { rows: mockJobTypes, rowCount: mockJobTypes.length };
+            }
+
+            // Job Types INSERT
+            if (queryStr.includes('INSERT INTO project_job_types')) {
+                const newJobType = {
+                    id: mockJobTypes.length + 1,
+                    name: params[0],
+                    description: params[1],
+                    is_active: params[2],
+                    created_at: new Date(),
+                    updated_at: new Date()
+                };
+                mockJobTypes.push(newJobType);
+                return { rows: [newJobType], rowCount: 1 };
+            }
+
+            // Job Types UPDATE
+            if (queryStr.includes('UPDATE project_job_types')) {
+                const id = Number(params[params.length - 1]);
+                const existing = mockJobTypes.find(j => j.id === id);
+                if (existing) {
+                    if (params[0] !== undefined) existing.name = params[0];
+                    if (params[1] !== undefined) existing.description = params[1];
+                    if (params[2] !== undefined) existing.is_active = params[2];
+                    return { rows: [existing], rowCount: 1 };
+                }
+                return { rows: [], rowCount: 0 };
+            }
+
+            // Job Types DELETE
+            if (queryStr.includes('DELETE FROM project_job_types WHERE id = $1')) {
+                const id = Number(params[0]);
+                const idx = mockJobTypes.findIndex(j => j.id === id);
+                if (idx !== -1) {
+                    const deleted = mockJobTypes.splice(idx, 1)[0];
+                    return { rows: [deleted], rowCount: 1 };
+                }
+                return { rows: [], rowCount: 0 };
+            }
+
             return { rows: [], rowCount: 0 };
         };
 
@@ -619,6 +677,61 @@ describe('Technician Workflow, Dynamic Services & Work Order Editing', () => {
         const reqDelete = { params: { id: created.id } };
         const resDelete = mockRes();
         await projectController.deleteServicePreset(reqDelete, resDelete);
+        expect(resDelete.status).toHaveBeenCalledWith(200);
+        expect(resDelete.json.mock.calls[0][0].success).toBe(true);
+    });
+
+    test('RULE 1 & 2 & 3 (Job Types CRUD): API supports fetching, adding, updating, and deleting project/job types', async () => {
+        // 1. GET all job types vs active only
+        const reqAll = { query: {} };
+        const resAll = mockRes();
+        await projectController.getJobTypes(reqAll, resAll);
+        expect(resAll.status).toHaveBeenCalledWith(200);
+        expect(resAll.json.mock.calls[0][0].data.length).toBe(3);
+
+        const reqActive = { query: { active_only: 'true' } };
+        const resActive = mockRes();
+        await projectController.getJobTypes(reqActive, resActive);
+        expect(resActive.status).toHaveBeenCalledWith(200);
+        expect(resActive.json.mock.calls[0][0].data.length).toBe(2);
+
+        // 2. POST create new job type
+        const reqCreate = {
+            body: {
+                name: 'Solar Panel Setup',
+                description: 'Inverter and solar array configuration',
+                is_active: true
+            }
+        };
+        const resCreate = mockRes();
+        await projectController.createJobType(reqCreate, resCreate);
+        expect(resCreate.status).toHaveBeenCalledWith(201);
+        const created = resCreate.json.mock.calls[0][0].data;
+        expect(created.name).toBe('Solar Panel Setup');
+        expect(created.description).toBe('Inverter and solar array configuration');
+        expect(created.is_active).toBe(true);
+
+        // 3. PUT update job type
+        const reqUpdate = {
+            params: { id: created.id },
+            body: {
+                name: 'Solar & IPS Setup',
+                description: 'Full IPS and solar inverter setup',
+                is_active: false
+            }
+        };
+        const resUpdate = mockRes();
+        await projectController.updateJobType(reqUpdate, resUpdate);
+        expect(resUpdate.status).toHaveBeenCalledWith(200);
+        const updated = resUpdate.json.mock.calls[0][0].data;
+        expect(updated.name).toBe('Solar & IPS Setup');
+        expect(updated.description).toBe('Full IPS and solar inverter setup');
+        expect(updated.is_active).toBe(false);
+
+        // 4. DELETE job type
+        const reqDelete = { params: { id: created.id } };
+        const resDelete = mockRes();
+        await projectController.deleteJobType(reqDelete, resDelete);
         expect(resDelete.status).toHaveBeenCalledWith(200);
         expect(resDelete.json.mock.calls[0][0].success).toBe(true);
     });

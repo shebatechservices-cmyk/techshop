@@ -11,9 +11,11 @@ import NewProjectModal from './modals/NewProjectModal';
 import ProjectPrintModal from './modals/ProjectPrintModal';
 import TechWalletModal from './modals/TechWalletModal';
 import ManageServicePresetsModal from './modals/ManageServicePresetsModal';
+import ManageJobTypesModal from './modals/ManageJobTypesModal';
 
 export default function Projects() {
   const [isManagePresetsOpen, setIsManagePresetsOpen] = useState(false);
+  const [isManageJobTypesOpen, setIsManageJobTypesOpen] = useState(false);
   const {
     loading,
     error,
@@ -58,6 +60,7 @@ export default function Projects() {
         error={error}
         onOpenTechWallet={() => setIsTechWalletOpen(true)}
         onOpenManagePresets={() => setIsManagePresetsOpen(true)}
+        onOpenManageJobTypes={() => setIsManageJobTypesOpen(true)}
         onOpenNewProject={() => {
           setEditingProject(null);
           setIsNewProjectOpen(true);
@@ -156,6 +159,12 @@ export default function Projects() {
       <ManageServicePresetsModal
         isOpen={isManagePresetsOpen}
         onClose={() => setIsManagePresetsOpen(false)}
+      />
+
+      {/* Manage Job Types Modal (RULE 3) */}
+      <ManageJobTypesModal
+        isOpen={isManageJobTypesOpen}
+        onClose={() => setIsManageJobTypesOpen(false)}
       />
     </div>
   );

@@ -1,10 +1,50 @@
-import React from "react";
+import React, { useState, useEffect, useCallback } from "react";
+import API from "../../../../services/api";
+import ManageUomModal from "../../modals/ManageUomModal";
+
+const DEFAULT_UOMS = [
+  { name: 'Piece', code: 'PCS', is_fractional_allowed: false },
+  { name: 'Box', code: 'BOX', is_fractional_allowed: false },
+  { name: 'Meter', code: 'MTR', is_fractional_allowed: true },
+  { name: 'Drum / Spool', code: 'DRM', is_fractional_allowed: true },
+  { name: 'Roll', code: 'ROLL', is_fractional_allowed: true },
+  { name: 'Carton', code: 'CTN', is_fractional_allowed: false },
+  { name: 'Pack', code: 'PK', is_fractional_allowed: false },
+  { name: 'Set', code: 'SET', is_fractional_allowed: false },
+  { name: 'Kilogram', code: 'KG', is_fractional_allowed: true },
+  { name: 'Foot', code: 'FT', is_fractional_allowed: true }
+];
 
 export default function ProductUomFormSection({
   form,
   setForm,
   handleFieldChange,
 }) {
+  const [uoms, setUoms] = useState(DEFAULT_UOMS);
+  const [isManageModalOpen, setIsManageModalOpen] = useState(false);
+
+  const fetchActiveUoms = useCallback(async () => {
+    try {
+      const res = await fetch(`${API}/uom?active_only=true`);
+      if (res.ok) {
+        const json = await res.json();
+        if (json.success && Array.isArray(json.data) && json.data.length > 0) {
+          setUoms(json.data);
+        }
+      }
+    } catch (err) {
+      console.error("Error loading active UOMs:", err);
+    }
+  }, []);
+
+  useEffect(() => {
+    fetchActiveUoms();
+  }, [fetchActiveUoms]);
+
+  // Ensure current selected values exist in dropdown options
+  const baseUnitValue = form.unit_name || "Piece";
+  const sellUnitValue = form.sub_unit_name || "";
+
   return (
     <div className="bg-slate-50/90 p-5 rounded-xl border border-slate-200 space-y-4">
       <div className="flex items-center justify-between">
@@ -16,22 +56,52 @@ export default function ProductUomFormSection({
             Buy in bulk Base Units (e.g., Box) and sell in fractional units (e.g., Meter).
           </p>
         </div>
+        <button
+          type="button"
+          onClick={() => setIsManageModalOpen(true)}
+          className="text-xs font-bold text-sky-700 bg-sky-50 border border-sky-200 hover:bg-sky-100 px-2.5 py-1 rounded-lg transition-colors flex items-center gap-1 cursor-pointer"
+          title="Manage Units of Measurement"
+        >
+          <span>⚙️</span>
+          <span>Manage UOM</span>
+        </button>
       </div>
 
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 items-end">
         {/* Base Unit */}
         <div className="flex flex-col gap-1.5">
-          <label className="text-sm font-bold text-slate-700 flex items-center gap-1">
-            <span>Base Unit (Purchase / Bulk Unit)</span>
-            <span className="text-slate-400 font-normal text-xs">(e.g. Box, Drum, Roll, Carton, Pack)</span>
-          </label>
-          <input
-            name="unit_name"
-            value={form.unit_name || ""}
-            onChange={handleFieldChange}
-            placeholder="e.g. Box, Pcs, Meter"
-            className="w-full px-3.5 py-2.5 border border-slate-300 rounded-lg text-sm bg-white focus:ring-2 focus:ring-sky-500 font-semibold text-slate-800"
-          />
+          <div className="flex justify-between items-center">
+            <label className="text-sm font-bold text-slate-700 flex items-center gap-1">
+              <span>Base Unit (Purchase / Bulk Unit)</span>
+              <span className="text-slate-400 font-normal text-xs">(e.g. Box, Drum, Roll, Carton, Pack)</span>
+            </label>
+          </div>
+          <div className="flex gap-2">
+            <select
+              name="unit_name"
+              value={baseUnitValue}
+              onChange={handleFieldChange}
+              className="flex-1 px-3.5 py-2.5 border border-slate-300 rounded-lg text-sm bg-white focus:ring-2 focus:ring-sky-500 font-semibold text-slate-800"
+            >
+              {uoms.map((u) => (
+                <option key={u.id || u.name} value={u.name}>
+                  {u.name} {u.code ? `(${u.code})` : ""}
+                </option>
+              ))}
+              {/* Fallback if form has a legacy custom unit not in uoms list */}
+              {baseUnitValue && !uoms.some((u) => u.name === baseUnitValue) && (
+                <option value={baseUnitValue}>{baseUnitValue} (Custom)</option>
+              )}
+            </select>
+            <button
+              type="button"
+              onClick={() => setIsManageModalOpen(true)}
+              title="Add or Edit Units"
+              className="w-10 h-10 border border-sky-300 bg-sky-50 hover:bg-sky-600 hover:text-white text-sky-700 font-bold rounded-lg flex items-center justify-center transition-colors cursor-pointer text-lg"
+            >
+              +
+            </button>
+          </div>
         </div>
 
         {/* Sell Unit / Fractional Unit Enable Toggle */}
@@ -54,13 +124,22 @@ export default function ProductUomFormSection({
               <label className="text-xs font-bold text-slate-700">
                 Sell Unit (Retail Unit)
               </label>
-              <input
+              <select
                 name="sub_unit_name"
-                value={form.sub_unit_name || ""}
+                value={sellUnitValue}
                 onChange={handleFieldChange}
-                placeholder="e.g. Meter"
-                className="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm font-semibold focus:ring-2 focus:ring-sky-500 text-slate-800"
-              />
+                className="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm font-semibold focus:ring-2 focus:ring-sky-500 text-slate-800 bg-white"
+              >
+                <option value="">Select Retail Unit</option>
+                {uoms.map((u) => (
+                  <option key={u.id || u.name} value={u.name}>
+                    {u.name} {u.code ? `(${u.code})` : ""} {u.is_fractional_allowed ? "— (Fractional)" : ""}
+                  </option>
+                ))}
+                {sellUnitValue && !uoms.some((u) => u.name === sellUnitValue) && (
+                  <option value={sellUnitValue}>{sellUnitValue} (Custom)</option>
+                )}
+              </select>
             </div>
 
             <div className="flex flex-col gap-1.5">
@@ -130,6 +209,15 @@ export default function ProductUomFormSection({
           </div>
         </div>
       )}
+
+      {/* Standalone Manage UOM Modal */}
+      <ManageUomModal
+        isOpen={isManageModalOpen}
+        onClose={() => setIsManageModalOpen(false)}
+        onUomUpdated={(updatedList) => {
+          setUoms(updatedList);
+        }}
+      />
     </div>
   );
 }

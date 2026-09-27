@@ -15,31 +15,25 @@ export function usePurchaseBarcodeScanner({
   const searchInputRef = useRef(null);
   const searchContainerRef = useRef(null);
 
-  const handleAddBarcode = async (localId, barcodeToAdd = null) => {
-    const item = items.find((i) => i.localId === localId);
-    if (!item) return;
-
+  const handleAddBarcode = (localId, barcodeToAdd = null) => {
     const rawBarcode =
-      barcodeToAdd !== null ? barcodeToAdd : barcodeInput[localId] || '';
+      barcodeToAdd !== null
+        ? barcodeToAdd
+        : typeof barcodeInput === 'object' && barcodeInput !== null
+        ? barcodeInput[localId] || ''
+        : barcodeInput || '';
     const code = String(rawBarcode).trim();
     if (!code) return;
 
-    // 1. Check duplicate within current item
-    const currentSerials = item.serials || [];
-    if (currentSerials.some((s) => s.toLowerCase() === code.toLowerCase())) {
-      setBarcodeScanErrors((prev) => ({
-        ...prev,
-        [localId]: `⚠️ Barcode/Serial "${code}" already added to this product.`,
-      }));
-      return;
-    }
-
-    // 2. Check duplicate across other items in current purchase order
+    // 1. Check duplicate across other items in current purchase order
     for (const otherItem of items) {
-      if (otherItem.localId !== localId && Array.isArray(otherItem.serials)) {
-        if (
-          otherItem.serials.some((s) => s.toLowerCase() === code.toLowerCase())
-        ) {
+      if (otherItem.localId !== localId) {
+        const otherList = Array.isArray(otherItem.barcodes)
+          ? otherItem.barcodes
+          : Array.isArray(otherItem.serials)
+          ? otherItem.serials
+          : [];
+        if (otherList.some((s) => s.toLowerCase() === code.toLowerCase())) {
           setBarcodeScanErrors((prev) => ({
             ...prev,
             [localId]: `⚠️ Barcode/Serial "${code}" is already assigned to another item in this order.`,
@@ -49,44 +43,54 @@ export function usePurchaseBarcodeScanner({
       }
     }
 
-    // 3. Check database serial availability
-    try {
-      const excludePoId = orderToEdit?.id ? `&exclude_po_id=${orderToEdit.id}` : '';
-      const checkRes = await fetch(
-        `${API}/purchase/check-serial?serial=${encodeURIComponent(code)}${excludePoId}`
-      );
-      if (checkRes.ok) {
-        const checkData = await checkRes.json();
-        if (checkData.exists) {
-          const detailMsg =
-            checkData.message ||
-            `⚠️ Serial/Barcode "${code}" already exists in Inventory.`;
-          setBarcodeScanErrors((prev) => ({
-            ...prev,
-            [localId]: detailMsg,
-          }));
-          return;
-        }
-      }
-    } catch (err) {
-      console.warn('Serial availability verification warning:', err.message);
-    }
-
-    // Add barcode and update quantity to match serial count
-    const updatedSerials = [...currentSerials, code];
+    // RULE 2 & 3: Immutable state update & auto-increment quantity
+    let duplicateFound = false;
     setItems((current) =>
       current.map((i) => {
         if (i.localId !== localId) return i;
+
+        const currentList = Array.isArray(i.barcodes)
+          ? i.barcodes
+          : Array.isArray(i.serials)
+          ? i.serials
+          : [];
+
+        if (currentList.some((s) => s.toLowerCase() === code.toLowerCase())) {
+          duplicateFound = true;
+          return i;
+        }
+
+        const nextBarcodes = [...currentList, code];
+        const currentQty = Number(i.quantity) || 0;
+        const newQty = i.is_serial_tracked
+          ? nextBarcodes.length
+          : Math.max(currentQty + 1, nextBarcodes.length);
+
         return {
           ...i,
-          serials: updatedSerials,
-          quantity: updatedSerials.length,
+          barcodes: nextBarcodes,
+          serials: nextBarcodes,
+          quantity: newQty,
           barcode: i.barcode || code,
         };
       })
     );
 
-    setBarcodeInput((prev) => ({ ...prev, [localId]: '' }));
+    if (duplicateFound) {
+      setBarcodeScanErrors((prev) => ({
+        ...prev,
+        [localId]: `⚠️ Barcode/Serial "${code}" already added to this product.`,
+      }));
+      return;
+    }
+
+    // Explicitly reset barcode input state and clear errors
+    setBarcodeInput((prev) => {
+      if (typeof prev === 'object' && prev !== null) {
+        return { ...prev, [localId]: '' };
+      }
+      return '';
+    });
     setBarcodeScanErrors((prev) => {
       const next = { ...prev };
       delete next[localId];
@@ -101,13 +105,23 @@ export function usePurchaseBarcodeScanner({
     setItems((current) =>
       current.map((i) => {
         if (i.localId !== localId) return i;
-        const filtered = (i.serials || []).filter(
+        const currentList = Array.isArray(i.barcodes)
+          ? i.barcodes
+          : Array.isArray(i.serials)
+          ? i.serials
+          : [];
+        const filtered = currentList.filter(
           (s) => s.toLowerCase() !== serialCode.toLowerCase()
         );
+        const newQty = i.is_serial_tracked
+          ? filtered.length
+          : Math.max(1, (Number(i.quantity) || 1) - 1);
+
         return {
           ...i,
+          barcodes: filtered,
           serials: filtered,
-          quantity: Math.max(1, filtered.length),
+          quantity: newQty,
         };
       })
     );

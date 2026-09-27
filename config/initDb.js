@@ -127,6 +127,58 @@ async function autoInitDatabase() {
                 ) AS defaults(name, default_rate, is_active)
                 WHERE NOT EXISTS (SELECT 1 FROM service_presets);
 
+                -- Dynamic Project / Job Types Table
+                CREATE TABLE IF NOT EXISTS project_job_types (
+                    id SERIAL PRIMARY KEY,
+                    name VARCHAR(150) NOT NULL,
+                    description VARCHAR(255),
+                    is_active BOOLEAN DEFAULT true,
+                    created_at TIMESTAMP DEFAULT NOW(),
+                    updated_at TIMESTAMP DEFAULT NOW()
+                );
+                CREATE INDEX IF NOT EXISTS idx_project_job_types_is_active ON project_job_types(is_active);
+
+                -- Seed Default Job Types if table is empty
+                INSERT INTO project_job_types (name, description, is_active)
+                SELECT name, description, is_active FROM (
+                    VALUES 
+                    ('CCTV Installation', 'New camera setup, wiring, DVR/NVR configuration', true),
+                    ('Repair & Servicing', 'Troubleshooting and equipment repair', true),
+                    ('Networking Setup', 'Networking & WiFi router/AP configuration', true),
+                    ('Maintenance Visit', 'Routine checkup and preventive maintenance', true),
+                    ('Multi-Task Service', 'Multi-task setup (Router/ONU/TV/CCTV)', true)
+                ) AS defaults(name, description, is_active)
+                WHERE NOT EXISTS (SELECT 1 FROM project_job_types);
+
+                -- Dynamic Units of Measurement (UOM) Table (RULE 1)
+                CREATE TABLE IF NOT EXISTS units_of_measurement (
+                    id SERIAL PRIMARY KEY,
+                    name VARCHAR(100) UNIQUE NOT NULL,
+                    code VARCHAR(50),
+                    is_fractional_allowed BOOLEAN DEFAULT false,
+                    is_active BOOLEAN DEFAULT true,
+                    created_at TIMESTAMP DEFAULT NOW(),
+                    updated_at TIMESTAMP DEFAULT NOW()
+                );
+                CREATE INDEX IF NOT EXISTS idx_uom_is_active ON units_of_measurement(is_active);
+
+                -- Seed Essential Default Units of Measurement if table is empty
+                INSERT INTO units_of_measurement (name, code, is_fractional_allowed, is_active)
+                SELECT name, code, is_fractional_allowed, is_active FROM (
+                    VALUES 
+                    ('Piece', 'PCS', false, true),
+                    ('Box', 'BOX', false, true),
+                    ('Meter', 'MTR', true, true),
+                    ('Drum / Spool', 'DRM', true, true),
+                    ('Roll', 'ROLL', true, true),
+                    ('Carton', 'CTN', false, true),
+                    ('Pack', 'PK', false, true),
+                    ('Set', 'SET', false, true),
+                    ('Kilogram', 'KG', true, true),
+                    ('Foot', 'FT', true, true)
+                ) AS defaults(name, code, is_fractional_allowed, is_active)
+                WHERE NOT EXISTS (SELECT 1 FROM units_of_measurement);
+
                 CREATE TABLE IF NOT EXISTS tenders (
                     id SERIAL PRIMARY KEY,
                     name VARCHAR(100) UNIQUE NOT NULL,

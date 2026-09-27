@@ -1,4 +1,5 @@
-import React from "react";
+import React, { useState } from "react";
+import ManageUomModal from "../modals/ManageUomModal";
 
 export default function CategoriesAttributesTab({
   categories = [],
@@ -18,6 +19,7 @@ export default function CategoriesAttributesTab({
   openQuickAddModal,
   deleteAttribute,
 }) {
+  const [isManageUomOpen, setIsManageUomOpen] = useState(false);
   const totalAttributesCount =
     categories.length +
     subCategories.length +
@@ -84,9 +86,19 @@ export default function CategoriesAttributesTab({
             Configure classifications, manufacturers, and hardware specifications for products.
           </p>
         </div>
-        <span className="bg-slate-100 border border-slate-200 text-slate-700 font-extrabold text-xs px-3 py-1.5 rounded-xl shadow-xs">
-          {totalAttributesCount} Total Attributes
-        </span>
+        <div className="flex items-center gap-2 flex-wrap">
+          <button
+            type="button"
+            onClick={() => setIsManageUomOpen(true)}
+            className="bg-white hover:bg-sky-50 border border-sky-300 text-sky-700 font-extrabold text-xs px-3 py-1.5 rounded-xl shadow-xs transition-colors flex items-center gap-1.5 cursor-pointer"
+          >
+            <span>📏</span>
+            <span>Manage Units (UOM)</span>
+          </button>
+          <span className="bg-slate-100 border border-slate-200 text-slate-700 font-extrabold text-xs px-3 py-1.5 rounded-xl shadow-xs">
+            {totalAttributesCount} Total Attributes
+          </span>
+        </div>
       </div>
 
       {/* Grid of Attribute Panels */}
@@ -260,6 +272,11 @@ export default function CategoriesAttributesTab({
           </div>
         ))}
       </div>
+      {/* Standalone Manage UOM Modal */}
+      <ManageUomModal
+        isOpen={isManageUomOpen}
+        onClose={() => setIsManageUomOpen(false)}
+      />
     </div>
   );
 }

@@ -17,9 +17,11 @@ export default function useNewProjectForm({ isOpen, onClose, onSuccess, projectT
   const [invoices, setInvoices] = useState([]);
   const [technicians, setTechnicians] = useState([]);
   const [servicePresets, setServicePresets] = useState([]);
+  const [jobTypes, setJobTypes] = useState([]);
   const [loadingLookups, setLoadingLookups] = useState(true);
   const [isAddTechOpen, setIsAddTechOpen] = useState(false);
   const [isManagePresetsOpen, setIsManagePresetsOpen] = useState(false);
+  const [isManageJobTypesOpen, setIsManageJobTypesOpen] = useState(false);
 
   // Form field states
   const [title, setTitle] = useState('');
@@ -61,6 +63,23 @@ export default function useNewProjectForm({ isOpen, onClose, onSuccess, projectT
     return null;
   }, []);
 
+  // Fetch job types from backend (RULE 2)
+  const fetchJobTypes = useCallback(async () => {
+    try {
+      const res = await fetch(`${API}/projects/job-types?active_only=true`);
+      if (res.ok) {
+        const json = await res.json();
+        if (json.success && Array.isArray(json.data)) {
+          setJobTypes(json.data);
+          return json.data;
+        }
+      }
+    } catch (err) {
+      console.error('Error fetching job types:', err);
+    }
+    return null;
+  }, []);
+
   // Fetch technicians lookup from backend
   const fetchTechnicians = useCallback(async () => {
     try {
@@ -85,7 +104,8 @@ export default function useNewProjectForm({ isOpen, onClose, onSuccess, projectT
       Promise.all([
         fetch(`${API}/projects/invoices-lookup`).catch(() => null),
         fetchTechnicians(),
-        fetchServicePresets()
+        fetchServicePresets(),
+        fetchJobTypes()
       ])
         .then(async ([invRes]) => {
           if (invRes && invRes.ok) {
@@ -225,6 +245,20 @@ export default function useNewProjectForm({ isOpen, onClose, onSuccess, projectT
     }));
   };
 
+  const handleApplyPresetToRow = (id, presetName, defaultRate) => {
+    setServices(prev => prev.map(s => {
+      if (s.id !== id) return s;
+      const qty = parseInt(s.quantity, 10) || 1;
+      const rate = parseFloat(defaultRate) || 0;
+      return {
+        ...s,
+        service_name: presetName,
+        unit_rate: rate,
+        line_total: qty * rate
+      };
+    }));
+  };
+
   const handleRemoveServiceRow = (id) => {
     if (services.length <= 1) {
       setServices([{ id: Date.now(), service_name: '', quantity: 1, unit_rate: 0, line_total: 0, notes: '' }]);
@@ -354,11 +388,15 @@ export default function useNewProjectForm({ isOpen, onClose, onSuccess, projectT
     technicians,
     servicePresets,
     fetchServicePresets,
+    jobTypes,
+    fetchJobTypes,
     loadingLookups,
     isAddTechOpen,
     setIsAddTechOpen,
     isManagePresetsOpen,
     setIsManagePresetsOpen,
+    isManageJobTypesOpen,
+    setIsManageJobTypesOpen,
     title,
     setTitle,
     projectType,
@@ -375,6 +413,7 @@ export default function useNewProjectForm({ isOpen, onClose, onSuccess, projectT
     services,
     handleAddServiceRow,
     handleUpdateServiceRow,
+    handleApplyPresetToRow,
     handleRemoveServiceRow,
     conveyanceCost,
     setConveyanceCost,

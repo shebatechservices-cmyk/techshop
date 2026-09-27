@@ -12,13 +12,15 @@ export const SERVICE_PRESETS = [
   { name: 'General Troubleshooting', rate: 500 }
 ];
 
-export const JOB_TYPES = [
-  { value: 'CCTV Installation', label: 'CCTV Installation (New Camera Setup)' },
-  { value: 'Repair & Servicing', label: 'Repair & Servicing (Troubleshooting)' },
-  { value: 'Networking Setup', label: 'Networking & WiFi Setup' },
-  { value: 'Maintenance Visit', label: 'Maintenance Visit (Routine Check)' },
-  { value: 'Multi-Task Service', label: 'Multi-Task Service (Router/ONU/TV/CCTV)' }
+export const DEFAULT_JOB_TYPES = [
+  { value: 'CCTV Installation', label: 'CCTV Installation (New Camera Setup)', description: 'New camera setup, wiring, DVR/NVR configuration' },
+  { value: 'Repair & Servicing', label: 'Repair & Servicing (Troubleshooting)', description: 'Troubleshooting and equipment repair' },
+  { value: 'Networking Setup', label: 'Networking & WiFi Setup', description: 'Networking & WiFi router/AP configuration' },
+  { value: 'Maintenance Visit', label: 'Maintenance Visit (Routine Check)', description: 'Routine checkup and preventive maintenance' },
+  { value: 'Multi-Task Service', label: 'Multi-Task Service (Router/ONU/TV/CCTV)', description: 'Multi-task setup (Router/ONU/TV/CCTV)' }
 ];
+
+export const JOB_TYPES = DEFAULT_JOB_TYPES;
 
 /**
  * Normalizes a raw phone string into an 11-digit Bangladeshi phone number (starting with 0).
