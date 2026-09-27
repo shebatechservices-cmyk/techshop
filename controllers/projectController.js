@@ -61,7 +61,7 @@ exports.getTechniciansLookup = async (req, res) => {
             WHERE u.deleted_at IS NULL
               AND (u.is_active IS NOT FALSE AND u.is_locked IS NOT TRUE)
               AND (
-                  UPPER(COALESCE(u.role, '')) = 'TECHNICIAN'
+                  UPPER(COALESCE(u.role::text, '')) = 'TECHNICIAN'
                   OR u.role_id = 4
                   OR COALESCE(u.role_name, '') ILIKE '%technician%'
                   OR COALESCE(r.name, '') ILIKE '%technician%'

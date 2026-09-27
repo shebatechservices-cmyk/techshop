@@ -241,18 +241,20 @@ exports.createStaff = async (req, res) => {
         }
 
         // Normalize role and role_name
+        const parsedRoleId = parseInt(role_id, 10) || (String(role).toUpperCase() === 'TECHNICIAN' ? 4 : String(role).toUpperCase() === 'ADMIN' ? 1 : 3);
         let roleName = 'Staff';
-        const roleRes = await pool.query('SELECT name FROM roles WHERE id = $1', [role_id]);
+        const roleRes = await pool.query('SELECT name FROM roles WHERE id = $1', [parsedRoleId]);
         if (roleRes.rows.length > 0) {
             roleName = roleRes.rows[0].name;
         } else {
-            if (role === 'ADMIN') roleName = 'Shop Admin';
-            else if (role === 'TECHNICIAN') roleName = 'Field Technician';
+            if (role === 'ADMIN' || parsedRoleId === 1) roleName = 'Shop Admin';
+            else if (role === 'TECHNICIAN' || parsedRoleId === 4) roleName = 'Field Technician';
             else roleName = 'Staff';
         }
 
-        const resolvedRole = normalizeRole(role, roleName, parseInt(role_id, 10));
+        const resolvedRole = normalizeRole(role, roleName, parsedRoleId);
         const passwordHash = await hashPassword(password.trim());
+        const parsedIsActive = is_active === undefined ? true : (is_active === true || is_active === 'true' || is_active === 1 || is_active === '1');
 
         const insertResult = await pool.query(`
             INSERT INTO users (
@@ -268,7 +270,7 @@ exports.createStaff = async (req, res) => {
             email ? email.trim() : null,
             passwordHash,
             resolvedRole,
-            parseInt(role_id, 10) || 3,
+            parsedRoleId,
             roleName,
             designation ? designation.trim() : (resolvedRole === 'TECHNICIAN' ? 'Field Technician' : 'Staff Member'),
             parseFloat(salary) || 0,
@@ -276,7 +278,7 @@ exports.createStaff = async (req, res) => {
             address ? address.trim() : null,
             emergency_contact ? emergency_contact.trim() : null,
             joining_date ? new Date(joining_date) : new Date(),
-            is_active === true || is_active === 'true',
+            parsedIsActive,
             notes ? notes.trim() : null
         ]);
 

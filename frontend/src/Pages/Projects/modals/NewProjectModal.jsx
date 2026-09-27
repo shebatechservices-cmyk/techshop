@@ -27,7 +27,22 @@ export default function NewProjectModal({ isOpen, onClose, onSuccess }) {
   const [description, setDescription] = useState('');
   const [startDate, setStartDate] = useState(new Date().toISOString().split('T')[0]);
   const [deadline, setDeadline] = useState('');
-  const [submitting, setSubmitting] = useState(false);
+  // Fetch technicians lookup from backend
+  const fetchTechnicians = async () => {
+    try {
+      const techRes = await fetch(`${API}/projects/technicians-lookup`);
+      if (techRes.ok) {
+        const tData = await techRes.json();
+        if (tData.success && Array.isArray(tData.data)) {
+          setTechnicians(tData.data);
+          return tData.data;
+        }
+      }
+    } catch (err) {
+      console.error('Error fetching technicians lookup:', err);
+    }
+    return null;
+  };
 
   // Load invoices and technicians
   useEffect(() => {
@@ -35,16 +50,12 @@ export default function NewProjectModal({ isOpen, onClose, onSuccess }) {
       setLoadingLookups(true);
       Promise.all([
         fetch(`${API}/projects/invoices-lookup`).catch(() => null),
-        fetch(`${API}/projects/technicians-lookup`).catch(() => null)
+        fetchTechnicians()
       ])
-        .then(async ([invRes, techRes]) => {
+        .then(async ([invRes]) => {
           if (invRes && invRes.ok) {
             const iData = await invRes.json();
             if (iData.success) setInvoices(iData.data || []);
-          }
-          if (techRes && techRes.ok) {
-            const tData = await techRes.json();
-            if (tData.success) setTechnicians(tData.data || []);
           }
         })
         .finally(() => setLoadingLookups(false));
@@ -78,22 +89,39 @@ export default function NewProjectModal({ isOpen, onClose, onSuccess }) {
     }
   };
 
-  // Handle newly created technician from Quick Add modal
-  const handleTechAdded = (newTech) => {
+  // Handle newly created technician from Quick Add modal (RULE 2 & 3)
+  const handleTechAdded = async (newTech) => {
     if (!newTech) return;
+    const newId = String(newTech.id);
+
+    // Fallback object to guarantee instant UI reflection
     const techObj = {
       id: newTech.id,
       name: newTech.name,
       contact: newTech.phone || newTech.email || '',
+      phone: newTech.phone || '',
       role_title: newTech.role_name || newTech.designation || 'Technician',
       designation: newTech.designation || 'Field Technician',
       wallet_balance: 0
     };
+
+    // Pre-insert locally
     setTechnicians(prev => {
-      const exists = prev.some(t => String(t.id) === String(newTech.id));
+      const exists = prev.some(t => String(t.id) === newId);
       return exists ? prev : [techObj, ...prev];
     });
-    setTechnicianId(newTech.id);
+
+    // Auto-select newly created technician
+    setTechnicianId(newId);
+
+    // Immediately refetch latest technician list from server
+    const serverList = await fetchTechnicians();
+    if (serverList && Array.isArray(serverList)) {
+      const found = serverList.some(t => String(t.id) === newId);
+      if (!found) {
+        setTechnicians(prev => [techObj, ...prev.filter(t => String(t.id) !== newId)]);
+      }
+    }
   };
 
   const totalTechnicianPayout = Number(setupCharge || 0) + Number(conveyanceCost || 0) + Number(mealAllowance || 0);
