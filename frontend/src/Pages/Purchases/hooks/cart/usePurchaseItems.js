@@ -19,11 +19,11 @@ export function usePurchaseItems({
   const [query, setQuery] = useState('');
   const [isSearchOpen, setIsSearchOpen] = useState(false);
 
-  // Search matches for autocomplete
+  // Search matches for autocomplete - only show when user typed characters
   const matches = useMemo(() => {
     const list = Array.isArray(productList) ? productList : [];
     const term = query.trim().toLowerCase();
-    if (!term) return list.slice(0, 30);
+    if (!term || term.length === 0) return [];
     return list
       .filter((product) => {
         const full = fullCatalogName(product).toLowerCase();
@@ -111,6 +111,7 @@ export function usePurchaseItems({
   };
 
   const addProduct = (product) => {
+    if (!product || !product.id) return;
     const existingIndex = items.findIndex((i) => i.product_id === product.id);
     if (existingIndex !== -1) {
       if (setPopupMsg) {
@@ -154,7 +155,11 @@ export function usePurchaseItems({
 
   const handleAddButtonClick = (product, e) => {
     if (e && e.stopPropagation) e.stopPropagation();
-    addProduct(product);
+    if (product && product.id) {
+      addProduct(product);
+    } else if (searchInputRef?.current) {
+      searchInputRef.current.focus();
+    }
   };
 
   return {

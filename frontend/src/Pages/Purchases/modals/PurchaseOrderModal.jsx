@@ -377,11 +377,19 @@ export default function PurchaseOrderModal(props) {
                       type="text"
                       value={query}
                       onChange={(e) => {
-                        setQuery(e.target.value);
-                        setIsSearchOpen(true);
+                        const val = e.target.value;
+                        setQuery(val);
+                        setIsSearchOpen(val.trim().length > 0);
                       }}
                       onFocus={() => {
-                        setIsSearchOpen(true);
+                        if (query.trim().length > 0) {
+                          setIsSearchOpen(true);
+                        }
+                      }}
+                      onKeyDown={(e) => {
+                        if (e.key === 'Escape') {
+                          setIsSearchOpen(false);
+                        }
                       }}
                       placeholder="Search by full catalog name, brand, model, SKU or barcode..."
                       className="w-full py-2.5 px-9 rounded-lg border-[1.5px] border-slate-300 text-sm outline-none focus:border-emerald-500"
@@ -403,15 +411,20 @@ export default function PurchaseOrderModal(props) {
 
                   <button
                     type="button"
-                    onClick={handleAddButtonClick}
+                    onClick={() => {
+                      searchInputRef?.current?.focus();
+                      if (query.trim().length > 0) {
+                        setIsSearchOpen(true);
+                      }
+                    }}
                     className="py-2.5 px-4.5 rounded-lg bg-emerald-500 hover:bg-emerald-600 text-white border-0 font-semibold text-sm cursor-pointer flex items-center gap-1.5 whitespace-nowrap transition-colors"
                   >
                     + Add More
                   </button>
                 </div>
 
-                {/* Autocomplete dropdown with Full Catalog Name */}
-                {isSearchOpen && (
+                {/* Autocomplete dropdown with Full Catalog Name - only render if query has length > 0 */}
+                {isSearchOpen && query.trim().length > 0 && (
                   <div className="absolute top-[calc(100%+4px)] left-0 right-0 z-[100] bg-white rounded-xl border-[1.5px] border-emerald-500 shadow-2xl max-h-[260px] overflow-y-auto p-1.5">
                     {matches.length === 0 ? (
                       <div className="p-3.5 text-center text-slate-400 text-sm">
@@ -443,6 +456,7 @@ export default function PurchaseOrderModal(props) {
                             onClick={() => {
                               if (isAlreadyAdded) return;
                               addProduct(p);
+                              setQuery('');
                               setIsSearchOpen(false);
                             }}
                             className={`py-2 px-3 rounded-md flex justify-between items-center text-sm border-b border-slate-100 transition-colors ${
