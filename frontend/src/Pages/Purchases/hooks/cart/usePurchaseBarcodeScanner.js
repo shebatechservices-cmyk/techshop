@@ -33,7 +33,7 @@ export function usePurchaseBarcodeScanner({
           : Array.isArray(otherItem.serials)
           ? otherItem.serials
           : [];
-        if (otherList.some((s) => s.toLowerCase() === code.toLowerCase())) {
+        if (otherList.some((s) => s === code)) {
           setBarcodeScanErrors((prev) => ({
             ...prev,
             [localId]: `⚠️ Barcode/Serial "${code}" is already assigned to another item in this order.`,
@@ -55,7 +55,7 @@ export function usePurchaseBarcodeScanner({
           ? i.serials
           : [];
 
-        if (currentList.some((s) => s.toLowerCase() === code.toLowerCase())) {
+        if (currentList.some((s) => s === code)) {
           duplicateFound = true;
           return i;
         }
@@ -110,9 +110,7 @@ export function usePurchaseBarcodeScanner({
           : Array.isArray(i.serials)
           ? i.serials
           : [];
-        const filtered = currentList.filter(
-          (s) => s.toLowerCase() !== serialCode.toLowerCase()
-        );
+        const filtered = currentList.filter((s) => s !== serialCode);
         const newQty = i.is_serial_tracked
           ? filtered.length
           : Math.max(1, (Number(i.quantity) || 1) - 1);

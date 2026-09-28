@@ -48,13 +48,19 @@ function PurchaseCartItemRow({
     ? item.serials
     : [];
 
+  const isSerialTracked = Boolean(
+    item.isSerialRequired ||
+    item.is_serial_required ||
+    item.is_serial_tracked ||
+    isProductSerialTracked(item)
+  );
+
   const onAdd = (e) => {
     if (e) {
       e.preventDefault();
       e.stopPropagation();
     }
     const currentInputValue = tempBarcode.trim();
-    console.log('Triggered Add Barcode with value:', currentInputValue);
     if (!currentInputValue) return;
 
     // RULE 1, 2 & 3: Trigger barcode addition to the matching product index and reset input
@@ -69,28 +75,28 @@ function PurchaseCartItemRow({
   // EXPANDED ITEM VIEW
   if (isExpanded) {
     return (
-      <div className="border-[1.5px] border-emerald-500 rounded-xl bg-white p-4 shadow-sm">
+      <div className="border-[1.5px] border-emerald-500 rounded-xl bg-white p-3.5 shadow-sm">
         {/* Line 1: Full Catalog Name at Top */}
-        <div className="flex items-center justify-between mb-2">
-          <div className="flex items-center gap-2">
-            <span className="text-emerald-500 text-xl leading-none">⬡</span>
-            <span className="font-extrabold text-[0.98rem] text-slate-900">
+        <div className="flex items-center justify-between mb-1.5">
+          <div className="flex items-center gap-2 min-w-0">
+            <span className="text-emerald-500 text-lg leading-none shrink-0">⬡</span>
+            <span className="font-extrabold text-sm text-slate-900 truncate">
               {displayName}
             </span>
           </div>
 
-          <div className="flex items-center gap-3.5">
+          <div className="flex items-center gap-2 shrink-0">
             <button
               type="button"
               onClick={() => setExpandedId(null)}
-              className="bg-transparent border-0 text-sky-600 font-bold text-sm cursor-pointer p-0 hover:text-sky-700"
+              className="bg-transparent border-0 text-sky-600 font-bold text-xs cursor-pointer p-0 hover:text-sky-700"
             >
               ▲ Collapse
             </button>
             <button
               type="button"
               onClick={() => handleRemoveItem(item.localId)}
-              className="bg-transparent border-0 text-rose-500 text-base cursor-pointer p-0 hover:text-rose-700"
+              className="bg-transparent border-0 text-rose-500 text-sm cursor-pointer p-0 hover:text-rose-700"
               title="Remove product"
             >
               ✕
@@ -98,71 +104,75 @@ function PurchaseCartItemRow({
           </div>
         </div>
 
-        {/* Line 2: Summary Details Badge Bar */}
-        <div className="flex items-center gap-2 flex-wrap py-2 px-3 bg-slate-50 rounded-lg border border-slate-200 mb-3.5 text-xs">
+        {/* Line 2: Summary Details Badge Bar (Uncollapsed) */}
+        <div className="flex items-center gap-1.5 flex-wrap py-1.5 px-2.5 bg-slate-50 rounded-lg border border-slate-200 mb-2.5 text-xs">
           <span className="bg-slate-200 text-slate-700 py-0.5 px-2 rounded-full font-semibold">
             📦 {qty} units
           </span>
           <span className="bg-emerald-50 border border-emerald-200 text-emerald-800 py-0.5 px-2 rounded-full font-bold">
             Unit Cost: {taka(cost)}
           </span>
+          <span className="bg-amber-50 border border-amber-200 text-amber-800 py-0.5 px-2 rounded-full font-bold">
+            Sale Margin: {item.margin_value || 15}
+            {item.margin_type === 'percent' ? '%' : '৳'}
+          </span>
           <span className="bg-sky-50 border border-sky-200 text-sky-700 py-0.5 px-2 rounded-full font-bold">
             Total Cost: {taka(lineTotal)}
           </span>
-          <span className="bg-amber-50 border border-amber-200 text-amber-800 py-0.5 px-2 rounded-full font-bold">
-            Margin: {item.margin_value || 15}
-            {item.margin_type === 'percent' ? '%' : '৳'}
-          </span>
           <span className="bg-emerald-50 border border-emerald-200 text-emerald-700 py-0.5 px-2 rounded-full font-bold">
-            Final Sale: {taka(finalSale)}
+            Total Sale: {taka(Number((finalSale * qty).toFixed(2)))}
           </span>
+          {!isSerialTracked ? (
+            <span className="bg-slate-100 border border-slate-300 text-slate-600 py-0.5 px-2 rounded-full font-semibold">
+              No serial tracked
+            </span>
+          ) : barcodesList.length > 0 ? (
+            <span className="bg-fuchsia-50 border border-fuchsia-200 text-fuchsia-800 py-0.5 px-2 rounded-full font-semibold">
+              📷 {barcodesList.length} serials
+            </span>
+          ) : (
+            <span className="bg-rose-50 border border-rose-200 text-rose-700 py-0.5 px-2 rounded-full font-semibold">
+              📷 Serial required
+            </span>
+          )}
           {item.previous_margin && (
             <span className="bg-slate-100 border border-slate-300 text-slate-600 py-0.5 px-2 rounded-full font-semibold">
               🏷️ Prev Margin: {item.previous_margin}%{' '}
               {item.previous_cost ? `· ৳${item.previous_cost}` : ''}
             </span>
           )}
-          {barcodesList.length > 0 && (
-            <span className="bg-fuchsia-50 border border-fuchsia-200 text-fuchsia-800 py-0.5 px-2 rounded-full font-semibold">
-              📷 {barcodesList.length} serials
-            </span>
-          )}
         </div>
 
-        {/* Editable Form Controls - Row 1: Quantity, Cost Price, Margin, Final Sale */}
-        <div className="grid grid-cols-[80px_130px_160px_130px] gap-3 mb-3 items-end">
+        {/* Editable Form Controls - Single Row Inputs: Quantity, Cost Price, Sales Margin (%), Final Sale (Unit) */}
+        <div className="grid grid-cols-4 gap-2 mb-2.5 items-end">
           {/* Quantity */}
           <div>
-            <label className="block text-xs font-semibold text-slate-600 mb-1 truncate">
+            <label className="block text-[11px] font-semibold text-slate-600 mb-0.5 truncate">
               Quantity *
             </label>
             <input
               type="number"
               min="1"
-              readOnly={Boolean(item.is_serial_tracked)}
-              value={
-                item.is_serial_tracked
-                  ? barcodesList.length
-                  : item.quantity
-              }
+              readOnly={isSerialTracked}
+              value={isSerialTracked ? barcodesList.length : item.quantity}
               onChange={(e) => {
-                if (item.is_serial_tracked) return;
+                if (isSerialTracked) return;
                 updateItem(item.localId, {
                   quantity: Math.max(1, Number(e.target.value || 1)),
                 });
               }}
-              className={`w-full py-1.5 px-2 rounded-md text-sm text-center box-border ${
-                item.is_serial_tracked && barcodesList.length === 0
+              className={`w-full py-1 px-2 rounded-md text-xs text-center box-border ${
+                isSerialTracked && barcodesList.length === 0
                   ? 'border-2 border-rose-500'
                   : 'border border-slate-300'
               } ${
-                item.is_serial_tracked
+                isSerialTracked
                   ? 'bg-slate-50 text-slate-900 font-bold cursor-not-allowed'
                   : 'bg-white text-slate-900 font-bold cursor-text'
               }`}
               title={
-                item.is_serial_tracked
-                  ? 'Quantity is automatically calculated from scanned barcodes and cannot be manually modified'
+                isSerialTracked
+                  ? 'Quantity is automatically calculated from scanned serials and cannot be manually modified'
                   : 'Enter quantity manually'
               }
             />
@@ -170,12 +180,12 @@ function PurchaseCartItemRow({
 
           {/* Cost Price */}
           <div>
-            <div className="flex justify-between items-center mb-1">
-              <label className="text-xs font-bold text-sky-600 truncate">
+            <div className="flex justify-between items-center mb-0.5">
+              <label className="text-[11px] font-bold text-sky-600 truncate">
                 Cost Price ৳ *
               </label>
               {item.previous_cost && (
-                <span className="text-[0.66rem] text-slate-400">
+                <span className="text-[0.6rem] text-slate-400">
                   (Last: ৳{item.previous_cost})
                 </span>
               )}
@@ -186,13 +196,13 @@ function PurchaseCartItemRow({
               value={item.cost_price}
               onChange={(e) => handleItemCostChange(item, e.target.value)}
               placeholder="0.00"
-              className="w-full py-1.5 px-2.5 rounded-md border-[1.5px] border-sky-400 text-sm box-border font-semibold focus:outline-none focus:border-sky-500"
+              className="w-full py-1 px-2 rounded-md border border-sky-400 text-xs box-border font-semibold focus:outline-none focus:border-sky-500"
             />
           </div>
 
-          {/* Sales Margin (%) Default */}
+          {/* Sales Margin (%) */}
           <div>
-            <label className="block text-xs font-bold text-slate-600 mb-1 truncate">
+            <label className="block text-[11px] font-bold text-slate-600 mb-0.5 truncate">
               Sales Margin ({item.margin_type === 'percent' ? '%' : '৳'})
             </label>
             <div className="flex gap-1 items-center">
@@ -202,7 +212,7 @@ function PurchaseCartItemRow({
                 value={item.margin_value}
                 onChange={(e) => handleItemMarginChange(item, e.target.value)}
                 placeholder="15"
-                className="w-[95px] py-1.5 px-2 rounded-md border border-slate-300 text-sm text-center font-bold box-border focus:outline-none focus:border-emerald-500"
+                className="w-full py-1 px-2 rounded-md border border-slate-300 text-xs text-center font-bold box-border focus:outline-none focus:border-emerald-500"
               />
               <div className="flex rounded-md overflow-hidden border border-slate-300 shrink-0">
                 <button
@@ -210,7 +220,7 @@ function PurchaseCartItemRow({
                   onClick={() => {
                     updateItem(item.localId, { margin_type: 'percent' });
                   }}
-                  className={`px-2 py-1.5 border-0 cursor-pointer text-xs font-bold ${
+                  className={`px-1.5 py-1 border-0 cursor-pointer text-[11px] font-bold ${
                     item.margin_type === 'percent'
                       ? 'bg-emerald-500 text-white'
                       : 'bg-slate-100 text-slate-500'
@@ -224,7 +234,7 @@ function PurchaseCartItemRow({
                   onClick={() => {
                     updateItem(item.localId, { margin_type: 'amount' });
                   }}
-                  className={`px-2 py-1.5 border-0 cursor-pointer text-xs font-bold ${
+                  className={`px-1.5 py-1 border-0 cursor-pointer text-[11px] font-bold ${
                     item.margin_type === 'amount'
                       ? 'bg-emerald-500 text-white'
                       : 'bg-slate-100 text-slate-500'
@@ -237,13 +247,13 @@ function PurchaseCartItemRow({
             </div>
           </div>
 
-          {/* Final Sale Price */}
+          {/* Final Sale (Unit) */}
           <div>
-            <div className="flex justify-between items-center mb-1">
-              <label className="text-xs font-bold text-emerald-600 truncate">
-                Final Sale ৳
+            <div className="flex justify-between items-center mb-0.5">
+              <label className="text-[11px] font-bold text-emerald-600 truncate">
+                Final Sale (Unit) ৳
               </label>
-              <span className="text-[0.66rem] text-emerald-600 font-semibold">
+              <span className="text-[0.6rem] text-emerald-600 font-semibold">
                 (Calc)
               </span>
             </div>
@@ -251,18 +261,18 @@ function PurchaseCartItemRow({
               type="text"
               readOnly
               value={finalSale > 0 ? taka(finalSale) : '৳ 0.00'}
-              className="w-full py-1.5 px-2 rounded-md border-[1.5px] border-emerald-300 bg-emerald-50 text-emerald-700 text-sm font-extrabold text-center box-border cursor-default"
+              className="w-full py-1 px-2 rounded-md border border-emerald-300 bg-emerald-50 text-emerald-700 text-xs font-extrabold text-center box-border cursor-default"
               title="Final sale price is strictly calculated from Cost Price + Margin and cannot be manually modified."
             />
           </div>
         </div>
 
         {/* Editable Form Controls - Row 2: Expected Date, Customer Warranty, Supplier Warranty, Barcode Scan Input */}
-        <div className="grid grid-cols-[140px_100px_100px_260px] gap-3 items-end justify-start">
+        <div className="grid grid-cols-[140px_110px_110px_1fr] gap-2 items-end">
           {/* Expected Inward Date */}
           <div>
-            <label className="block text-xs font-semibold text-slate-600 mb-1 truncate">
-              Expected Inward Date *
+            <label className="block text-[11px] font-semibold text-slate-600 mb-0.5 truncate">
+              Expected Date *
             </label>
             <input
               type="date"
@@ -270,17 +280,17 @@ function PurchaseCartItemRow({
               onChange={(e) =>
                 updateItem(item.localId, { expected_date: e.target.value })
               }
-              className="w-full py-1.5 px-2 rounded-md border border-slate-300 text-xs box-border focus:outline-none focus:border-emerald-500"
+              className="w-full py-1 px-2 rounded-md border border-slate-300 text-xs box-border focus:outline-none focus:border-emerald-500"
             />
           </div>
 
           {/* Customer Warranty (Months) */}
           <div>
-            <div className="flex justify-between items-center mb-1">
-              <label className="text-xs font-bold text-emerald-700 truncate">
+            <div className="flex justify-between items-center mb-0.5">
+              <label className="text-[11px] font-bold text-emerald-700 truncate">
                 Cust. Warranty (M) *
               </label>
-              <span className="text-[0.64rem] text-emerald-500 font-semibold">
+              <span className="text-[0.6rem] text-emerald-500 font-semibold">
                 (Inv)
               </span>
             </div>
@@ -306,7 +316,7 @@ function PurchaseCartItemRow({
                   });
                 }}
                 placeholder="12"
-                className="w-full min-w-0 py-1.5 px-1 border-0 outline-none text-xs text-center font-bold text-emerald-800 bg-transparent box-border"
+                className="w-full min-w-0 py-1 px-1 border-0 outline-none text-xs text-center font-bold text-emerald-800 bg-transparent box-border"
               />
               <div className="flex items-center border-l border-emerald-200 divide-x divide-emerald-200 shrink-0 bg-emerald-50">
                 <button
@@ -325,7 +335,7 @@ function PurchaseCartItemRow({
                       customer_warranty_months: next,
                     });
                   }}
-                  className="py-1.5 px-1.5 border-0 bg-transparent cursor-pointer text-[10px] font-bold text-emerald-600 hover:bg-emerald-100 transition-colors leading-none"
+                  className="py-1 px-1 border-0 bg-transparent cursor-pointer text-[10px] font-bold text-emerald-600 hover:bg-emerald-100 transition-colors leading-none"
                   title="Decrease customer warranty months"
                 >
                   ▼
@@ -346,7 +356,7 @@ function PurchaseCartItemRow({
                       customer_warranty_months: next,
                     });
                   }}
-                  className="py-1.5 px-1.5 border-0 bg-transparent cursor-pointer text-[10px] font-bold text-emerald-600 hover:bg-emerald-100 transition-colors leading-none"
+                  className="py-1 px-1 border-0 bg-transparent cursor-pointer text-[10px] font-bold text-emerald-600 hover:bg-emerald-100 transition-colors leading-none"
                   title="Increase customer warranty months"
                 >
                   ▲
@@ -357,11 +367,11 @@ function PurchaseCartItemRow({
 
           {/* Supplier Warranty (Months) */}
           <div>
-            <div className="flex justify-between items-center mb-1">
-              <label className="text-xs font-bold text-indigo-700 truncate">
+            <div className="flex justify-between items-center mb-0.5">
+              <label className="text-[11px] font-bold text-indigo-700 truncate">
                 Supp. Warranty (M) *
               </label>
-              <span className="text-[0.64rem] text-indigo-500 font-semibold">
+              <span className="text-[0.6rem] text-indigo-500 font-semibold">
                 (Ven)
               </span>
             </div>
@@ -385,7 +395,7 @@ function PurchaseCartItemRow({
                   })
                 }
                 placeholder="14"
-                className="w-full min-w-0 py-1.5 px-1 border-0 outline-none text-xs text-center font-bold text-indigo-800 bg-transparent box-border"
+                className="w-full min-w-0 py-1 px-1 border-0 outline-none text-xs text-center font-bold text-indigo-800 bg-transparent box-border"
               />
               <div className="flex items-center border-l border-indigo-200 divide-x divide-indigo-200 shrink-0 bg-indigo-50">
                 <button
@@ -402,7 +412,7 @@ function PurchaseCartItemRow({
                       supplier_warranty_months: Math.max(0, cur - 1),
                     });
                   }}
-                  className="py-1.5 px-1.5 border-0 bg-transparent cursor-pointer text-[10px] font-bold text-indigo-700 hover:bg-indigo-100 transition-colors leading-none"
+                  className="py-1 px-1 border-0 bg-transparent cursor-pointer text-[10px] font-bold text-indigo-700 hover:bg-indigo-100 transition-colors leading-none"
                   title="Decrease supplier warranty months"
                 >
                   ▼
@@ -421,7 +431,7 @@ function PurchaseCartItemRow({
                       supplier_warranty_months: cur + 1,
                     });
                   }}
-                  className="py-1.5 px-1.5 border-0 bg-transparent cursor-pointer text-[10px] font-bold text-indigo-700 hover:bg-indigo-100 transition-colors leading-none"
+                  className="py-1 px-1 border-0 bg-transparent cursor-pointer text-[10px] font-bold text-indigo-700 hover:bg-indigo-100 transition-colors leading-none"
                   title="Increase supplier warranty months"
                 >
                   ▲
@@ -430,27 +440,19 @@ function PurchaseCartItemRow({
             </div>
           </div>
 
-          {/* Barcode / Serial Scanning */}
-          <div className="min-w-0">
-            {!(
-              item.isSerialRequired ||
-              item.is_serial_required ||
-              item.is_serial_tracked ||
-              isProductSerialTracked(item)
-            ) ? (
-              <div className="bg-slate-50 border border-dashed border-slate-300 rounded-lg py-1.5 px-2.5 flex items-center h-[34px] box-border">
+          {/* Barcode / Serial Scanning (Shrunk to w-48/w-56 and aligned to right) */}
+          <div className="min-w-0 flex flex-col items-end">
+            {!isSerialTracked ? (
+              <div className="bg-slate-50 border border-dashed border-slate-300 rounded-md py-1 px-2.5 flex items-center h-[28px] box-border">
                 <span className="text-xs text-slate-500 font-semibold truncate">
-                  📦 Non-serialized product (Standard Quantity)
+                  📦 Non-serialized product
                 </span>
               </div>
             ) : (
-              <div>
-                <div className="flex justify-between items-center mb-1 gap-1 min-w-0">
-                  <label className="flex items-center gap-1.5 text-xs font-bold text-slate-900 whitespace-nowrap overflow-hidden">
-                    <span className="truncate">📷 Scan Barcode</span>
-                    <span className="text-[0.65rem] text-rose-700 bg-rose-100 py-0.25 px-1.5 rounded font-extrabold whitespace-nowrap">
-                      Serial Required
-                    </span>
+              <div className="w-48 sm:w-56 max-w-full">
+                <div className="flex justify-between items-center mb-0.5 gap-1 min-w-0">
+                  <label className="flex items-center gap-1 text-[11px] font-bold text-slate-900 whitespace-nowrap overflow-hidden">
+                    <span className="truncate">📷 Scan Serial</span>
                     <span
                       className={`text-[0.65rem] font-bold whitespace-nowrap ${
                         barcodesList.length > 0
@@ -458,15 +460,15 @@ function PurchaseCartItemRow({
                           : 'text-rose-500'
                       }`}
                     >
-                      ({barcodesList.length} scanned)
+                      ({barcodesList.length})
                     </span>
                   </label>
                   {barcodesList.length > 0 && (
                     <span
-                      className="text-[0.65rem] text-sky-700 font-semibold bg-sky-100 py-0.25 px-1.5 rounded whitespace-nowrap"
-                      title="All subsequent barcodes must match this length"
+                      className="text-[0.62rem] text-sky-700 font-semibold bg-sky-100 py-0.25 px-1 rounded whitespace-nowrap"
+                      title="All subsequent serials must match this length"
                     >
-                      Ref: {barcodesList[0].length} chars
+                      Ref: {barcodesList[0].length}
                     </span>
                   )}
                 </div>
@@ -480,27 +482,25 @@ function PurchaseCartItemRow({
                       if (e.key === 'Enter') {
                         e.preventDefault();
                         e.stopPropagation();
-                        const currentInputValue = tempBarcode.trim();
-                        console.log('Triggered Add Barcode with value:', currentInputValue);
                         onAdd(e);
                       }
                     }}
-                    placeholder="Scan or type barcode..."
-                    className={`w-full py-1.5 pl-3 pr-16 rounded-lg text-xs text-slate-800 placeholder:text-slate-400 focus:outline-none transition-all bg-white ${
+                    placeholder="Scan serial..."
+                    className={`w-full py-1 pl-2.5 pr-14 rounded-md text-xs text-slate-800 placeholder:text-slate-400 focus:outline-none transition-all bg-white ${
                       barcodeScanErrors[item.localId] || barcodesList.length === 0
-                        ? 'border-2 border-rose-400 focus:border-rose-500 focus:ring-1 focus:ring-rose-400'
-                        : 'border border-slate-300 focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500'
+                        ? 'border-2 border-rose-400 focus:border-rose-500'
+                        : 'border border-slate-300 focus:border-emerald-500'
                     }`}
                   />
                   
-                  <div className="absolute right-1.5 flex items-center gap-1">
+                  <div className="absolute right-1 flex items-center gap-0.5">
                     <button
                       type="button"
                       onClick={() => setIsCameraScannerOpen(true)}
                       title="Open Camera Scanner"
-                      className="w-6 h-6 rounded flex items-center justify-center text-slate-500 hover:text-emerald-600 hover:bg-emerald-50 transition-colors cursor-pointer border-0 bg-transparent p-0"
+                      className="w-5 h-5 rounded flex items-center justify-center text-slate-500 hover:text-emerald-600 hover:bg-emerald-50 transition-colors cursor-pointer border-0 bg-transparent p-0"
                     >
-                      <CameraIcon className="w-4 h-4" />
+                      <CameraIcon className="w-3.5 h-3.5" />
                     </button>
 
                     <button
@@ -508,19 +508,17 @@ function PurchaseCartItemRow({
                       onClick={(e) => {
                         e.preventDefault();
                         e.stopPropagation();
-                        const currentInputValue = tempBarcode.trim();
-                        console.log('Triggered Add Barcode with value:', currentInputValue);
                         onAdd(e);
                       }}
-                      title="Add Serial / Barcode"
-                      className="w-6 h-6 bg-emerald-500 hover:bg-emerald-600 text-white rounded font-bold text-xs flex items-center justify-center border-0 cursor-pointer transition-colors"
+                      title="Add Serial"
+                      className="w-5 h-5 bg-emerald-500 hover:bg-emerald-600 text-white rounded font-bold text-xs flex items-center justify-center border-0 cursor-pointer transition-colors leading-none"
                     >
                       +
                     </button>
                   </div>
                 </div>
                 {barcodeScanErrors[item.localId] && (
-                  <div className="text-xs text-rose-600 mt-1 font-semibold truncate">
+                  <div className="text-[11px] text-rose-600 mt-0.5 font-semibold truncate">
                     {barcodeScanErrors[item.localId]}
                   </div>
                 )}
@@ -570,7 +568,7 @@ function PurchaseCartItemRow({
 
         {/* Serial Chips */}
         {barcodesList.length > 0 && (
-          <div className="flex flex-wrap gap-1.5 mt-3">
+          <div className="flex flex-wrap gap-1.5 mt-2.5">
             {barcodesList.map((sn) => (
               <span
                 key={sn}
@@ -594,51 +592,59 @@ function PurchaseCartItemRow({
 
   // COLLAPSED ITEM VIEW
   return (
-    <div className="border border-slate-200 rounded-xl bg-white py-2 px-3 flex items-center justify-between flex-wrap gap-2.5">
-      <div className="flex items-center gap-2.5 flex-1 min-w-[320px]">
-        <span className="text-emerald-500 text-xl">⬡</span>
+    <div className="border border-slate-200 rounded-xl bg-white py-1.5 px-3 flex items-center justify-between flex-wrap gap-2">
+      <div className="flex items-center gap-2 flex-1 min-w-[320px]">
+        <span className="text-emerald-500 text-lg">⬡</span>
         <div className="flex-1">
-          <div className="flex items-center gap-1.5 flex-wrap">
+          <div className="flex items-center gap-1.5 flex-wrap text-xs">
             <span className="font-extrabold text-sm text-slate-900">
               {displayName}
             </span>
-            <span className="bg-slate-200 text-slate-700 py-0.5 px-1.5 rounded text-xs font-semibold">
+            <span className="bg-slate-200 text-slate-700 py-0.5 px-1.5 rounded font-semibold">
               📦 {qty} units
             </span>
-            <span className="bg-emerald-50 text-emerald-800 border border-emerald-200 py-0.5 px-1.5 rounded text-xs font-bold">
+            <span className="bg-emerald-50 text-emerald-800 border border-emerald-200 py-0.5 px-1.5 rounded font-bold">
               Unit Cost: {taka(cost)}
             </span>
-            <span className="bg-sky-50 text-sky-700 border border-sky-200 py-0.5 px-1.5 rounded text-xs font-bold">
-              Total Cost: {taka(lineTotal)}
-            </span>
-            <span className="bg-amber-50 text-amber-800 border border-amber-200 py-0.5 px-1.5 rounded text-xs font-bold">
-              Margin: {item.margin_value || 15}
+            <span className="bg-amber-50 text-amber-800 border border-amber-200 py-0.5 px-1.5 rounded font-bold">
+              Sale Margin: {item.margin_value || 15}
               {item.margin_type === 'percent' ? '%' : '৳'}
             </span>
-            <span className="bg-emerald-50 text-emerald-700 border border-emerald-200 py-0.5 px-1.5 rounded text-xs font-bold">
-              Sale: {taka(finalSale)}
+            <span className="bg-sky-50 text-sky-700 border border-sky-200 py-0.5 px-1.5 rounded font-bold">
+              Total Cost: {taka(lineTotal)}
             </span>
-            {barcodesList.length > 0 && (
-              <span className="text-sky-600 font-semibold text-xs">
+            <span className="bg-emerald-50 text-emerald-700 border border-emerald-200 py-0.5 px-1.5 rounded font-bold">
+              Total Sale: {taka(Number((finalSale * qty).toFixed(2)))}
+            </span>
+            {!isSerialTracked ? (
+              <span className="bg-slate-100 text-slate-600 border border-slate-300 py-0.5 px-1.5 rounded font-semibold">
+                No serial tracked
+              </span>
+            ) : barcodesList.length > 0 ? (
+              <span className="text-sky-600 font-semibold">
                 ({barcodesList.length} serials)
+              </span>
+            ) : (
+              <span className="text-rose-600 font-semibold">
+                (Serial required)
               </span>
             )}
           </div>
         </div>
       </div>
 
-      <div className="flex items-center gap-2.5">
+      <div className="flex items-center gap-2">
         <button
           type="button"
           onClick={() => setExpandedId(item.localId)}
-          className="py-1 px-3 rounded-md border border-slate-300 bg-slate-50 text-slate-900 font-semibold text-xs cursor-pointer hover:bg-slate-100 transition-colors"
+          className="py-1 px-2.5 rounded-md border border-slate-300 bg-slate-50 text-slate-900 font-semibold text-xs cursor-pointer hover:bg-slate-100 transition-colors"
         >
           ✏️ Edit
         </button>
         <button
           type="button"
           onClick={() => handleRemoveItem(item.localId)}
-          className="bg-transparent border-0 text-rose-500 text-base cursor-pointer p-1 hover:text-rose-700"
+          className="bg-transparent border-0 text-rose-500 text-base cursor-pointer p-0.5 hover:text-rose-700"
           title="Remove product"
         >
           ✕
