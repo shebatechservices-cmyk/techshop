@@ -275,7 +275,7 @@ export default function PurchaseOrderModal(props) {
                 </label>
                 <div className="flex gap-2 items-center">
                   <div className="relative flex-1" ref={supplierSelectRef}>
-                    <span className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400">🔍</span>
+                    <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400">🔍</span>
                     <input
                       type="text"
                       placeholder="Select Supplier (Search name / phone)"
@@ -291,7 +291,7 @@ export default function PurchaseOrderModal(props) {
                         setSupplierSearch(e.target.value);
                         setIsSupplierOpen(true);
                       }}
-                      className="w-full py-2.5 px-9 rounded-lg border-[1.5px] border-slate-300 text-sm text-slate-900 bg-white box-border focus:outline-none focus:border-emerald-500"
+                      className="w-full py-2.5 pl-10 pr-9 rounded-lg border-[1.5px] border-slate-300 text-sm text-slate-900 bg-white box-border focus:outline-none focus:border-emerald-500"
                     />
                     <div className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none">
                       <span className="text-xs">⇅</span>
@@ -371,7 +371,7 @@ export default function PurchaseOrderModal(props) {
                 </label>
                 <div className="flex gap-2 items-center">
                   <div className="relative flex-1 flex items-center">
-                    <span className="absolute left-3 text-slate-400">🔍</span>
+                    <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400">🔍</span>
                     <input
                       ref={searchInputRef}
                       type="text"
@@ -392,19 +392,26 @@ export default function PurchaseOrderModal(props) {
                         }
                       }}
                       placeholder="Search by full catalog name, brand, model, SKU or barcode..."
-                      className="w-full py-2.5 px-9 rounded-lg border-[1.5px] border-slate-300 text-sm outline-none focus:border-emerald-500"
+                      className="w-full py-2.5 pl-10 pr-9 rounded-lg border-[1.5px] border-slate-300 text-sm outline-none focus:border-emerald-500"
                     />
                     <span className="absolute right-3 text-slate-400 pointer-events-none">
                       ⇅
                     </span>
                   </div>
 
-                  {/* Inline '+' Button: Triggers popup instead of redirecting */}
+                  {/* Inline '+' Button: Triggers global add product */}
                   <button
                     type="button"
-                    onClick={() => setIsAddProductOpen(true)}
+                    onClick={() => {
+                      if (onClose) onClose();
+                      if (onOpenAddProduct) {
+                        onOpenAddProduct();
+                      } else {
+                        window.dispatchEvent(new CustomEvent('open-add-product'));
+                      }
+                    }}
                     className="w-[38px] h-[38px] rounded-lg border-[1.5px] border-slate-300 bg-slate-50 text-emerald-500 text-xl font-bold flex items-center justify-center cursor-pointer hover:bg-slate-100 transition-colors"
-                    title="Quick Add Product to Catalog (Popup)"
+                    title="Add Product to Catalog"
                   >
                     +
                   </button>
