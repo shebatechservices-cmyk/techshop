@@ -172,14 +172,6 @@ export default function Accounts({ initialTab, onNavigateToExpenses }) {
 
           <button
             type="button"
-            onClick={() => setIsAddPaymentMethodOpen(true)}
-            className="bg-indigo-600 hover:bg-indigo-700 text-white border-0 py-1.5 px-3 rounded-md font-bold text-xs cursor-pointer flex items-center gap-1 shadow-sm transition-colors"
-          >
-            <span>💳</span> Payment Method
-          </button>
-
-          <button
-            type="button"
             onClick={() => {
               setIsTransferOpen(true);
               setTransferError('');

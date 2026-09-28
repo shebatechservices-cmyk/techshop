@@ -14,25 +14,36 @@ const ensureAccountColumns = async () => {
 exports.createAccount = async (req, res) => {
     try {
         await ensureAccountColumns();
-        const { name, account_type = 'drawer', balance = 0, account_number = '', tender_id, tenderId } = req.body;
-        if (!name || !name.trim()) return res.status(400).json({ success: false, message: 'Account name is required.' });
+        const accountName = req.body.accountName || req.body.name;
+        const methodType = req.body.methodType || req.body.account_type || 'drawer';
+        const { balance = 0, account_number = '', tender_id, tenderId } = req.body;
+        if (!accountName || !String(accountName).trim()) {
+            return res.status(400).json({ success: false, message: 'Account name is required.' });
+        }
 
-        const trimmedName = name.trim();
+        const trimmedName = String(accountName).trim();
         const trimmedNumber = typeof account_number === 'string' ? account_number.trim() : '';
         const finalTenderId = tender_id ? parseInt(tender_id, 10) : (tenderId ? parseInt(tenderId, 10) : null);
+
+        // Check if an account already exists with the same methodType and accountName
+        const existingCheck = await pool.query(
+            'SELECT id FROM payment_accounts WHERE LOWER(account_type) = LOWER($1) AND LOWER(name) = LOWER($2) AND deleted_at IS NULL LIMIT 1',
+            [methodType, trimmedName]
+        );
+        if (existingCheck.rows.length > 0) {
+            return res.status(409).json({
+                success: false,
+                code: 'CONFLICT',
+                message: `An account named "${trimmedName}" already exists for the selected payment method.`
+            });
+        }
 
         const query = `
             INSERT INTO payment_accounts (name, account_type, balance, account_number, is_active, tender_id) 
             VALUES ($1, $2, $3, NULLIF($4, ''), true, $5)
-            ON CONFLICT (name) 
-            DO UPDATE SET 
-                account_type = EXCLUDED.account_type,
-                account_number = COALESCE(EXCLUDED.account_number, payment_accounts.account_number),
-                is_active = true,
-                tender_id = COALESCE(EXCLUDED.tender_id, payment_accounts.tender_id)
             RETURNING *;
         `;
-        const result = await pool.query(query, [trimmedName, account_type, balance, trimmedNumber, finalTenderId]);
+        const result = await pool.query(query, [trimmedName, methodType, balance, trimmedNumber, finalTenderId]);
 
         if (Number(balance) > 0) {
             const client = await pool.connect();
@@ -60,6 +71,13 @@ exports.createAccount = async (req, res) => {
         });
     } catch (error) {
         console.error('Account creation error:', error);
+        if (error.code === '23505' || error.code === 'P2002' || error.message?.includes('unique constraint') || error.message?.includes('Unique constraint failed')) {
+            return res.status(409).json({
+                success: false,
+                code: 'CONFLICT',
+                message: 'An account with this name already exists for the selected method.'
+            });
+        }
         return res.status(500).json({ success: false, message: error.message || 'Server error occurred.' });
     }
 };
