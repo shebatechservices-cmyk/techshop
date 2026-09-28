@@ -177,7 +177,12 @@ export default function PurchaseOrderModal(props) {
                       ? `Edit Purchase Order #${orderToEdit.po_number || orderToEdit.id}`
                       : 'New Purchase Order'}
                   </h2>
-                  {orderToEdit?.has_sales && (
+                  {Boolean(
+                    orderToEdit?.has_sales ||
+                    items.some(
+                      (it) => Number(it.soldQuantity || it.sold_quantity || it.sold_count || 0) > 0
+                    )
+                  ) && (
                     <span className="text-[0.72rem] bg-amber-100 text-amber-800 py-0.5 px-2 rounded font-bold border border-amber-200">
                       ⚠️ Sold Items Locked
                     </span>
@@ -190,7 +195,14 @@ export default function PurchaseOrderModal(props) {
                 </div>
                 <p className="mt-0.5 mb-0 text-xs text-slate-500">
                   {orderToEdit
-                    ? 'Prices and barcodes can be updated. Deleting or reducing sold quantities is strictly prohibited.'
+                    ? Boolean(
+                        orderToEdit?.has_sales ||
+                        items.some(
+                          (it) => Number(it.soldQuantity || it.sold_quantity || it.sold_count || 0) > 0
+                        )
+                      )
+                      ? 'Prices and barcodes can be updated. Deleting or reducing sold quantities is strictly prohibited.'
+                      : 'Prices, quantities, serials, and supplier details can be updated.'
                     : 'Procurement, Stock Inward, and Supplier Dues Management'}
                 </p>
               </div>

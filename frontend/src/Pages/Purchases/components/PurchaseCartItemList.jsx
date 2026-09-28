@@ -65,6 +65,11 @@ function PurchaseCartItemRow({
     isProductSerialTracked(item)
   );
 
+  const soldQuantity = Number(
+    item.soldQuantity || item.sold_quantity || item.sold_count || 0
+  );
+  const isSoldLocked = soldQuantity > 0;
+
   const onAdd = (e) => {
     if (e) {
       e.preventDefault();
@@ -105,11 +110,22 @@ function PurchaseCartItemRow({
             </button>
             <button
               type="button"
-              onClick={() => handleRemoveItem(item.localId)}
-              className="bg-transparent border-0 text-rose-500 text-sm cursor-pointer p-0 hover:text-rose-700"
-              title="Remove product"
+              disabled={isSoldLocked}
+              onClick={() => {
+                if (!isSoldLocked) handleRemoveItem(item.localId);
+              }}
+              className={`border-0 text-sm p-0 transition-colors ${
+                isSoldLocked
+                  ? 'bg-transparent text-slate-300 cursor-not-allowed'
+                  : 'bg-transparent text-rose-500 hover:text-rose-700 cursor-pointer'
+              }`}
+              title={
+                isSoldLocked
+                  ? `Cannot remove: ${soldQuantity} unit(s) already sold`
+                  : 'Remove product'
+              }
             >
-              ✕
+              {isSoldLocked ? '🔒' : '✕'}
             </button>
           </div>
         </div>
@@ -162,13 +178,14 @@ function PurchaseCartItemRow({
             </label>
             <input
               type="number"
-              min="1"
+              min={isSoldLocked ? soldQuantity : 1}
               readOnly={isSerialTracked}
               value={isSerialTracked ? barcodesList.length : item.quantity}
               onChange={(e) => {
                 if (isSerialTracked) return;
+                const minVal = isSoldLocked ? soldQuantity : 1;
                 updateItem(item.localId, {
-                  quantity: Math.max(1, Number(e.target.value || 1)),
+                  quantity: Math.max(minVal, Number(e.target.value || minVal)),
                 });
               }}
               className={`w-full py-1 px-2 rounded-md text-xs text-center box-border ${
@@ -183,6 +200,8 @@ function PurchaseCartItemRow({
               title={
                 isSerialTracked
                   ? 'Quantity is automatically calculated from scanned serials and cannot be manually modified'
+                  : isSoldLocked
+                  ? `Quantity locked to minimum ${soldQuantity} sold unit(s)`
                   : 'Enter quantity manually'
               }
             />
@@ -653,11 +672,22 @@ function PurchaseCartItemRow({
         </button>
         <button
           type="button"
-          onClick={() => handleRemoveItem(item.localId)}
-          className="bg-transparent border-0 text-rose-500 text-base cursor-pointer p-0.5 hover:text-rose-700"
-          title="Remove product"
+          disabled={isSoldLocked}
+          onClick={() => {
+            if (!isSoldLocked) handleRemoveItem(item.localId);
+          }}
+          className={`border-0 text-base p-0.5 transition-colors ${
+            isSoldLocked
+              ? 'bg-transparent text-slate-300 cursor-not-allowed'
+              : 'bg-transparent text-rose-500 hover:text-rose-700 cursor-pointer'
+          }`}
+          title={
+            isSoldLocked
+              ? `Cannot remove: ${soldQuantity} unit(s) already sold`
+              : 'Remove product'
+          }
         >
-          ✕
+          {isSoldLocked ? '🔒' : '✕'}
         </button>
       </div>
     </div>
