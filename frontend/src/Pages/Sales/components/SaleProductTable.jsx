@@ -48,14 +48,14 @@ export default function SaleProductTable({
     <>
       <div className="bg-white rounded-lg border border-slate-200 overflow-visible relative mb-1.5 shadow-sm">
         {/* Table Header */}
-        <div className="grid grid-cols-[38px_minmax(180px,1fr)_96px_116px_96px_105px_105px_52px] items-center bg-slate-50 p-2 text-xs font-bold text-slate-500 border-b-2 border-slate-200 rounded-t-md">
+        <div className="grid grid-cols-[30px_minmax(160px,1fr)_68px_74px_68px_80px_84px_44px] items-center bg-slate-50 p-2 text-xs font-bold text-slate-500 border-b-2 border-slate-200 rounded-t-md">
           <div className="text-center">#</div>
-          <div className="pl-1.5">PRODUCT</div>
-          <div className="text-center" title="Customer Warranty (Months)">WAR (Cust)</div>
+          <div className="pl-1">PRODUCT</div>
+          <div className="text-center" title="Customer Warranty (Months)">WAR</div>
           <div className="text-center">QTY</div>
           <div className="text-center">DISC</div>
-          <div className="text-right pr-2.5">PRICE</div>
-          <div className="text-right pr-2.5">TOTAL</div>
+          <div className="text-right pr-1.5">PRICE</div>
+          <div className="text-right pr-1.5">TOTAL</div>
           <div className="text-center"></div>
         </div>
 
@@ -83,26 +83,26 @@ export default function SaleProductTable({
                 activeCostCardId === it.localId || openPickerId === it.localId ? 'z-[1000]' : 'z-[1]'
               } ${idx === items.length - 1 && !isExpanded ? 'rounded-b-md' : ''}`}
             >
-              <div className="grid grid-cols-[38px_minmax(180px,1fr)_96px_116px_96px_105px_105px_52px] items-center py-2 px-2">
+              <div className="grid grid-cols-[30px_minmax(160px,1fr)_68px_74px_68px_80px_84px_44px] items-center py-2 px-2">
                 {/* # */}
                 <div className="text-center text-xs text-slate-500 font-medium">
                   {idx + 1}
                 </div>
 
-                {/* PRODUCT NAME + SERIAL CHIPS */}
-                <div className="pl-1.5">
+                {/* PRODUCT NAME + SERIAL CHIPS + INLINE SCAN INPUT */}
+                <div className="pl-1">
                   <div className="font-bold text-slate-800 text-xs leading-snug flex items-center gap-1.5 flex-wrap">
                     <span>{it.full_name || it.name}</span>
-                    <span className="text-[0.66rem] font-bold py-px px-1.5 rounded text-emerald-700 bg-emerald-50 border border-emerald-200">
+                    <span className="text-[0.66rem] font-bold py-px px-1.5 rounded text-emerald-700 bg-emerald-50 border border-emerald-200 shrink-0">
                       Stock: {it.stock || 0}
                     </span>
                     {it.is_bundle && (
-                      <span className="text-[0.66rem] font-extrabold py-px px-1.5 rounded text-purple-700 bg-purple-100 border border-purple-200">
+                      <span className="text-[0.66rem] font-extrabold py-px px-1.5 rounded text-purple-700 bg-purple-100 border border-purple-200 shrink-0">
                         🎁 Bundle Kit
                       </span>
                     )}
                     {isTracked && (
-                      <span className={`text-[0.66rem] font-extrabold py-px px-1.5 rounded ${
+                      <span className={`text-[0.66rem] font-extrabold py-px px-1.5 rounded shrink-0 ${
                         isSerialMissing
                           ? 'text-rose-700 bg-rose-50 border border-rose-200'
                           : 'text-indigo-600 bg-indigo-50 border-0'
@@ -111,67 +111,14 @@ export default function SaleProductTable({
                       </span>
                     )}
                     {it.is_warranty_required && isWarrantyMissing && (
-                      <span className="text-[0.66rem] text-rose-700 bg-rose-50 border border-rose-200 py-px px-1.5 rounded font-extrabold">
+                      <span className="text-[0.66rem] text-rose-700 bg-rose-50 border border-rose-200 py-px px-1.5 rounded font-extrabold shrink-0">
                         ⚠️ Warranty Required
                       </span>
                     )}
-                  </div>
 
-                  {/* Bundle Items Summary */}
-                  {it.is_bundle && it.bundle_items && it.bundle_items.length > 0 && (
-                    <div className="text-[10px] text-purple-700 font-medium mt-0.5">
-                      Kit Items: {it.bundle_items.map((b) => `${b.quantity}x ${b.component_name || `Item #${b.product_id}`}`).join(', ')}
-                    </div>
-                  )}
-
-                  {/* Dual-UoM Unit Toggle Selector */}
-                  {it.sub_unit_name && (
-                    <div className="inline-flex items-center rounded-md border border-slate-200 bg-slate-100 p-0.5 mt-1 text-[10px] font-bold">
-                      <button
-                        type="button"
-                        onClick={() => switchItemUnit && switchItemUnit(it.localId, 'base_unit')}
-                        className={`px-1.5 py-0.5 rounded transition-all cursor-pointer ${
-                          it.unit_type !== 'sub_unit'
-                            ? 'bg-white text-slate-900 shadow-xs'
-                            : 'text-slate-500 hover:text-slate-800'
-                        }`}
-                      >
-                        {it.base_unit_name || 'Box'}
-                      </button>
-                      <button
-                        type="button"
-                        onClick={() => switchItemUnit && switchItemUnit(it.localId, 'sub_unit')}
-                        className={`px-1.5 py-0.5 rounded transition-all cursor-pointer ${
-                          it.unit_type === 'sub_unit'
-                            ? 'bg-sky-600 text-white shadow-xs'
-                            : 'text-slate-500 hover:text-slate-800'
-                        }`}
-                      >
-                        {it.sub_unit_name || 'Meter'}
-                      </button>
-                    </div>
-                  )}
-
-                  {/* Barcode/Serial Chips & Inline Scan Input */}
-                  {isTracked && (
-                    <div className="flex flex-wrap items-center gap-1.5 mt-1">
-                      {it.serials &&
-                        it.serials.map((s, sIdx) => (
-                          <span
-                            key={sIdx}
-                            className="inline-flex items-center gap-1 py-px px-1.5 bg-white border border-slate-300 rounded text-[0.7rem] font-mono text-slate-700"
-                          >
-                            {s}
-                            <button
-                              type="button"
-                              onClick={() => handleRemoveBarcode(it.localId, s)}
-                              className="border-0 bg-transparent text-slate-400 hover:text-rose-500 cursor-pointer text-xs p-0 leading-none"
-                            >
-                              ×
-                            </button>
-                          </span>
-                        ))}
-                      <div className="relative inline-flex items-center gap-1 serial-picker-container">
+                    {/* Inline Serial Scan Input & Picker Icon directly in this row */}
+                    {isTracked && (
+                      <div className="relative inline-flex items-center gap-1 serial-picker-container shrink-0">
                         <input
                           type="text"
                           placeholder="Scan Serial..."
@@ -188,7 +135,7 @@ export default function SaleProductTable({
                               handleAddBarcode(it.localId, barcodeInput);
                             }
                           }}
-                          className={`w-32 py-0.5 px-2 rounded text-xs outline-none bg-white transition-all ${
+                          className={`w-28 py-0.5 px-1.5 rounded text-[11px] outline-none bg-white transition-all ${
                             barcodeError && barcodeError[it.localId]
                               ? 'border-2 border-rose-500'
                               : isSerialMissing
@@ -211,7 +158,7 @@ export default function SaleProductTable({
 
                         {/* Serial Picker Popover */}
                         {openPickerId === it.localId && (
-                          <div className="absolute top-[calc(100%+4px)] left-0 w-64 max-h-56 overflow-y-auto bg-white border border-slate-300 rounded-lg shadow-2xl p-2 z-[999999] text-left">
+                          <div className="absolute top-[calc(100%+4px)] left-0 w-64 max-h-56 overflow-y-auto bg-white border border-slate-300 rounded-lg shadow-2xl p-2 z-[999999] text-left font-normal">
                             <div className="text-[11px] font-bold text-slate-800 pb-1.5 mb-1.5 border-b border-slate-200 flex items-center justify-between">
                               <span>Available Stock Serials</span>
                               <span className="text-[10px] text-slate-500 font-normal">
@@ -255,6 +202,62 @@ export default function SaleProductTable({
                           </div>
                         )}
                       </div>
+                    )}
+                  </div>
+
+                  {/* Bundle Items Summary */}
+                  {it.is_bundle && it.bundle_items && it.bundle_items.length > 0 && (
+                    <div className="text-[10px] text-purple-700 font-medium mt-0.5">
+                      Kit Items: {it.bundle_items.map((b) => `${b.quantity}x ${b.component_name || `Item #${b.product_id}`}`).join(', ')}
+                    </div>
+                  )}
+
+                  {/* Dual-UoM Unit Toggle Selector */}
+                  {it.sub_unit_name && (
+                    <div className="inline-flex items-center rounded-md border border-slate-200 bg-slate-100 p-0.5 mt-1 text-[10px] font-bold">
+                      <button
+                        type="button"
+                        onClick={() => switchItemUnit && switchItemUnit(it.localId, 'base_unit')}
+                        className={`px-1.5 py-0.5 rounded transition-all cursor-pointer ${
+                          it.unit_type !== 'sub_unit'
+                            ? 'bg-white text-slate-900 shadow-xs'
+                            : 'text-slate-500 hover:text-slate-800'
+                        }`}
+                      >
+                        {it.base_unit_name || 'Box'}
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => switchItemUnit && switchItemUnit(it.localId, 'sub_unit')}
+                        className={`px-1.5 py-0.5 rounded transition-all cursor-pointer ${
+                          it.unit_type === 'sub_unit'
+                            ? 'bg-sky-600 text-white shadow-xs'
+                            : 'text-slate-500 hover:text-slate-800'
+                        }`}
+                      >
+                        {it.sub_unit_name || 'Meter'}
+                      </button>
+                    </div>
+                  )}
+
+                  {/* Scanned Serial Chips */}
+                  {isTracked && it.serials && it.serials.length > 0 && (
+                    <div className="flex flex-wrap items-center gap-1 mt-1">
+                      {it.serials.map((s, sIdx) => (
+                        <span
+                          key={sIdx}
+                          className="inline-flex items-center gap-1 py-px px-1.5 bg-white border border-slate-300 rounded text-[0.68rem] font-mono text-slate-700"
+                        >
+                          {s}
+                          <button
+                            type="button"
+                            onClick={() => handleRemoveBarcode(it.localId, s)}
+                            className="border-0 bg-transparent text-slate-400 hover:text-rose-500 cursor-pointer text-xs p-0 leading-none"
+                          >
+                            ×
+                          </button>
+                        </span>
+                      ))}
                     </div>
                   )}
                 </div>
@@ -268,7 +271,7 @@ export default function SaleProductTable({
                     onChange={(e) => updateItem(it.localId, { warranty_months: e.target.value })}
                     title={isWarrantyMissing ? 'Warranty is required for this product' : 'Warranty duration in months'}
                     placeholder={it.is_warranty_required ? 'Req' : '0'}
-                    className={`w-20 py-1.5 px-2 rounded-md text-center text-xs outline-none transition-colors ${
+                    className={`w-14 py-1 px-1 rounded-md text-center text-xs outline-none transition-colors ${
                       isWarrantyMissing
                         ? 'border-2 border-rose-500 bg-rose-50 text-rose-700 font-bold ring-2 ring-rose-200'
                         : 'border border-slate-300 bg-white text-slate-800 font-medium focus:border-sky-500 focus:ring-1 focus:ring-sky-500'
@@ -279,22 +282,22 @@ export default function SaleProductTable({
                 {/* QTY */}
                 <div className="flex justify-center items-center">
                   {isTracked ? (
-                    <div className="inline-flex items-center gap-1 justify-center" title="Quantity is auto-locked to scanned serials count">
+                    <div className="inline-flex items-center gap-0.5 justify-center" title="Quantity is auto-locked to scanned serials count">
                       <input
                         type="number"
                         disabled={true}
                         readOnly={true}
                         value={qty}
-                        className={`w-16 py-1.5 px-1.5 rounded-md text-center text-xs font-bold cursor-not-allowed outline-none ${
+                        className={`w-12 py-1 px-1 rounded-md text-center text-xs font-bold cursor-not-allowed outline-none ${
                           isSerialMissing
                             ? 'border-2 border-rose-500 bg-rose-50 text-rose-700 ring-2 ring-rose-200'
                             : 'border border-slate-300 bg-slate-100 text-slate-600'
                         }`}
                       />
-                      <span className="text-xs select-none" title="Auto-locked by serial scans">🔒</span>
+                      <span className="text-[11px] select-none" title="Auto-locked by serial scans">🔒</span>
                     </div>
                   ) : (
-                    <div className="inline-flex items-center gap-1.5 justify-center">
+                    <div className="inline-flex items-center gap-1 justify-center">
                       <input
                         type="number"
                         min="0.01"
@@ -310,13 +313,8 @@ export default function SaleProductTable({
                             updateItem(it.localId, { quantity: isNaN(val) ? '' : val });
                           }
                         }}
-                        className="w-20 py-1.5 px-2 rounded-md border border-slate-300 text-center text-xs font-bold text-slate-800 outline-none bg-white focus:border-sky-500 focus:ring-1 focus:ring-sky-500"
+                        className="w-14 py-1 px-1 rounded-md border border-slate-300 text-center text-xs font-bold text-slate-800 outline-none bg-white focus:border-sky-500 focus:ring-1 focus:ring-sky-500"
                       />
-                      {it.unit_name && (
-                        <span className="text-[10px] text-slate-500 font-bold whitespace-nowrap">
-                          {it.unit_name}
-                        </span>
-                      )}
                     </div>
                   )}
                 </div>
@@ -331,40 +329,51 @@ export default function SaleProductTable({
                     onChange={(e) =>
                       updateItem(it.localId, { discount: Math.max(0, parseFloat(e.target.value) || 0) })
                     }
-                    className="w-20 py-1.5 px-2 rounded-md border border-slate-300 text-center text-xs font-semibold text-slate-800 outline-none bg-white focus:border-sky-500 focus:ring-1 focus:ring-sky-500"
+                    className="w-14 py-1 px-1 rounded-md border border-slate-300 text-center text-xs font-semibold text-slate-800 outline-none bg-white focus:border-sky-500 focus:ring-1 focus:ring-sky-500"
                   />
                 </div>
 
                 {/* PRICE */}
-                <div className="text-right pr-2.5 font-bold text-slate-900 text-sm">
+                <div className="text-right pr-1.5 font-bold text-slate-900 text-xs">
                   {taka(it.unit_price)}
                   {it.unit_name && (
-                    <span className="text-[10px] text-slate-500 block font-normal">
+                    <span className="text-[9px] text-slate-500 block font-normal">
                       /{it.unit_name}
                     </span>
                   )}
                 </div>
 
                 {/* TOTAL */}
-                <div className="text-right pr-2.5 font-extrabold text-slate-900 text-sm">
+                <div className="text-right pr-1.5 font-extrabold text-slate-900 text-xs">
                   {taka(lineTotal)}
                 </div>
 
                 {/* ACTIONS: Eye (Cost & Margin Info Toggle) and Delete */}
                 <div
-                  className={`cost-peek-container relative flex justify-center items-center gap-2 ${
+                  className={`cost-peek-container relative flex justify-center items-center gap-1.5 ${
                     activeCostCardId === it.localId ? 'z-[1001]' : 'z-[1]'
                   }`}
                 >
                   <button
                     type="button"
                     onClick={() => toggleCostCard(it.localId)}
-                    title="Cost & Margin Info"
-                    className={`border-0 rounded w-6 h-6 cursor-pointer flex items-center justify-center text-sm transition-colors ${
-                      activeCostCardId === it.localId ? 'bg-indigo-100 text-indigo-600' : 'bg-transparent text-slate-400 hover:text-indigo-600'
+                    title={activeCostCardId === it.localId ? "Hide Cost & Margin Info" : "Show Cost & Margin Info"}
+                    className={`border-0 rounded w-6 h-6 cursor-pointer flex items-center justify-center transition-colors ${
+                      activeCostCardId === it.localId
+                        ? 'bg-indigo-100 text-indigo-600'
+                        : 'bg-transparent text-slate-400 hover:text-indigo-600'
                     }`}
                   >
-                    👁
+                    {activeCostCardId === it.localId ? (
+                      <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2">
+                        <path strokeLinecap="round" strokeLinejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                        <path strokeLinecap="round" strokeLinejoin="round" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+                      </svg>
+                    ) : (
+                      <svg className="w-3.5 h-3.5 opacity-60 hover:opacity-100" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2">
+                        <path strokeLinecap="round" strokeLinejoin="round" d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.88 9.88l-3.29-3.29m7.532 7.532l3.29 3.29M3 3l18 18" />
+                      </svg>
+                    )}
                   </button>
 
                   {/* Cost & Margin Info Dropdown Popup */}
