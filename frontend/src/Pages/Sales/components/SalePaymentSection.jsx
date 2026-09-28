@@ -182,7 +182,7 @@ export default function SalePaymentSection({
             </div>
 
             {/* Less Discount */}
-            <div className="flex justify-between items-center py-0.5 px-2 bg-white border border-slate-200 rounded gap-1.5 min-h-[26px]">
+            <div className="flex justify-between items-center py-1 px-2 bg-white border border-slate-200 rounded min-h-[26px]">
               <div className="flex items-center gap-1">
                 <label className="text-[0.68rem] font-bold text-rose-600 m-0">
                   Less Disc.
@@ -193,7 +193,7 @@ export default function SalePaymentSection({
                   </span>
                 )}
               </div>
-              <div className="flex items-center gap-0.5 max-w-[110px]">
+              <div className="flex items-center justify-end gap-1">
                 <span className="text-xs text-rose-600 font-bold">-৳</span>
                 <input
                   type="number"
@@ -206,8 +206,10 @@ export default function SalePaymentSection({
                     const val = e.target.value;
                     setDiscount(val === '' ? '' : Math.max(0, parseFloat(val) || 0));
                   }}
-                  className={`w-full h-6 py-0.5 px-1.5 rounded text-xs font-bold text-rose-600 text-right outline-none box-border ${
-                    isGroupDiscountActive ? 'border-[1.5px] border-indigo-500 bg-indigo-50' : 'border border-slate-300 bg-white'
+                  className={`w-20 py-0.5 px-1 bg-transparent text-right text-xs font-bold text-rose-600 outline-none rounded transition-colors ${
+                    isGroupDiscountActive
+                      ? 'border border-indigo-400 bg-indigo-50/50'
+                      : 'border-b border-dashed border-rose-300 focus:border-rose-500'
                   }`}
                 />
               </div>

@@ -243,8 +243,8 @@ export default function SaleProductTable({
                   )}
                 </div>
 
-                {/* WAR */}
-                <div className="flex justify-center">
+                {/* 3. WAR */}
+                <div className="flex justify-center items-center px-1">
                   <input
                     type="number"
                     min="0"
@@ -252,7 +252,7 @@ export default function SaleProductTable({
                     onChange={(e) => updateItem(it.localId, { warranty_months: e.target.value })}
                     title={isWarrantyMissing ? 'Warranty is required for this product' : 'Warranty duration in months'}
                     placeholder={it.is_warranty_required ? 'Req' : '0'}
-                    className={`w-14 py-1 px-1 rounded-md text-center text-xs outline-none transition-colors ${
+                    className={`w-full py-1 px-1 rounded-md text-center text-xs outline-none transition-colors ${
                       isWarrantyMissing
                         ? 'border-2 border-rose-500 bg-rose-50 text-rose-700 font-bold ring-2 ring-rose-200'
                         : 'border border-slate-300 bg-white text-slate-800 font-medium focus:border-sky-500 focus:ring-1 focus:ring-sky-500'
@@ -260,48 +260,46 @@ export default function SaleProductTable({
                   />
                 </div>
 
-                {/* QTY */}
-                <div className="flex justify-center items-center">
+                {/* 4. QTY */}
+                <div className="flex justify-center items-center px-1">
                   {isTracked ? (
-                    <div className="inline-flex items-center gap-0.5 justify-center" title="Quantity is auto-locked to scanned serials count">
+                    <div className="flex items-center gap-1 justify-center w-full" title="Quantity is auto-locked to scanned serials count">
                       <input
                         type="number"
                         disabled={true}
                         readOnly={true}
                         value={qty}
-                        className={`w-12 py-1 px-1 rounded-md text-center text-xs font-bold cursor-not-allowed outline-none ${
+                        className={`w-full py-1 px-1 rounded-md text-center text-xs font-bold cursor-not-allowed outline-none ${
                           isSerialMissing
                             ? 'border-2 border-rose-500 bg-rose-50 text-rose-700 ring-2 ring-rose-200'
                             : 'border border-slate-300 bg-slate-100 text-slate-600'
                         }`}
                       />
-                      <span className="text-[11px] select-none" title="Auto-locked by serial scans">🔒</span>
+                      <span className="text-[11px] select-none shrink-0" title="Auto-locked by serial scans">🔒</span>
                     </div>
                   ) : (
-                    <div className="inline-flex items-center gap-1 justify-center">
-                      <input
-                        type="number"
-                        min="0.01"
-                        max={it.stock || 99999}
-                        step="any"
-                        value={it.quantity !== undefined ? it.quantity : 1}
-                        onChange={(e) => {
-                          const val = parseFloat(e.target.value);
-                          const maxStock = Number(it.stock || 0);
-                          if (!isNaN(val) && maxStock > 0 && val > maxStock) {
-                            updateItem(it.localId, { quantity: maxStock });
-                          } else {
-                            updateItem(it.localId, { quantity: isNaN(val) ? '' : val });
-                          }
-                        }}
-                        className="w-14 py-1 px-1 rounded-md border border-slate-300 text-center text-xs font-bold text-slate-800 outline-none bg-white focus:border-sky-500 focus:ring-1 focus:ring-sky-500"
-                      />
-                    </div>
+                    <input
+                      type="number"
+                      min="0.01"
+                      max={it.stock || 99999}
+                      step="any"
+                      value={it.quantity !== undefined ? it.quantity : 1}
+                      onChange={(e) => {
+                        const val = parseFloat(e.target.value);
+                        const maxStock = Number(it.stock || 0);
+                        if (!isNaN(val) && maxStock > 0 && val > maxStock) {
+                          updateItem(it.localId, { quantity: maxStock });
+                        } else {
+                          updateItem(it.localId, { quantity: isNaN(val) ? '' : val });
+                        }
+                      }}
+                      className="w-full py-1 px-1 rounded-md border border-slate-300 text-center text-xs font-bold text-slate-800 outline-none bg-white focus:border-sky-500 focus:ring-1 focus:ring-sky-500"
+                    />
                   )}
                 </div>
 
-                {/* DISC */}
-                <div className="flex justify-center">
+                {/* 5. DISC */}
+                <div className="flex justify-center items-center px-1">
                   <input
                     type="number"
                     min="0"
@@ -310,11 +308,11 @@ export default function SaleProductTable({
                     onChange={(e) =>
                       updateItem(it.localId, { discount: Math.max(0, parseFloat(e.target.value) || 0) })
                     }
-                    className="w-14 py-1 px-1 rounded-md border border-slate-300 text-center text-xs font-semibold text-slate-800 outline-none bg-white focus:border-sky-500 focus:ring-1 focus:ring-sky-500"
+                    className="w-full py-1 px-1 rounded-md border border-slate-300 text-center text-xs font-semibold text-slate-800 outline-none bg-white focus:border-sky-500 focus:ring-1 focus:ring-sky-500"
                   />
                 </div>
 
-                {/* PRICE */}
+                {/* 6. PRICE */}
                 <div className="text-right pr-2 font-bold text-slate-900 text-xs">
                   {taka(it.unit_price)}
                   {it.unit_name && (
@@ -324,7 +322,7 @@ export default function SaleProductTable({
                   )}
                 </div>
 
-                {/* TOTAL */}
+                {/* 7. TOTAL */}
                 <div className="text-right pr-2 font-extrabold text-slate-900 text-xs">
                   {taka(lineTotal)}
                 </div>
