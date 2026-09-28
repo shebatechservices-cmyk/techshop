@@ -22,7 +22,7 @@ export function usePurchaseBarcodeScanner({
         : typeof barcodeInput === 'object' && barcodeInput !== null
         ? barcodeInput[localId] || ''
         : barcodeInput || '';
-    const code = String(rawBarcode).trim();
+    const code = String(rawBarcode).toUpperCase().trim();
     if (!code) return;
 
     // 1. Check duplicate across other items in current purchase order
@@ -33,7 +33,11 @@ export function usePurchaseBarcodeScanner({
           : Array.isArray(otherItem.serials)
           ? otherItem.serials
           : [];
-        if (otherList.some((s) => s === code)) {
+        if (
+          otherList.some(
+            (s) => String(s).toUpperCase().trim() === code
+          )
+        ) {
           setBarcodeScanErrors((prev) => ({
             ...prev,
             [localId]: `⚠️ Barcode/Serial "${code}" is already assigned to another item in this order.`,
@@ -55,7 +59,11 @@ export function usePurchaseBarcodeScanner({
           ? i.serials
           : [];
 
-        if (currentList.some((s) => s === code)) {
+        if (
+          currentList.some(
+            (s) => String(s).toUpperCase().trim() === code
+          )
+        ) {
           duplicateFound = true;
           return i;
         }
@@ -102,6 +110,7 @@ export function usePurchaseBarcodeScanner({
   };
 
   const handleRemoveBarcode = (localId, serialCode) => {
+    const targetCode = String(serialCode).toUpperCase().trim();
     setItems((current) =>
       current.map((i) => {
         if (i.localId !== localId) return i;
@@ -110,7 +119,9 @@ export function usePurchaseBarcodeScanner({
           : Array.isArray(i.serials)
           ? i.serials
           : [];
-        const filtered = currentList.filter((s) => s !== serialCode);
+        const filtered = currentList.filter(
+          (s) => String(s).toUpperCase().trim() !== targetCode
+        );
         const newQty = i.is_serial_tracked
           ? filtered.length
           : Math.max(1, (Number(i.quantity) || 1) - 1);

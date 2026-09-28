@@ -60,7 +60,7 @@ function PurchaseCartItemRow({
       e.preventDefault();
       e.stopPropagation();
     }
-    const currentInputValue = tempBarcode.trim();
+    const currentInputValue = tempBarcode.toUpperCase().trim();
     if (!currentInputValue) return;
 
     // RULE 1, 2 & 3: Trigger barcode addition to the matching product index and reset input
@@ -143,8 +143,8 @@ function PurchaseCartItemRow({
           )}
         </div>
 
-        {/* Editable Form Controls - Single Row Inputs: Quantity, Cost Price, Sales Margin (%), Final Sale (Unit) */}
-        <div className="grid grid-cols-4 gap-2 mb-2.5 items-end">
+        {/* Editable Form Controls - Responsive Grid: Quantity, Cost Price, Sales Margin (%), Final Sale (Unit) */}
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-2 mb-2.5 items-end">
           {/* Quantity */}
           <div>
             <label className="block text-[11px] font-semibold text-slate-600 mb-0.5 truncate">
@@ -440,8 +440,8 @@ function PurchaseCartItemRow({
             </div>
           </div>
 
-          {/* Barcode / Serial Scanning (Shrunk to w-48/w-56 and aligned to right) */}
-          <div className="min-w-0 flex flex-col items-end">
+          {/* Barcode / Serial Scanning (Compact max-w-xs aligned left) */}
+          <div className="min-w-0 flex flex-col items-start">
             {!isSerialTracked ? (
               <div className="bg-slate-50 border border-dashed border-slate-300 rounded-md py-1 px-2.5 flex items-center h-[28px] box-border">
                 <span className="text-xs text-slate-500 font-semibold truncate">
@@ -449,7 +449,7 @@ function PurchaseCartItemRow({
                 </span>
               </div>
             ) : (
-              <div className="w-48 sm:w-56 max-w-full">
+              <div className="w-full max-w-xs">
                 <div className="flex justify-between items-center mb-0.5 gap-1 min-w-0">
                   <label className="flex items-center gap-1 text-[11px] font-bold text-slate-900 whitespace-nowrap overflow-hidden">
                     <span className="truncate">📷 Scan Serial</span>
@@ -477,7 +477,7 @@ function PurchaseCartItemRow({
                     ref={inputRef}
                     type="text"
                     value={tempBarcode}
-                    onChange={(e) => setTempBarcode(e.target.value)}
+                    onChange={(e) => setTempBarcode(e.target.value.toUpperCase())}
                     onKeyDown={(e) => {
                       if (e.key === 'Enter') {
                         e.preventDefault();
