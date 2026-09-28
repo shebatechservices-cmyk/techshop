@@ -1,13 +1,7 @@
 import React from 'react';
 import useAccountsManager from './hooks/useAccountsManager';
-import PartyProfileModal from '../../components/modals/PartyProfileModal';
-import DayCloseModal from './modals/DayCloseModal';
-import AddAccountModal from './modals/AddAccountModal';
-import AddPaymentMethodModal from '../../components/modals/AddPaymentMethodModal';
-import EditWalletModal from './modals/EditWalletModal';
-import FundTransferModal from './modals/FundTransferModal';
-import CashFlowModal from './modals/CashFlowModal';
-import TransactionDetailsModal from './modals/TransactionDetailsModal';
+import AccountsHeader from './components/AccountsHeader';
+import AccountsModalsContainer from './components/AccountsModalsContainer';
 import AccountLedgersSubpage from './subpages/AccountLedgersSubpage';
 import PartiesLedgerSubpage from './subpages/PartiesLedgerSubpage';
 
@@ -105,111 +99,21 @@ export default function Accounts({ initialTab, onNavigateToExpenses }) {
   return (
     <div className="p-6 bg-slate-50 min-h-screen font-sans">
       {/* 1. Unified Compact Header & Tab Bar (Single Row) */}
-      <div className="flex justify-between items-center flex-wrap gap-2.5 mb-3 pb-2 border-b-[1.5px] border-slate-200">
-        {/* Left: Compact Title */}
-        <div className="flex items-center gap-2">
-          <span className="text-xl">🏦</span>
-          <div>
-            <h2 className="text-xl font-extrabold text-slate-900 m-0 leading-tight">
-              Accounts & Ledgers
-            </h2>
-            <span className="text-slate-500 text-xs">
-              Manage cash drawers, banks, ledgers and party accounts
-            </span>
-          </div>
-        </div>
-
-        {/* Center: Integrated Tab Navigation Pills */}
-        <div className="flex gap-1 bg-slate-100 p-1 rounded-lg">
-          <button
-            type="button"
-            onClick={() => handleSubpageChange('ledgers')}
-            className={`py-1.5 px-3 border-0 rounded-md text-xs cursor-pointer flex items-center gap-1.5 transition-all ${
-              activeSubpage === 'ledgers'
-                ? 'bg-white text-sky-600 font-bold shadow-sm'
-                : 'bg-transparent text-slate-500 font-semibold hover:text-slate-700'
-            }`}
-          >
-            <span>📂 Account Ledgers</span>
-            <span
-              className={`py-px px-1.5 rounded-full text-[0.72rem] font-bold ${
-                activeSubpage === 'ledgers' ? 'bg-sky-100 text-sky-600' : 'bg-slate-200 text-slate-500'
-              }`}
-            >
-              {wallets.length}
-            </span>
-          </button>
-
-          <button
-            type="button"
-            onClick={() => handleSubpageChange('parties')}
-            className={`py-1.5 px-3 border-0 rounded-md text-xs cursor-pointer flex items-center gap-1.5 transition-all ${
-              activeSubpage === 'parties'
-                ? 'bg-white text-sky-600 font-bold shadow-sm'
-                : 'bg-transparent text-slate-500 font-semibold hover:text-slate-700'
-            }`}
-          >
-            <span>👥 Parties Ledger</span>
-            <span
-              className={`py-px px-1.5 rounded-full text-[0.72rem] font-bold ${
-                activeSubpage === 'parties' ? 'bg-sky-100 text-sky-600' : 'bg-slate-200 text-slate-500'
-              }`}
-            >
-              {partyCounts.total || parties.length}
-            </span>
-          </button>
-        </div>
-
-        {/* Right: Action Buttons */}
-        <div className="flex gap-1.5 items-center flex-wrap">
-          <button
-            type="button"
-            onClick={() => setIsAddAccountOpen(true)}
-            className="bg-sky-600 hover:bg-sky-700 text-white border-0 py-1.5 px-3 rounded-md font-bold text-xs cursor-pointer flex items-center gap-1 shadow-sm transition-colors"
-          >
-            <span>+</span> New Account
-          </button>
-
-          <button
-            type="button"
-            onClick={() => {
-              setIsTransferOpen(true);
-              setTransferError('');
-            }}
-            className="bg-cyan-600 hover:bg-cyan-700 text-white border-0 py-1.5 px-3 rounded-md font-bold text-xs cursor-pointer flex items-center gap-1 shadow-sm transition-colors"
-          >
-            <span>⇄</span> Transfer
-          </button>
-
-          <button
-            type="button"
-            onClick={() => setIsDayCloseOpen(true)}
-            className="bg-amber-600 hover:bg-amber-700 text-white border-0 py-1.5 px-3 rounded-md font-bold text-xs cursor-pointer flex items-center gap-1 shadow-sm transition-colors"
-          >
-            <span>🌅</span> Z-Report
-          </button>
-
-          {onNavigateToExpenses && (
-            <button
-              type="button"
-              onClick={onNavigateToExpenses}
-              className="bg-white hover:bg-slate-50 border border-slate-300 py-1.5 px-3 rounded-md text-xs text-slate-700 cursor-pointer font-semibold flex items-center gap-1 transition-colors"
-            >
-              <span>📊</span> Expenses »
-            </button>
-          )}
-
-          <button
-            type="button"
-            onClick={loadAccountsData}
-            disabled={loading}
-            className="bg-white hover:bg-slate-50 border border-slate-300 py-1.5 px-2.5 rounded-md text-xs text-slate-600 cursor-pointer font-semibold flex items-center gap-1 transition-colors disabled:opacity-50"
-            title="Refresh Ledger"
-          >
-            <span className={`inline-block transition-transform duration-500 ${loading ? 'rotate-180' : ''}`}>🔄</span>
-          </button>
-        </div>
-      </div>
+      <AccountsHeader
+        activeSubpage={activeSubpage}
+        handleSubpageChange={handleSubpageChange}
+        walletsCount={wallets.length}
+        partiesCount={partyCounts.total || parties.length}
+        onOpenAddAccount={() => setIsAddAccountOpen(true)}
+        onOpenTransfer={() => {
+          setIsTransferOpen(true);
+          setTransferError('');
+        }}
+        onOpenDayClose={() => setIsDayCloseOpen(true)}
+        onNavigateToExpenses={onNavigateToExpenses}
+        onRefresh={loadAccountsData}
+        loading={loading}
+      />
 
       {/* Alert Notifications */}
       {error && (
@@ -286,86 +190,45 @@ export default function Accounts({ initialTab, onNavigateToExpenses }) {
         />
       )}
 
-      {/* 4. Central Modals with high zIndex: 10000 */}
-
-      {/* Add Payment Method Modal */}
-      <AddPaymentMethodModal
-        isOpen={isAddPaymentMethodOpen}
-        onClose={() => setIsAddPaymentMethodOpen(false)}
-        onSuccess={() => {
-          setSuccessMsg('Payment method saved successfully!');
-          loadAccountsData();
-        }}
-      />
-
-      {/* Add Account Modal */}
-      <AddAccountModal
-        isOpen={isAddAccountOpen}
-        onClose={() => setIsAddAccountOpen(false)}
-        onSuccess={() => {
-          setSuccessMsg('New account created successfully!');
-          loadAccountsData();
-        }}
-      />
-
-      {/* Edit Account Modal */}
-      <EditWalletModal
-        isOpen={isEditWalletOpen}
-        onClose={() => setIsEditWalletOpen(false)}
+      {/* 4. Central Modals Container */}
+      <AccountsModalsContainer
+        isAddPaymentMethodOpen={isAddPaymentMethodOpen}
+        setIsAddPaymentMethodOpen={setIsAddPaymentMethodOpen}
+        isAddAccountOpen={isAddAccountOpen}
+        setIsAddAccountOpen={setIsAddAccountOpen}
+        isEditWalletOpen={isEditWalletOpen}
+        setIsEditWalletOpen={setIsEditWalletOpen}
         editWalletForm={editWalletForm}
         setEditWalletForm={setEditWalletForm}
         tenders={tenders}
         editWalletLoading={editWalletLoading}
-        onSubmit={handleSaveWalletEdit}
-      />
-
-      {/* Fund Transfer Modal */}
-      <FundTransferModal
-        isOpen={isTransferOpen}
-        onClose={() => setIsTransferOpen(false)}
+        handleSaveWalletEdit={handleSaveWalletEdit}
+        isTransferOpen={isTransferOpen}
+        setIsTransferOpen={setIsTransferOpen}
         transferForm={transferForm}
         setTransferForm={setTransferForm}
         wallets={wallets}
         transferLoading={transferLoading}
         transferError={transferError}
-        onSubmit={handleTransferSubmit}
-      />
-
-      {/* Deposit / Withdraw Modal */}
-      <CashFlowModal
-        isOpen={isCashFlowOpen}
-        onClose={() => setIsCashFlowOpen(false)}
+        handleTransferSubmit={handleTransferSubmit}
+        isCashFlowOpen={isCashFlowOpen}
+        setIsCashFlowOpen={setIsCashFlowOpen}
         cashFlowMode={cashFlowMode}
         cashFlowAccount={cashFlowAccount}
         cashFlowForm={cashFlowForm}
         setCashFlowForm={setCashFlowForm}
         cashFlowLoading={cashFlowLoading}
         cashFlowError={cashFlowError}
-        onSubmit={handleCashFlowSubmit}
-      />
-
-      {/* Party Profile & Ledgers Modal */}
-      {selectedPartyModal.isOpen && (
-        <PartyProfileModal
-          isOpen={selectedPartyModal.isOpen}
-          partyType={selectedPartyModal.partyType}
-          partyId={selectedPartyModal.partyId}
-          initialTab={selectedPartyModal.initialTab}
-          onClose={() => setSelectedPartyModal((prev) => ({ ...prev, isOpen: false }))}
-          onPartyUpdated={() => {
-            loadPartiesData();
-            loadAccountsData();
-          }}
-        />
-      )}
-
-      {/* Daily Cash Closing (Z-Report) Modal */}
-      <DayCloseModal isOpen={isDayCloseOpen} onClose={() => setIsDayCloseOpen(false)} />
-
-      {/* View-Only Audit Record & Receipt Details Modal */}
-      <TransactionDetailsModal
-        tx={selectedTxForDetails}
-        onClose={() => setSelectedTxForDetails(null)}
+        handleCashFlowSubmit={handleCashFlowSubmit}
+        selectedPartyModal={selectedPartyModal}
+        setSelectedPartyModal={setSelectedPartyModal}
+        loadPartiesData={loadPartiesData}
+        loadAccountsData={loadAccountsData}
+        setSuccessMsg={setSuccessMsg}
+        isDayCloseOpen={isDayCloseOpen}
+        setIsDayCloseOpen={setIsDayCloseOpen}
+        selectedTxForDetails={selectedTxForDetails}
+        setSelectedTxForDetails={setSelectedTxForDetails}
       />
     </div>
   );

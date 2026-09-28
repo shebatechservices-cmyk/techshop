@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import API from '../../services/api';
+import API, { smartFetch } from '../../services/api';
 
 const money = (val) => Number.parseFloat(val || 0) || 0;
 const taka = (val) => `৳${money(val).toLocaleString('en-BD', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
@@ -7,7 +7,7 @@ const taka = (val) => `৳${money(val).toLocaleString('en-BD', { minimumFraction
 const getMethodIcon = (type, name) => {
   const t = String(type || '').toLowerCase();
   const n = String(name || '').toLowerCase();
-  if (t === 'cash' || n === 'cash') return '💵';
+  if (t === 'cash' || n === 'cash' || t === 'drawer') return '💵';
   if (t === 'bank' || n.includes('bank')) return '🏦';
   if (t === 'wallet' || n.includes('wallet')) return '👛';
   if (
@@ -26,25 +26,6 @@ const getMethodIcon = (type, name) => {
   return '💳';
 };
 
-/**
- * MultiTenderPaymentTable
- *
- * Props:
- * - tenders: Array of tender objects:
- *     { id, method, payment_method_id, sub_option, transaction_id, receiver_name, amount, isAccepted }
- * - onUpdateTender: (index, patch) => void
- * - onAddTender: () => void
- * - onAcceptTender: (index) => void
- * - onCancelTender: (index) => void
- * - paymentMethods: Array of database payment methods [{id, name, type, account_number, is_active}]
- * - cashAccounts: Array of string labels
- * - bankAccounts: Array of string labels
- * - mfsAccounts: Array of string labels
- * - walletAccounts: Array of raw account objects (for balance lookup)
- * - isPurchase: boolean (false for Sale, true for Purchase)
- * - walletBalance: number (Customer advance or Supplier wallet balance)
- * - remainingPayable: number (for suggestion / validation)
- */
 export default function MultiTenderPaymentTable({
   tenders = [],
   onUpdateTender,
@@ -70,9 +51,9 @@ export default function MultiTenderPaymentTable({
       setDbPaymentMethods(paymentMethodsProp);
       return;
     }
-    const fetchActiveMethods = async () => {
+    const fetchActiveAccounts = async () => {
       try {
-        const res = await fetch(`${API}/accounts/payment-methods?active_only=true`);
+        const res = await smartFetch('/accounts');
         const data = await res.json();
         if (res.ok && data.success && Array.isArray(data.data) && data.data.length > 0) {
           setDbPaymentMethods(data.data);
@@ -81,7 +62,7 @@ export default function MultiTenderPaymentTable({
         // Fallback default methods
       }
     };
-    fetchActiveMethods();
+    fetchActiveAccounts();
   }, [paymentMethodsProp]);
 
   // Combined active methods list (always include fallback defaults if empty)
@@ -99,9 +80,9 @@ export default function MultiTenderPaymentTable({
 
   const getMethodType = (methodName) => {
     const found = effectivePaymentMethods.find(
-      (pm) => (pm.name || pm.method_name || '').toLowerCase() === String(methodName || '').toLowerCase()
+      (pm) => (pm.account_name || pm.name || pm.method_name || '').toLowerCase() === String(methodName || '').toLowerCase()
     );
-    if (found && found.type) return found.type.toLowerCase();
+    if (found && (found.account_type || found.type)) return (found.account_type || found.type).toLowerCase();
     const m = String(methodName || '').toLowerCase();
     if (m === 'wallet') return 'wallet';
     if (m.includes('bank')) return 'bank';
@@ -338,11 +319,11 @@ export default function MultiTenderPaymentTable({
                           </div>
                         ) : (
                           <select
-                            value={row.method || (effectivePaymentMethods[0]?.name || 'Cash')}
+                            value={row.method || (effectivePaymentMethods[0]?.account_name || effectivePaymentMethods[0]?.name || 'Cash')}
                             onChange={(e) => {
                               const val = e.target.value;
                               const matchMethod = effectivePaymentMethods.find(
-                                (pm) => (pm.name || pm.method_name) === val
+                                (pm) => (pm.account_name || pm.name || pm.method_name) === val
                               );
                               handleMethodChange(index, val, matchMethod ? matchMethod.id : null);
                             }}
@@ -360,16 +341,16 @@ export default function MultiTenderPaymentTable({
                             }}
                           >
                             {effectivePaymentMethods.map((pm) => {
-                              const name = pm.name || pm.method_name;
-                              const icon = getMethodIcon(pm.type, name);
+                              const accountName = pm.account_name || pm.name || pm.method_name;
+                              const icon = getMethodIcon(pm.account_type || pm.type, accountName);
                               const suffix = pm.account_number ? ` (${pm.account_number})` : '';
                               return (
-                                <option key={pm.id || name} value={name}>
-                                  {icon} {name} {suffix}
+                                <option key={pm.id || accountName} value={accountName}>
+                                  {icon} {accountName} {suffix}
                                 </option>
                               );
                             })}
-                            {!effectivePaymentMethods.some((pm) => (pm.name || pm.method_name || '').toLowerCase() === 'wallet') && (
+                            {!effectivePaymentMethods.some((pm) => (pm.account_name || pm.name || pm.method_name || '').toLowerCase() === 'wallet') && (
                               <option value="Wallet">👛 Wallet</option>
                             )}
                           </select>

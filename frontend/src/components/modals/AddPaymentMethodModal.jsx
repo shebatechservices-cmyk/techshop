@@ -1,5 +1,7 @@
 import React, { useState, useEffect } from 'react';
-import API from '../../services/api';
+import API, { smartFetch } from '../../services/api';
+import PaymentMethodForm from './payment-methods/PaymentMethodForm';
+import PaymentMethodList from './payment-methods/PaymentMethodList';
 
 export default function AddPaymentMethodModal({ isOpen, onClose, onSuccess }) {
   const [methods, setMethods] = useState([]);
@@ -176,16 +178,6 @@ export default function AddPaymentMethodModal({ isOpen, onClose, onSuccess }) {
     }
   };
 
-  const getTypeBadge = (type) => {
-    const t = String(type || '').toLowerCase();
-    if (t.includes('cash')) return { label: '💵 Cash', color: 'bg-emerald-50 text-emerald-700 border-emerald-200' };
-    if (t.includes('mobile') || t.includes('mfs')) return { label: '📱 MFS / Mobile', color: 'bg-purple-50 text-purple-700 border-purple-200' };
-    if (t.includes('bank')) return { label: '🏦 Bank', color: 'bg-blue-50 text-blue-700 border-blue-200' };
-    if (t.includes('card')) return { label: '💳 Card', color: 'bg-amber-50 text-amber-700 border-amber-200' };
-    if (t.includes('wallet')) return { label: '👛 Wallet', color: 'bg-indigo-50 text-indigo-700 border-indigo-200' };
-    return { label: '🏷️ Other', color: 'bg-slate-50 text-slate-700 border-slate-200' };
-  };
-
   if (!isOpen) return null;
 
   return (
@@ -308,191 +300,27 @@ export default function AddPaymentMethodModal({ isOpen, onClose, onSuccess }) {
           )}
 
           {activeTab === 'add' || activeTab === 'edit' ? (
-            <form onSubmit={handleSubmit} className="space-y-4">
-              {/* Method Name */}
-              <div>
-                <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1">
-                  Method Name <span className="text-red-500">*</span>
-                </label>
-                <input
-                  type="text"
-                  required
-                  autoFocus
-                  placeholder="e.g. bKash Merchant, Cash Counter 1, DBBL City"
-                  value={formData.name}
-                  onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                  className="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 text-sm focus:outline-none focus:ring-2 focus:ring-purple-500/20 focus:border-purple-600 transition"
-                />
-              </div>
-
-              {/* Type */}
-              <div>
-                <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1">
-                  Payment Method Type
-                </label>
-                <select
-                  value={formData.type}
-                  onChange={(e) => setFormData({ ...formData, type: e.target.value })}
-                  className="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 text-sm focus:outline-none focus:ring-2 focus:ring-purple-500/20 focus:border-purple-600 bg-white transition cursor-pointer"
-                >
-                  <option value="cash">💵 Cash</option>
-                  <option value="mobile_banking">📱 Mobile Banking (MFS)</option>
-                  <option value="bank">🏦 Bank Account</option>
-                  <option value="card">💳 Credit / Debit Card</option>
-                  <option value="wallet">👛 Digital Wallet</option>
-                  <option value="other">🏷️ Other</option>
-                </select>
-              </div>
-
-              {/* Account Number */}
-              <div>
-                <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1">
-                  Account / Mobile / Reference Number (Optional)
-                </label>
-                <input
-                  type="text"
-                  placeholder="e.g. 01700-000000 or A/C 205.120.450"
-                  value={formData.account_number}
-                  onChange={(e) => setFormData({ ...formData, account_number: e.target.value })}
-                  className="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 text-sm focus:outline-none focus:ring-2 focus:ring-purple-500/20 focus:border-purple-600 transition font-mono"
-                />
-              </div>
-
-              {/* Account Details / Notes */}
-              <div>
-                <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1">
-                  Description / Notes (Optional)
-                </label>
-                <textarea
-                  rows={2}
-                  placeholder="e.g. Primary merchant wallet used for retail payments"
-                  value={formData.account_details}
-                  onChange={(e) => setFormData({ ...formData, account_details: e.target.value })}
-                  className="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 text-sm focus:outline-none focus:ring-2 focus:ring-purple-500/20 focus:border-purple-600 transition"
-                />
-              </div>
-
-              {/* Is Active Toggle */}
-              <div className="flex items-center gap-2 pt-1">
-                <input
-                  type="checkbox"
-                  id="pm_is_active"
-                  checked={formData.is_active}
-                  onChange={(e) => setFormData({ ...formData, is_active: e.target.checked })}
-                  className="w-4 h-4 text-purple-600 rounded border-slate-300 focus:ring-purple-500 cursor-pointer"
-                />
-                <label htmlFor="pm_is_active" className="text-xs font-semibold text-slate-700 cursor-pointer">
-                  Active for checkout and invoice transactions
-                </label>
-              </div>
-
-              {/* Modal Buttons */}
-              <div className="flex items-center justify-end gap-3 pt-3 border-t border-slate-100">
-                <button
-                  type="button"
-                  onClick={activeTab === 'edit' ? () => setActiveTab('list') : onClose}
-                  className="px-4 py-2 bg-white border border-slate-300 rounded-lg shadow-sm hover:bg-slate-50 font-medium text-sm text-slate-700 transition cursor-pointer"
-                >
-                  {activeTab === 'edit' ? 'Cancel Edit' : 'Cancel'}
-                </button>
-                <button
-                  type="submit"
-                  disabled={submitting}
-                  className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg shadow-sm font-medium text-sm transition disabled:opacity-60 disabled:cursor-not-allowed flex items-center gap-2 cursor-pointer"
-                >
-                  {submitting
-                    ? 'Saving...'
-                    : activeTab === 'edit'
-                    ? '✓ Update Payment Method'
-                    : '+ Create Payment Method'}
-                </button>
-              </div>
-            </form>
+            <PaymentMethodForm
+              formData={formData}
+              setFormData={setFormData}
+              activeTab={activeTab}
+              setActiveTab={setActiveTab}
+              submitting={submitting}
+              onClose={onClose}
+              onSubmit={handleSubmit}
+            />
           ) : (
-            <div className="space-y-3">
-              {loading ? (
-                <div className="text-center py-8 text-slate-400 text-xs flex flex-col items-center gap-2">
-                  <div className="w-5 h-5 border-2 border-purple-600 border-t-transparent rounded-full animate-spin"></div>
-                  <span>Loading payment methods...</span>
-                </div>
-              ) : methods.length === 0 ? (
-                <div className="text-center py-8 text-slate-400 text-xs">
-                  <p className="text-sm font-semibold text-slate-600 mb-1">No payment methods found.</p>
-                  <p>Click "➕ Add New Method" tab to create one.</p>
-                </div>
-              ) : (
-                <div className="divide-y divide-slate-100 border border-slate-200 rounded-xl overflow-hidden">
-                  {methods.map((m) => {
-                    const badge = getTypeBadge(m.type);
-                    return (
-                      <div
-                        key={m.id}
-                        className="p-3.5 bg-white flex items-center justify-between gap-3 hover:bg-slate-50/80 transition"
-                      >
-                        <div className="min-w-0 flex-1">
-                          <div className="flex items-center gap-2 flex-wrap">
-                            <span className="font-bold text-sm text-slate-800 truncate">
-                              {m.name || m.method_name}
-                            </span>
-                            <span
-                              className={`text-[10px] font-bold uppercase px-2 py-0.5 rounded-full border ${badge.color}`}
-                            >
-                              {badge.label}
-                            </span>
-                          </div>
-                          {m.account_number && (
-                            <div className="text-xs text-slate-500 font-mono mt-1">
-                              💳 {m.account_number}
-                            </div>
-                          )}
-                          {m.account_details && (
-                            <div className="text-[11px] text-slate-400 truncate mt-0.5">
-                              {m.account_details}
-                            </div>
-                          )}
-                        </div>
-
-                        <div className="flex items-center gap-2 shrink-0">
-                          {/* Active Toggle Button */}
-                          <button
-                            type="button"
-                            onClick={() => handleToggleActive(m.id, m.is_active)}
-                            className={`text-xs px-2.5 py-1 rounded-lg font-bold border transition cursor-pointer ${
-                              m.is_active
-                                ? 'bg-emerald-50 text-emerald-700 border-emerald-200 hover:bg-emerald-100'
-                                : 'bg-slate-100 text-slate-500 border-slate-200 hover:bg-slate-200'
-                            }`}
-                            title={m.is_active ? 'Click to deactivate' : 'Click to activate'}
-                          >
-                            {m.is_active ? '● Active' : '○ Inactive'}
-                          </button>
-
-                          {/* Edit Button */}
-                          <button
-                            type="button"
-                            onClick={() => handleStartEdit(m)}
-                            className="p-1.5 rounded-lg text-slate-600 hover:text-indigo-600 hover:bg-indigo-50 border border-slate-200 hover:border-indigo-200 text-xs font-semibold transition cursor-pointer"
-                            title="Edit details"
-                          >
-                            ✏️
-                          </button>
-
-                          {/* Delete Button */}
-                          <button
-                            type="button"
-                            onClick={() => handleDeleteMethod(m.id, m.name || m.method_name)}
-                            className="p-1.5 rounded-lg text-slate-400 hover:text-red-600 hover:bg-red-50 border border-slate-200 hover:border-red-200 text-xs font-semibold transition cursor-pointer"
-                            title="Delete / Deactivate"
-                          >
-                            🗑️
-                          </button>
-                        </div>
-                      </div>
-                    );
-                  })}
-                </div>
-              )}
-            </div>
+            <PaymentMethodList
+              methods={methods}
+              loading={loading}
+              onToggleActive={handleToggleActive}
+              onStartEdit={handleStartEdit}
+              onDeleteMethod={handleDeleteMethod}
+              onAddNew={() => {
+                setActiveTab('add');
+                setEditingMethod(null);
+              }}
+            />
           )}
         </div>
       </div>
