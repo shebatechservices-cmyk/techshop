@@ -48,14 +48,14 @@ export default function SaleProductTable({
     <>
       <div className="bg-white rounded-lg border border-slate-200 overflow-visible relative mb-1.5 shadow-sm">
         {/* Table Header */}
-        <div className="grid grid-cols-[30px_minmax(160px,1fr)_68px_74px_68px_80px_84px_44px] items-center bg-slate-50 p-2 text-xs font-bold text-slate-500 border-b-2 border-slate-200 rounded-t-md">
+        <div className="grid grid-cols-[32px_minmax(0,1fr)_72px_80px_75px_85px_90px_48px] items-center bg-slate-50 px-2 py-2 text-xs font-bold text-slate-500 border-b-2 border-slate-200 rounded-t-md">
           <div className="text-center">#</div>
-          <div className="pl-1">PRODUCT</div>
+          <div className="pl-1 min-w-0">PRODUCT</div>
           <div className="text-center" title="Customer Warranty (Months)">WAR</div>
           <div className="text-center">QTY</div>
           <div className="text-center">DISC</div>
-          <div className="text-right pr-1.5">PRICE</div>
-          <div className="text-right pr-1.5">TOTAL</div>
+          <div className="text-right pr-2">PRICE</div>
+          <div className="text-right pr-2">TOTAL</div>
           <div className="text-center"></div>
         </div>
 
@@ -83,14 +83,14 @@ export default function SaleProductTable({
                 activeCostCardId === it.localId || openPickerId === it.localId ? 'z-[1000]' : 'z-[1]'
               } ${idx === items.length - 1 && !isExpanded ? 'rounded-b-md' : ''}`}
             >
-              <div className="grid grid-cols-[30px_minmax(160px,1fr)_68px_74px_68px_80px_84px_44px] items-center py-2 px-2">
-                {/* # */}
+              <div className="grid grid-cols-[32px_minmax(0,1fr)_72px_80px_75px_85px_90px_48px] items-center py-2 px-2">
+                {/* 1. # */}
                 <div className="text-center text-xs text-slate-500 font-medium">
                   {idx + 1}
                 </div>
 
-                {/* PRODUCT NAME + SERIAL CHIPS + INLINE SCAN INPUT */}
-                <div className="pl-1">
+                {/* 2. PRODUCT NAME + SERIAL CHIPS + PICKER ICON */}
+                <div className="pl-1 min-w-0">
                   <div className="font-bold text-slate-800 text-xs leading-snug flex items-center gap-1.5 flex-wrap">
                     <span>{it.full_name || it.name}</span>
                     <span className="text-[0.66rem] font-bold py-px px-1.5 rounded text-emerald-700 bg-emerald-50 border border-emerald-200 shrink-0">
@@ -116,44 +116,25 @@ export default function SaleProductTable({
                       </span>
                     )}
 
-                    {/* Inline Serial Scan Input & Picker Icon directly in this row */}
+                    {/* Serial Picker Icon directly in this row (No input box) */}
                     {isTracked && (
-                      <div className="relative inline-flex items-center gap-1 serial-picker-container shrink-0">
-                        <input
-                          type="text"
-                          placeholder="Scan Serial..."
-                          value={barcodeInput || ''}
-                          onChange={(e) => {
-                            setBarcodeInput(e.target.value);
-                            if (barcodeError && barcodeError[it.localId]) {
-                              setBarcodeError((prev) => ({ ...prev, [it.localId]: '' }));
-                            }
-                          }}
-                          onKeyDown={(e) => {
-                            if (e.key === 'Enter') {
-                              e.preventDefault();
-                              handleAddBarcode(it.localId, barcodeInput);
-                            }
-                          }}
-                          className={`w-28 py-0.5 px-1.5 rounded text-[11px] outline-none bg-white transition-all ${
-                            barcodeError && barcodeError[it.localId]
-                              ? 'border-2 border-rose-500'
-                              : isSerialMissing
-                              ? 'border border-amber-400 focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500'
-                              : 'border border-slate-300 focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500'
-                          }`}
-                        />
+                      <div className="relative inline-flex items-center serial-picker-container shrink-0">
                         <button
                           type="button"
                           onClick={() => setOpenPickerId(openPickerId === it.localId ? null : it.localId)}
                           title="Pick available serial from inventory"
-                          className={`px-1.5 py-0.5 text-xs rounded border transition-colors cursor-pointer flex items-center justify-center ${
+                          className={`px-1.5 py-0.5 text-xs rounded border transition-colors cursor-pointer flex items-center gap-1 ${
                             openPickerId === it.localId
                               ? 'bg-indigo-600 text-white border-indigo-600 shadow-xs'
+                              : isSerialMissing
+                              ? 'bg-amber-50 hover:bg-amber-100 text-amber-800 border-amber-300'
                               : 'bg-slate-100 hover:bg-slate-200 text-slate-600 border-slate-300'
                           }`}
                         >
-                          📋
+                          <span>📋</span>
+                          <span className="text-[10px] font-sans font-semibold">
+                            {isSerialMissing ? 'Pick Serial' : 'Serials'}
+                          </span>
                         </button>
 
                         {/* Serial Picker Popover */}
@@ -334,7 +315,7 @@ export default function SaleProductTable({
                 </div>
 
                 {/* PRICE */}
-                <div className="text-right pr-1.5 font-bold text-slate-900 text-xs">
+                <div className="text-right pr-2 font-bold text-slate-900 text-xs">
                   {taka(it.unit_price)}
                   {it.unit_name && (
                     <span className="text-[9px] text-slate-500 block font-normal">
@@ -344,7 +325,7 @@ export default function SaleProductTable({
                 </div>
 
                 {/* TOTAL */}
-                <div className="text-right pr-1.5 font-extrabold text-slate-900 text-xs">
+                <div className="text-right pr-2 font-extrabold text-slate-900 text-xs">
                   {taka(lineTotal)}
                 </div>
 
