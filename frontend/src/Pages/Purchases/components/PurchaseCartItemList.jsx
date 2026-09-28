@@ -133,7 +133,7 @@ function PurchaseCartItemRow({
         {/* Line 2: Summary Details Badge Bar (Uncollapsed) */}
         <div className="flex items-center gap-1.5 flex-wrap py-1.5 px-2.5 bg-slate-50 rounded-lg border border-slate-200 mb-2.5 text-xs">
           <span className="bg-slate-200 text-slate-700 py-0.5 px-2 rounded-full font-semibold">
-            📦 {qty} units
+            📦 {qty} units / {isSerialTracked ? `${barcodesList.length} serials` : 'No Serial'}
           </span>
           <span className="bg-emerald-50 border border-emerald-200 text-emerald-800 py-0.5 px-2 rounded-full font-bold">
             Unit Cost: {taka(cost)}
@@ -148,32 +148,13 @@ function PurchaseCartItemRow({
           <span className="bg-emerald-50 border border-emerald-200 text-emerald-700 py-0.5 px-2 rounded-full font-bold">
             Total Sale: {taka(Number((finalSale * qty).toFixed(2)))}
           </span>
-          {!isSerialTracked ? (
-            <span className="bg-slate-100 border border-slate-300 text-slate-600 py-0.5 px-2 rounded-full font-semibold">
-              No serial tracked
-            </span>
-          ) : barcodesList.length > 0 ? (
-            <span className="bg-fuchsia-50 border border-fuchsia-200 text-fuchsia-800 py-0.5 px-2 rounded-full font-semibold">
-              📷 {barcodesList.length} serials
-            </span>
-          ) : (
-            <span className="bg-rose-50 border border-rose-200 text-rose-700 py-0.5 px-2 rounded-full font-semibold">
-              📷 Serial required
-            </span>
-          )}
-          {item.previous_margin && (
-            <span className="bg-slate-100 border border-slate-300 text-slate-600 py-0.5 px-2 rounded-full font-semibold">
-              🏷️ Prev Margin: {item.previous_margin}%{' '}
-              {item.previous_cost ? `· ৳${item.previous_cost}` : ''}
-            </span>
-          )}
         </div>
 
-        {/* Editable Form Controls - Responsive Grid: Quantity, Cost Price, Sales Margin (%), Final Sale (Unit) */}
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-2 mb-2.5 items-end">
+        {/* Editable Form Controls - Inline Label-Left Grid: Quantity, Cost Price, Sales Margin (%), Final Sale (Unit) */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 mb-2.5 items-center">
           {/* Quantity */}
-          <div>
-            <label className="block text-[11px] font-semibold text-slate-600 mb-0.5 truncate">
+          <div className="flex items-center gap-2">
+            <label className="w-20 sm:w-24 shrink-0 text-xs font-bold text-slate-700 whitespace-nowrap">
               Quantity *
             </label>
             <input
@@ -188,7 +169,7 @@ function PurchaseCartItemRow({
                   quantity: Math.max(minVal, Number(e.target.value || minVal)),
                 });
               }}
-              className={`w-full py-1 px-2 rounded-md text-xs text-center box-border ${
+              className={`flex-1 min-w-0 py-1 px-2 rounded-md text-xs text-center box-border ${
                 isSerialTracked && barcodesList.length === 0
                   ? 'border-2 border-rose-500'
                   : 'border border-slate-300'
@@ -208,40 +189,33 @@ function PurchaseCartItemRow({
           </div>
 
           {/* Cost Price */}
-          <div>
-            <div className="flex justify-between items-center mb-0.5">
-              <label className="text-[11px] font-bold text-sky-600 truncate">
-                Cost Price ৳ *
-              </label>
-              {item.previous_cost && (
-                <span className="text-[0.6rem] text-slate-400">
-                  (Last: ৳{item.previous_cost})
-                </span>
-              )}
-            </div>
+          <div className="flex items-center gap-2">
+            <label className="w-20 sm:w-24 shrink-0 text-xs font-bold text-sky-600 whitespace-nowrap">
+              Cost Price ৳ *
+            </label>
             <input
               type="number"
               step="any"
               value={item.cost_price}
               onChange={(e) => handleItemCostChange(item, e.target.value)}
               placeholder="0.00"
-              className="w-full py-1 px-2 rounded-md border border-sky-400 text-xs box-border font-semibold focus:outline-none focus:border-sky-500"
+              className="flex-1 min-w-0 py-1 px-2 rounded-md border border-sky-400 text-xs box-border font-semibold focus:outline-none focus:border-sky-500"
             />
           </div>
 
           {/* Sales Margin (%) */}
-          <div>
-            <label className="block text-[11px] font-bold text-slate-600 mb-0.5 truncate">
-              Sales Margin ({item.margin_type === 'percent' ? '%' : '৳'})
+          <div className="flex items-center gap-2">
+            <label className="w-20 sm:w-24 shrink-0 text-xs font-bold text-slate-700 whitespace-nowrap">
+              Margin ({item.margin_type === 'percent' ? '%' : '৳'})
             </label>
-            <div className="flex gap-1 items-center">
+            <div className="flex-1 min-w-0 flex gap-1 items-center">
               <input
                 type="number"
                 step="any"
                 value={item.margin_value}
                 onChange={(e) => handleItemMarginChange(item, e.target.value)}
                 placeholder="15"
-                className="w-full py-1 px-2 rounded-md border border-slate-300 text-xs text-center font-bold box-border focus:outline-none focus:border-emerald-500"
+                className="w-full min-w-0 py-1 px-2 rounded-md border border-slate-300 text-xs text-center font-bold box-border focus:outline-none focus:border-emerald-500"
               />
               <div className="flex rounded-md overflow-hidden border border-slate-300 shrink-0">
                 <button
@@ -277,20 +251,15 @@ function PurchaseCartItemRow({
           </div>
 
           {/* Final Sale (Unit) */}
-          <div>
-            <div className="flex justify-between items-center mb-0.5">
-              <label className="text-[11px] font-bold text-emerald-600 truncate">
-                Final Sale (Unit) ৳
-              </label>
-              <span className="text-[0.6rem] text-emerald-600 font-semibold">
-                (Calc)
-              </span>
-            </div>
+          <div className="flex items-center gap-2">
+            <label className="w-20 sm:w-24 shrink-0 text-xs font-bold text-emerald-600 whitespace-nowrap">
+              Final Sale ৳
+            </label>
             <input
               type="text"
               readOnly
               value={finalSale > 0 ? taka(finalSale) : '৳ 0.00'}
-              className="w-full py-1 px-2 rounded-md border border-emerald-300 bg-emerald-50 text-emerald-700 text-xs font-extrabold text-center box-border cursor-default"
+              className="flex-1 min-w-0 py-1 px-2 rounded-md border border-emerald-300 bg-emerald-50 text-emerald-700 text-xs font-extrabold text-center box-border cursor-default"
               title="Final sale price is strictly calculated from Cost Price + Margin and cannot be manually modified."
             />
           </div>
@@ -630,7 +599,7 @@ function PurchaseCartItemRow({
               {displayName}
             </span>
             <span className="bg-slate-200 text-slate-700 py-0.5 px-1.5 rounded font-semibold">
-              📦 {qty} units
+              📦 {qty} units / {isSerialTracked ? `${barcodesList.length} serials` : 'No Serial'}
             </span>
             <span className="bg-emerald-50 text-emerald-800 border border-emerald-200 py-0.5 px-1.5 rounded font-bold">
               Unit Cost: {taka(cost)}
@@ -645,19 +614,6 @@ function PurchaseCartItemRow({
             <span className="bg-emerald-50 text-emerald-700 border border-emerald-200 py-0.5 px-1.5 rounded font-bold">
               Total Sale: {taka(Number((finalSale * qty).toFixed(2)))}
             </span>
-            {!isSerialTracked ? (
-              <span className="bg-slate-100 text-slate-600 border border-slate-300 py-0.5 px-1.5 rounded font-semibold">
-                No serial tracked
-              </span>
-            ) : barcodesList.length > 0 ? (
-              <span className="text-sky-600 font-semibold">
-                ({barcodesList.length} serials)
-              </span>
-            ) : (
-              <span className="text-rose-600 font-semibold">
-                (Serial required)
-              </span>
-            )}
           </div>
         </div>
       </div>
