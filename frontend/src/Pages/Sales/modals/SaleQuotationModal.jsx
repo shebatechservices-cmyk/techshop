@@ -64,15 +64,19 @@ export default function SaleQuotationModal({
           ? editingQuotation.items.map((it, idx) => {
               const prodInList = (products || []).find((p) => p.id === it.product_id);
               const fullName = fullCatalogName(prodInList || it);
+              const qty = Number(it.quantity || 1);
+              const uPrice = money(it.unit_price);
+              const uDisc = money(it.unit_discount || it.discount_amount || 0);
               return {
                 localId: `${Date.now()}-${idx}`,
                 product_id: it.product_id,
                 product_name: fullName,
                 full_name: fullName,
                 brand_name: it.brand_name || (prodInList && prodInList.brand_name) || '',
-                quantity: Number(it.quantity || 1),
-                unit_price: money(it.unit_price),
-                line_total: money(it.line_total) || (Number(it.quantity || 1) * money(it.unit_price)),
+                quantity: qty,
+                unit_price: uPrice,
+                unit_discount: uDisc,
+                line_total: money(it.line_total) || Math.max(0, qty * (uPrice - uDisc)),
                 warranty_months: it.warranty_months !== undefined && it.warranty_months !== null ? Number(it.warranty_months) : (prodInList ? Number(prodInList.warranty_months || 0) : 0),
               };
             })
@@ -128,9 +132,17 @@ export default function SaleQuotationModal({
     const existing = items.find((it) => it.product_id === prod.id);
     if (existing) {
       setItems((prev) =>
-        prev.map((it) =>
-          it.product_id === prod.id ? { ...it, quantity: it.quantity + 1, line_total: (it.quantity + 1) * it.unit_price } : it
-        )
+        prev.map((it) => {
+          if (it.product_id !== prod.id) return it;
+          const newQty = it.quantity + 1;
+          const price = Number(it.unit_price) || 0;
+          const uDisc = Number(it.unit_discount) || 0;
+          return {
+            ...it,
+            quantity: newQty,
+            line_total: Math.max(0, newQty * (price - uDisc)),
+          };
+        })
       );
     } else {
       const price = Number(
@@ -156,6 +168,7 @@ export default function SaleQuotationModal({
           brand_name: prod.brand_name || '',
           quantity: 1,
           unit_price: price,
+          unit_discount: 0,
           line_total: price,
           warranty_months: prod.warranty_months !== undefined && prod.warranty_months !== null ? Number(prod.warranty_months) : 0,
         },
@@ -172,7 +185,8 @@ export default function SaleQuotationModal({
         const updated = { ...it, [field]: val };
         const qty = Number(field === 'quantity' ? val : it.quantity) || 1;
         const price = Number(field === 'unit_price' ? val : it.unit_price) || 0;
-        updated.line_total = qty * price;
+        const uDisc = Number(field === 'unit_discount' ? val : (it.unit_discount || 0)) || 0;
+        updated.line_total = Math.max(0, qty * (price - uDisc));
         return updated;
       })
     );
@@ -208,7 +222,8 @@ export default function SaleQuotationModal({
       total_amount: grandTotal,
       items: items.map((it) => ({
         ...it,
-        line_total: money(it.unit_price) * Number(it.quantity || 1),
+        unit_discount: money(it.unit_discount || 0),
+        line_total: Math.max(0, (money(it.unit_price) - money(it.unit_discount || 0)) * Number(it.quantity || 1)),
       })),
     };
     setPrintQuotation(previewData);
@@ -245,6 +260,7 @@ export default function SaleQuotationModal({
             product_name: it.product_name,
             quantity: Number(it.quantity || 1),
             unit_price: money(it.unit_price),
+            unit_discount: money(it.unit_discount || 0),
             line_total: money(it.line_total),
             warranty_months: Number(it.warranty_months || 0),
           })),
@@ -551,63 +567,36 @@ export default function SaleQuotationModal({
             <table style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'left', fontSize: '0.85rem' }}>
               <thead>
                 <tr style={{ background: '#f8fafc', borderBottom: '2px solid #e2e8f0', color: '#64748b' }}>
-                  <th style={{ padding: '10px 12px' }}>Product Description</th>
-                  <th style={{ padding: '10px 12px', width: '110px' }}>Unit Rate ৳</th>
-                  <th style={{ padding: '10px 12px', width: '90px' }}>Qty</th>
-                  <th style={{ padding: '10px 12px', width: '110px' }}>Warranty</th>
-                  <th style={{ padding: '10px 12px', width: '120px', textAlign: 'right' }}>Total ৳</th>
+                  <th style={{ padding: '10px 12px' }}>PRODUCT DESCRIPTION</th>
+                  <th style={{ padding: '10px 12px', width: '105px', textAlign: 'center' }}>WARRANTY</th>
+                  <th style={{ padding: '10px 12px', width: '80px', textAlign: 'center' }}>QTY</th>
+                  <th style={{ padding: '10px 12px', width: '110px', textAlign: 'right' }}>UNIT RATE ৳</th>
+                  <th style={{ padding: '10px 12px', width: '105px', textAlign: 'right' }}>U. DISC ৳</th>
+                  <th style={{ padding: '10px 12px', width: '120px', textAlign: 'right' }}>TOTAL ৳</th>
                   <th style={{ padding: '10px 12px', width: '40px', textAlign: 'center' }}></th>
                 </tr>
               </thead>
               <tbody>
                 {items.length === 0 ? (
                   <tr>
-                    <td colSpan={6} style={{ padding: '30px', textAlign: 'center', color: '#94a3b8' }}>
+                    <td colSpan={7} style={{ padding: '30px', textAlign: 'center', color: '#94a3b8' }}>
                       No items added yet. Search and click products above to add them to this quotation.
                     </td>
                   </tr>
                 ) : (
                   items.map((it) => (
                     <tr key={it.localId} style={{ borderBottom: '1px solid #f1f5f9' }}>
+                      {/* 1. PRODUCT DESCRIPTION */}
                       <td style={{ padding: '8px 12px' }}>
                         <strong style={{ color: '#0f172a' }}>{it.product_name}</strong>
                       </td>
+
+                      {/* 2. WARRANTY */}
                       <td style={{ padding: '8px 12px' }}>
                         <input
                           type="number"
                           min="0"
-                          step="0.01"
-                          value={it.unit_price}
-                          onChange={(e) => handleUpdateItem(it.localId, 'unit_price', e.target.value)}
-                          style={{
-                            width: '100%',
-                            padding: '6px 8px',
-                            borderRadius: '6px',
-                            border: '1px solid #cbd5e1',
-                            fontSize: '0.85rem',
-                          }}
-                        />
-                      </td>
-                      <td style={{ padding: '8px 12px' }}>
-                        <input
-                          type="number"
-                          min="1"
-                          value={it.quantity}
-                          onChange={(e) => handleUpdateItem(it.localId, 'quantity', e.target.value)}
-                          style={{
-                            width: '100%',
-                            padding: '6px 8px',
-                            borderRadius: '6px',
-                            border: '1px solid #cbd5e1',
-                            fontSize: '0.85rem',
-                          }}
-                        />
-                      </td>
-                      <td style={{ padding: '8px 12px' }}>
-                        <input
-                          type="number"
-                          min="0"
-                          value={it.warranty_months}
+                          value={it.warranty_months !== undefined ? it.warranty_months : ''}
                           onChange={(e) => handleUpdateItem(it.localId, 'warranty_months', e.target.value)}
                           placeholder="0 Mos"
                           style={{
@@ -616,12 +605,78 @@ export default function SaleQuotationModal({
                             borderRadius: '6px',
                             border: '1px solid #cbd5e1',
                             fontSize: '0.85rem',
+                            textAlign: 'center',
+                            boxSizing: 'border-box',
                           }}
                         />
                       </td>
+
+                      {/* 3. QTY */}
+                      <td style={{ padding: '8px 12px' }}>
+                        <input
+                          type="number"
+                          min="1"
+                          value={it.quantity !== undefined ? it.quantity : 1}
+                          onChange={(e) => handleUpdateItem(it.localId, 'quantity', e.target.value)}
+                          style={{
+                            width: '100%',
+                            padding: '6px 8px',
+                            borderRadius: '6px',
+                            border: '1px solid #cbd5e1',
+                            fontSize: '0.85rem',
+                            textAlign: 'center',
+                            boxSizing: 'border-box',
+                          }}
+                        />
+                      </td>
+
+                      {/* 4. UNIT RATE ৳ */}
+                      <td style={{ padding: '8px 12px' }}>
+                        <input
+                          type="number"
+                          min="0"
+                          step="0.01"
+                          value={it.unit_price !== undefined ? it.unit_price : ''}
+                          onChange={(e) => handleUpdateItem(it.localId, 'unit_price', e.target.value)}
+                          style={{
+                            width: '100%',
+                            padding: '6px 8px',
+                            borderRadius: '6px',
+                            border: '1px solid #cbd5e1',
+                            fontSize: '0.85rem',
+                            textAlign: 'right',
+                            boxSizing: 'border-box',
+                          }}
+                        />
+                      </td>
+
+                      {/* 5. U. DISC ৳ */}
+                      <td style={{ padding: '8px 12px' }}>
+                        <input
+                          type="number"
+                          min="0"
+                          step="any"
+                          placeholder="0.00"
+                          value={it.unit_discount !== undefined ? it.unit_discount : ''}
+                          onChange={(e) => handleUpdateItem(it.localId, 'unit_discount', e.target.value)}
+                          style={{
+                            width: '100%',
+                            padding: '6px 8px',
+                            borderRadius: '6px',
+                            border: '1px solid #cbd5e1',
+                            fontSize: '0.85rem',
+                            textAlign: 'right',
+                            boxSizing: 'border-box',
+                          }}
+                        />
+                      </td>
+
+                      {/* 6. TOTAL ৳ */}
                       <td style={{ padding: '8px 12px', textAlign: 'right', fontWeight: 700, color: '#0f172a' }}>
                         {taka(it.line_total)}
                       </td>
+
+                      {/* Delete Button */}
                       <td style={{ padding: '8px 12px', textAlign: 'center' }}>
                         <button
                           type="button"
