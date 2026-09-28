@@ -287,7 +287,7 @@ export default function PurchaseOrderModal(props) {
                 </label>
                 <div className="flex gap-2 items-center">
                   <div className="relative flex-1" ref={supplierSelectRef}>
-                    <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400">🔍</span>
+                    <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none">🔍</span>
                     <input
                       type="text"
                       placeholder="Select Supplier (Search name / phone)"
@@ -383,7 +383,7 @@ export default function PurchaseOrderModal(props) {
                 </label>
                 <div className="flex gap-2 items-center">
                   <div className="relative flex-1 flex items-center">
-                    <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400">🔍</span>
+                    <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none">🔍</span>
                     <input
                       ref={searchInputRef}
                       type="text"
