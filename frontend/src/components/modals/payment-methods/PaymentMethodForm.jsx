@@ -39,12 +39,11 @@ export default function PaymentMethodForm({
           onChange={(e) => setFormData({ ...formData, type: e.target.value })}
           className="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 text-sm focus:outline-none focus:ring-2 focus:ring-purple-500/20 focus:border-purple-600 bg-white transition cursor-pointer"
         >
-          <option value="cash">💵 Cash</option>
-          <option value="mobile_banking">📱 Mobile Banking (MFS)</option>
+          <option value="drawer">💵 Cash Drawer / Physical Cash</option>
           <option value="bank">🏦 Bank Account</option>
-          <option value="card">💳 Credit / Debit Card</option>
-          <option value="wallet">👛 Digital Wallet</option>
-          <option value="other">🏷️ Other</option>
+          <option value="mobile_banking">📱 Mobile Banking</option>
+          <option value="wallet">👛 Digital / Staff Wallet</option>
+          <option value="other">🏷️ Other Payment Channel</option>
         </select>
       </div>
 

@@ -125,7 +125,7 @@ export default function QuickAddAccountSubModal({
             >
               <option value="drawer">💵 Cash Drawer / Physical Cash</option>
               <option value="bank">🏛️ Bank Account</option>
-              <option value="mobile_banking">📱 Mobile Banking (bKash / Nagad / Rocket)</option>
+              <option value="mobile_banking">📱 Mobile Banking</option>
               <option value="wallet">💼 Digital / Staff Wallet</option>
               <option value="other">💳 Other Payment Channel</option>
             </select>

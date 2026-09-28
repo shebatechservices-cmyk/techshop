@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { isProductSerialTracked } from '../../../utils/productUtils';
 import { taka } from '../hooks/useNewSale';
 
@@ -21,6 +21,17 @@ export default function SaleProductTable({
   subtotal,
   currentSaleTotal,
 }) {
+  const [openPickerId, setOpenPickerId] = useState(null);
+
+  useEffect(() => {
+    const handleClickOutside = (e) => {
+      if (openPickerId && !e.target.closest('.serial-picker-container')) {
+        setOpenPickerId(null);
+      }
+    };
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, [openPickerId]);
   if (items.length === 0) {
     return (
       <div className="text-center py-9 px-5 bg-white rounded-xl border border-dashed border-slate-300 text-slate-400 mb-4">
@@ -69,7 +80,7 @@ export default function SaleProductTable({
               className={`transition-colors relative ${
                 idx === items.length - 1 ? 'border-b-0' : 'border-b border-slate-100'
               } ${isExpanded ? 'bg-purple-50/50' : 'bg-white'} ${
-                activeCostCardId === it.localId ? 'z-[1000]' : 'z-[1]'
+                activeCostCardId === it.localId || openPickerId === it.localId ? 'z-[1000]' : 'z-[1]'
               } ${idx === items.length - 1 && !isExpanded ? 'rounded-b-md' : ''}`}
             >
               <div className="grid grid-cols-[38px_minmax(180px,1fr)_96px_116px_96px_105px_105px_52px] items-center py-2 px-2">
@@ -97,11 +108,6 @@ export default function SaleProductTable({
                           : 'text-indigo-600 bg-indigo-50 border-0'
                       }`}>
                         {isSerialMissing ? '⚠️ Serial Required' : 'Serial Tracked'}
-                      </span>
-                    )}
-                    {isTracked && it.available_serials && (
-                      <span className="text-[0.66rem] text-sky-700 bg-sky-50 border border-sky-200 py-px px-1.5 rounded font-semibold">
-                        {it.available_serials.length} Available
                       </span>
                     )}
                     {it.is_warranty_required && isWarrantyMissing && (
@@ -146,9 +152,9 @@ export default function SaleProductTable({
                     </div>
                   )}
 
-                  {/* Barcode/Serial Chips (Strictly for serial tracked items) */}
+                  {/* Barcode/Serial Chips & Inline Scan Input */}
                   {isTracked && (
-                    <div className="flex flex-wrap items-center gap-1 mt-1">
+                    <div className="flex flex-wrap items-center gap-1.5 mt-1">
                       {it.serials &&
                         it.serials.map((s, sIdx) => (
                           <span
@@ -165,20 +171,90 @@ export default function SaleProductTable({
                             </button>
                           </span>
                         ))}
-                      <button
-                        type="button"
-                        onClick={() => setExpandedId(isExpanded ? null : it.localId)}
-                        title={isSerialMissing ? 'Serial numbers are strictly required' : 'Scan or add barcode/serial'}
-                        className={`rounded py-0.5 px-1.5 text-[0.7rem] font-bold cursor-pointer transition-colors ${
-                          isSerialMissing
-                            ? 'border-[1.5px] border-rose-500 bg-rose-50 text-rose-600 ring-2 ring-rose-200'
-                            : isExpanded
-                            ? 'border border-slate-300 bg-indigo-100 text-indigo-600'
-                            : 'border border-dashed border-slate-300 bg-slate-50 text-slate-500 hover:bg-slate-100'
-                        }`}
-                      >
-                        {isExpanded ? '✕ Close' : (isSerialMissing ? '⚠️ + Add Serial' : '+ Barcode')}
-                      </button>
+                      <div className="relative inline-flex items-center gap-1 serial-picker-container">
+                        <input
+                          type="text"
+                          placeholder="Scan Serial..."
+                          value={barcodeInput || ''}
+                          onChange={(e) => {
+                            setBarcodeInput(e.target.value);
+                            if (barcodeError && barcodeError[it.localId]) {
+                              setBarcodeError((prev) => ({ ...prev, [it.localId]: '' }));
+                            }
+                          }}
+                          onKeyDown={(e) => {
+                            if (e.key === 'Enter') {
+                              e.preventDefault();
+                              handleAddBarcode(it.localId, barcodeInput);
+                            }
+                          }}
+                          className={`w-32 py-0.5 px-2 rounded text-xs outline-none bg-white transition-all ${
+                            barcodeError && barcodeError[it.localId]
+                              ? 'border-2 border-rose-500'
+                              : isSerialMissing
+                              ? 'border border-amber-400 focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500'
+                              : 'border border-slate-300 focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500'
+                          }`}
+                        />
+                        <button
+                          type="button"
+                          onClick={() => setOpenPickerId(openPickerId === it.localId ? null : it.localId)}
+                          title="Pick available serial from inventory"
+                          className={`px-1.5 py-0.5 text-xs rounded border transition-colors cursor-pointer flex items-center justify-center ${
+                            openPickerId === it.localId
+                              ? 'bg-indigo-600 text-white border-indigo-600 shadow-xs'
+                              : 'bg-slate-100 hover:bg-slate-200 text-slate-600 border-slate-300'
+                          }`}
+                        >
+                          📋
+                        </button>
+
+                        {/* Serial Picker Popover */}
+                        {openPickerId === it.localId && (
+                          <div className="absolute top-[calc(100%+4px)] left-0 w-64 max-h-56 overflow-y-auto bg-white border border-slate-300 rounded-lg shadow-2xl p-2 z-[999999] text-left">
+                            <div className="text-[11px] font-bold text-slate-800 pb-1.5 mb-1.5 border-b border-slate-200 flex items-center justify-between">
+                              <span>Available Stock Serials</span>
+                              <span className="text-[10px] text-slate-500 font-normal">
+                                ({(it.available_serials || []).length} in stock)
+                              </span>
+                            </div>
+                            {it.available_serials && it.available_serials.length > 0 ? (
+                              <div className="flex flex-col gap-1">
+                                {it.available_serials.map((serialCode, sIdx) => {
+                                  const isSelected = (it.serials || []).includes(serialCode);
+                                  return (
+                                    <button
+                                      key={sIdx}
+                                      type="button"
+                                      disabled={isSelected}
+                                      onClick={() => {
+                                        handleAddBarcode(it.localId, serialCode);
+                                        setOpenPickerId(null);
+                                      }}
+                                      className={`w-full text-left px-2 py-1 rounded text-xs font-mono flex items-center justify-between border-0 transition-colors ${
+                                        isSelected
+                                          ? 'bg-slate-100 text-slate-400 cursor-not-allowed'
+                                          : 'bg-slate-50 hover:bg-indigo-50 hover:text-indigo-700 text-slate-700 cursor-pointer'
+                                      }`}
+                                    >
+                                      <span>{serialCode}</span>
+                                      {isSelected ? (
+                                        <span className="text-[10px] text-emerald-600 font-sans font-bold">✓ Added</span>
+                                      ) : (
+                                        <span className="text-[10px] text-indigo-600 font-sans font-semibold">+ Select</span>
+                                      )}
+                                    </button>
+                                  );
+                                })}
+                              </div>
+                            ) : (
+                              <div className="py-3 px-2 text-center text-xs text-slate-400">
+                                No available serial numbers in stock
+                              </div>
+                            )}
+                          </div>
+                        )}
+                      </div>
                     </div>
                   )}
                 </div>
@@ -203,17 +279,20 @@ export default function SaleProductTable({
                 {/* QTY */}
                 <div className="flex justify-center items-center">
                   {isTracked ? (
-                    <input
-                      type="number"
-                      readOnly={true}
-                      value={qty}
-                      title="Quantity is auto-calculated from scanned serials count"
-                      className={`w-20 py-1.5 px-2 rounded-md text-center text-xs font-bold cursor-not-allowed outline-none ${
-                        isSerialMissing
-                          ? 'border-2 border-rose-500 bg-rose-50 text-rose-700 ring-2 ring-rose-200'
-                          : 'border border-slate-300 bg-slate-100 text-slate-600'
-                      }`}
-                    />
+                    <div className="inline-flex items-center gap-1 justify-center" title="Quantity is auto-locked to scanned serials count">
+                      <input
+                        type="number"
+                        disabled={true}
+                        readOnly={true}
+                        value={qty}
+                        className={`w-16 py-1.5 px-1.5 rounded-md text-center text-xs font-bold cursor-not-allowed outline-none ${
+                          isSerialMissing
+                            ? 'border-2 border-rose-500 bg-rose-50 text-rose-700 ring-2 ring-rose-200'
+                            : 'border border-slate-300 bg-slate-100 text-slate-600'
+                        }`}
+                      />
+                      <span className="text-xs select-none" title="Auto-locked by serial scans">🔒</span>
+                    </div>
                   ) : (
                     <div className="inline-flex items-center gap-1.5 justify-center">
                       <input
@@ -345,60 +424,6 @@ export default function SaleProductTable({
                   </button>
                 </div>
               </div>
-
-              {/* Barcode Scanner Row for Serial-Tracked items */}
-              {isTracked && (isExpanded || isSerialMissing) && (
-                <div
-                  className={`py-2 pr-4 pl-14 flex items-center gap-2.5 flex-wrap border-t border-dashed border-slate-200 ${
-                    isSerialMissing ? 'bg-rose-50' : 'bg-slate-50'
-                  } border-l-[3px] border-l-indigo-500`}
-                >
-                  <span className="text-xs font-bold text-indigo-600 flex items-center gap-1">
-                    <span>📷</span>
-                    <span>Scan Serial / Barcode:</span>
-                  </span>
-                  <div className="flex gap-1.5 items-center flex-1 max-w-[380px]">
-                    <input
-                      ref={barcodeInputRef}
-                      type="text"
-                      value={barcodeInput}
-                      onChange={(e) => {
-                        setBarcodeInput(e.target.value);
-                        if (barcodeError[it.localId]) setBarcodeError((prev) => ({ ...prev, [it.localId]: '' }));
-                      }}
-                      onKeyDown={(e) => {
-                        if (e.key === 'Enter') {
-                          e.preventDefault();
-                          handleAddBarcode(it.localId, barcodeInput);
-                        }
-                      }}
-                      placeholder="Scan barcode with scanner or press Enter..."
-                      className={`flex-1 py-1.5 px-2.5 rounded-md text-xs outline-none bg-white ${
-                        (barcodeError[it.localId] || isSerialMissing)
-                          ? 'border-[1.5px] border-rose-500'
-                          : 'border-[1.5px] border-indigo-400'
-                      }`}
-                    />
-                    <button
-                      type="button"
-                      onClick={() => handleAddBarcode(it.localId, barcodeInput)}
-                      className="py-1.5 px-3 bg-indigo-600 hover:bg-indigo-700 text-white border-0 rounded-md text-xs font-bold cursor-pointer whitespace-nowrap transition-colors"
-                    >
-                      + Add
-                    </button>
-                  </div>
-                  {isSerialMissing && !barcodeError[it.localId] && (
-                    <span className="text-rose-600 text-[0.74rem] font-bold">
-                      ⚠️ Serial scan required (Quantity auto-locked to count)
-                    </span>
-                  )}
-                  {barcodeError[it.localId] && (
-                    <span className="text-rose-600 text-xs font-semibold">
-                      ⚠️ {barcodeError[it.localId]}
-                    </span>
-                  )}
-                </div>
-              )}
             </div>
           );
         })}

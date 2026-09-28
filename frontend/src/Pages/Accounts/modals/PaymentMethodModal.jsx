@@ -65,12 +65,11 @@ export default function PaymentMethodModal({
               onChange={(e) => setFormData({ ...formData, type: e.target.value })}
               className="w-full px-3 py-2 text-sm rounded-lg border border-slate-300 bg-white focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none transition"
             >
-              <option value="cash">💵 Cash</option>
-              <option value="mobile_banking">📱 Mobile Banking (MFS)</option>
+              <option value="drawer">💵 Cash Drawer / Physical Cash</option>
               <option value="bank">🏦 Bank Account</option>
-              <option value="card">💳 Credit/Debit Card</option>
-              <option value="wallet">👛 Digital Wallet</option>
-              <option value="other">🏷️ Other</option>
+              <option value="mobile_banking">📱 Mobile Banking</option>
+              <option value="wallet">👛 Digital / Staff Wallet</option>
+              <option value="other">🏷️ Other Payment Channel</option>
             </select>
           </div>
 
