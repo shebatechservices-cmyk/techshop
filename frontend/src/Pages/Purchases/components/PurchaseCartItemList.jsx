@@ -41,7 +41,15 @@ function PurchaseCartItemRow({
   const qty = Number(item.quantity || 1);
   const lineTotal = Number((cost * qty).toFixed(2));
   const finalSale = computeFinalSale(item) || money(item.sale_price);
-  const displayName = item.full_name || item.name;
+  const displayName =
+    item.full_name ||
+    item.name ||
+    item.product_name ||
+    (item.brand_name && item.model_name ? `${item.brand_name} ${item.model_name}` : '') ||
+    item.model_name ||
+    item.brand_name ||
+    item.title ||
+    (item.sku ? `SKU: ${item.sku}` : 'Product');
   const barcodesList = Array.isArray(item.barcodes)
     ? item.barcodes
     : Array.isArray(item.serials)
@@ -49,9 +57,11 @@ function PurchaseCartItemRow({
     : [];
 
   const isSerialTracked = Boolean(
-    item.isSerialRequired ||
-    item.is_serial_required ||
+    barcodesList.length > 0 ||
     item.is_serial_tracked ||
+    item.is_serial_required ||
+    item.isSerialRequired ||
+    item.has_serials ||
     isProductSerialTracked(item)
   );
 
