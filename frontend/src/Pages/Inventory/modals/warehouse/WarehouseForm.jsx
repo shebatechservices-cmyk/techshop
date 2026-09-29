@@ -12,28 +12,21 @@ export default function WarehouseForm({
   return (
     <form
       onSubmit={onSave}
-      style={{
-        background: '#f8fafc',
-        border: '1.5px solid #0284c7',
-        borderRadius: '8px',
-        padding: '14px 16px',
-        marginBottom: '16px',
-        boxShadow: '0 4px 6px -1px rgba(0,0,0,0.05)',
-      }}
+      className="bg-slate-50 border-2 border-sky-600 rounded-lg p-3.5 mb-4 shadow-sm"
     >
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '12px' }}>
-        <span style={{ fontWeight: 800, fontSize: '0.9rem', color: '#0369a1' }}>
+      <div className="flex justify-between items-center mb-3">
+        <span className="font-extrabold text-sm text-sky-700">
           {editingId ? '✏️ Edit Warehouse Details' : '➕ Add New Warehouse / Branch'}
         </span>
-        <span style={{ fontSize: '0.72rem', color: '#64748b' }}>
+        <span className="text-xs text-slate-500">
           Fields marked with * are required
         </span>
       </div>
 
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '10px', marginBottom: '10px' }}>
+      <div className="grid grid-cols-[repeat(auto-fit,minmax(200px,1fr))] gap-2.5 mb-2.5">
         {/* Name */}
         <div>
-          <label style={{ display: 'block', fontSize: '0.74rem', fontWeight: 700, color: '#334155', marginBottom: '3px' }}>
+          <label className="block text-xs font-bold text-slate-700 mb-1">
             Warehouse Name *
           </label>
           <input
@@ -42,20 +35,13 @@ export default function WarehouseForm({
             value={formData.name}
             onChange={(e) => setFormData({ ...formData, name: e.target.value })}
             placeholder="e.g. Main Shop, Agrabad Branch"
-            style={{
-              width: '100%',
-              padding: '6px 10px',
-              borderRadius: '6px',
-              border: '1px solid #cbd5e1',
-              fontSize: '0.82rem',
-              boxSizing: 'border-box',
-            }}
+            className="w-full px-2.5 py-1.5 rounded-md border border-slate-300 text-sm outline-none focus:border-sky-500 box-border bg-white"
           />
         </div>
 
         {/* Code */}
         <div>
-          <label style={{ display: 'block', fontSize: '0.74rem', fontWeight: 700, color: '#334155', marginBottom: '3px' }}>
+          <label className="block text-xs font-bold text-slate-700 mb-1">
             Warehouse Code / Tag
           </label>
           <input
@@ -63,21 +49,13 @@ export default function WarehouseForm({
             value={formData.code}
             onChange={(e) => setFormData({ ...formData, code: e.target.value.toUpperCase() })}
             placeholder="e.g. WH-MAIN, WH-01"
-            style={{
-              width: '100%',
-              padding: '6px 10px',
-              borderRadius: '6px',
-              border: '1px solid #cbd5e1',
-              fontSize: '0.82rem',
-              fontFamily: 'monospace',
-              boxSizing: 'border-box',
-            }}
+            className="w-full px-2.5 py-1.5 rounded-md border border-slate-300 text-sm font-mono outline-none focus:border-sky-500 box-border bg-white uppercase"
           />
         </div>
 
         {/* Location / Area */}
         <div>
-          <label style={{ display: 'block', fontSize: '0.74rem', fontWeight: 700, color: '#334155', marginBottom: '3px' }}>
+          <label className="block text-xs font-bold text-slate-700 mb-1">
             City / Location Zone
           </label>
           <input
@@ -85,22 +63,15 @@ export default function WarehouseForm({
             value={formData.location}
             onChange={(e) => setFormData({ ...formData, location: e.target.value })}
             placeholder="e.g. Dhaka Central, Chittagong Port"
-            style={{
-              width: '100%',
-              padding: '6px 10px',
-              borderRadius: '6px',
-              border: '1px solid #cbd5e1',
-              fontSize: '0.82rem',
-              boxSizing: 'border-box',
-            }}
+            className="w-full px-2.5 py-1.5 rounded-md border border-slate-300 text-sm outline-none focus:border-sky-500 box-border bg-white"
           />
         </div>
       </div>
 
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '10px', marginBottom: '10px' }}>
+      <div className="grid grid-cols-[repeat(auto-fit,minmax(200px,1fr))] gap-2.5 mb-2.5">
         {/* Full Address */}
-        <div style={{ gridColumn: 'span 2' }}>
-          <label style={{ display: 'block', fontSize: '0.74rem', fontWeight: 700, color: '#334155', marginBottom: '3px' }}>
+        <div className="col-span-1 sm:col-span-2">
+          <label className="block text-xs font-bold text-slate-700 mb-1">
             Full Address / Road
           </label>
           <input
@@ -108,20 +79,13 @@ export default function WarehouseForm({
             value={formData.address}
             onChange={(e) => setFormData({ ...formData, address: e.target.value })}
             placeholder="e.g. Level 3, Suite 402, Motijheel C/A, Dhaka"
-            style={{
-              width: '100%',
-              padding: '6px 10px',
-              borderRadius: '6px',
-              border: '1px solid #cbd5e1',
-              fontSize: '0.82rem',
-              boxSizing: 'border-box',
-            }}
+            className="w-full px-2.5 py-1.5 rounded-md border border-slate-300 text-sm outline-none focus:border-sky-500 box-border bg-white"
           />
         </div>
 
         {/* Contact Person */}
         <div>
-          <label style={{ display: 'block', fontSize: '0.74rem', fontWeight: 700, color: '#334155', marginBottom: '3px' }}>
+          <label className="block text-xs font-bold text-slate-700 mb-1">
             Contact Person Name
           </label>
           <input
@@ -129,14 +93,7 @@ export default function WarehouseForm({
             value={formData.contact_person}
             onChange={(e) => setFormData({ ...formData, contact_person: e.target.value })}
             placeholder="e.g. Store Manager"
-            style={{
-              width: '100%',
-              padding: '6px 10px',
-              borderRadius: '6px',
-              border: '1px solid #cbd5e1',
-              fontSize: '0.82rem',
-              boxSizing: 'border-box',
-            }}
+            className="w-full px-2.5 py-1.5 rounded-md border border-slate-300 text-sm outline-none focus:border-sky-500 box-border bg-white"
           />
         </div>
 
@@ -153,60 +110,41 @@ export default function WarehouseForm({
       </div>
 
       {/* Toggles */}
-      <div style={{ display: 'flex', alignItems: 'center', gap: '20px', margin: '12px 0 14px 0', flexWrap: 'wrap' }}>
-        <label style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '0.8rem', fontWeight: 700, color: '#0f172a', cursor: 'pointer' }}>
+      <div className="flex items-center gap-5 my-3 flex-wrap">
+        <label className="flex items-center gap-1.5 text-xs font-bold text-slate-900 cursor-pointer select-none">
           <input
             type="checkbox"
             checked={formData.is_default}
             onChange={(e) => setFormData({ ...formData, is_default: e.target.checked })}
-            style={{ cursor: 'pointer' }}
+            className="cursor-pointer rounded text-sky-600 focus:ring-sky-500"
           />
           <span>★ Set as Default Warehouse</span>
         </label>
 
-        <label style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '0.8rem', fontWeight: 700, color: '#0f172a', cursor: 'pointer' }}>
+        <label className="flex items-center gap-1.5 text-xs font-bold text-slate-900 cursor-pointer select-none">
           <input
             type="checkbox"
             checked={formData.is_active}
             onChange={(e) => setFormData({ ...formData, is_active: e.target.checked })}
-            style={{ cursor: 'pointer' }}
+            className="cursor-pointer rounded text-sky-600 focus:ring-sky-500"
           />
           <span>🟢 Active (Available for Sales & Purchases)</span>
         </label>
       </div>
 
       {/* Form Action Buttons */}
-      <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '8px' }}>
+      <div className="flex justify-end gap-2">
         <button
           type="button"
           onClick={onCancel}
-          style={{
-            padding: '6px 14px',
-            borderRadius: '6px',
-            border: '1px solid #cbd5e1',
-            background: '#ffffff',
-            color: '#475569',
-            fontSize: '0.78rem',
-            fontWeight: 600,
-            cursor: 'pointer',
-          }}
+          className="px-3.5 py-1.5 rounded-md border border-slate-300 bg-white hover:bg-slate-100 text-slate-600 text-xs font-semibold cursor-pointer transition-colors"
         >
           Cancel
         </button>
         <button
           type="submit"
           disabled={saving}
-          style={{
-            padding: '6px 18px',
-            borderRadius: '6px',
-            border: 'none',
-            background: '#0284c7',
-            color: '#ffffff',
-            fontSize: '0.78rem',
-            fontWeight: 700,
-            cursor: saving ? 'not-allowed' : 'pointer',
-            opacity: saving ? 0.7 : 1,
-          }}
+          className="px-4.5 py-1.5 rounded-md bg-sky-600 hover:bg-sky-700 text-white text-xs font-bold transition-colors disabled:cursor-not-allowed disabled:opacity-70 cursor-pointer"
         >
           {saving ? 'Saving...' : editingId ? '✓ Update Warehouse' : '✓ Create Warehouse'}
         </button>

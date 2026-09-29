@@ -8,29 +8,29 @@ export default function WarehouseTable({
   onDelete,
 }) {
   return (
-    <div style={{ border: '1px solid #e2e8f0', borderRadius: '8px', overflow: 'hidden' }}>
-      <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '0.8rem', textAlign: 'left' }}>
+    <div className="border border-slate-200 rounded-lg overflow-hidden">
+      <table className="w-full border-collapse text-xs text-left">
         <thead>
-          <tr style={{ background: '#f8fafc', borderBottom: '1.5px solid #e2e8f0', color: '#475569', fontSize: '0.72rem', textTransform: 'uppercase', letterSpacing: '0.04em' }}>
-            <th style={{ padding: '8px 12px' }}>Warehouse Name & Code</th>
-            <th style={{ padding: '8px 12px' }}>Location / Address</th>
-            <th style={{ padding: '8px 12px' }}>Contact Person</th>
-            <th style={{ padding: '8px 12px', textAlign: 'center' }}>Stock Status</th>
-            <th style={{ padding: '8px 12px', textAlign: 'center' }}>Status</th>
-            <th style={{ padding: '8px 12px', textAlign: 'center', width: '120px' }}>Actions</th>
+          <tr className="bg-slate-50 border-b border-slate-200 text-slate-600 text-[11px] uppercase tracking-wider font-semibold">
+            <th className="px-3 py-2">Warehouse Name & Code</th>
+            <th className="px-3 py-2">Location / Address</th>
+            <th className="px-3 py-2">Contact Person</th>
+            <th className="px-3 py-2 text-center">Stock Status</th>
+            <th className="px-3 py-2 text-center">Status</th>
+            <th className="px-3 py-2 text-center w-[120px]">Actions</th>
           </tr>
         </thead>
         <tbody>
           {loading ? (
             <tr>
-              <td colSpan={6} style={{ textAlign: 'center', padding: '30px', color: '#64748b' }}>
-                <div style={{ fontSize: '1.2rem', marginBottom: '4px' }}>🔄</div>
-                Loading warehouses...
+              <td colSpan={6} className="text-center py-7 px-4 text-slate-500">
+                <div className="text-lg mb-1 animate-spin inline-block">🔄</div>
+                <div>Loading warehouses...</div>
               </td>
             </tr>
           ) : warehouses.length === 0 ? (
             <tr>
-              <td colSpan={6} style={{ textAlign: 'center', padding: '30px', color: '#64748b' }}>
+              <td colSpan={6} className="text-center py-7 px-4 text-slate-500">
                 No warehouses found matching your query.
               </td>
             </tr>
@@ -38,103 +38,64 @@ export default function WarehouseTable({
             warehouses.map((wh) => (
               <tr
                 key={wh.id}
-                style={{
-                  borderBottom: '1px solid #f1f5f9',
-                  background: wh.is_default ? '#f0f9ff' : '#ffffff',
-                }}
+                className={`border-b border-slate-100 transition-colors ${
+                  wh.is_default ? 'bg-sky-50' : 'bg-white hover:bg-slate-50/60'
+                }`}
               >
                 {/* Name & Code */}
-                <td style={{ padding: '8px 12px', verticalAlign: 'middle' }}>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-                    <span style={{ fontWeight: 800, color: '#0f172a', fontSize: '0.84rem' }}>
+                <td className="px-3 py-2 align-middle">
+                  <div className="flex items-center gap-1.5">
+                    <span className="font-extrabold text-slate-900 text-sm">
                       {wh.name}
                     </span>
                     {wh.is_default && (
-                      <span
-                        style={{
-                          fontSize: '0.62rem',
-                          fontWeight: 800,
-                          background: '#fef3c7',
-                          color: '#b45309',
-                          border: '1px solid #fde68a',
-                          padding: '1px 5px',
-                          borderRadius: '4px',
-                        }}
-                      >
+                      <span className="text-[10px] font-extrabold bg-amber-100 text-amber-700 border border-amber-200 px-1.5 py-0.5 rounded">
                         ★ DEFAULT
                       </span>
                     )}
                   </div>
                   {wh.code && (
-                    <span
-                      style={{
-                        fontFamily: 'monospace',
-                        fontSize: '0.68rem',
-                        color: '#0369a1',
-                        background: '#e0f2fe',
-                        padding: '1px 4px',
-                        borderRadius: '3px',
-                        display: 'inline-block',
-                        marginTop: '2px',
-                      }}
-                    >
+                    <span className="font-mono text-[11px] text-sky-700 bg-sky-100 px-1 py-0.5 rounded inline-block mt-0.5">
                       {wh.code}
                     </span>
                   )}
                 </td>
 
                 {/* Location / Address */}
-                <td style={{ padding: '8px 12px', verticalAlign: 'middle', color: '#334155' }}>
-                  <div style={{ fontWeight: 600 }}>{wh.location || '—'}</div>
+                <td className="px-3 py-2 align-middle text-slate-700">
+                  <div className="font-semibold">{wh.location || '—'}</div>
                   {wh.address && (
-                    <div style={{ fontSize: '0.7rem', color: '#64748b', marginTop: '1px' }}>
+                    <div className="text-[11px] text-slate-500 mt-0.5">
                       {wh.address}
                     </div>
                   )}
                 </td>
 
                 {/* Contact */}
-                <td style={{ padding: '8px 12px', verticalAlign: 'middle', color: '#334155' }}>
-                  <div style={{ fontWeight: 600 }}>{wh.contact_person || '—'}</div>
+                <td className="px-3 py-2 align-middle text-slate-700">
+                  <div className="font-semibold">{wh.contact_person || '—'}</div>
                   {wh.phone && (
-                    <div style={{ fontSize: '0.7rem', color: '#64748b', fontFamily: 'monospace' }}>
+                    <div className="text-[11px] text-slate-500 font-mono mt-0.5">
                       📞 {wh.phone}
                     </div>
                   )}
                 </td>
 
                 {/* Stock Summary */}
-                <td style={{ padding: '8px 12px', textAlign: 'center', verticalAlign: 'middle' }}>
-                  <span
-                    style={{
-                      fontSize: '0.72rem',
-                      fontWeight: 700,
-                      padding: '2px 6px',
-                      borderRadius: '4px',
-                      background: '#f1f5f9',
-                      color: '#475569',
-                      display: 'inline-block',
-                    }}
-                  >
+                <td className="px-3 py-2 text-center align-middle">
+                  <span className="text-[11px] font-bold px-1.5 py-0.5 rounded bg-slate-100 text-slate-600 inline-block">
                     {Number(wh.total_stock_units || 0).toLocaleString()} units
                   </span>
                 </td>
 
                 {/* Status */}
-                <td style={{ padding: '8px 12px', textAlign: 'center', verticalAlign: 'middle' }}>
+                <td className="px-3 py-2 text-center align-middle">
                   <span
-                    style={{
-                      fontSize: '0.68rem',
-                      fontWeight: 700,
-                      padding: '2px 7px',
-                      borderRadius: '999px',
-                      background: wh.is_active ? '#dcfce7' : '#f1f5f9',
-                      color: wh.is_active ? '#15803d' : '#94a3b8',
-                      border: `1px solid ${wh.is_active ? '#bbf7d0' : '#e2e8f0'}`,
-                      display: 'inline-flex',
-                      alignItems: 'center',
-                      gap: '3px',
-                    }}
+                    className={`text-[11px] font-bold px-2 py-0.5 rounded-full inline-flex items-center gap-1 border ${
+                      wh.is_active
+                        ? 'bg-emerald-50 text-emerald-700 border-emerald-200'
+                        : 'bg-slate-100 text-slate-400 border-slate-200'
+                    }`}
                   >
                     <span>{wh.is_active ? '🟢' : '⚪'}</span>
                     <span>{wh.is_active ? 'Active' : 'Inactive'}</span>
@@ -142,22 +103,13 @@ export default function WarehouseTable({
                 </td>
 
                 {/* Actions */}
-                <td style={{ padding: '8px 12px', textAlign: 'center', verticalAlign: 'middle' }}>
-                  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '4px' }}>
+                <td className="px-3 py-2 text-center align-middle">
+                  <div className="flex items-center justify-center gap-1">
                     {!wh.is_default && (
                       <button
                         type="button"
                         onClick={() => onSetDefault(wh)}
-                        style={{
-                          background: '#f8fafc',
-                          border: '1px solid #cbd5e1',
-                          borderRadius: '4px',
-                          padding: '2px 6px',
-                          fontSize: '0.68rem',
-                          fontWeight: 700,
-                          color: '#b45309',
-                          cursor: 'pointer',
-                        }}
+                        className="bg-slate-50 hover:bg-amber-50 border border-slate-300 hover:border-amber-300 rounded px-1.5 py-0.5 text-[11px] font-bold text-amber-700 cursor-pointer transition-colors"
                         title="Set as default warehouse"
                       >
                         ★ Default
@@ -166,15 +118,7 @@ export default function WarehouseTable({
                     <button
                       type="button"
                       onClick={() => onEdit(wh)}
-                      style={{
-                        background: '#f8fafc',
-                        border: '1px solid #cbd5e1',
-                        borderRadius: '4px',
-                        padding: '2px 6px',
-                        fontSize: '0.7rem',
-                        color: '#0284c7',
-                        cursor: 'pointer',
-                      }}
+                      className="bg-slate-50 hover:bg-sky-50 border border-slate-300 hover:border-sky-300 rounded px-1.5 py-0.5 text-xs text-sky-600 cursor-pointer transition-colors"
                       title="Edit warehouse details"
                     >
                       ✏️
@@ -183,15 +127,7 @@ export default function WarehouseTable({
                       <button
                         type="button"
                         onClick={() => onDelete(wh)}
-                        style={{
-                          background: '#fef2f2',
-                          border: '1px solid #fecaca',
-                          borderRadius: '4px',
-                          padding: '2px 6px',
-                          fontSize: '0.7rem',
-                          color: '#dc2626',
-                          cursor: 'pointer',
-                        }}
+                        className="bg-red-50 hover:bg-red-100 border border-red-200 hover:border-red-300 rounded px-1.5 py-0.5 text-xs text-red-600 cursor-pointer transition-colors"
                         title="Delete warehouse"
                       >
                         🗑️

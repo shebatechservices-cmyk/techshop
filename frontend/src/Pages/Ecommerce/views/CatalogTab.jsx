@@ -12,35 +12,22 @@ export default function CatalogTab({
   return (
     <div>
       {/* Catalog Filter Header */}
-      <div
-        style={{
-          background: '#ffffff',
-          borderRadius: '10px',
-          border: '1px solid #e2e8f0',
-          padding: '14px 18px',
-          display: 'flex',
-          justifyContent: 'space-between',
-          alignItems: 'center',
-          marginBottom: '20px',
-          flexWrap: 'wrap',
-          gap: '12px',
-        }}
-      >
-        <div style={{ flex: 1, minWidth: '240px' }}>
+      <div className="bg-white rounded-xl border border-slate-200 p-3.5 mb-5 flex justify-between items-center flex-wrap gap-3 shadow-xs">
+        <div className="flex-1 min-w-[240px]">
           <input
             type="text"
             value={catalogSearch}
             onChange={(e) => setCatalogSearch(e.target.value)}
             placeholder="🔍 Search catalog by product name, SKU, brand..."
-            style={{ width: '100%', padding: '8px 12px', borderRadius: '6px', border: '1px solid #cbd5e1', fontSize: '0.86rem', boxSizing: 'border-box' }}
+            className="w-full px-3 py-2 rounded-md border border-slate-300 text-sm outline-none focus:border-teal-500 box-border bg-white"
           />
         </div>
 
-        <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+        <div className="flex items-center gap-2.5">
           <select
             value={catalogStockFilter}
             onChange={(e) => setCatalogStockFilter(e.target.value)}
-            style={{ padding: '8px 12px', borderRadius: '6px', border: '1px solid #cbd5e1', fontSize: '0.85rem' }}
+            className="px-3 py-2 rounded-md border border-slate-300 text-sm bg-white outline-none focus:border-teal-500 cursor-pointer"
           >
             <option value="all">All Stock Statuses</option>
             <option value="instock">In Stock (Stock &gt; 0)</option>
@@ -51,16 +38,7 @@ export default function CatalogTab({
           <button
             type="button"
             onClick={() => setIsNewOrderModalOpen(true)}
-            style={{
-              padding: '8px 16px',
-              background: '#0d9488',
-              color: '#ffffff',
-              border: 'none',
-              borderRadius: '6px',
-              fontWeight: 700,
-              fontSize: '0.85rem',
-              cursor: 'pointer',
-            }}
+            className="px-4 py-2 bg-teal-600 hover:bg-teal-700 text-white rounded-md font-bold text-sm cursor-pointer transition-colors shadow-xs"
           >
             + Create Order with Product
           </button>
@@ -68,7 +46,7 @@ export default function CatalogTab({
       </div>
 
       {/* Product Grid */}
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(240px, 1fr))', gap: '16px' }}>
+      <div className="grid grid-cols-[repeat(auto-fill,minmax(240px,1fr))] gap-4">
         {filteredCatalog.map((p) => {
           const stock = Number(p.stock || 0);
           const isOut = stock <= 0;
@@ -77,63 +55,44 @@ export default function CatalogTab({
           return (
             <div
               key={p.id}
-              style={{
-                background: '#ffffff',
-                borderRadius: '10px',
-                border: '1px solid #e2e8f0',
-                padding: '14px',
-                display: 'flex',
-                flexDirection: 'column',
-                justifyContent: 'space-between',
-                boxShadow: '0 1px 3px rgba(0,0,0,0.02)',
-                transition: 'transform 0.15s ease, box-shadow 0.15s ease',
-              }}
-              onMouseEnter={(e) => {
-                e.currentTarget.style.transform = 'translateY(-2px)';
-                e.currentTarget.style.boxShadow = '0 6px 14px rgba(0,0,0,0.06)';
-              }}
-              onMouseLeave={(e) => {
-                e.currentTarget.style.transform = 'none';
-                e.currentTarget.style.boxShadow = '0 1px 3px rgba(0,0,0,0.02)';
-              }}
+              className="bg-white rounded-xl border border-slate-200 p-3.5 flex flex-col justify-between shadow-xs hover:-translate-y-0.5 hover:shadow-lg transition-all duration-150"
             >
               <div>
                 {/* Header: SKU & Stock Badge */}
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
-                  <span style={{ fontSize: '0.72rem', color: '#64748b', fontWeight: 600 }}>
+                <div className="flex justify-between items-center mb-2">
+                  <span className="text-xs text-slate-500 font-semibold">
                     SKU: {p.sku || 'N/A'}
                   </span>
                   <span
-                    style={{
-                      padding: '2px 7px',
-                      borderRadius: '4px',
-                      fontSize: '0.7rem',
-                      fontWeight: 800,
-                      background: isOut ? '#fee2e2' : isLow ? '#fef3c7' : '#dcfce7',
-                      color: isOut ? '#b91c1c' : isLow ? '#b45309' : '#15803d',
-                    }}
+                    className={`px-2 py-0.5 rounded text-[11px] font-extrabold ${
+                      isOut
+                        ? 'bg-red-100 text-red-700'
+                        : isLow
+                        ? 'bg-amber-100 text-amber-700'
+                        : 'bg-emerald-100 text-emerald-700'
+                    }`}
                   >
                     {isOut ? 'Out of Stock' : isLow ? `Low (${stock})` : `In Stock (${stock})`}
                   </span>
                 </div>
 
                 {/* Product Name */}
-                <div style={{ fontWeight: 700, fontSize: '0.92rem', color: '#0f172a', lineHeight: '1.3', marginBottom: '6px' }}>
+                <div className="font-bold text-sm text-slate-900 leading-snug mb-1.5">
                   {p.name}
                 </div>
 
                 {p.brand_name && (
-                  <div style={{ fontSize: '0.76rem', color: '#64748b', marginBottom: '8px' }}>
-                    Brand: <strong>{p.brand_name}</strong>
+                  <div className="text-xs text-slate-500 mb-2">
+                    Brand: <strong className="text-slate-700">{p.brand_name}</strong>
                   </div>
                 )}
               </div>
 
               {/* Pricing & Action */}
-              <div style={{ borderTop: '1px solid #f1f5f9', paddingTop: '10px', marginTop: '10px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+              <div className="border-t border-slate-100 pt-2.5 mt-2.5 flex justify-between items-center">
                 <div>
-                  <span style={{ fontSize: '0.7rem', color: '#64748b', display: 'block' }}>Selling Price</span>
-                  <span style={{ fontSize: '1.1rem', fontWeight: 900, color: '#16a34a' }}>
+                  <span className="text-[11px] text-slate-500 block">Selling Price</span>
+                  <span className="text-lg font-black text-emerald-600">
                     {taka(p.selling_price || p.purchase_price || 0)}
                   </span>
                 </div>
@@ -141,16 +100,7 @@ export default function CatalogTab({
                 <button
                   type="button"
                   onClick={() => setIsNewOrderModalOpen(true)}
-                  style={{
-                    padding: '6px 10px',
-                    background: '#f0fdfa',
-                    border: '1px solid #99f6e4',
-                    color: '#0d9488',
-                    borderRadius: '6px',
-                    fontSize: '0.78rem',
-                    fontWeight: 700,
-                    cursor: 'pointer',
-                  }}
+                  className="px-2.5 py-1.5 bg-teal-50 hover:bg-teal-100 border border-teal-200 text-teal-600 rounded-md text-xs font-bold cursor-pointer transition-colors"
                 >
                   + Order
                 </button>

@@ -21,6 +21,14 @@ const STATUS_STEPS = [
   { key: 'delivered', label: 'Delivered', icon: '✅', desc: 'Delivered to customer' },
 ];
 
+const STATUS_BADGES = {
+  delivered: 'bg-emerald-100 text-emerald-700',
+  shipped: 'bg-indigo-100 text-indigo-700',
+  processing: 'bg-amber-100 text-amber-700',
+  cancelled: 'bg-red-100 text-red-700',
+  pending: 'bg-slate-100 text-slate-700',
+};
+
 export default function EcommerceOrderDetailsModal({
   isOpen,
   onClose,
@@ -133,126 +141,47 @@ export default function EcommerceOrderDetailsModal({
 
   return (
     <div
-      style={{
-        position: 'fixed',
-        inset: 0,
-        background: 'rgba(15, 23, 42, 0.6)',
-        backdropFilter: 'blur(3px)',
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'center',
-        zIndex: 9999,
-        padding: '16px',
-      }}
+      className="fixed inset-0 bg-slate-900/60 backdrop-blur-sm flex items-center justify-center z-[9999] p-4"
       onClick={(e) => {
         if (e.target === e.currentTarget) onClose();
       }}
     >
-      <div
-        style={{
-          background: '#ffffff',
-          borderRadius: '14px',
-          width: '100%',
-          maxWidth: '860px',
-          maxHeight: '92vh',
-          display: 'flex',
-          flexDirection: 'column',
-          boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.25)',
-          overflow: 'hidden',
-        }}
-      >
+      <div className="bg-white rounded-2xl w-full max-w-4xl max-h-[92vh] flex flex-col shadow-2xl overflow-hidden border border-slate-200">
         {/* Header */}
-        <div
-          style={{
-            display: 'flex',
-            justifyContent: 'space-between',
-            alignItems: 'center',
-            padding: '16px 24px',
-            background: '#0f172a',
-            color: '#ffffff',
-          }}
-        >
-          <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-            <span style={{ fontSize: '1.4rem' }}>🛍️</span>
+        <div className="flex justify-between items-center px-6 py-4 bg-slate-900 text-white">
+          <div className="flex items-center gap-3">
+            <span className="text-2xl">🛍️</span>
             <div>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                <h3 style={{ margin: 0, fontSize: '1.15rem', fontWeight: 800 }}>
+              <div className="flex items-center gap-2">
+                <h3 className="m-0 text-lg font-extrabold">
                   Order #{order.order_no || order.order_number || order.id}
                 </h3>
                 <span
-                  style={{
-                    padding: '2px 8px',
-                    borderRadius: '999px',
-                    fontSize: '0.72rem',
-                    fontWeight: 800,
-                    textTransform: 'uppercase',
-                    background:
-                      currentStatus === 'delivered'
-                        ? '#dcfce7'
-                        : currentStatus === 'shipped'
-                        ? '#e0e7ff'
-                        : currentStatus === 'processing'
-                        ? '#fef3c7'
-                        : currentStatus === 'cancelled'
-                        ? '#fee2e2'
-                        : '#f1f5f9',
-                    color:
-                      currentStatus === 'delivered'
-                        ? '#15803d'
-                        : currentStatus === 'shipped'
-                        ? '#4338ca'
-                        : currentStatus === 'processing'
-                        ? '#b45309'
-                        : currentStatus === 'cancelled'
-                        ? '#b91c1c'
-                        : '#475569',
-                  }}
+                  className={`px-2 py-0.5 rounded-full text-xs font-extrabold uppercase ${
+                    STATUS_BADGES[currentStatus] || STATUS_BADGES.pending
+                  }`}
                 >
                   {order.order_status || 'Pending'}
                 </span>
               </div>
-              <span style={{ fontSize: '0.78rem', color: '#94a3b8' }}>
+              <span className="text-xs text-slate-400">
                 Placed on {order.created_at ? new Date(order.created_at).toLocaleString() : 'N/A'}
               </span>
             </div>
           </div>
 
-          <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+          <div className="flex items-center gap-2">
             <button
               type="button"
               onClick={() => onOpenPrint && onOpenPrint(order)}
-              style={{
-                padding: '6px 14px',
-                background: '#0d9488',
-                color: '#ffffff',
-                border: 'none',
-                borderRadius: '6px',
-                fontWeight: 700,
-                fontSize: '0.82rem',
-                cursor: 'pointer',
-                display: 'flex',
-                alignItems: 'center',
-                gap: '6px',
-              }}
+              className="px-3.5 py-1.5 bg-teal-600 hover:bg-teal-700 text-white rounded-md font-bold text-xs cursor-pointer flex items-center gap-1.5 transition-colors"
             >
               🖨️ Print Slip
             </button>
             <button
               type="button"
               onClick={onClose}
-              style={{
-                background: 'rgba(255,255,255,0.1)',
-                border: 'none',
-                color: '#ffffff',
-                width: '32px',
-                height: '32px',
-                borderRadius: '6px',
-                cursor: 'pointer',
-                fontSize: '1rem',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-              }}
+              className="bg-white/10 hover:bg-white/20 text-white w-8 h-8 rounded-md cursor-pointer text-base flex items-center justify-center transition-colors"
             >
               ✕
             </button>
@@ -260,96 +189,68 @@ export default function EcommerceOrderDetailsModal({
         </div>
 
         {/* Content Body */}
-        <div style={{ overflowY: 'auto', padding: '20px 24px', flex: 1, background: '#f8fafc' }}>
+        <div className="overflow-y-auto px-6 py-5 flex-1 bg-slate-50">
           {error && (
-            <div style={{ padding: '10px 14px', background: '#fee2e2', color: '#b91c1c', borderRadius: '8px', fontSize: '0.85rem', marginBottom: '14px' }}>
+            <div className="p-3 bg-red-100 text-red-700 rounded-lg text-xs mb-3.5 border border-red-200">
               ⚠️ {error}
             </div>
           )}
           {successMsg && (
-            <div style={{ padding: '10px 14px', background: '#dcfce7', color: '#15803d', borderRadius: '8px', fontSize: '0.85rem', marginBottom: '14px' }}>
+            <div className="p-3 bg-emerald-100 text-emerald-700 rounded-lg text-xs mb-3.5 border border-emerald-200">
               ✓ {successMsg}
             </div>
           )}
 
           {/* Stepper Timeline */}
-          <div
-            style={{
-              background: '#ffffff',
-              borderRadius: '10px',
-              padding: '16px 20px',
-              border: '1px solid #e2e8f0',
-              marginBottom: '16px',
-            }}
-          >
-            <div style={{ fontSize: '0.78rem', fontWeight: 800, color: '#64748b', textTransform: 'uppercase', marginBottom: '12px' }}>
+          <div className="bg-white rounded-xl p-4 sm:p-5 border border-slate-200 mb-4 shadow-xs">
+            <div className="text-xs font-extrabold text-slate-500 uppercase tracking-wide mb-3">
               Fulfillment Timeline &amp; Status Stepper
             </div>
 
             {isCancelled ? (
-              <div style={{ padding: '12px 16px', background: '#fef2f2', border: '1px solid #fecaca', borderRadius: '8px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '8px', color: '#dc2626', fontWeight: 700 }}>
+              <div className="p-3.5 bg-red-50 border border-red-200 rounded-lg flex justify-between items-center">
+                <div className="flex items-center gap-2 text-red-600 font-bold text-xs">
                   <span>🚫</span> This order has been cancelled and its inventory stock restored.
                 </div>
                 <button
                   type="button"
                   onClick={() => handleStatusChange('pending')}
                   disabled={updatingStatus}
-                  style={{
-                    padding: '6px 12px',
-                    background: '#ffffff',
-                    border: '1px solid #dc2626',
-                    color: '#dc2626',
-                    borderRadius: '6px',
-                    fontSize: '0.8rem',
-                    fontWeight: 700,
-                    cursor: 'pointer',
-                  }}
+                  className="px-3 py-1.5 bg-white border border-red-500 hover:bg-red-50 text-red-600 rounded-md text-xs font-bold cursor-pointer transition-colors"
                 >
                   Reopen Order
                 </button>
               </div>
             ) : (
-              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', position: 'relative' }}>
+              <div className="flex items-center justify-between relative">
                 {STATUS_STEPS.map((step, idx) => {
                   const isDone = currentStepIdx >= idx;
                   const isCurrent = currentStepIdx === idx;
                   return (
                     <div
                       key={step.key}
-                      style={{
-                        flex: 1,
-                        display: 'flex',
-                        flexDirection: 'column',
-                        alignItems: 'center',
-                        position: 'relative',
-                        zIndex: 2,
-                      }}
+                      className="flex-1 flex flex-col items-center relative z-10"
                     >
                       <button
                         type="button"
                         onClick={() => handleStatusChange(step.key)}
                         disabled={updatingStatus}
                         title={`Change to ${step.label}`}
-                        style={{
-                          width: '38px',
-                          height: '38px',
-                          borderRadius: '50%',
-                          background: isDone ? '#0d9488' : '#e2e8f0',
-                          color: isDone ? '#ffffff' : '#64748b',
-                          border: isCurrent ? '3px solid #99f6e4' : 'none',
-                          display: 'flex',
-                          alignItems: 'center',
-                          justifyContent: 'center',
-                          fontSize: '1rem',
-                          cursor: 'pointer',
-                          transition: 'all 0.2s ease',
-                          boxShadow: isCurrent ? '0 0 0 4px rgba(13, 148, 136, 0.2)' : 'none',
-                        }}
+                        className={`w-9 h-9 rounded-full flex items-center justify-center text-sm cursor-pointer transition-all ${
+                          isDone ? 'bg-teal-600 text-white' : 'bg-slate-200 text-slate-500'
+                        } ${isCurrent ? 'ring-4 ring-teal-200 border-2 border-teal-300 shadow-sm' : ''}`}
                       >
                         {step.icon}
                       </button>
-                      <span style={{ fontSize: '0.78rem', fontWeight: isCurrent ? 800 : 600, color: isDone ? '#0f172a' : '#94a3b8', marginTop: '6px' }}>
+                      <span
+                        className={`text-xs mt-1.5 ${
+                          isCurrent
+                            ? 'font-extrabold text-slate-900'
+                            : isDone
+                            ? 'font-bold text-slate-700'
+                            : 'font-medium text-slate-400'
+                        }`}
+                      >
                         {step.label}
                       </span>
                     </div>
@@ -359,20 +260,12 @@ export default function EcommerceOrderDetailsModal({
             )}
 
             {!isCancelled && (
-              <div style={{ display: 'flex', justifyContent: 'flex-end', marginTop: '12px' }}>
+              <div className="flex justify-end mt-3">
                 <button
                   type="button"
                   onClick={() => handleStatusChange('cancelled')}
                   disabled={updatingStatus}
-                  style={{
-                    background: 'none',
-                    border: 'none',
-                    color: '#ef4444',
-                    fontSize: '0.78rem',
-                    fontWeight: 600,
-                    cursor: 'pointer',
-                    textDecoration: 'underline',
-                  }}
+                  className="text-red-500 hover:text-red-600 text-xs font-semibold cursor-pointer underline transition-colors"
                 >
                   Cancel Order &amp; Restock Products
                 </button>
@@ -381,18 +274,18 @@ export default function EcommerceOrderDetailsModal({
           </div>
 
           {/* Two-Column Customer & Courier Section */}
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px', marginBottom: '16px' }}>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
             {/* Customer Details Box */}
-            <div style={{ background: '#ffffff', borderRadius: '10px', padding: '16px', border: '1px solid #e2e8f0' }}>
-              <div style={{ fontSize: '0.78rem', fontWeight: 800, color: '#0d9488', textTransform: 'uppercase', marginBottom: '8px' }}>
+            <div className="bg-white rounded-xl p-4 border border-slate-200 shadow-xs">
+              <div className="text-xs font-extrabold text-teal-600 uppercase tracking-wide mb-2">
                 👤 Customer &amp; Recipient
               </div>
-              <div style={{ fontSize: '1rem', fontWeight: 700, color: '#0f172a' }}>{order.customer_name}</div>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginTop: '4px' }}>
-                <span style={{ fontSize: '0.86rem', color: '#334155' }}>📞 {order.customer_phone}</span>
+              <div className="text-base font-bold text-slate-900">{order.customer_name}</div>
+              <div className="flex items-center gap-2 mt-1">
+                <span className="text-sm text-slate-700">📞 {order.customer_phone}</span>
                 <a
                   href={`tel:${order.customer_phone}`}
-                  style={{ fontSize: '0.74rem', padding: '2px 8px', background: '#f1f5f9', borderRadius: '4px', textDecoration: 'none', color: '#0284c7', fontWeight: 600 }}
+                  className="text-xs px-2 py-0.5 bg-slate-100 hover:bg-slate-200 rounded text-sky-600 font-semibold no-underline transition-colors"
                 >
                   Call
                 </a>
@@ -400,36 +293,36 @@ export default function EcommerceOrderDetailsModal({
                   href={whatsappUrl}
                   target="_blank"
                   rel="noopener noreferrer"
-                  style={{ fontSize: '0.74rem', padding: '2px 8px', background: '#dcfce7', borderRadius: '4px', textDecoration: 'none', color: '#16a34a', fontWeight: 700 }}
+                  className="text-xs px-2 py-0.5 bg-emerald-100 hover:bg-emerald-200 rounded text-emerald-700 font-bold no-underline transition-colors"
                 >
                   WhatsApp
                 </a>
               </div>
-              <div style={{ marginTop: '8px', fontSize: '0.82rem', color: '#64748b', lineHeight: '1.4' }}>
+              <div className="mt-2 text-xs text-slate-500 leading-relaxed">
                 <strong>Address:</strong> {order.shipping_address}
               </div>
               {order.customer_notes && (
-                <div style={{ marginTop: '8px', fontSize: '0.8rem', color: '#92400e', background: '#fef3c7', padding: '6px 10px', borderRadius: '6px' }}>
+                <div className="mt-2 text-xs text-amber-800 bg-amber-50 border border-amber-200 p-2 rounded-md">
                   <strong>Note:</strong> {order.customer_notes}
                 </div>
               )}
             </div>
 
             {/* Courier & Payment Editor Box */}
-            <div style={{ background: '#ffffff', borderRadius: '10px', padding: '16px', border: '1px solid #e2e8f0' }}>
-              <div style={{ fontSize: '0.78rem', fontWeight: 800, color: '#0d9488', textTransform: 'uppercase', marginBottom: '8px' }}>
+            <div className="bg-white rounded-xl p-4 border border-slate-200 shadow-xs">
+              <div className="text-xs font-extrabold text-teal-600 uppercase tracking-wide mb-2">
                 🚚 Logistics &amp; Payment Status
               </div>
               <form onSubmit={handleSaveCourierAndPayment}>
-                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px', marginBottom: '8px' }}>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5 mb-2">
                   <div>
-                    <label style={{ display: 'block', fontSize: '0.74rem', fontWeight: 700, color: '#64748b', marginBottom: '3px' }}>
+                    <label className="block text-xs font-bold text-slate-500 mb-1">
                       COURIER PARTNER
                     </label>
                     <select
                       value={courierName}
                       onChange={(e) => setCourierName(e.target.value)}
-                      style={{ width: '100%', padding: '6px 8px', borderRadius: '6px', border: '1px solid #cbd5e1', fontSize: '0.82rem' }}
+                      className="w-full px-2.5 py-1.5 rounded-md border border-slate-300 text-xs bg-white outline-none focus:border-teal-500"
                     >
                       <option value="">-- Choose Courier --</option>
                       {COURIER_OPTIONS.map((c) => (
@@ -441,13 +334,13 @@ export default function EcommerceOrderDetailsModal({
                   </div>
 
                   <div>
-                    <label style={{ display: 'block', fontSize: '0.74rem', fontWeight: 700, color: '#64748b', marginBottom: '3px' }}>
+                    <label className="block text-xs font-bold text-slate-500 mb-1">
                       PAYMENT STATUS
                     </label>
                     <select
                       value={paymentStatus}
                       onChange={(e) => setPaymentStatus(e.target.value)}
-                      style={{ width: '100%', padding: '6px 8px', borderRadius: '6px', border: '1px solid #cbd5e1', fontSize: '0.82rem' }}
+                      className="w-full px-2.5 py-1.5 rounded-md border border-slate-300 text-xs bg-white outline-none focus:border-teal-500"
                     >
                       <option value="unpaid">Unpaid / COD</option>
                       <option value="paid">Paid</option>
@@ -457,8 +350,8 @@ export default function EcommerceOrderDetailsModal({
                   </div>
                 </div>
 
-                <div style={{ marginBottom: '8px' }}>
-                  <label style={{ display: 'block', fontSize: '0.74rem', fontWeight: 700, color: '#64748b', marginBottom: '3px' }}>
+                <div className="mb-2">
+                  <label className="block text-xs font-bold text-slate-500 mb-1">
                     TRACKING / CONSIGNMENT ID
                   </label>
                   <input
@@ -466,23 +359,14 @@ export default function EcommerceOrderDetailsModal({
                     value={trackingCode}
                     onChange={(e) => setTrackingCode(e.target.value)}
                     placeholder="e.g. STDF-124982 or Pathao CN"
-                    style={{ width: '100%', padding: '6px 8px', borderRadius: '6px', border: '1px solid #cbd5e1', fontSize: '0.82rem', boxSizing: 'border-box' }}
+                    className="w-full px-2.5 py-1.5 rounded-md border border-slate-300 text-xs bg-white outline-none focus:border-teal-500 box-border"
                   />
                 </div>
 
                 <button
                   type="submit"
                   disabled={savingDetails}
-                  style={{
-                    padding: '6px 14px',
-                    background: '#0f172a',
-                    color: '#ffffff',
-                    border: 'none',
-                    borderRadius: '6px',
-                    fontSize: '0.8rem',
-                    fontWeight: 700,
-                    cursor: 'pointer',
-                  }}
+                  className="px-3.5 py-1.5 bg-slate-900 hover:bg-slate-800 text-white rounded-md text-xs font-bold cursor-pointer transition-colors disabled:opacity-60"
                 >
                   {savingDetails ? 'Saving...' : 'Save Logistics Info'}
                 </button>
@@ -491,34 +375,36 @@ export default function EcommerceOrderDetailsModal({
           </div>
 
           {/* Items Table */}
-          <div style={{ background: '#ffffff', borderRadius: '10px', border: '1px solid #e2e8f0', overflow: 'hidden', marginBottom: '16px' }}>
-            <div style={{ padding: '12px 16px', background: '#f8fafc', borderBottom: '1px solid #e2e8f0', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-              <span style={{ fontWeight: 800, fontSize: '0.84rem', color: '#0f172a', textTransform: 'uppercase' }}>
+          <div className="bg-white rounded-xl border border-slate-200 overflow-hidden mb-4 shadow-xs">
+            <div className="px-4 py-3 bg-slate-50 border-b border-slate-200 flex justify-between items-center">
+              <span className="font-extrabold text-xs text-slate-900 uppercase tracking-wide">
                 Ordered Products ({items.length})
               </span>
             </div>
 
-            <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '0.85rem' }}>
+            <table className="w-full border-collapse text-xs">
               <thead>
-                <tr style={{ background: '#f8fafc', borderBottom: '1px solid #e2e8f0', color: '#64748b' }}>
-                  <th style={{ padding: '8px 12px', textAlign: 'left' }}>PRODUCT</th>
-                  <th style={{ padding: '8px 12px', textAlign: 'center', width: '80px' }}>QTY</th>
-                  <th style={{ padding: '8px 12px', textAlign: 'right', width: '110px' }}>UNIT PRICE</th>
-                  <th style={{ padding: '8px 12px', textAlign: 'right', width: '110px' }}>TOTAL</th>
+                <tr className="bg-slate-50 border-b border-slate-200 text-slate-500 text-[11px] font-bold uppercase">
+                  <th className="px-3 py-2 text-left">PRODUCT</th>
+                  <th className="px-3 py-2 text-center w-20">QTY</th>
+                  <th className="px-3 py-2 text-right w-28">UNIT PRICE</th>
+                  <th className="px-3 py-2 text-right w-28">TOTAL</th>
                 </tr>
               </thead>
               <tbody>
                 {items.map((it, idx) => {
                   const lineTotal = money(it.quantity) * money(it.unit_price);
                   return (
-                    <tr key={idx} style={{ borderBottom: '1px solid #f1f5f9' }}>
-                      <td style={{ padding: '10px 12px' }}>
-                        <div style={{ fontWeight: 600, color: '#0f172a' }}>{it.product_name || `Product ID #${it.product_id}`}</div>
-                        {it.sku && <div style={{ fontSize: '0.74rem', color: '#64748b' }}>SKU: {it.sku}</div>}
+                    <tr key={idx} className="border-b border-slate-100 hover:bg-slate-50/50 transition-colors">
+                      <td className="px-3 py-2.5">
+                        <div className="font-semibold text-slate-900">
+                          {it.product_name || `Product ID #${it.product_id}`}
+                        </div>
+                        {it.sku && <div className="text-[11px] text-slate-500 mt-0.5">SKU: {it.sku}</div>}
                       </td>
-                      <td style={{ padding: '10px 12px', textAlign: 'center', fontWeight: 700 }}>{it.quantity}</td>
-                      <td style={{ padding: '10px 12px', textAlign: 'right', color: '#334155' }}>{taka(it.unit_price)}</td>
-                      <td style={{ padding: '10px 12px', textAlign: 'right', fontWeight: 700, color: '#0f172a' }}>{taka(lineTotal)}</td>
+                      <td className="px-3 py-2.5 text-center font-bold">{it.quantity}</td>
+                      <td className="px-3 py-2.5 text-right text-slate-700">{taka(it.unit_price)}</td>
+                      <td className="px-3 py-2.5 text-right font-bold text-slate-900">{taka(lineTotal)}</td>
                     </tr>
                   );
                 })}
@@ -527,34 +413,27 @@ export default function EcommerceOrderDetailsModal({
           </div>
 
           {/* Bottom Financials Summary Box */}
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+          <div className="flex flex-wrap justify-between items-center gap-3">
             <button
               type="button"
               onClick={handleDeleteOrder}
-              style={{
-                background: 'none',
-                border: 'none',
-                color: '#ef4444',
-                fontSize: '0.8rem',
-                fontWeight: 600,
-                cursor: 'pointer',
-              }}
+              className="text-red-500 hover:text-red-600 text-xs font-semibold cursor-pointer transition-colors"
             >
               🗑️ Delete Order
             </button>
 
-            <div style={{ width: '280px', background: '#ffffff', border: '1px solid #e2e8f0', borderRadius: '8px', padding: '12px 16px' }}>
-              <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.82rem', color: '#64748b', marginBottom: '4px' }}>
+            <div className="w-full sm:w-[280px] bg-white border border-slate-200 rounded-xl p-3.5 shadow-xs">
+              <div className="flex justify-between text-xs text-slate-500 mb-1">
                 <span>Subtotal:</span>
-                <span style={{ fontWeight: 600, color: '#0f172a' }}>{taka(itemsSubtotal)}</span>
+                <span className="font-semibold text-slate-900">{taka(itemsSubtotal)}</span>
               </div>
-              <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.82rem', color: '#64748b', marginBottom: '6px' }}>
+              <div className="flex justify-between text-xs text-slate-500 mb-1.5">
                 <span>Delivery Charge:</span>
-                <span style={{ fontWeight: 600, color: '#0f172a' }}>{taka(deliveryCharge)}</span>
+                <span className="font-semibold text-slate-900">{taka(deliveryCharge)}</span>
               </div>
-              <div style={{ borderTop: '1px solid #e2e8f0', paddingTop: '6px', display: 'flex', justifyContent: 'space-between', fontSize: '0.95rem', fontWeight: 800, color: '#0f172a' }}>
+              <div className="border-t border-slate-200 pt-1.5 flex justify-between text-sm font-extrabold text-slate-900">
                 <span>Grand Total:</span>
-                <span style={{ color: '#0d9488' }}>{taka(grandTotal)}</span>
+                <span className="text-teal-600">{taka(grandTotal)}</span>
               </div>
             </div>
           </div>

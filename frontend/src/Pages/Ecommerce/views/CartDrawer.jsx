@@ -29,114 +29,60 @@ export default function CartDrawer({
   if (!isOpen) return null;
 
   return (
-    <div
-      style={{
-        width: '360px',
-        background: '#ffffff',
-        borderLeft: '1px solid #e2e8f0',
-        display: 'flex',
-        flexDirection: 'column',
-        height: '100%',
-        boxShadow: '-4px 0 20px rgba(0,0,0,0.06)',
-        zIndex: 10,
-      }}
-    >
+    <div className="w-[360px] bg-white border-l border-slate-200 flex flex-col h-full shadow-[-4px_0_20px_rgba(0,0,0,0.06)] z-10">
       {/* Drawer Header */}
-      <div
-        style={{
-          padding: '14px 18px',
-          borderBottom: '1px solid #e2e8f0',
-          display: 'flex',
-          justifyContent: 'space-between',
-          alignItems: 'center',
-        }}
-      >
-        <strong style={{ fontSize: '1rem', color: '#0f172a' }}>
+      <div className="px-4.5 py-3.5 border-b border-slate-200 flex justify-between items-center">
+        <strong className="text-base text-slate-900">
           🛒 Your Order Cart ({cart.length})
         </strong>
         <button
           type="button"
           onClick={onClose}
-          style={{
-            background: 'none',
-            border: 'none',
-            color: '#64748b',
-            fontSize: '1rem',
-            cursor: 'pointer',
-          }}
+          className="text-slate-500 hover:text-slate-700 text-base cursor-pointer p-1 transition-colors"
         >
           ✕
         </button>
       </div>
 
       {/* Cart Items List */}
-      <div style={{ flex: 1, overflowY: 'auto', padding: '14px 18px' }}>
+      <div className="flex-1 overflow-y-auto px-4.5 py-3.5">
         {cart.length === 0 ? (
-          <div style={{ textAlign: 'center', padding: '40px 0', color: '#94a3b8' }}>
-            <span style={{ fontSize: '2rem', display: 'block', marginBottom: '8px' }}>🛍️</span>
+          <div className="text-center py-10 text-slate-400">
+            <span className="text-3xl block mb-2">🛍️</span>
             Your cart is empty. Add products from the storefront to place an order!
           </div>
         ) : (
           <>
-            <div style={{ marginBottom: '16px' }}>
+            <div className="space-y-1 mb-4">
               {cart.map((it) => (
                 <div
                   key={it.product_id}
-                  style={{
-                    display: 'flex',
-                    justifyContent: 'space-between',
-                    alignItems: 'center',
-                    padding: '8px 0',
-                    borderBottom: '1px solid #f1f5f9',
-                  }}
+                  className="flex justify-between items-center py-2 border-b border-slate-100"
                 >
-                  <div style={{ flex: 1, paddingRight: '8px' }}>
-                    <div style={{ fontWeight: 600, fontSize: '0.84rem', color: '#0f172a' }}>
+                  <div className="flex-1 pr-2">
+                    <div className="font-semibold text-xs text-slate-900">
                       {it.name}
                     </div>
-                    <div style={{ fontSize: '0.78rem', color: '#64748b' }}>
+                    <div className="text-xs text-slate-500">
                       {taka(it.price)} × {it.quantity}
                     </div>
                   </div>
 
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                  <div className="flex items-center gap-1.5">
                     <button
                       type="button"
                       onClick={() => updateCartQty(it.product_id, -1)}
-                      style={{
-                        width: '24px',
-                        height: '24px',
-                        borderRadius: '4px',
-                        border: '1px solid #cbd5e1',
-                        background: '#f8fafc',
-                        cursor: 'pointer',
-                        fontWeight: 800,
-                      }}
+                      className="w-6 h-6 rounded border border-slate-300 bg-slate-50 hover:bg-slate-100 cursor-pointer font-extrabold text-xs flex items-center justify-center transition-colors"
                     >
                       -
                     </button>
-                    <span
-                      style={{
-                        fontWeight: 700,
-                        fontSize: '0.84rem',
-                        minWidth: '16px',
-                        textAlign: 'center',
-                      }}
-                    >
+                    <span className="font-bold text-xs min-w-[16px] text-center">
                       {it.quantity}
                     </span>
                     <button
                       type="button"
                       onClick={() => updateCartQty(it.product_id, 1)}
-                      style={{
-                        width: '24px',
-                        height: '24px',
-                        borderRadius: '4px',
-                        border: '1px solid #cbd5e1',
-                        background: '#f8fafc',
-                        cursor: 'pointer',
-                        fontWeight: 800,
-                      }}
+                      className="w-6 h-6 rounded border border-slate-300 bg-slate-50 hover:bg-slate-100 cursor-pointer font-extrabold text-xs flex items-center justify-center transition-colors"
                     >
                       +
                     </button>
@@ -146,61 +92,29 @@ export default function CartDrawer({
             </div>
 
             {/* Quick Checkout Form */}
-            <div
-              style={{
-                background: '#f8fafc',
-                padding: '14px',
-                borderRadius: '8px',
-                border: '1px solid #e2e8f0',
-                marginBottom: '16px',
-              }}
-            >
-              <div
-                style={{
-                  fontSize: '0.78rem',
-                  fontWeight: 800,
-                  color: '#0d9488',
-                  textTransform: 'uppercase',
-                  marginBottom: '10px',
-                }}
-              >
+            <div className="bg-slate-50 p-3.5 rounded-lg border border-slate-200 mb-4 shadow-xs">
+              <div className="text-xs font-extrabold text-teal-600 uppercase tracking-wide mb-2.5">
                 Delivery &amp; Checkout Details
               </div>
 
               {checkoutError && (
-                <div
-                  style={{
-                    padding: '8px 10px',
-                    background: '#fee2e2',
-                    color: '#b91c1c',
-                    borderRadius: '6px',
-                    fontSize: '0.78rem',
-                    marginBottom: '8px',
-                  }}
-                >
+                <div className="p-2 bg-red-100 text-red-700 rounded-md text-xs mb-2">
                   ⚠️ {checkoutError}
                 </div>
               )}
 
-              <div style={{ marginBottom: '8px' }}>
+              <div className="mb-2">
                 <input
                   type="text"
                   required
                   placeholder="Your Name *"
                   value={checkoutName}
                   onChange={(e) => setCheckoutName(e.target.value)}
-                  style={{
-                    width: '100%',
-                    padding: '7px 10px',
-                    borderRadius: '6px',
-                    border: '1px solid #cbd5e1',
-                    fontSize: '0.82rem',
-                    boxSizing: 'border-box',
-                  }}
+                  className="w-full px-2.5 py-1.5 rounded-md border border-slate-300 text-xs outline-none focus:border-teal-500 box-border bg-white"
                 />
               </div>
 
-              <div style={{ marginBottom: '8px' }}>
+              <div className="mb-2">
                 <BangladeshiPhoneInput
                   required
                   placeholder="1X-XXXXXXXX"
@@ -209,34 +123,19 @@ export default function CartDrawer({
                 />
               </div>
 
-              <div style={{ marginBottom: '8px' }}>
+              <div className="mb-2">
                 <textarea
                   required
                   rows={2}
                   placeholder="Full Delivery Address *"
                   value={checkoutAddress}
                   onChange={(e) => setCheckoutAddress(e.target.value)}
-                  style={{
-                    width: '100%',
-                    padding: '7px 10px',
-                    borderRadius: '6px',
-                    border: '1px solid #cbd5e1',
-                    fontSize: '0.82rem',
-                    boxSizing: 'border-box',
-                  }}
+                  className="w-full px-2.5 py-1.5 rounded-md border border-slate-300 text-xs outline-none focus:border-teal-500 box-border bg-white"
                 />
               </div>
 
-              <div style={{ marginBottom: '8px' }}>
-                <label
-                  style={{
-                    fontSize: '0.72rem',
-                    fontWeight: 700,
-                    color: '#64748b',
-                    display: 'block',
-                    marginBottom: '2px',
-                  }}
-                >
+              <div className="mb-2">
+                <label className="text-[11px] font-bold text-slate-500 block mb-1">
                   Courier &amp; Delivery Fee
                 </label>
                 <select
@@ -247,13 +146,7 @@ export default function CartDrawer({
                       setCheckoutDeliveryFee(preset.charge);
                     }
                   }}
-                  style={{
-                    width: '100%',
-                    padding: '6px 8px',
-                    borderRadius: '6px',
-                    border: '1px solid #cbd5e1',
-                    fontSize: '0.8rem',
-                  }}
+                  className="w-full px-2 py-1.5 rounded-md border border-slate-300 text-xs outline-none focus:border-teal-500 bg-white"
                 >
                   {COURIER_PRESETS.map((p) => (
                     <option key={p.label} value={p.label}>
@@ -264,27 +157,13 @@ export default function CartDrawer({
               </div>
 
               <div>
-                <label
-                  style={{
-                    fontSize: '0.72rem',
-                    fontWeight: 700,
-                    color: '#64748b',
-                    display: 'block',
-                    marginBottom: '2px',
-                  }}
-                >
+                <label className="text-[11px] font-bold text-slate-500 block mb-1">
                   Payment Method
                 </label>
                 <select
                   value={checkoutPaymentMethod}
                   onChange={(e) => setCheckoutPaymentMethod(e.target.value)}
-                  style={{
-                    width: '100%',
-                    padding: '6px 8px',
-                    borderRadius: '6px',
-                    border: '1px solid #cbd5e1',
-                    fontSize: '0.8rem',
-                  }}
+                  className="w-full px-2 py-1.5 rounded-md border border-slate-300 text-xs outline-none focus:border-teal-500 bg-white"
                 >
                   <option value="cod">Cash on Delivery (COD)</option>
                   <option value="bkash">bKash</option>
@@ -298,69 +177,25 @@ export default function CartDrawer({
 
       {/* Drawer Footer with Calculation */}
       {cart.length > 0 && (
-        <div
-          style={{
-            padding: '14px 18px',
-            borderTop: '1px solid #e2e8f0',
-            background: '#f8fafc',
-          }}
-        >
-          <div
-            style={{
-              display: 'flex',
-              justifyContent: 'space-between',
-              fontSize: '0.82rem',
-              color: '#64748b',
-              marginBottom: '4px',
-            }}
-          >
+        <div className="px-4.5 py-3.5 border-t border-slate-200 bg-slate-50">
+          <div className="flex justify-between text-xs text-slate-500 mb-1">
             <span>Items Subtotal:</span>
             <span>{taka(cartSubtotal)}</span>
           </div>
-          <div
-            style={{
-              display: 'flex',
-              justifyContent: 'space-between',
-              fontSize: '0.82rem',
-              color: '#64748b',
-              marginBottom: '8px',
-            }}
-          >
+          <div className="flex justify-between text-xs text-slate-500 mb-2">
             <span>Delivery Fee:</span>
             <span>{taka(checkoutDeliveryFee)}</span>
           </div>
-          <div
-            style={{
-              borderTop: '1px solid #e2e8f0',
-              paddingTop: '6px',
-              display: 'flex',
-              justifyContent: 'space-between',
-              fontSize: '1.05rem',
-              fontWeight: 900,
-              color: '#0f172a',
-              marginBottom: '12px',
-            }}
-          >
+          <div className="border-t border-slate-200 pt-1.5 flex justify-between text-base font-black text-slate-900 mb-3">
             <span>Total Payable:</span>
-            <span style={{ color: '#0d9488' }}>{taka(cartGrandTotal)}</span>
+            <span className="text-teal-600">{taka(cartGrandTotal)}</span>
           </div>
 
           <button
             type="button"
             onClick={handleCheckoutSubmit}
             disabled={placingOrder}
-            style={{
-              width: '100%',
-              padding: '11px',
-              background: '#0d9488',
-              color: '#ffffff',
-              border: 'none',
-              borderRadius: '8px',
-              fontWeight: 800,
-              fontSize: '0.92rem',
-              cursor: 'pointer',
-              boxShadow: '0 4px 10px rgba(13, 148, 136, 0.3)',
-            }}
+            className="w-full py-2.5 bg-teal-600 hover:bg-teal-700 text-white rounded-lg font-extrabold text-sm cursor-pointer shadow-md transition-colors disabled:cursor-not-allowed disabled:opacity-70"
           >
             {placingOrder ? 'Submitting Order...' : '✓ Confirm & Place Order'}
           </button>

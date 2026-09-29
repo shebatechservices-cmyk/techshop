@@ -48,67 +48,35 @@ export default function Ecommerce() {
   } = useEcommerceManager();
 
   return (
-    <div style={{ padding: '24px', background: '#f8fafc', minHeight: '100vh', fontFamily: 'Inter, system-ui, sans-serif' }}>
+    <div className="min-h-screen p-6 bg-slate-50 font-sans">
       {/* 1. Consolidated Header, Tabs & Action Buttons in a Single Sleek Row */}
-      <div
-        style={{
-          display: 'flex',
-          justifyContent: 'space-between',
-          alignItems: 'center',
-          flexWrap: 'wrap',
-          gap: '10px',
-          marginBottom: '10px',
-          paddingBottom: '8px',
-          borderBottom: '1.5px solid #e2e8f0',
-        }}
-      >
+      <div className="flex justify-between items-center flex-wrap gap-2.5 mb-2.5 pb-2 border-b border-slate-200">
         {/* Left: Compact Title */}
-        <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-          <span style={{ fontSize: '1.3rem' }}>🌐</span>
+        <div className="flex items-center gap-2">
+          <span className="text-xl">🌐</span>
           <div>
-            <h1 style={{ fontSize: '1.25rem', fontWeight: 800, color: '#0f172a', margin: 0, letterSpacing: '-0.02em', lineHeight: 1.2 }}>
+            <h1 className="text-xl font-extrabold text-slate-900 m-0 tracking-tight leading-tight">
               E-Commerce &amp; Online Orders
             </h1>
           </div>
         </div>
 
         {/* Center: Inline Tabs */}
-        <div
-          style={{
-            display: 'flex',
-            background: '#f1f5f9',
-            padding: '3px',
-            borderRadius: '8px',
-            gap: '3px',
-          }}
-        >
+        <div className="flex bg-slate-100 p-1 rounded-lg gap-1">
           <button
             type="button"
             onClick={() => setActiveTab('orders')}
-            style={{
-              padding: '5px 12px',
-              borderRadius: '6px',
-              border: 'none',
-              background: activeTab === 'orders' ? '#0d9488' : 'transparent',
-              color: activeTab === 'orders' ? '#ffffff' : '#64748b',
-              fontWeight: activeTab === 'orders' ? 700 : 600,
-              fontSize: '0.8rem',
-              cursor: 'pointer',
-              display: 'flex',
-              alignItems: 'center',
-              gap: '6px',
-            }}
+            className={`px-3 py-1.5 rounded-md text-xs cursor-pointer flex items-center gap-1.5 transition-colors ${
+              activeTab === 'orders'
+                ? 'bg-teal-600 text-white font-bold shadow-xs'
+                : 'text-slate-600 hover:text-slate-900 font-semibold'
+            }`}
           >
             <span>Orders</span>
             <span
-              style={{
-                background: activeTab === 'orders' ? 'rgba(255,255,255,0.25)' : '#e2e8f0',
-                color: activeTab === 'orders' ? '#ffffff' : '#475569',
-                padding: '1px 6px',
-                borderRadius: '999px',
-                fontSize: '0.72rem',
-                fontWeight: 700,
-              }}
+              className={`px-1.5 py-0.5 rounded-full text-[11px] font-bold ${
+                activeTab === 'orders' ? 'bg-white/25 text-white' : 'bg-slate-200 text-slate-700'
+              }`}
             >
               {orders.length}
             </span>
@@ -117,30 +85,17 @@ export default function Ecommerce() {
           <button
             type="button"
             onClick={() => setActiveTab('catalog')}
-            style={{
-              padding: '5px 12px',
-              borderRadius: '6px',
-              border: 'none',
-              background: activeTab === 'catalog' ? '#0d9488' : 'transparent',
-              color: activeTab === 'catalog' ? '#ffffff' : '#64748b',
-              fontWeight: activeTab === 'catalog' ? 700 : 600,
-              fontSize: '0.8rem',
-              cursor: 'pointer',
-              display: 'flex',
-              alignItems: 'center',
-              gap: '6px',
-            }}
+            className={`px-3 py-1.5 rounded-md text-xs cursor-pointer flex items-center gap-1.5 transition-colors ${
+              activeTab === 'catalog'
+                ? 'bg-teal-600 text-white font-bold shadow-xs'
+                : 'text-slate-600 hover:text-slate-900 font-semibold'
+            }`}
           >
             <span>Catalog</span>
             <span
-              style={{
-                background: activeTab === 'catalog' ? 'rgba(255,255,255,0.25)' : '#e2e8f0',
-                color: activeTab === 'catalog' ? '#ffffff' : '#475569',
-                padding: '1px 6px',
-                borderRadius: '999px',
-                fontSize: '0.72rem',
-                fontWeight: 700,
-              }}
+              className={`px-1.5 py-0.5 rounded-full text-[11px] font-bold ${
+                activeTab === 'catalog' ? 'bg-white/25 text-white' : 'bg-slate-200 text-slate-700'
+              }`}
             >
               {products.length}
             </span>
@@ -149,19 +104,11 @@ export default function Ecommerce() {
           <button
             type="button"
             onClick={() => setActiveTab('couriers')}
-            style={{
-              padding: '5px 12px',
-              borderRadius: '6px',
-              border: 'none',
-              background: activeTab === 'couriers' ? '#0d9488' : 'transparent',
-              color: activeTab === 'couriers' ? '#ffffff' : '#64748b',
-              fontWeight: activeTab === 'couriers' ? 700 : 600,
-              fontSize: '0.8rem',
-              cursor: 'pointer',
-              display: 'flex',
-              alignItems: 'center',
-              gap: '6px',
-            }}
+            className={`px-3 py-1.5 rounded-md text-xs cursor-pointer flex items-center gap-1.5 transition-colors ${
+              activeTab === 'couriers'
+                ? 'bg-teal-600 text-white font-bold shadow-xs'
+                : 'text-slate-600 hover:text-slate-900 font-semibold'
+            }`}
           >
             <span>Couriers</span>
           </button>
@@ -169,43 +116,23 @@ export default function Ecommerce() {
           <button
             type="button"
             onClick={() => setActiveTab('analytics')}
-            style={{
-              padding: '5px 12px',
-              borderRadius: '6px',
-              border: 'none',
-              background: activeTab === 'analytics' ? '#0d9488' : 'transparent',
-              color: activeTab === 'analytics' ? '#ffffff' : '#64748b',
-              fontWeight: activeTab === 'analytics' ? 700 : 600,
-              fontSize: '0.8rem',
-              cursor: 'pointer',
-              display: 'flex',
-              alignItems: 'center',
-              gap: '6px',
-            }}
+            className={`px-3 py-1.5 rounded-md text-xs cursor-pointer flex items-center gap-1.5 transition-colors ${
+              activeTab === 'analytics'
+                ? 'bg-teal-600 text-white font-bold shadow-xs'
+                : 'text-slate-600 hover:text-slate-900 font-semibold'
+            }`}
           >
             <span>Analytics</span>
           </button>
         </div>
 
         {/* Right: Action Buttons */}
-        <div style={{ display: 'flex', gap: '8px', alignItems: 'center', flexWrap: 'wrap' }}>
+        <div className="flex items-center gap-2 flex-wrap">
           <button
             type="button"
             onClick={loadData}
             title="Refresh orders and stock"
-            style={{
-              padding: '5px 10px',
-              background: '#ffffff',
-              border: '1px solid #cbd5e1',
-              borderRadius: '6px',
-              color: '#334155',
-              fontWeight: 600,
-              fontSize: '0.78rem',
-              cursor: 'pointer',
-              display: 'flex',
-              alignItems: 'center',
-              gap: '4px',
-            }}
+            className="px-2.5 py-1.5 bg-white hover:bg-slate-100 border border-slate-300 rounded-md text-slate-700 font-semibold text-xs cursor-pointer flex items-center gap-1 transition-colors shadow-xs"
           >
             🔄 Refresh
           </button>
@@ -213,19 +140,7 @@ export default function Ecommerce() {
           <button
             type="button"
             onClick={() => setIsStorefrontModalOpen(true)}
-            style={{
-              padding: '5px 12px',
-              background: '#f0fdfa',
-              border: '1px solid #0d9488',
-              borderRadius: '6px',
-              color: '#0d9488',
-              fontWeight: 700,
-              fontSize: '0.78rem',
-              cursor: 'pointer',
-              display: 'flex',
-              alignItems: 'center',
-              gap: '4px',
-            }}
+            className="px-3 py-1.5 bg-teal-50 hover:bg-teal-100 border border-teal-600 rounded-md text-teal-600 font-bold text-xs cursor-pointer flex items-center gap-1 transition-colors shadow-xs"
           >
             🛍️ Storefront
           </button>
@@ -233,20 +148,7 @@ export default function Ecommerce() {
           <button
             type="button"
             onClick={() => setIsNewOrderModalOpen(true)}
-            style={{
-              background: '#0d9488',
-              color: '#ffffff',
-              border: 'none',
-              padding: '6px 14px',
-              borderRadius: '6px',
-              fontWeight: 700,
-              fontSize: '0.8rem',
-              cursor: 'pointer',
-              display: 'flex',
-              alignItems: 'center',
-              gap: '4px',
-              boxShadow: '0 2px 4px rgba(13, 148, 136, 0.2)',
-            }}
+            className="px-3.5 py-1.5 bg-teal-600 hover:bg-teal-700 text-white rounded-md font-bold text-xs cursor-pointer flex items-center gap-1 transition-colors shadow-sm"
           >
             <span>+</span> New Order
           </button>
@@ -254,7 +156,7 @@ export default function Ecommerce() {
       </div>
 
       {error && (
-        <div style={{ padding: '8px 12px', background: '#fee2e2', color: '#b91c1c', borderRadius: '6px', marginBottom: '10px', border: '1px solid #fecaca', fontSize: '0.82rem' }}>
+        <div className="p-2.5 bg-red-100 text-red-700 rounded-md mb-2.5 border border-red-200 text-xs">
           ⚠️ {error}
         </div>
       )}
@@ -321,7 +223,6 @@ export default function Ecommerce() {
         order={selectedOrderDetails}
         onOrderUpdated={() => {
           loadData();
-          // also refresh selected order details from updated list
           setSelectedOrderDetails(null);
         }}
         onOpenPrint={(ord) => {
