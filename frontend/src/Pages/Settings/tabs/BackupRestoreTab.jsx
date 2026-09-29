@@ -1,26 +1,27 @@
 import React from 'react';
 import API from '../../../services/api';
+import { useSettings } from '../context/SettingsContext';
 
-export default function BackupRestoreTab({
-  settings = {},
-  setSettings = () => {},
-  saving = false,
-  handleSaveSettings = () => {},
-  handleDownloadSqlBackup,
-  downloadingBackup,
-  handleExportJsonBackup,
-  downloadingJson,
-  handleTriggerBackup,
-  backupLogs,
-  loadSettingsData,
-  backupFiles,
-  loadingFiles,
-  loadBackupFiles,
-  setRestoreModal,
-  uploadingBackup,
-  handleUploadSqlFile,
-  setShowClearModal
-}) {
+export default function BackupRestoreTab(props) {
+  const context = useSettings();
+  const settings = props.settings ?? context.settings ?? {};
+  const setSettings = props.setSettings ?? context.setSettings ?? (() => {});
+  const saving = props.saving ?? context.saving ?? false;
+  const handleSaveSettings = props.handleSaveSettings ?? context.handleSaveSettings ?? (() => {});
+  const handleDownloadSqlBackup = props.handleDownloadSqlBackup ?? context.handleDownloadSqlBackup;
+  const downloadingBackup = props.downloadingBackup ?? context.downloadingBackup;
+  const handleExportJsonBackup = props.handleExportJsonBackup ?? context.handleExportJsonBackup;
+  const downloadingJson = props.downloadingJson ?? context.downloadingJson;
+  const handleTriggerBackup = props.handleTriggerBackup ?? context.handleTriggerBackup;
+  const backupLogs = props.backupLogs ?? context.backupLogs;
+  const loadSettingsData = props.loadSettingsData ?? context.loadSettingsData;
+  const backupFiles = props.backupFiles ?? context.backupFiles;
+  const loadingFiles = props.loadingFiles ?? context.loadingFiles;
+  const loadBackupFiles = props.loadBackupFiles ?? context.loadBackupFiles;
+  const setRestoreModal = props.setRestoreModal ?? context.setRestoreModal;
+  const uploadingBackup = props.uploadingBackup ?? context.uploadingBackup;
+  const handleUploadSqlFile = props.handleUploadSqlFile ?? context.handleUploadSqlFile;
+  const setShowClearModal = props.setShowClearModal ?? context.setShowClearModal;
   return (
     <div className="space-y-6">
       {/* Sub-page Header with Quick Actions */}

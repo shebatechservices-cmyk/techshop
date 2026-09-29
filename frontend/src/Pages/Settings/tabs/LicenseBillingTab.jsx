@@ -1,20 +1,21 @@
 import React from 'react';
+import { useSettings } from '../context/SettingsContext';
 
-export default function LicenseBillingTab({
-  settings,
-  licenseInfo,
-  stats,
-  copyText,
-  syncingHeartbeat,
-  handleTriggerHeartbeat,
-  redemptionCode,
-  setRedemptionCode,
-  redeeming,
-  handleRedeemCode,
-  redemptionResult,
-  saving,
-  handleSaveSettings
-}) {
+export default function LicenseBillingTab(props) {
+  const context = useSettings();
+  const settings = props.settings ?? context.settings;
+  const licenseInfo = props.licenseInfo ?? context.licenseInfo;
+  const stats = props.stats ?? context.stats;
+  const copyText = props.copyText ?? context.copyText;
+  const syncingHeartbeat = props.syncingHeartbeat ?? context.syncingHeartbeat;
+  const handleTriggerHeartbeat = props.handleTriggerHeartbeat ?? context.handleTriggerHeartbeat;
+  const redemptionCode = props.redemptionCode ?? context.redemptionCode;
+  const setRedemptionCode = props.setRedemptionCode ?? context.setRedemptionCode;
+  const redeeming = props.redeeming ?? context.redeeming;
+  const handleRedeemCode = props.handleRedeemCode ?? context.handleRedeemCode;
+  const redemptionResult = props.redemptionResult ?? context.redemptionResult;
+  const saving = props.saving ?? context.saving;
+  const handleSaveSettings = props.handleSaveSettings ?? context.handleSaveSettings;
   return (
     <div className="space-y-6">
       {/* Sub-page Header with Quick Actions */}

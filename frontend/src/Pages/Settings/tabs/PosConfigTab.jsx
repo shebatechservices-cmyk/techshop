@@ -1,11 +1,12 @@
 import React from 'react';
+import { useSettings } from '../context/SettingsContext';
 
-export default function PosConfigTab({
-  settings,
-  setSettings,
-  saving,
-  handleSaveSettings
-}) {
+export default function PosConfigTab(props) {
+  const context = useSettings();
+  const settings = props.settings ?? context.settings;
+  const setSettings = props.setSettings ?? context.setSettings;
+  const saving = props.saving ?? context.saving;
+  const handleSaveSettings = props.handleSaveSettings ?? context.handleSaveSettings;
   return (
     <div className="space-y-5">
       {/* Sub-page Header with Actions */}

@@ -21,7 +21,7 @@ const CameraIcon = ({ className = 'w-4 h-4' }) => (
   </svg>
 );
 
-function PurchaseCartItemRow({
+const PurchaseCartItemRow = React.memo(function PurchaseCartItemRow({
   item,
   isExpanded,
   setExpandedId,
@@ -169,7 +169,7 @@ function PurchaseCartItemRow({
                   quantity: Math.max(minVal, Number(e.target.value || minVal)),
                 });
               }}
-              className={`flex-1 w-full min-w-[80px] py-1 px-2 rounded-md text-xs text-center box-border ${
+              className={`flex-1 w-full min-w-[90px] py-1 px-2 rounded-md text-xs text-center box-border ${
                 isSerialTracked && barcodesList.length === 0
                   ? 'border-2 border-rose-500'
                   : 'border border-slate-300'
@@ -199,7 +199,7 @@ function PurchaseCartItemRow({
               value={item.cost_price}
               onChange={(e) => handleItemCostChange(item, e.target.value)}
               placeholder="0.00"
-              className="flex-1 w-full min-w-[80px] py-1 px-2 rounded-md border border-sky-400 text-xs box-border font-semibold focus:outline-none focus:border-sky-500"
+              className="flex-1 w-full min-w-[90px] py-1 px-2 rounded-md border border-sky-400 text-xs box-border font-semibold focus:outline-none focus:border-sky-500"
             />
           </div>
 
@@ -215,7 +215,7 @@ function PurchaseCartItemRow({
                 value={item.margin_value}
                 onChange={(e) => handleItemMarginChange(item, e.target.value)}
                 placeholder="15"
-                className="flex-1 w-full min-w-[80px] py-1 px-2 rounded-md border border-slate-300 text-xs text-center font-bold box-border focus:outline-none focus:border-emerald-500"
+                className="flex-1 w-full min-w-[90px] py-1 px-2 rounded-md border border-slate-300 text-xs text-center font-bold box-border focus:outline-none focus:border-emerald-500"
               />
               <div className="flex rounded-md overflow-hidden border border-slate-300 shrink-0">
                 <button
@@ -259,7 +259,7 @@ function PurchaseCartItemRow({
               type="text"
               readOnly
               value={finalSale > 0 ? taka(finalSale) : '৳ 0.00'}
-              className="flex-1 w-full min-w-[80px] py-1 px-2 rounded-md border border-emerald-300 bg-emerald-50 text-emerald-700 text-xs font-extrabold text-center box-border cursor-default"
+              className="flex-1 w-full min-w-[90px] py-1 px-2 rounded-md border border-emerald-300 bg-emerald-50 text-emerald-700 text-xs font-extrabold text-center box-border cursor-default"
               title="Final sale price is strictly calculated from Cost Price + Margin and cannot be manually modified."
             />
           </div>
@@ -648,9 +648,9 @@ function PurchaseCartItemRow({
       </div>
     </div>
   );
-}
+});
 
-export default function PurchaseCartItemList({
+const PurchaseCartItemList = React.memo(function PurchaseCartItemList({
   items = [],
   expandedId,
   setExpandedId,
@@ -691,5 +691,8 @@ export default function PurchaseCartItemList({
       ))}
     </div>
   );
-}
+});
+
+export const PurchaseItemCard = PurchaseCartItemRow;
+export default PurchaseCartItemList;
 

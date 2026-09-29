@@ -1,15 +1,16 @@
 import React from 'react';
+import { useSettings } from '../context/SettingsContext';
 
-export default function SecuritySessionTab({
-  currentUser,
-  settings,
-  setSettings,
-  setIsLocked,
-  saving,
-  handleSaveSettings,
-  onLogout,
-  showToast
-}) {
+export default function SecuritySessionTab(props) {
+  const context = useSettings();
+  const currentUser = props.currentUser ?? context.currentUser;
+  const settings = props.settings ?? context.settings;
+  const setSettings = props.setSettings ?? context.setSettings;
+  const setIsLocked = props.setIsLocked ?? context.setIsLocked;
+  const saving = props.saving ?? context.saving;
+  const handleSaveSettings = props.handleSaveSettings ?? context.handleSaveSettings;
+  const onLogout = props.onLogout ?? context.onLogout;
+  const showToast = props.showToast ?? context.showToast;
   return (
     <div className="space-y-6">
       {/* Sub-page Header with Breadcrumbs & Action Button */}

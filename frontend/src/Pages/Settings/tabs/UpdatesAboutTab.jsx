@@ -1,11 +1,12 @@
 import React from 'react';
+import { useSettings } from '../context/SettingsContext';
 
-export default function UpdatesAboutTab({
-  handleCheckUpdates,
-  updateChecking,
-  updateStatus,
-  showToast
-}) {
+export default function UpdatesAboutTab(props) {
+  const context = useSettings();
+  const handleCheckUpdates = props.handleCheckUpdates ?? context.handleCheckUpdates;
+  const updateChecking = props.updateChecking ?? context.updateChecking;
+  const updateStatus = props.updateStatus ?? context.updateStatus;
+  const showToast = props.showToast ?? context.showToast;
   return (
     <div className="space-y-6">
       {/* Sub-page Header with Quick Actions */}

@@ -1,29 +1,30 @@
 import React from 'react';
+import { useSettings } from '../context/SettingsContext';
 
-export default function SmsModuleTab({
-  settings,
-  setSettings,
-  savingTriggers,
-  handleSaveSmsTriggers,
-  smsProviders,
-  smsBalance,
-  handleCheckLiveBalance,
-  handleSetActiveProvider,
-  handleDeleteProvider,
-  setProviderModal,
-  setTestSmsModal,
-  setBulkSmsModal,
-  smsCategoryFilter,
-  setSmsCategoryFilter,
-  filteredTriggers,
-  activeTriggersCount,
-  smsTriggers,
-  handleToggleSmsTrigger,
-  handleTemplateChange,
-  handleInsertToken,
-  handleOpenSamplePreview,
-  smsLogs
-}) {
+export default function SmsModuleTab(props) {
+  const context = useSettings();
+  const settings = props.settings ?? context.settings;
+  const setSettings = props.setSettings ?? context.setSettings;
+  const savingTriggers = props.savingTriggers ?? context.savingTriggers;
+  const handleSaveSmsTriggers = props.handleSaveSmsTriggers ?? context.handleSaveSmsTriggers;
+  const smsProviders = props.smsProviders ?? context.smsProviders;
+  const smsBalance = props.smsBalance ?? context.smsBalance;
+  const handleCheckLiveBalance = props.handleCheckLiveBalance ?? context.handleCheckLiveBalance;
+  const handleSetActiveProvider = props.handleSetActiveProvider ?? context.handleSetActiveProvider;
+  const handleDeleteProvider = props.handleDeleteProvider ?? context.handleDeleteProvider;
+  const setProviderModal = props.setProviderModal ?? context.setProviderModal;
+  const setTestSmsModal = props.setTestSmsModal ?? context.setTestSmsModal;
+  const setBulkSmsModal = props.setBulkSmsModal ?? context.setBulkSmsModal;
+  const smsCategoryFilter = props.smsCategoryFilter ?? context.smsCategoryFilter;
+  const setSmsCategoryFilter = props.setSmsCategoryFilter ?? context.setSmsCategoryFilter;
+  const filteredTriggers = props.filteredTriggers ?? context.filteredTriggers;
+  const activeTriggersCount = props.activeTriggersCount ?? context.activeTriggersCount;
+  const smsTriggers = props.smsTriggers ?? context.smsTriggers;
+  const handleToggleSmsTrigger = props.handleToggleSmsTrigger ?? context.handleToggleSmsTrigger;
+  const handleTemplateChange = props.handleTemplateChange ?? context.handleTemplateChange;
+  const handleInsertToken = props.handleInsertToken ?? context.handleInsertToken;
+  const handleOpenSamplePreview = props.handleOpenSamplePreview ?? context.handleOpenSamplePreview;
+  const smsLogs = props.smsLogs ?? context.smsLogs;
   return (
     <div className="space-y-6">
       {/* Sub-page Header with Quick Actions */}

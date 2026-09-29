@@ -1,4 +1,4 @@
-import { useState, useRef } from 'react';
+import { useState, useRef, useCallback } from 'react';
 import API from '../../../../services/api';
 
 export function usePurchaseBarcodeScanner({
@@ -15,7 +15,7 @@ export function usePurchaseBarcodeScanner({
   const searchInputRef = useRef(null);
   const searchContainerRef = useRef(null);
 
-  const handleAddBarcode = (localId, barcodeToAdd = null) => {
+  const handleAddBarcode = useCallback((localId, barcodeToAdd = null) => {
     const rawBarcode =
       barcodeToAdd !== null
         ? barcodeToAdd
@@ -107,9 +107,9 @@ export function usePurchaseBarcodeScanner({
 
     if (setError) setError('');
     if (setPopupMsg) setPopupMsg('');
-  };
+  }, [barcodeInput, items, setError, setItems, setPopupMsg]);
 
-  const handleRemoveBarcode = (localId, serialCode) => {
+  const handleRemoveBarcode = useCallback((localId, serialCode) => {
     const targetCode = String(serialCode).toUpperCase().trim();
     setItems((current) =>
       current.map((i) => {
@@ -134,7 +134,7 @@ export function usePurchaseBarcodeScanner({
         };
       })
     );
-  };
+  }, [setItems]);
 
   return {
     barcodeInput,

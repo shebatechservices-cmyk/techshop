@@ -1,14 +1,15 @@
 import React from 'react';
 import BangladeshiPhoneInput from '../../../components/ui/BangladeshiPhoneInput';
+import { useSettings } from '../context/SettingsContext';
 
-export default function StoreProfileTab({
-  settings,
-  setSettings,
-  saving,
-  handleResetDummyShop,
-  handleSaveSettings,
-  handleLogoUpload
-}) {
+export default function StoreProfileTab(props) {
+  const context = useSettings();
+  const settings = props.settings ?? context.settings;
+  const setSettings = props.setSettings ?? context.setSettings;
+  const saving = props.saving ?? context.saving;
+  const handleResetDummyShop = props.handleResetDummyShop ?? context.handleResetDummyShop;
+  const handleSaveSettings = props.handleSaveSettings ?? context.handleSaveSettings;
+  const handleLogoUpload = props.handleLogoUpload ?? context.handleLogoUpload;
   return (
     <div className="space-y-5">
       {/* Sub-page Header with Actions */}

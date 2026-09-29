@@ -1,19 +1,20 @@
 import React from 'react';
+import { useSettings } from '../context/SettingsContext';
 
-export default function PrintTemplateTab({
-  settings,
-  setSettings,
-  saving,
-  handleSavePrintDesign,
-  handleGenericImageUpload,
-  handleBrandLogoFileUpload,
-  handleMoveBrandLogo,
-  handleAddBrandLogo,
-  handleUpdateBrandLogo,
-  handleRemoveBrandLogo,
-  previewMode,
-  setPreviewMode
-}) {
+export default function PrintTemplateTab(props) {
+  const context = useSettings();
+  const settings = props.settings ?? context.settings;
+  const setSettings = props.setSettings ?? context.setSettings;
+  const saving = props.saving ?? context.saving;
+  const handleSavePrintDesign = props.handleSavePrintDesign ?? context.handleSavePrintDesign;
+  const handleGenericImageUpload = props.handleGenericImageUpload ?? context.handleGenericImageUpload;
+  const handleBrandLogoFileUpload = props.handleBrandLogoFileUpload ?? context.handleBrandLogoFileUpload;
+  const handleMoveBrandLogo = props.handleMoveBrandLogo ?? context.handleMoveBrandLogo;
+  const handleAddBrandLogo = props.handleAddBrandLogo ?? context.handleAddBrandLogo;
+  const handleUpdateBrandLogo = props.handleUpdateBrandLogo ?? context.handleUpdateBrandLogo;
+  const handleRemoveBrandLogo = props.handleRemoveBrandLogo ?? context.handleRemoveBrandLogo;
+  const previewMode = props.previewMode ?? context.previewMode;
+  const setPreviewMode = props.setPreviewMode ?? context.setPreviewMode;
   return (
     <div className="space-y-5">
       {/* Sub-page Header with Actions */}

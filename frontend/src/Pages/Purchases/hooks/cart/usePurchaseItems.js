@@ -1,4 +1,4 @@
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useCallback } from 'react';
 import {
   money,
   computeFinalSale,
@@ -44,7 +44,7 @@ export function usePurchaseItems({
       .slice(0, 30);
   }, [productList, query]);
 
-  const updateItem = (localId, patch) => {
+  const updateItem = useCallback((localId, patch) => {
     setItems((current) =>
       current.map((item) => {
         if (item.localId !== localId) return item;
@@ -53,9 +53,9 @@ export function usePurchaseItems({
         return next;
       })
     );
-  };
+  }, []);
 
-  const handleItemCostChange = (item, newCostStr) => {
+  const handleItemCostChange = useCallback((item, newCostStr) => {
     const cost = money(newCostStr);
     let patch = { cost_price: newCostStr };
     if (
@@ -78,9 +78,9 @@ export function usePurchaseItems({
       patch.final_sale_price = sale;
     }
     updateItem(item.localId, patch);
-  };
+  }, [updateItem]);
 
-  const handleItemMarginChange = (item, newMarginStr) => {
+  const handleItemMarginChange = useCallback((item, newMarginStr) => {
     const margin = money(newMarginStr);
     const cost = money(item.cost_price);
     let patch = { margin_value: newMarginStr };
@@ -92,9 +92,9 @@ export function usePurchaseItems({
       patch.final_sale_manual = false;
     }
     updateItem(item.localId, patch);
-  };
+  }, [updateItem]);
 
-  const handleItemSaleChange = (item, newSaleStr) => {
+  const handleItemSaleChange = useCallback((item, newSaleStr) => {
     const sale = money(newSaleStr);
     const cost = money(item.cost_price);
     let patch = {
@@ -108,41 +108,44 @@ export function usePurchaseItems({
       patch.margin_value = Number(margin.toFixed(2));
     }
     updateItem(item.localId, patch);
-  };
+  }, [updateItem]);
 
-  const addProduct = (product) => {
+  const addProduct = useCallback((product) => {
     if (!product || !product.id) return;
-    const existingIndex = items.findIndex((i) => i.product_id === product.id);
-    if (existingIndex !== -1) {
-      if (setPopupMsg) {
-        setPopupMsg(
-          `"${product.name || 'Product'}" is already in your purchase list. Adjust quantity or barcode in the table below.`
-        );
+    setItems((current) => {
+      const existingIndex = current.findIndex((i) => i.product_id === product.id);
+      if (existingIndex !== -1) {
+        if (setPopupMsg) {
+          setPopupMsg(
+            `"${product.name || 'Product'}" is already in your purchase list. Adjust quantity or barcode in the table below.`
+          );
+        }
+        setExpandedId(current[existingIndex].localId);
+        setQuery('');
+        setIsSearchOpen(false);
+        return current;
       }
-      setExpandedId(items[existingIndex].localId);
+
+      const item = newLineItem(product);
+      setExpandedId(item.localId);
       setQuery('');
       setIsSearchOpen(false);
-      return;
-    }
+      if (setError) setError('');
+      if (setPopupMsg) setPopupMsg('');
 
-    const item = newLineItem(product);
-    setItems((current) => [item, ...current]);
-    setExpandedId(item.localId);
-    setQuery('');
-    setIsSearchOpen(false);
-    if (setError) setError('');
-    if (setPopupMsg) setPopupMsg('');
+      setTimeout(() => {
+        if (item.is_serial_tracked && barcodeInputRef?.current) {
+          barcodeInputRef.current.focus();
+        } else if (searchInputRef?.current) {
+          searchInputRef.current.focus();
+        }
+      }, 150);
 
-    setTimeout(() => {
-      if (item.is_serial_tracked && barcodeInputRef?.current) {
-        barcodeInputRef.current.focus();
-      } else if (searchInputRef?.current) {
-        searchInputRef.current.focus();
-      }
-    }, 150);
-  };
+      return [item, ...current];
+    });
+  }, [barcodeInputRef, searchInputRef, setError, setPopupMsg]);
 
-  const handleRemoveItem = (localId) => {
+  const handleRemoveItem = useCallback((localId) => {
     setItems((current) => current.filter((item) => item.localId !== localId));
     if (setBarcodeScanErrors) {
       setBarcodeScanErrors((prev) => {
@@ -151,16 +154,16 @@ export function usePurchaseItems({
         return next;
       });
     }
-  };
+  }, [setBarcodeScanErrors]);
 
-  const handleAddButtonClick = (product, e) => {
+  const handleAddButtonClick = useCallback((product, e) => {
     if (e && e.stopPropagation) e.stopPropagation();
     if (product && product.id) {
       addProduct(product);
     } else if (searchInputRef?.current) {
       searchInputRef.current.focus();
     }
-  };
+  }, [addProduct, searchInputRef]);
 
   return {
     items,

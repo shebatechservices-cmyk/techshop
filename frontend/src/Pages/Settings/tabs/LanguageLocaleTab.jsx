@@ -1,11 +1,12 @@
 import React from 'react';
+import { useSettings } from '../context/SettingsContext';
 
-export default function LanguageLocaleTab({
-  settings,
-  setSettings,
-  saving,
-  handleSaveSettings
-}) {
+export default function LanguageLocaleTab(props) {
+  const context = useSettings();
+  const settings = props.settings ?? context.settings;
+  const setSettings = props.setSettings ?? context.setSettings;
+  const saving = props.saving ?? context.saving;
+  const handleSaveSettings = props.handleSaveSettings ?? context.handleSaveSettings;
   return (
     <div className="space-y-6">
       {/* Sub-page Header with Quick Actions */}

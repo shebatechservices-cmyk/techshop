@@ -50,7 +50,7 @@ export function computeFinalSale(item) {
     return money(item.final_sale_price);
   const cost = money(item.cost_price);
   const margin = money(item.margin_value);
-  if (cost <= 0) return 0;
+  if (cost <= 0) return money(item.sale_price || item.final_sale_price || 0);
   if (item.margin_type === 'amount') return Number((cost + margin).toFixed(2));
   return Number((cost + (cost * margin) / 100).toFixed(2));
 }

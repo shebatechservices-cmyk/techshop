@@ -1,5 +1,11 @@
 import { useState, useEffect, useMemo } from "react";
 import API_BASE from "../../../services/api";
+import {
+  getMergedArray,
+  buildQuickAddConfig,
+  buildQuickAddPayload,
+  buildQuickEditConfig,
+} from "./attributeUtils";
 
 const API = `${API_BASE}/master`;
 const CATEGORY_API = `${API_BASE}/categories`;
@@ -182,10 +188,10 @@ export default function useProductAttributes({ onEntityCreated } = {}) {
       series: setSeries,
     };
     if (entity === "product_names") {
-      setAllProductNames((prev) => [item, ...prev.filter((p) => p.id !== item.id)]);
-      setProductNames((prev) => [item, ...prev.filter((p) => p.id !== item.id)]);
+      setAllProductNames((prev) => getMergedArray(prev, item));
+      setProductNames((prev) => getMergedArray(prev, item));
     } else if (setters[entity]) {
-      setters[entity]((prev) => [item, ...prev.filter((p) => p.id !== item.id)]);
+      setters[entity]((prev) => getMergedArray(prev, item));
     }
   };
 
@@ -237,53 +243,27 @@ export default function useProductAttributes({ onEntityCreated } = {}) {
   };
 
   const openQuickAddModal = (entity, context = {}) => {
-    const map = {
-      categories: { title: "Quick Add Category", label: "Category Name", placeholder: "e.g., Network Accessories", entityLabel: "Category" },
-      sub_categories: { title: "Quick Add Sub-category", label: "Sub-category Name", placeholder: "e.g., Cat-6 UTP Cable", entityLabel: "Sub-category" },
-      brands: { title: "Quick Add Brand", label: "Brand Name", placeholder: "e.g., Hikvision", entityLabel: "Brand" },
-      product_names: { title: "Quick Add Product Name", label: "Product Name", placeholder: "e.g., Bullet IP Camera", entityLabel: "Product Name" },
-      models: { title: "Quick Add Model", label: "Model Number/Name", placeholder: "e.g., DS-2CD2043G2-I", entityLabel: "Model" },
-      series: { title: "Quick Add Series", label: "Series Name", placeholder: "e.g., ColorVu Series", entityLabel: "Series" },
-    };
-    const config = map[entity] || { title: `Add ${entity}`, label: "Name", placeholder: "Enter name...", entityLabel: entity };
-
-    let parentName = context?.parentName || "";
-    let parentType = context?.parentType || "";
-
-    if (!parentName) {
-      if (entity === "sub_categories" && selectedCategory) {
-        parentName = categories.find((c) => String(c.id) === String(selectedCategory))?.name || "";
-        parentType = "Category";
-      } else if (entity === "brands" && selectedSubCategory) {
-        parentName = catalogSubCategories.find((s) => String(s.id) === String(selectedSubCategory))?.name || "";
-        parentType = "Sub-category";
-      } else if (entity === "product_names" && selectedBrand) {
-        parentName = catalogBrands.find((b) => String(b.id) === String(selectedBrand))?.name || "";
-        parentType = "Brand";
-      } else if (entity === "models") {
-        parentName = context?.productName || catalogBrands.find((b) => String(b.id) === String(selectedBrand))?.name || "";
-        parentType = context?.productName ? "Product Name" : "Brand";
-      } else if (entity === "series" && selectedModel) {
-        parentName = models.find((m) => String(m.id) === String(selectedModel))?.name || "";
-        parentType = "Model";
-      }
-    }
-
-    setQuickAdd({
-      isOpen: true,
+    const config = buildQuickAddConfig(
       entity,
-      title: config.title,
-      subtitle: parentName ? `Adding new ${config.entityLabel} under: ${parentName}` : `Registering new ${config.entityLabel}`,
-      label: config.label,
-      placeholder: config.placeholder,
-      entityLabel: config.entityLabel,
-      parentName,
-      parentType,
-      value: "",
-      extraInfo: "",
-      error: "",
-      loading: false,
-    });
+      context,
+      {
+        selectedCategory,
+        selectedSubCategory,
+        selectedBrand,
+        selectedModel,
+        selectedSeries,
+      },
+      {
+        categories,
+        subCategories,
+        catalogSubCategories,
+        brands,
+        catalogBrands,
+        models,
+        series,
+      }
+    );
+    setQuickAdd(config);
   };
 
   const handleQuickAddSave = async (customValue) => {
@@ -298,23 +278,13 @@ export default function useProductAttributes({ onEntityCreated } = {}) {
     }
     setQuickAdd((prev) => ({ ...prev, loading: true, error: "" }));
     try {
-      const payload = { name: val };
-      if (quickAdd.entity === "sub_categories" && selectedCategory) payload.category_id = Number(selectedCategory);
-      if (quickAdd.entity === "brands" && selectedSubCategory) payload.sub_category_id = Number(selectedSubCategory);
-      if (quickAdd.entity === "product_names") {
-        if (selectedBrand) payload.brand_id = Number(selectedBrand);
-        if (selectedCategory) payload.category_id = Number(selectedCategory);
-        if (selectedSubCategory) payload.sub_category_id = Number(selectedSubCategory);
-      }
-      if (quickAdd.entity === "models") {
-        if (selectedBrand) payload.brand_id = Number(selectedBrand);
-        if (selectedCategory) payload.category_id = Number(selectedCategory);
-        if (selectedSubCategory) payload.sub_category_id = Number(selectedSubCategory);
-      }
-      if (quickAdd.entity === "series") {
-        if (selectedModel) payload.model_id = Number(selectedModel);
-        if (selectedBrand) payload.brand_id = Number(selectedBrand);
-      }
+      const payload = buildQuickAddPayload(quickAdd.entity, val, {
+        selectedCategory,
+        selectedSubCategory,
+        selectedBrand,
+        selectedModel,
+        selectedSeries,
+      });
 
       const created = await persistMasterItem(quickAdd.entity, payload);
       const item = created?.data || created;
@@ -340,25 +310,7 @@ export default function useProductAttributes({ onEntityCreated } = {}) {
   };
 
   const openQuickEditModal = (entity, item) => {
-    const titleMap = {
-      categories: "Category",
-      sub_categories: "Sub-category",
-      brands: "Brand",
-      product_names: "Product Name",
-      models: "Model",
-      series: "Series",
-    };
-    setQuickEdit({
-      isOpen: true,
-      entity,
-      id: item.id,
-      title: `Edit ${titleMap[entity] || entity}`,
-      subtitle: `Update name for "${item.name}"`,
-      label: "Name",
-      value: item.name,
-      loading: false,
-      error: "",
-    });
+    setQuickEdit(buildQuickEditConfig(entity, item));
   };
 
   const handleQuickEditSave = async (e) => {

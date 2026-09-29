@@ -1,5 +1,4 @@
-import { useEffect, useState, useRef } from 'react';
-import API_BASE from '../../../services/api';
+import { useState, useRef } from 'react';
 import {
   fullCatalogName,
   productLabel,
@@ -15,6 +14,7 @@ import {
   getItemMissingFields,
   newLineItem,
 } from '../utils/purchaseCartUtils';
+import { usePurchaseInitialData } from './cart/usePurchaseInitialData';
 import { usePurchaseLandingCosts } from './cart/usePurchaseLandingCosts';
 import { usePurchaseItems } from './cart/usePurchaseItems';
 import { usePurchaseBarcodeScanner } from './cart/usePurchaseBarcodeScanner';
@@ -57,18 +57,30 @@ export function usePurchaseCart(props = {}) {
   const [isPrintOpen, setIsPrintOpen] = useState(false);
   const [isPrintPreviewOnly, setIsPrintPreviewOnly] = useState(false);
 
-  // Supplier & Catalog State
-  const [productList, setProductList] = useState(initialProducts);
-  const [suppliers, setSuppliers] = useState([]);
-  const [accounts, setAccounts] = useState([]);
+  // Supplier & Reference Selection State
   const [supplierId, setSupplierId] = useState('');
-  const [summary, setSummary] = useState(null);
   const [reference, setReference] = useState('');
   const [supplierSearch, setSupplierSearch] = useState('');
   const [isSupplierOpen, setIsSupplierOpen] = useState(false);
   const supplierSelectRef = useRef(null);
 
-  // 1. Landing / Logistics Extra Costs Sub-hook
+  // 1. Initial Data Sub-hook (Products, Suppliers, Accounts, Summary)
+  const {
+    productList,
+    setProductList,
+    suppliers,
+    setSuppliers,
+    accounts,
+    setAccounts,
+    summary,
+    setSummary,
+  } = usePurchaseInitialData({
+    initialProducts,
+    supplierId,
+    setError,
+  });
+
+  // 2. Landing / Logistics Extra Costs Sub-hook
   const {
     hasExtraCost,
     setHasExtraCost,
@@ -81,14 +93,14 @@ export function usePurchaseCart(props = {}) {
     extraCostValue: extra,
   } = usePurchaseLandingCosts();
 
-  // 2. Barcode & Serials Sub-hook
+  // 3. Barcode & Serials Sub-hook Refs
   const barcodeRefs = useRef({
     barcodeInputRef: null,
     searchInputRef: null,
     searchContainerRef: null,
   });
 
-  // 3. Items & Catalog Sub-hook
+  // 4. Items & Catalog Sub-hook
   const {
     items,
     setItems,
@@ -114,7 +126,7 @@ export function usePurchaseCart(props = {}) {
     setPopupMsg,
   });
 
-  // 4. Barcode Scanner Sub-hook
+  // 5. Barcode Scanner Sub-hook
   const {
     barcodeInput,
     setBarcodeInput,
@@ -137,47 +149,7 @@ export function usePurchaseCart(props = {}) {
   barcodeRefs.current.searchInputRef = searchInputRef;
   barcodeRefs.current.searchContainerRef = searchContainerRef;
 
-  // Initial Data Loading
-  useEffect(() => {
-    const fetchMasterProducts = async () => {
-      try {
-        const res = await fetch(`${API_BASE}/master/products`);
-        if (res.ok) {
-          const data = await res.json();
-          setProductList(Array.isArray(data) ? data : data.data || []);
-        }
-      } catch (err) {
-        console.error('Failed to load master products for purchase cart:', err);
-      }
-    };
-    fetchMasterProducts();
-  }, [initialProducts]);
-
-  useEffect(() => {
-    const load = async () => {
-      const [supplierData, accountData] = await Promise.all([
-        fetch(`${PURCHASE_API}/suppliers`).then((res) => res.json()).catch(() => []),
-        fetch(`${PURCHASE_API}/accounts`).then((res) => res.json()).catch(() => []),
-      ]);
-      const supList = Array.isArray(supplierData) ? supplierData : [];
-      setSuppliers(supList);
-      setAccounts(Array.isArray(accountData) ? accountData : []);
-    };
-    load().catch(() => setError('Failed to load purchase data'));
-  }, []);
-
-  useEffect(() => {
-    if (!supplierId) {
-      setSummary(null);
-      return;
-    }
-    fetch(`${PURCHASE_API}/suppliers/${supplierId}/summary`)
-      .then((res) => res.json())
-      .then(setSummary)
-      .catch(() => setSummary(null));
-  }, [supplierId]);
-
-  // 5. Pricing & Payments Sub-hook
+  // 6. Pricing & Payments Sub-hook
   const {
     discount,
     setDiscount,
@@ -226,7 +198,7 @@ export function usePurchaseCart(props = {}) {
     isOpen,
   });
 
-  // 6. Persistence, Drafts & Save Mutation Sub-hook
+  // 7. Persistence, Drafts & Save Mutation Sub-hook
   const {
     saving,
     setSaving,
