@@ -17,6 +17,8 @@ export default function PurchaseOrderModal(props) {
     isOpen = true,
     orderToEdit = null,
     onClose = () => {},
+    onOpenAddProduct,
+    onOpenAddSupplier,
   } = props;
 
   const {
