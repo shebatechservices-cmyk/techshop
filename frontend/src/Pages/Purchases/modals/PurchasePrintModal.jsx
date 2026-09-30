@@ -170,17 +170,30 @@ export default function PurchasePrintModal({
           .a4-page-sheet {
             width: 100% !important;
             max-width: ${paperSize === 'thermal_80mm' ? '80mm' : (paperSize === 'a5' ? '148mm' : 'none')} !important;
-            min-height: auto !important;
-            height: auto !important;
+            min-height: ${paperSize === 'thermal_80mm' ? 'auto' : (paperSize === 'a5' ? '200mm' : '285mm')} !important;
+            height: ${paperSize === 'thermal_80mm' ? 'auto' : '100%'} !important;
             margin: 0 !important;
-            padding: ${paperSize === 'thermal_80mm' ? '0' : (pageMargin === '1in' ? '18px 22px' : (pageMargin === '0.5in' ? '12px 16px' : '10px 14px'))} !important;
+            padding: ${paperSize === 'thermal_80mm' ? '0' : (pageMargin === '1in' ? '12mm 14mm' : (pageMargin === '0.5in' ? '8mm 10mm' : '6mm 8mm'))} !important;
             box-shadow: none !important;
-            border: ${paperSize === 'thermal_80mm' ? 'none' : '1.5px solid #0f172a'} !important;
-            border-radius: ${paperSize === 'thermal_80mm' ? '0' : '4px'} !important;
+            border: none !important;
+            border-radius: 0 !important;
             font-size: ${paperSize === 'thermal_80mm' ? '9.5px' : (paperSize === 'a5' ? '10px' : '11px')} !important;
             box-sizing: border-box !important;
+            display: flex !important;
+            flex-direction: column !important;
             page-break-after: auto !important;
             break-after: auto !important;
+          }
+          .invoice-page-border {
+            border: ${paperSize === 'thermal_80mm' ? 'none' : '1.5px solid #0f172a'} !important;
+            border-radius: ${paperSize === 'thermal_80mm' ? '0' : '4px'} !important;
+            padding: ${paperSize === 'thermal_80mm' ? '0' : (pageMargin === '1in' ? '12px 16px' : (pageMargin === '0.5in' ? '10px 14px' : '8px 12px'))} !important;
+            height: 100% !important;
+            min-height: ${paperSize === 'thermal_80mm' ? 'auto' : (paperSize === 'a5' ? '190mm' : '265mm')} !important;
+            display: flex !important;
+            flex-direction: column !important;
+            justify-content: space-between !important;
+            box-sizing: border-box !important;
             -webkit-box-decoration-break: clone !important;
             box-decoration-break: clone !important;
           }

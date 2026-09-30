@@ -1,7 +1,10 @@
 import React from 'react';
+import { takaInWords } from '../../templates/purchaseModalHelpers';
 
 export default function PurchasePrintFinancials({
   isChalan = false,
+  items = [],
+  order = {},
   payments = [],
   itemsCost = 0,
   extraCost = 0,
@@ -14,6 +17,9 @@ export default function PurchasePrintFinancials({
 }) {
   if (isChalan) return null;
 
+  const totalUnits = order.unit_count || items.reduce((s, it) => s + Number(it.quantity || 0), 0);
+  const totalItemsCount = items.length;
+
   return (
     <div className="print-avoid-break" style={{
       display: 'grid',
@@ -23,43 +29,81 @@ export default function PurchasePrintFinancials({
       pageBreakInside: 'avoid',
       breakInside: 'avoid',
     }}>
-      {/* Payment Tenders Detail */}
+      {/* Marked Summary Box: Total Quantity, In Words, and Payment Tenders */}
       <div style={{
         background: '#f8fafc',
-        border: '1px solid #e2e8f0',
+        border: '1.5px solid #cbd5e1',
         borderRadius: '8px',
         padding: '10px 12px',
         fontSize: '0.78rem',
+        display: 'flex',
+        flexDirection: 'column',
+        justifyContent: 'space-between',
+        gap: '8px',
       }}>
-        <div style={{ fontSize: '0.7rem', fontWeight: 800, color: '#475569', textTransform: 'uppercase', marginBottom: '6px' }}>
-          Payment Tenders Recorded ({payments.length})
+        {/* Top: Total Quantity & Total Amount in Words */}
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+            <span style={{
+              background: '#0f172a',
+              color: '#ffffff',
+              padding: '2px 8px',
+              borderRadius: '4px',
+              fontSize: '0.72rem',
+              fontWeight: 800,
+              letterSpacing: '0.02em',
+            }}>
+              TOTAL QUANTITY: {totalUnits} Units ({totalItemsCount} Items)
+            </span>
+          </div>
+
+          <div style={{
+            fontSize: '0.74rem',
+            color: '#1e293b',
+            lineHeight: 1.35,
+            background: '#ffffff',
+            border: '1px solid #e2e8f0',
+            borderRadius: '6px',
+            padding: '6px 8px',
+          }}>
+            <span style={{ color: '#64748b', fontWeight: 700, marginRight: '4px' }}>In Words:</span>
+            <strong style={{ color: '#0f172a' }}>{takaInWords(totalPayable)}</strong>
+          </div>
         </div>
-        {payments.length > 0 ? (
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
-            {payments.map((p, pIdx) => (
-              <div key={pIdx} style={{
-                display: 'flex',
-                justifyContent: 'space-between',
-                alignItems: 'center',
-                padding: '4px 8px',
-                background: '#ffffff',
-                border: '1px solid #e2e8f0',
-                borderRadius: '5px',
-              }}>
-                <div>
-                  <strong style={{ color: '#0f172a' }}>{p.payment_method || 'Cash'}</strong>
-                  {p.account_name && <span style={{ color: '#64748b' }}> · {p.account_name}</span>}
-                  {p.transaction_id && <span style={{ color: '#0284c7' }}> · Trx: {p.transaction_id}</span>}
+
+        {/* Bottom: Payment Tenders Detail */}
+        <div style={{ borderTop: '1px dashed #cbd5e1', paddingTop: '6px' }}>
+          <div style={{ fontSize: '0.68rem', fontWeight: 800, color: '#475569', textTransform: 'uppercase', marginBottom: '4px' }}>
+            Payment Tenders Recorded ({payments.length})
+          </div>
+          {payments.length > 0 ? (
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '3px' }}>
+              {payments.map((p, pIdx) => (
+                <div key={pIdx} style={{
+                  display: 'flex',
+                  justifyContent: 'space-between',
+                  alignItems: 'center',
+                  padding: '3px 6px',
+                  background: '#ffffff',
+                  border: '1px solid #e2e8f0',
+                  borderRadius: '4px',
+                  fontSize: '0.72rem',
+                }}>
+                  <div>
+                    <strong style={{ color: '#0f172a' }}>{p.payment_method || 'Cash'}</strong>
+                    {p.account_name && <span style={{ color: '#64748b' }}> · {p.account_name}</span>}
+                    {p.transaction_id && <span style={{ color: '#0284c7' }}> · Trx: {p.transaction_id}</span>}
+                  </div>
+                  <strong style={{ color: '#16a34a' }}>{taka(p.amount)}</strong>
                 </div>
-                <strong style={{ color: '#16a34a' }}>{taka(p.amount)}</strong>
-              </div>
-            ))}
-          </div>
-        ) : (
-          <div style={{ color: '#94a3b8', fontStyle: 'italic', fontSize: '0.74rem' }}>
-            No payment tenders recorded (Full Due / Credit).
-          </div>
-        )}
+              ))}
+            </div>
+          ) : (
+            <div style={{ color: '#94a3b8', fontStyle: 'italic', fontSize: '0.72rem' }}>
+              No payment tenders recorded (Full Due / Credit).
+            </div>
+          )}
+        </div>
       </div>
 
       {/* Financial Calculation Box */}
