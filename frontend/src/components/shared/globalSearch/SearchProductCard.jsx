@@ -3,7 +3,7 @@ import React from 'react';
 const money = (val) => Number.parseFloat(val || 0) || 0;
 const taka = (val) => `৳${money(val).toLocaleString('en-BD', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
 
-export default function SearchProductCard({ item, onSelect }) {
+export default function SearchProductCard({ item, onSelect, onQuickView }) {
   return (
     <div
       style={{
@@ -33,28 +33,58 @@ export default function SearchProductCard({ item, onSelect }) {
               </span>
             )}
           </div>
-          <div style={{ fontSize: '0.76rem', color: '#64748b', marginTop: '2px' }}>
+          <div style={{ fontSize: '0.76rem', color: '#64748b', marginTop: '2px', display: 'flex', alignItems: 'center', gap: '6px', flexWrap: 'wrap' }}>
             {item.sku ? `SKU: ${item.sku} ` : ''}{item.barcode ? `• Barcode: ${item.barcode}` : ''}
+            {item.matched_serial && (
+              <span style={{ fontSize: '0.7rem', fontWeight: 800, background: '#fef3c7', color: '#b45309', padding: '1px 6px', borderRadius: '4px', border: '1px solid #fde68a' }}>
+                🎯 Matched S/N: {item.matched_serial}
+              </span>
+            )}
           </div>
         </div>
         
-        <button
-          type="button"
-          onClick={() => onSelect({ section: 'inventory', search: item.name || item.sku })}
-          style={{
-            background: '#f0f9ff',
-            border: '1px solid #bae6fd',
-            color: '#0284c7',
-            borderRadius: '6px',
-            padding: '4px 10px',
-            fontSize: '0.74rem',
-            fontWeight: 700,
-            cursor: 'pointer',
-            whiteSpace: 'nowrap',
-          }}
-        >
-          View in Inventory →
-        </button>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+          {onQuickView && (
+            <button
+              type="button"
+              onClick={() => onQuickView(item)}
+              style={{
+                background: '#f8fafc',
+                border: '1px solid #cbd5e1',
+                color: '#1e293b',
+                borderRadius: '6px',
+                padding: '4px 10px',
+                fontSize: '0.74rem',
+                fontWeight: 700,
+                cursor: 'pointer',
+                display: 'flex',
+                alignItems: 'center',
+                gap: '4px',
+                whiteSpace: 'nowrap',
+              }}
+              title="Open full 4-dimension modal popup"
+            >
+              <span>⚡</span> Quick View
+            </button>
+          )}
+          <button
+            type="button"
+            onClick={() => onSelect({ section: 'inventory', search: item.name || item.sku })}
+            style={{
+              background: '#f0f9ff',
+              border: '1px solid #bae6fd',
+              color: '#0284c7',
+              borderRadius: '6px',
+              padding: '4px 10px',
+              fontSize: '0.74rem',
+              fontWeight: 700,
+              cursor: 'pointer',
+              whiteSpace: 'nowrap',
+            }}
+          >
+            View in Inventory →
+          </button>
+        </div>
       </div>
 
       {/* 4 Operational Dimensions Sub-Grid */}

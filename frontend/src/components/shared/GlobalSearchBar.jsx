@@ -1,11 +1,16 @@
 import React, { useState, useEffect, useRef } from 'react';
 import API_BASE from '../../services/api';
 import SearchResultsList from './globalSearch/SearchResultsList';
+import SerialBarcodeQuickViewModal from './globalSearch/SerialBarcodeQuickViewModal';
 
 export default function GlobalSearchBar({ onNavigate, compact = false, className = '' }) {
   const [query, setQuery] = useState('');
   const [isOpen, setIsOpen] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [modalOpen, setModalOpen] = useState(false);
+  const [modalData, setModalData] = useState(null);
+  const [modalMatchType, setModalMatchType] = useState('');
+  const [modalScannedCode, setModalScannedCode] = useState('');
   const [results, setResults] = useState({
     sales: [],
     sale_quotations: [],
@@ -108,6 +113,90 @@ export default function GlobalSearchBar({ onNavigate, compact = false, className
     }
   };
 
+  const handleOpenBarcodeModal = async (codeToLookup, fallbackProduct = null) => {
+    const code = (codeToLookup || query || '').trim();
+    if (!code && !fallbackProduct) return;
+
+    setLoading(true);
+    try {
+      if (code) {
+        const res = await fetch(`${API_BASE}/search/barcode-lookup?code=${encodeURIComponent(code)}`);
+        if (res.ok) {
+          const json = await res.json();
+          if (json.success && json.data) {
+            setModalData(json.data);
+            setModalMatchType(json.match_type || 'SERIAL');
+            setModalScannedCode(json.scanned_code || code);
+            setModalOpen(true);
+            setIsOpen(false);
+            setLoading(false);
+            return;
+          }
+        }
+      }
+
+      // Fallback: If barcode-lookup didn't find specific unit, but we have a product item
+      const targetProd = fallbackProduct || (results.products && results.products.length === 1 ? results.products[0] : null);
+      if (targetProd) {
+        const firstPo = targetProd.purchase_history?.[0] || null;
+        const firstSale = targetProd.sales_history?.[0] || null;
+        setModalData({
+          serial_code: targetProd.matched_serial || null,
+          status: Number(targetProd.stock) > 0 ? 'In Stock' : 'Out of Stock',
+          product: {
+            id: targetProd.id,
+            name: targetProd.name,
+            brand_name: targetProd.brand_name,
+            category_name: targetProd.category_name,
+            sku: targetProd.sku,
+            barcode: targetProd.barcode,
+            stock: targetProd.stock,
+            cost_price: targetProd.cost_price,
+            sale_price: targetProd.sale_price,
+          },
+          purchase: firstPo ? {
+            po_id: firstPo.po_id,
+            po_number: firstPo.po_number,
+            purchase_date: firstPo.purchase_date,
+            cost_price: firstPo.cost_price,
+            supplier_name: firstPo.supplier_name,
+            supplier_phone: firstPo.supplier_phone,
+            supplier_warranty_expire_date: firstPo.supplier_warranty_expire_date,
+          } : null,
+          inventory: {
+            stock: targetProd.stock,
+            unit_status: Number(targetProd.stock) > 0 ? 'In Stock' : 'Out of Stock',
+            cost_price: targetProd.cost_price,
+            sale_price: targetProd.sale_price,
+          },
+          sale: firstSale ? {
+            sale_id: firstSale.sale_id,
+            invoice_no: firstSale.invoice_no,
+            sale_date: firstSale.sale_date,
+            customer_name: firstSale.customer_name,
+            customer_phone: firstSale.customer_phone,
+            unit_price: firstSale.unit_price,
+            payment_status: 'paid',
+          } : null,
+          warranty: {
+            warranty_months: targetProd.warranty_months,
+            customer_warranty_info: `${targetProd.warranty_months || 12} Months Policy`,
+            claims: targetProd.warranty_claims || [],
+            returns: targetProd.returns_refunds || [],
+          },
+        });
+        setModalMatchType('PRODUCT_BARCODE');
+        setModalScannedCode(code || targetProd.barcode || targetProd.sku);
+        setModalOpen(true);
+        setIsOpen(false);
+      }
+    } catch (err) {
+      console.error('Barcode lookup error:', err);
+    } finally {
+      setLoading(false);
+    }
+  };
+
   const handleClear = () => {
     setQuery('');
     setIsOpen(false);
@@ -139,8 +228,14 @@ export default function GlobalSearchBar({ onNavigate, compact = false, className
           onFocus={() => {
             if (query.trim()) setIsOpen(true);
           }}
+          onKeyDown={(e) => {
+            if (e.key === 'Enter') {
+              e.preventDefault();
+              handleOpenBarcodeModal(query.trim());
+            }
+          }}
           onChange={(e) => handleQueryChange(e.target.value)}
-          placeholder={compact ? "Search invoices, customers, suppliers..." : "Global Search: Invoices, Quotations, Customers, Suppliers, Products, SKU..."}
+          placeholder={compact ? "Scan barcode/serial or search..." : "Global Search: Scan Barcode/Serial (S/N), Invoices, Products, Customers..."}
           className={`flex-1 min-w-0 border-none outline-none bg-transparent font-medium text-gray-800 placeholder-gray-400 focus:outline-none focus:ring-0 ${compact ? 'text-xs' : 'text-sm'}`}
         />
 
@@ -185,8 +280,21 @@ export default function GlobalSearchBar({ onNavigate, compact = false, className
           query={query}
           dropdownRef={dropdownRef}
           onSelect={handleSelect}
+          onQuickView={(prod) => {
+            handleOpenBarcodeModal(prod.matched_serial || prod.barcode || prod.sku, prod);
+          }}
         />
       )}
+
+      {/* Instant 4-Dimension Serial / Barcode Quick-View Modal */}
+      <SerialBarcodeQuickViewModal
+        isOpen={modalOpen}
+        onClose={() => setModalOpen(false)}
+        data={modalData}
+        matchType={modalMatchType}
+        scannedCode={modalScannedCode}
+        onNavigate={onNavigate}
+      />
     </div>
   );
 }

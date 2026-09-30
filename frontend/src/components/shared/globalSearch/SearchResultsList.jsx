@@ -11,6 +11,7 @@ export default function SearchResultsList({
   query,
   dropdownRef,
   onSelect,
+  onQuickView,
 }) {
   return (
     <div
@@ -76,7 +77,12 @@ export default function SearchResultsList({
             <span>📦</span> Operational Products ({results.products.length})
           </div>
           {results.products.map((item) => (
-            <SearchProductCard key={`prod-${item.id}`} item={item} onSelect={onSelect} />
+            <SearchProductCard
+              key={`prod-${item.id}`}
+              item={item}
+              onSelect={onSelect}
+              onQuickView={onQuickView}
+            />
           ))}
         </div>
       )}
