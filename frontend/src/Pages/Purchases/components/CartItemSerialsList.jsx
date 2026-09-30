@@ -118,7 +118,7 @@ export default function CartItemSerialsList({
             </div>
           </div>
           {barcodeScanErrors[item?.localId] && (
-            <div className="text-[11px] text-rose-600 mt-0.5 font-semibold truncate">
+            <div className="text-[11px] text-rose-600 mt-1 font-semibold leading-tight">
               {barcodeScanErrors[item.localId]}
             </div>
           )}

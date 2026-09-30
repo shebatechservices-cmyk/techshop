@@ -47,6 +47,26 @@ export function usePurchaseBarcodeScanner({
       }
     }
 
+    // 2. Check pattern / length consistency with first scanned serial (Reference Serial)
+    const targetItem = items.find((i) => i.localId === localId);
+    if (targetItem) {
+      const existingList = Array.isArray(targetItem.barcodes)
+        ? targetItem.barcodes
+        : Array.isArray(targetItem.serials)
+        ? targetItem.serials
+        : [];
+      if (existingList.length > 0) {
+        const refSerial = String(existingList[0]).trim();
+        if (code.length !== refSerial.length) {
+          setBarcodeScanErrors((prev) => ({
+            ...prev,
+            [localId]: `⚠️ Invalid length! Expected ${refSerial.length} characters (Ref: "${refSerial}"), but got ${code.length}.`,
+          }));
+          return;
+        }
+      }
+    }
+
     // RULE 2 & 3: Immutable state update & auto-increment quantity
     let duplicateFound = false;
     setItems((current) =>
