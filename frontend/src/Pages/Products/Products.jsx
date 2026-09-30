@@ -123,14 +123,6 @@ export default function Products({ initialTab = "catalog", initialSearch = "" } 
           </button>
           <button
             type="button"
-            className="px-3.5 py-2 bg-purple-600 hover:bg-purple-700 text-white rounded-xl text-xs font-extrabold shadow-sm transition-colors cursor-pointer flex items-center gap-1.5"
-            onClick={openAddBundle}
-          >
-            <span>🎁</span>
-            <span>+ Bundle Kit Package</span>
-          </button>
-          <button
-            type="button"
             className="px-4 py-2 bg-sky-600 hover:bg-sky-700 text-white rounded-xl text-xs font-extrabold shadow-sm transition-colors cursor-pointer flex items-center gap-1.5"
             onClick={openAddProduct}
           >
