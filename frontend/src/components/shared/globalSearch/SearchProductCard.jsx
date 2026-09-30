@@ -36,8 +36,24 @@ export default function SearchProductCard({ item, onSelect, onQuickView }) {
           <div style={{ fontSize: '0.76rem', color: '#64748b', marginTop: '2px', display: 'flex', alignItems: 'center', gap: '6px', flexWrap: 'wrap' }}>
             {item.sku ? `SKU: ${item.sku} ` : ''}{item.barcode ? `• Barcode: ${item.barcode}` : ''}
             {item.matched_serial && (
-              <span style={{ fontSize: '0.7rem', fontWeight: 800, background: '#fef3c7', color: '#b45309', padding: '1px 6px', borderRadius: '4px', border: '1px solid #fde68a' }}>
-                🎯 Matched S/N: {item.matched_serial}
+              <span
+                style={{
+                  fontSize: '0.7rem',
+                  fontWeight: 800,
+                  background: item.matched_serial_status === 'Sold' ? '#f3e8ff' : '#ecfdf5',
+                  color: item.matched_serial_status === 'Sold' ? '#7e22ce' : '#047857',
+                  padding: '2px 8px',
+                  borderRadius: '6px',
+                  border: `1px solid ${item.matched_serial_status === 'Sold' ? '#d8b4fe' : '#a7f3d0'}`,
+                  display: 'inline-flex',
+                  alignItems: 'center',
+                  gap: '4px',
+                }}
+              >
+                <span>🎯 Matched S/N:</span>
+                <span style={{ fontFamily: 'monospace' }}>{item.matched_serial}</span>
+                <span>•</span>
+                <span>{item.matched_serial_status === 'Sold' ? 'Sold' : 'In Stock'}</span>
               </span>
             )}
           </div>
@@ -123,8 +139,35 @@ export default function SearchProductCard({ item, onSelect, onQuickView }) {
           {item.sales_history && item.sales_history.length > 0 ? (
             item.sales_history.slice(0, 2).map((sh, idx) => (
               <div key={`sh-${idx}`} style={{ fontSize: '0.73rem', color: '#334155', borderBottom: idx === 0 && item.sales_history.length > 1 ? '1px dashed #cbd5e1' : 'none', paddingBottom: '2px', marginBottom: '2px' }}>
-                <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-                  <strong style={{ color: '#15803d' }}>#{sh.invoice_no}</strong>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                  <button
+                    type="button"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      onSelect({
+                        section: 'sales',
+                        tab: 'history',
+                        search: sh.invoice_no,
+                      });
+                    }}
+                    style={{
+                      background: 'transparent',
+                      border: 'none',
+                      padding: 0,
+                      cursor: 'pointer',
+                      color: '#15803d',
+                      fontWeight: 800,
+                      fontSize: '0.74rem',
+                      textDecoration: 'underline',
+                      textUnderlineOffset: '2px',
+                      display: 'inline-flex',
+                      alignItems: 'center',
+                      gap: '2px',
+                    }}
+                    title={`Click to view Sale Invoice #${sh.invoice_no}`}
+                  >
+                    #{sh.invoice_no} ↗
+                  </button>
                   <span style={{ color: '#64748b', fontSize: '0.68rem' }}>{sh.sale_date ? new Date(sh.sale_date).toLocaleDateString() : ''}</span>
                 </div>
                 <div style={{ color: '#64748b', fontSize: '0.71rem' }}>
@@ -133,8 +176,8 @@ export default function SearchProductCard({ item, onSelect, onQuickView }) {
               </div>
             ))
           ) : (
-            <div style={{ fontSize: '0.71rem', color: '#94a3b8', fontStyle: 'italic', padding: '4px 0' }}>
-              No sales recorded yet
+            <div style={{ fontSize: '0.71rem', color: item.matched_serial ? '#059669' : '#94a3b8', fontStyle: item.matched_serial ? 'normal' : 'italic', fontWeight: item.matched_serial ? 600 : 400, padding: '4px 0' }}>
+              {item.matched_serial ? '✓ Unit in stock (Never sold)' : 'No sales recorded yet'}
             </div>
           )}
         </div>
@@ -147,8 +190,35 @@ export default function SearchProductCard({ item, onSelect, onQuickView }) {
           {item.purchase_history && item.purchase_history.length > 0 ? (
             item.purchase_history.slice(0, 2).map((ph, idx) => (
               <div key={`ph-${idx}`} style={{ fontSize: '0.73rem', color: '#334155', borderBottom: idx === 0 && item.purchase_history.length > 1 ? '1px dashed #cbd5e1' : 'none', paddingBottom: '2px', marginBottom: '2px' }}>
-                <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-                  <strong style={{ color: '#0e7490' }}>#{ph.po_number}</strong>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                  <button
+                    type="button"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      onSelect({
+                        section: 'purchases',
+                        tab: 'history',
+                        search: ph.po_number,
+                      });
+                    }}
+                    style={{
+                      background: 'transparent',
+                      border: 'none',
+                      padding: 0,
+                      cursor: 'pointer',
+                      color: '#0e7490',
+                      fontWeight: 800,
+                      fontSize: '0.74rem',
+                      textDecoration: 'underline',
+                      textUnderlineOffset: '2px',
+                      display: 'inline-flex',
+                      alignItems: 'center',
+                      gap: '2px',
+                    }}
+                    title={`Click to view Purchase Order #${ph.po_number}`}
+                  >
+                    #{ph.po_number} ↗
+                  </button>
                   <span style={{ color: '#64748b', fontSize: '0.68rem' }}>{ph.purchase_date ? new Date(ph.purchase_date).toLocaleDateString() : ''}</span>
                 </div>
                 <div style={{ color: '#64748b', fontSize: '0.71rem' }}>
@@ -176,13 +246,51 @@ export default function SearchProductCard({ item, onSelect, onQuickView }) {
           {((item.warranty_claims && item.warranty_claims.length > 0) || (item.returns_refunds && item.returns_refunds.length > 0)) ? (
             <div>
               {item.warranty_claims?.slice(0, 1).map((wc, idx) => (
-                <div key={`wc-${idx}`} style={{ fontSize: '0.71rem', color: '#b45309', marginBottom: '2px' }}>
-                  <strong>Claim #{wc.claim_no}</strong> ({wc.status}): {wc.issue_description || 'In process'}
+                <div key={`wc-${idx}`} style={{ fontSize: '0.71rem', color: '#b45309', marginBottom: '2px', display: 'flex', alignItems: 'center', gap: '4px', flexWrap: 'wrap' }}>
+                  <button
+                    type="button"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      onSelect({ section: 'warranty', search: wc.claim_no });
+                    }}
+                    style={{
+                      background: 'none',
+                      border: 'none',
+                      padding: 0,
+                      cursor: 'pointer',
+                      color: '#b45309',
+                      fontWeight: 800,
+                      textDecoration: 'underline',
+                    }}
+                    title={`Click to view Claim #${wc.claim_no}`}
+                  >
+                    Claim #{wc.claim_no} ↗
+                  </button>
+                  <span>({wc.status}): {wc.issue_description || 'In process'}</span>
                 </div>
               ))}
               {item.returns_refunds?.slice(0, 1).map((rr, idx) => (
-                <div key={`rr-${idx}`} style={{ fontSize: '0.71rem', color: '#dc2626' }}>
-                  <strong>Return #{rr.return_no}</strong>: {rr.return_qty} pcs ({taka(rr.refund_amount)})
+                <div key={`rr-${idx}`} style={{ fontSize: '0.71rem', color: '#dc2626', display: 'flex', alignItems: 'center', gap: '4px', flexWrap: 'wrap' }}>
+                  <button
+                    type="button"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      onSelect({ section: 'warranty', search: rr.return_no });
+                    }}
+                    style={{
+                      background: 'none',
+                      border: 'none',
+                      padding: 0,
+                      cursor: 'pointer',
+                      color: '#dc2626',
+                      fontWeight: 800,
+                      textDecoration: 'underline',
+                    }}
+                    title={`Click to view Return #${rr.return_no}`}
+                  >
+                    Return #{rr.return_no} ↗
+                  </button>
+                  <span>: {rr.return_qty} pcs ({taka(rr.refund_amount)})</span>
                 </div>
               ))}
             </div>

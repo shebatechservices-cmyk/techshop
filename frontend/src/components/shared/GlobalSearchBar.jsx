@@ -140,9 +140,14 @@ export default function GlobalSearchBar({ onNavigate, compact = false, className
       if (targetProd) {
         const firstPo = targetProd.purchase_history?.[0] || null;
         const firstSale = targetProd.sales_history?.[0] || null;
+        const isUnitSold = targetProd.matched_serial_status === 'Sold' || Boolean(firstSale);
+        const unitStatus = targetProd.matched_serial 
+          ? (isUnitSold ? 'Sold' : 'In Stock')
+          : (Number(targetProd.stock) > 0 ? 'In Stock' : 'Out of Stock');
+
         setModalData({
           serial_code: targetProd.matched_serial || null,
-          status: Number(targetProd.stock) > 0 ? 'In Stock' : 'Out of Stock',
+          status: unitStatus,
           product: {
             id: targetProd.id,
             name: targetProd.name,
@@ -165,7 +170,9 @@ export default function GlobalSearchBar({ onNavigate, compact = false, className
           } : null,
           inventory: {
             stock: targetProd.stock,
-            unit_status: Number(targetProd.stock) > 0 ? 'In Stock' : 'Out of Stock',
+            unit_status: targetProd.matched_serial
+              ? (isUnitSold ? 'Sold to Customer' : 'Available in Inventory')
+              : (Number(targetProd.stock) > 0 ? 'In Stock' : 'Out of Stock'),
             cost_price: targetProd.cost_price,
             sale_price: targetProd.sale_price,
           },
@@ -185,8 +192,12 @@ export default function GlobalSearchBar({ onNavigate, compact = false, className
             returns: targetProd.returns_refunds || [],
           },
         });
-        setModalMatchType('PRODUCT_BARCODE');
-        setModalScannedCode(code || targetProd.barcode || targetProd.sku);
+        setModalMatchType(
+          targetProd.matched_serial
+            ? (isUnitSold ? 'SERIAL_SOLD' : 'SERIAL_INVENTORY')
+            : (targetProd.barcode ? 'PRODUCT_BARCODE' : 'PRODUCT_DETAILS')
+        );
+        setModalScannedCode(code || targetProd.matched_serial || targetProd.barcode || targetProd.sku);
         setModalOpen(true);
         setIsOpen(false);
       }
