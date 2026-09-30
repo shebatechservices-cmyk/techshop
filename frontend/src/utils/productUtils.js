@@ -31,7 +31,7 @@ export const fullCatalogName = (product) => {
       parts.push(series);
     }
   }
-  return parts.filter(Boolean).join(' ') || name || 'Product';
+  return parts.filter(Boolean).join(' ') || name || (product.sku ? `SKU: ${product.sku}` : (product.id ? 'Product' : ''));
 };
 
 export const productLabel = fullCatalogName;

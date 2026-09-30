@@ -33,30 +33,32 @@ h4 { font-size: 1rem; font-weight: 700; margin: 0 0 4px 0; line-height: 1.3; col
 h5, h6 { font-size: 0.9rem; font-weight: 700; margin: 0 0 3px 0; }
 p { font-size: 0.925rem; margin: 0 0 8px 0; }
 
-/* Global Form Controls */
-input[type="text"],
-input[type="number"],
-input[type="email"],
-input[type="password"],
-input[type="date"],
-select,
-textarea {
-  font-size: 0.9rem;
-  padding: 8px 12px;
-  border-radius: 8px;
-  border: 1px solid #cbd5e1;
-  background-color: #ffffff;
-  min-height: 38px;
-  box-sizing: border-box;
-  outline: none;
-  transition: border-color 0.15s ease, box-shadow 0.15s ease;
-}
+@layer base {
+  /* Global Form Controls */
+  input[type="text"],
+  input[type="number"],
+  input[type="email"],
+  input[type="password"],
+  input[type="date"],
+  select,
+  textarea {
+    font-size: 0.9rem;
+    padding: 8px 12px;
+    border-radius: 8px;
+    border: 1px solid #cbd5e1;
+    background-color: #ffffff;
+    min-height: 38px;
+    box-sizing: border-box;
+    outline: none;
+    transition: border-color 0.15s ease, box-shadow 0.15s ease;
+  }
 
-input:focus,
-select:focus,
-textarea:focus {
-  border-color: #0284c7;
-  box-shadow: 0 0 0 2px rgba(2, 132, 199, 0.15);
+  input:focus,
+  select:focus,
+  textarea:focus {
+    border-color: #0284c7;
+    box-shadow: 0 0 0 2px rgba(2, 132, 199, 0.15);
+  }
 }
 
 /* Global Clean Buttons */

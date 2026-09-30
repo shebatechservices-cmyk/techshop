@@ -69,15 +69,19 @@ export const mapOrderToFormItems = (
     const cleanWarranty = parseWarrantyMonths(rawWarranty);
 
     return {
+      ...it,
       id: it.id,
       localId: `${Date.now()}-${it.product_id}-${Math.floor(
         Math.random() * 1000
       )}`,
       product_id: it.product_id,
-      name: it.product_name || (productLabel ? productLabel(prod) : prod.name || ''),
-      full_name: (fullCatalogName ? fullCatalogName(prod) : '') || it.product_name || prod.name || '',
+      product_name: it.product_name || prod.name || prod.product_name || '',
+      name: (prod && prod.id && productLabel ? productLabel(prod) : '') || it.full_name || it.name || it.product_name || prod.name || '',
+      full_name: (prod && prod.id && fullCatalogName ? fullCatalogName(prod) : '') || it.full_name || it.name || it.product_name || prod.name || '',
       brand_name: it.brand_name || prod.brand_name || '',
       category_name: it.category_name || prod.category_name || '',
+      model_name: it.model_name || prod.model_name || '',
+      series_name: it.series_name || prod.series_name || '',
       sku: it.sku || prod.sku || '',
       barcode: it.barcode || prod.barcode || '',
       quantity: isTracked
