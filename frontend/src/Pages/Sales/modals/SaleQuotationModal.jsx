@@ -1,10 +1,13 @@
 import React, { useState, useEffect, useMemo, useRef } from 'react';
 import API from '../../../services/api';
 import SalePrintModal from './SalePrintModal';
-import { fullCatalogName, productLabel } from '../../../utils/productUtils';
+import { fullCatalogName } from '../../../utils/productUtils';
+import QuotationCustomerMeta from './quotation/QuotationCustomerMeta';
+import QuotationProductSearch from './quotation/QuotationProductSearch';
+import QuotationItemsTable from './quotation/QuotationItemsTable';
+import QuotationFinancialSummary from './quotation/QuotationFinancialSummary';
 
 const money = (val) => Number.parseFloat(val || 0) || 0;
-const taka = (val) => `৳${money(val).toLocaleString('en-BD', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
 
 export default function SaleQuotationModal({
   isOpen,
@@ -112,7 +115,7 @@ export default function SaleQuotationModal({
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, []);
 
-  // Filter products for search (quotations only quote items from current inventory stock, no stock effect)
+  // Filter products for search
   const filteredProducts = useMemo(() => {
     const q = searchQuery.trim().toLowerCase();
     if (!q) return [];
@@ -382,411 +385,46 @@ export default function SaleQuotationModal({
           )}
 
           {/* Customer & Quote Meta Card */}
-          <div
-            style={{
-              background: '#f8fafc',
-              border: '1px solid #e2e8f0',
-              borderRadius: '12px',
-              padding: '16px',
-              marginBottom: '18px',
-              display: 'grid',
-              gridTemplateColumns: '1.4fr 1fr 1fr',
-              gap: '14px',
-              alignItems: 'flex-end',
-            }}
-          >
-            {/* Customer Select + Add Button */}
-            <div>
-              <label style={{ display: 'block', fontSize: '0.8rem', fontWeight: 700, color: '#475569', marginBottom: '5px' }}>
-                Customer / Client
-              </label>
-              <div style={{ display: 'flex', gap: '6px' }}>
-                <select
-                  value={customerId}
-                  onChange={(e) => handleCustomerChange(e.target.value)}
-                  style={{
-                    flex: 1,
-                    padding: '8px 10px',
-                    borderRadius: '8px',
-                    border: '1px solid #cbd5e1',
-                    fontSize: '0.86rem',
-                    background: '#ffffff',
-                    outline: 'none',
-                  }}
-                >
-                  <option value="">-- Choose Registered Customer --</option>
-                  {customers.map((c) => (
-                    <option key={c.id} value={c.id}>
-                      {c.name} ({c.phone})
-                    </option>
-                  ))}
-                </select>
-                <button
-                  type="button"
-                  onClick={() => {
-                    if (onOpenAddCustomer) onOpenAddCustomer();
-                  }}
-                  style={{
-                    padding: '8px 12px',
-                    borderRadius: '8px',
-                    border: '1.5px solid #6366f1',
-                    background: '#eef2ff',
-                    color: '#4f46e5',
-                    fontWeight: 700,
-                    cursor: 'pointer',
-                    fontSize: '0.95rem',
-                  }}
-                  title="Add New Customer"
-                >
-                  +
-                </button>
-              </div>
-            </div>
-
-            {/* Manual Client Name if Walk-in */}
-            <div>
-              <label style={{ display: 'block', fontSize: '0.8rem', fontWeight: 700, color: '#475569', marginBottom: '5px' }}>
-                Client Name
-              </label>
-              <input
-                type="text"
-                placeholder="Walk-in / Company name"
-                value={customerName}
-                onChange={(e) => setCustomerName(e.target.value)}
-                style={{
-                  width: '100%',
-                  padding: '8px 10px',
-                  borderRadius: '8px',
-                  border: '1px solid #cbd5e1',
-                  fontSize: '0.86rem',
-                  outline: 'none',
-                  boxSizing: 'border-box',
-                }}
-              />
-            </div>
-
-            {/* Valid Until Date */}
-            <div>
-              <label style={{ display: 'block', fontSize: '0.8rem', fontWeight: 700, color: '#475569', marginBottom: '5px' }}>
-                Valid Until
-              </label>
-              <input
-                type="date"
-                value={validUntil}
-                onChange={(e) => setValidUntil(e.target.value)}
-                style={{
-                  width: '100%',
-                  padding: '8px 10px',
-                  borderRadius: '8px',
-                  border: '1px solid #cbd5e1',
-                  fontSize: '0.86rem',
-                  outline: 'none',
-                  boxSizing: 'border-box',
-                }}
-              />
-            </div>
-          </div>
+          <QuotationCustomerMeta
+            customerId={customerId}
+            customers={customers}
+            customerName={customerName}
+            validUntil={validUntil}
+            onCustomerChange={handleCustomerChange}
+            onCustomerNameChange={setCustomerName}
+            onValidUntilChange={setValidUntil}
+            onOpenAddCustomer={onOpenAddCustomer}
+          />
 
           {/* Product Search & Dropdown */}
-          <div ref={searchContainerRef} style={{ position: 'relative', marginBottom: '18px' }}>
-            <div style={{ display: 'flex', gap: '8px' }}>
-              <input
-                type="text"
-                value={searchQuery}
-                onFocus={() => setIsSearchOpen(true)}
-                onChange={(e) => {
-                  setSearchQuery(e.target.value);
-                  setIsSearchOpen(true);
-                }}
-                placeholder="🔍 Search products by name, SKU, or barcode to add to quotation..."
-                style={{
-                  flex: 1,
-                  padding: '10px 14px',
-                  borderRadius: '9px',
-                  border: '1.5px solid #6366f1',
-                  fontSize: '0.9rem',
-                  outline: 'none',
-                  background: '#ffffff',
-                }}
-              />
-            </div>
-
-            {/* Floating Dropdown */}
-            {isSearchOpen && filteredProducts.length > 0 && (
-              <div
-                style={{
-                  position: 'absolute',
-                  top: '100%',
-                  left: 0,
-                  right: 0,
-                  zIndex: 20,
-                  marginTop: '4px',
-                  background: '#ffffff',
-                  border: '1px solid #cbd5e1',
-                  borderRadius: '10px',
-                  boxShadow: '0 12px 28px rgba(0, 0, 0, 0.15)',
-                  maxHeight: '260px',
-                  overflowY: 'auto',
-                  padding: '6px',
-                }}
-              >
-                {filteredProducts.map((prod) => (
-                  <div
-                    key={prod.id}
-                    onClick={() => handleAddItem(prod)}
-                    style={{
-                      display: 'flex',
-                      justifyContent: 'space-between',
-                      alignItems: 'center',
-                      padding: '8px 12px',
-                      borderRadius: '6px',
-                      cursor: 'pointer',
-                      transition: 'background 0.1s',
-                      fontSize: '0.86rem',
-                    }}
-                    onMouseEnter={(e) => (e.currentTarget.style.background = '#eef2ff')}
-                    onMouseLeave={(e) => (e.currentTarget.style.background = 'transparent')}
-                  >
-                    <div>
-                      <strong style={{ color: '#0f172a' }}>{fullCatalogName(prod)}</strong>
-                      <span style={{ fontSize: '0.76rem', color: '#64748b', marginLeft: '8px' }}>
-                        SKU: {prod.sku || 'N/A'} · Stock: {prod.stock || 0}
-                      </span>
-                    </div>
-                    <div style={{ fontWeight: 700, color: '#4f46e5' }}>
-                      {taka(prod.selling_price || prod.purchase_price || 0)}
-                    </div>
-                  </div>
-                ))}
-              </div>
-            )}
-          </div>
+          <QuotationProductSearch
+            searchQuery={searchQuery}
+            onSearchChange={setSearchQuery}
+            isSearchOpen={isSearchOpen}
+            onSearchFocus={() => setIsSearchOpen(true)}
+            filteredProducts={filteredProducts}
+            onAddItem={handleAddItem}
+            searchContainerRef={searchContainerRef}
+          />
 
           {/* Quotation Items Table */}
-          <div style={{ border: '1px solid #e2e8f0', borderRadius: '10px', overflow: 'hidden', marginBottom: '18px' }}>
-            <table style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'left', fontSize: '0.85rem' }}>
-              <thead>
-                <tr style={{ background: '#f8fafc', borderBottom: '2px solid #e2e8f0', color: '#64748b' }}>
-                  <th style={{ padding: '10px 12px' }}>PRODUCT DESCRIPTION</th>
-                  <th style={{ padding: '10px 12px', width: '105px', textAlign: 'center' }}>WARRANTY</th>
-                  <th style={{ padding: '10px 12px', width: '80px', textAlign: 'center' }}>QTY</th>
-                  <th style={{ padding: '10px 12px', width: '110px', textAlign: 'right' }}>UNIT RATE ৳</th>
-                  <th style={{ padding: '10px 12px', width: '105px', textAlign: 'right' }}>U. DISC ৳</th>
-                  <th style={{ padding: '10px 12px', width: '120px', textAlign: 'right' }}>TOTAL ৳</th>
-                  <th style={{ padding: '10px 12px', width: '40px', textAlign: 'center' }}></th>
-                </tr>
-              </thead>
-              <tbody>
-                {items.length === 0 ? (
-                  <tr>
-                    <td colSpan={7} style={{ padding: '30px', textAlign: 'center', color: '#94a3b8' }}>
-                      No items added yet. Search and click products above to add them to this quotation.
-                    </td>
-                  </tr>
-                ) : (
-                  items.map((it) => (
-                    <tr key={it.localId} style={{ borderBottom: '1px solid #f1f5f9' }}>
-                      {/* 1. PRODUCT DESCRIPTION */}
-                      <td style={{ padding: '8px 12px' }}>
-                        <strong style={{ color: '#0f172a' }}>{it.product_name}</strong>
-                      </td>
-
-                      {/* 2. WARRANTY */}
-                      <td style={{ padding: '8px 12px' }}>
-                        <input
-                          type="number"
-                          min="0"
-                          value={it.warranty_months !== undefined ? it.warranty_months : ''}
-                          onChange={(e) => handleUpdateItem(it.localId, 'warranty_months', e.target.value)}
-                          placeholder="0 Mos"
-                          style={{
-                            width: '100%',
-                            padding: '6px 8px',
-                            borderRadius: '6px',
-                            border: '1px solid #cbd5e1',
-                            fontSize: '0.85rem',
-                            textAlign: 'center',
-                            boxSizing: 'border-box',
-                          }}
-                        />
-                      </td>
-
-                      {/* 3. QTY */}
-                      <td style={{ padding: '8px 12px' }}>
-                        <input
-                          type="number"
-                          min="1"
-                          value={it.quantity !== undefined ? it.quantity : 1}
-                          onChange={(e) => handleUpdateItem(it.localId, 'quantity', e.target.value)}
-                          style={{
-                            width: '100%',
-                            padding: '6px 8px',
-                            borderRadius: '6px',
-                            border: '1px solid #cbd5e1',
-                            fontSize: '0.85rem',
-                            textAlign: 'center',
-                            boxSizing: 'border-box',
-                          }}
-                        />
-                      </td>
-
-                      {/* 4. UNIT RATE ৳ */}
-                      <td style={{ padding: '8px 12px' }}>
-                        <input
-                          type="number"
-                          min="0"
-                          step="0.01"
-                          value={it.unit_price !== undefined ? it.unit_price : ''}
-                          onChange={(e) => handleUpdateItem(it.localId, 'unit_price', e.target.value)}
-                          style={{
-                            width: '100%',
-                            padding: '6px 8px',
-                            borderRadius: '6px',
-                            border: '1px solid #cbd5e1',
-                            fontSize: '0.85rem',
-                            textAlign: 'right',
-                            boxSizing: 'border-box',
-                          }}
-                        />
-                      </td>
-
-                      {/* 5. U. DISC ৳ */}
-                      <td style={{ padding: '8px 12px' }}>
-                        <input
-                          type="number"
-                          min="0"
-                          step="any"
-                          placeholder="0.00"
-                          value={it.unit_discount !== undefined ? it.unit_discount : ''}
-                          onChange={(e) => handleUpdateItem(it.localId, 'unit_discount', e.target.value)}
-                          style={{
-                            width: '100%',
-                            padding: '6px 8px',
-                            borderRadius: '6px',
-                            border: '1px solid #cbd5e1',
-                            fontSize: '0.85rem',
-                            textAlign: 'right',
-                            boxSizing: 'border-box',
-                          }}
-                        />
-                      </td>
-
-                      {/* 6. TOTAL ৳ */}
-                      <td style={{ padding: '8px 12px', textAlign: 'right', fontWeight: 700, color: '#0f172a' }}>
-                        {taka(it.line_total)}
-                      </td>
-
-                      {/* Delete Button */}
-                      <td style={{ padding: '8px 12px', textAlign: 'center' }}>
-                        <button
-                          type="button"
-                          onClick={() => handleRemoveItem(it.localId)}
-                          style={{
-                            background: '#fee2e2',
-                            color: '#dc2626',
-                            border: 'none',
-                            borderRadius: '6px',
-                            width: '26px',
-                            height: '26px',
-                            cursor: 'pointer',
-                            fontSize: '0.9rem',
-                          }}
-                        >
-                          ×
-                        </button>
-                      </td>
-                    </tr>
-                  ))
-                )}
-              </tbody>
-            </table>
-          </div>
+          <QuotationItemsTable
+            items={items}
+            onUpdateItem={handleUpdateItem}
+            onRemoveItem={handleRemoveItem}
+          />
 
           {/* Notes & Financial Breakdown Grid */}
-          <div style={{ display: 'grid', gridTemplateColumns: '1.2fr 1fr', gap: '18px', alignItems: 'flex-start' }}>
-            <div>
-              <label style={{ display: 'block', fontSize: '0.8rem', fontWeight: 700, color: '#475569', marginBottom: '5px' }}>
-                Quotation Notes, Delivery & Payment Terms
-              </label>
-              <textarea
-                rows={4}
-                value={notes}
-                onChange={(e) => setNotes(e.target.value)}
-                placeholder="Specify terms, delivery timeframe, or account details..."
-                style={{
-                  width: '100%',
-                  padding: '9px 12px',
-                  borderRadius: '8px',
-                  border: '1px solid #cbd5e1',
-                  fontSize: '0.84rem',
-                  outline: 'none',
-                  resize: 'vertical',
-                  boxSizing: 'border-box',
-                }}
-              />
-            </div>
-
-            <div style={{ background: '#f8fafc', border: '1px solid #e2e8f0', borderRadius: '10px', padding: '14px 16px' }}>
-              <div style={{ display: 'flex', justifyContent: 'space-between', padding: '4px 0', fontSize: '0.85rem' }}>
-                <span>Subtotal:</span>
-                <strong>{taka(subtotal)}</strong>
-              </div>
-
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '4px 0', fontSize: '0.85rem' }}>
-                <span>Discount ৳:</span>
-                <input
-                  type="number"
-                  min="0"
-                  step="0.01"
-                  value={discount}
-                  onChange={(e) => setDiscount(e.target.value)}
-                  style={{
-                    width: '90px',
-                    padding: '4px 8px',
-                    borderRadius: '6px',
-                    border: '1px solid #cbd5e1',
-                    textAlign: 'right',
-                    fontSize: '0.85rem',
-                  }}
-                />
-              </div>
-
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '4px 0', fontSize: '0.85rem' }}>
-                <span>VAT / Tax ৳:</span>
-                <input
-                  type="number"
-                  min="0"
-                  step="0.01"
-                  value={vat}
-                  onChange={(e) => setVat(e.target.value)}
-                  style={{
-                    width: '90px',
-                    padding: '4px 8px',
-                    borderRadius: '6px',
-                    border: '1px solid #cbd5e1',
-                    textAlign: 'right',
-                    fontSize: '0.85rem',
-                  }}
-                />
-              </div>
-
-              <div
-                style={{
-                  display: 'flex',
-                  justifyContent: 'space-between',
-                  padding: '10px 0 4px 0',
-                  borderTop: '2px solid #cbd5e1',
-                  marginTop: '8px',
-                  fontSize: '1.1rem',
-                  fontWeight: 800,
-                  color: '#0f172a',
-                }}
-              >
-                <span>Grand Total:</span>
-                <span style={{ color: '#4f46e5' }}>{taka(grandTotal)}</span>
-              </div>
-            </div>
-          </div>
+          <QuotationFinancialSummary
+            notes={notes}
+            onNotesChange={setNotes}
+            subtotal={subtotal}
+            discount={discount}
+            onDiscountChange={setDiscount}
+            vat={vat}
+            onVatChange={setVat}
+            grandTotal={grandTotal}
+          />
 
           {/* Footer Buttons */}
           <div
