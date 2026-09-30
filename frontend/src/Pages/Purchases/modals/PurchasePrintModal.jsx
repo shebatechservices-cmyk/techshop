@@ -170,13 +170,36 @@ export default function PurchasePrintModal({
           .a4-page-sheet {
             width: 100% !important;
             max-width: ${paperSize === 'thermal_80mm' ? '80mm' : (paperSize === 'a5' ? '148mm' : 'none')} !important;
-            min-height: ${paperSize === 'thermal_80mm' ? 'auto' : (paperSize === 'a5' ? '195mm' : '280mm')} !important;
+            min-height: auto !important;
+            height: auto !important;
             margin: 0 !important;
             padding: 0 !important;
             box-shadow: none !important;
             border: none !important;
             border-radius: 0 !important;
             font-size: ${paperSize === 'thermal_80mm' ? '9.5px' : (paperSize === 'a5' ? '10px' : '11px')} !important;
+            page-break-after: auto !important;
+            break-after: auto !important;
+          }
+          table {
+            width: 100% !important;
+            border-collapse: collapse !important;
+            page-break-inside: auto !important;
+            break-inside: auto !important;
+          }
+          thead {
+            display: table-header-group !important;
+          }
+          tbody {
+            display: table-row-group !important;
+          }
+          tr {
+            page-break-inside: avoid !important;
+            break-inside: avoid !important;
+          }
+          .print-avoid-break {
+            page-break-inside: avoid !important;
+            break-inside: avoid !important;
           }
           @page {
             size: ${pageSizeRule};
