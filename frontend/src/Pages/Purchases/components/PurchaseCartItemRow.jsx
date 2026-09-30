@@ -32,14 +32,14 @@ const PurchaseCartItemRow = React.memo(function PurchaseCartItemRow({
   const lineTotal = Number((cost * qty).toFixed(2));
   const finalSale = computeFinalSale(item) || money(item.sale_price);
   const displayName =
+    item?.product_name ||
     item?.product?.full_name ||
     item?.product?.name ||
+    item?.Product?.name ||
+    item?.Product?.full_name ||
     item?.item_name ||
-    item?.full_name ||
     item?.name ||
-    item?.product_name ||
     item?.catalog_name ||
-    item?.title ||
     (item?.sku ? `SKU: ${item.sku}` : 'Product');
   const barcodesList = Array.isArray(item.barcodes)
     ? item.barcodes
