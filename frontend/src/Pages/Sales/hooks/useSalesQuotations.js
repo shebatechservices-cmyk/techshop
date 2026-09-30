@@ -238,6 +238,7 @@ export function useSalesQuotations({
     modalCustomers,
     modalProducts,
     newlyCreatedCustomer,
+    setNewlyCreatedCustomer,
     isQuotationModalOpen,
     setIsQuotationModalOpen,
     editingQuotation,

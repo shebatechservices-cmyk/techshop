@@ -29,6 +29,7 @@ export default function SalesQuotations({
     modalCustomers,
     modalProducts,
     newlyCreatedCustomer,
+    setNewlyCreatedCustomer,
     isQuotationModalOpen,
     setIsQuotationModalOpen,
     editingQuotation,
