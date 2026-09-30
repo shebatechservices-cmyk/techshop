@@ -24,6 +24,9 @@ const PurchaseCartItemRow = React.memo(function PurchaseCartItemRow({
   const [isCameraScannerOpen, setIsCameraScannerOpen] = useState(false);
   const inputRef = useRef(null);
 
+  // এই লাইনটি বসান (কনসোলে ডেটা দেখার জন্য)
+  console.log("🔍 Debugging Item Data:", item);
+
   const cost = money(item.cost_price);
   const qty = Number(item.quantity || 1);
   const lineTotal = Number((cost * qty).toFixed(2));
