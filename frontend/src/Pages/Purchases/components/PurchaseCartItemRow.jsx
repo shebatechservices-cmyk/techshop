@@ -30,8 +30,14 @@ const PurchaseCartItemRow = React.memo(function PurchaseCartItemRow({
   const finalSale = computeFinalSale(item) || money(item.sale_price);
   const displayName =
     item.full_name ||
+    item.product?.full_name ||
+    item.Product?.full_name ||
+    item.catalog_name ||
     item.name ||
     item.product_name ||
+    item.item_name ||
+    item.Product?.name ||
+    item.product?.name ||
     (item.brand_name && item.model_name ? `${item.brand_name} ${item.model_name}` : '') ||
     item.model_name ||
     item.brand_name ||
@@ -136,11 +142,11 @@ const PurchaseCartItemRow = React.memo(function PurchaseCartItemRow({
           </span>
         </div>
 
-        {/* Editable Form Controls - Inline Label-Left Grid: Quantity, Cost Price, Sales Margin (%), Final Sale (Unit) */}
+        {/* Editable Form Controls - Stacked Grid: Quantity, Cost Price, Sales Margin (%), Final Sale (Unit) */}
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 mb-2.5 items-center">
           {/* Quantity */}
-          <div className="flex items-center gap-2">
-            <label className="w-20 sm:w-24 shrink-0 text-xs font-bold text-slate-700 whitespace-nowrap">
+          <div className="flex flex-col gap-1">
+            <label className="text-xs font-bold text-slate-700 whitespace-nowrap">
               Quantity *
             </label>
             <input
@@ -155,7 +161,7 @@ const PurchaseCartItemRow = React.memo(function PurchaseCartItemRow({
                   quantity: Math.max(minVal, Number(e.target.value || minVal)),
                 });
               }}
-              className={`flex-1 w-full min-w-[90px] py-1 px-2 rounded-md text-xs text-center box-border ${
+              className={`w-full min-w-[90px] py-1 px-2 rounded-md text-xs text-center box-border ${
                 isSerialTracked && barcodesList.length === 0
                   ? 'border-2 border-rose-500'
                   : 'border border-slate-300'
@@ -175,8 +181,8 @@ const PurchaseCartItemRow = React.memo(function PurchaseCartItemRow({
           </div>
 
           {/* Cost Price */}
-          <div className="flex items-center gap-2">
-            <label className="w-20 sm:w-24 shrink-0 text-xs font-bold text-sky-600 whitespace-nowrap">
+          <div className="flex flex-col gap-1">
+            <label className="text-xs font-bold text-sky-600 whitespace-nowrap">
               Cost Price ৳ *
             </label>
             <input
@@ -185,23 +191,23 @@ const PurchaseCartItemRow = React.memo(function PurchaseCartItemRow({
               value={item.cost_price}
               onChange={(e) => handleItemCostChange(item, e.target.value)}
               placeholder="0.00"
-              className="flex-1 w-full min-w-[90px] py-1 px-2 rounded-md border border-sky-400 text-xs box-border font-semibold focus:outline-none focus:border-sky-500"
+              className="w-full min-w-[90px] py-1 px-2 rounded-md border border-sky-400 text-xs box-border font-semibold focus:outline-none focus:border-sky-500"
             />
           </div>
 
           {/* Sales Margin (%) */}
-          <div className="flex items-center gap-2">
-            <label className="w-20 sm:w-24 shrink-0 text-xs font-bold text-slate-700 whitespace-nowrap">
+          <div className="flex flex-col gap-1">
+            <label className="text-xs font-bold text-slate-700 whitespace-nowrap">
               Margin ({item.margin_type === 'percent' ? '%' : '৳'})
             </label>
-            <div className="flex-1 min-w-0 flex gap-1 items-center">
+            <div className="w-full min-w-0 flex gap-1 items-center">
               <input
                 type="number"
                 step="any"
                 value={item.margin_value}
                 onChange={(e) => handleItemMarginChange(item, e.target.value)}
                 placeholder="15"
-                className="flex-1 w-full min-w-[90px] py-1 px-2 rounded-md border border-slate-300 text-xs text-center font-bold box-border focus:outline-none focus:border-emerald-500"
+                className="w-full min-w-[90px] py-1 px-2 rounded-md border border-slate-300 text-xs text-center font-bold box-border focus:outline-none focus:border-emerald-500"
               />
               <div className="flex rounded-md overflow-hidden border border-slate-300 shrink-0">
                 <button
@@ -237,15 +243,15 @@ const PurchaseCartItemRow = React.memo(function PurchaseCartItemRow({
           </div>
 
           {/* Final Sale (Unit) */}
-          <div className="flex items-center gap-2">
-            <label className="w-20 sm:w-24 shrink-0 text-xs font-bold text-emerald-600 whitespace-nowrap">
+          <div className="flex flex-col gap-1">
+            <label className="text-xs font-bold text-emerald-600 whitespace-nowrap">
               Final Sale ৳
             </label>
             <input
               type="text"
               readOnly
               value={finalSale > 0 ? taka(finalSale) : '৳ 0.00'}
-              className="flex-1 w-full min-w-[90px] py-1 px-2 rounded-md border border-emerald-300 bg-emerald-50 text-emerald-700 text-xs font-extrabold text-center box-border cursor-default"
+              className="w-full min-w-[90px] py-1 px-2 rounded-md border border-emerald-300 bg-emerald-50 text-emerald-700 text-xs font-extrabold text-center box-border cursor-default"
               title="Final sale price is strictly calculated from Cost Price + Margin and cannot be manually modified."
             />
           </div>
