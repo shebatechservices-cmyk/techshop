@@ -35,7 +35,7 @@ export default React.memo(function SupplierSearchSection({
               setSupplierSearch(e.target.value);
               setIsSupplierOpen(true);
             }}
-            className="w-full py-2.5 pl-12 pr-9 rounded-lg border-[1.5px] border-slate-300 text-sm text-slate-900 bg-white box-border focus:outline-none focus:border-emerald-500"
+            className="w-full py-2.5 pl-10 pr-9 rounded-lg border-[1.5px] border-slate-300 text-sm text-slate-900 bg-white box-border focus:outline-none focus:border-emerald-500"
           />
           <div className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none">
             <span className="text-xs">⇅</span>

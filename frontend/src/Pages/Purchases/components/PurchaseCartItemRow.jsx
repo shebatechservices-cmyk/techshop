@@ -30,18 +30,12 @@ const PurchaseCartItemRow = React.memo(function PurchaseCartItemRow({
   const finalSale = computeFinalSale(item) || money(item.sale_price);
   const displayName =
     item.full_name ||
-    item.product?.full_name ||
-    item.Product?.full_name ||
-    item.catalog_name ||
     item.name ||
     item.product_name ||
-    item.item_name ||
-    item.Product?.name ||
-    item.product?.name ||
-    (item.brand_name && item.model_name ? `${item.brand_name} ${item.model_name}` : '') ||
-    item.model_name ||
-    item.brand_name ||
-    item.title ||
+    item?.product?.name ||
+    item?.product?.full_name ||
+    item?.item_name ||
+    item?.catalog_name ||
     (item.sku ? `SKU: ${item.sku}` : 'Product');
   const barcodesList = Array.isArray(item.barcodes)
     ? item.barcodes

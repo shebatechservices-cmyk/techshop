@@ -43,7 +43,7 @@ export default React.memo(function ProductSearchSection({
               }
             }}
             placeholder="Search by full catalog name, brand, model, SKU or barcode..."
-            className="w-full py-2.5 pl-12 pr-9 rounded-lg border-[1.5px] border-slate-300 text-sm outline-none focus:border-emerald-500"
+            className="w-full py-2.5 pl-10 pr-9 rounded-lg border-[1.5px] border-slate-300 text-sm outline-none focus:border-emerald-500"
           />
           <span className="absolute right-3 text-slate-400 pointer-events-none">
             ⇅
