@@ -470,6 +470,77 @@ describe('updateOrder payment & ledger sync', () => {
             })
         );
     });
+
+    it('cascades updated serial to sales_item_serials when editing already-sold serial in PO', async () => {
+        const executedQueries = [];
+        const client = setupClient({
+            'SELECT \\* FROM purchase_orders WHERE id =': () => ({
+                rows: [{
+                    id: 20,
+                    po_number: 'PO-SERIAL-TEST',
+                    supplier_id: 5,
+                    total_cost: '5000.00',
+                    total_sale: '6000.00',
+                    total_paid: '5000.00',
+                    total_due: '0.00',
+                    unit_count: 1,
+                    created_at: new Date().toISOString(),
+                }],
+            }),
+            'SELECT poi\\.product_id': () => ({ rows: [] }),
+            'SELECT pos\\.serial_code': () => ({ rows: [] }),
+            'SELECT \\* FROM purchase_order_items WHERE purchase_order_id =': () => ({
+                rows: [{ id: 55, product_id: 10, quantity: 1 }],
+            }),
+            'SELECT id, serial_code FROM purchase_order_serials': () => ({
+                rows: [{ id: 101, serial_code: 'SN-OLD-TYPO' }],
+            }),
+            'SELECT sis\\.id, sis\\.serial_code': () => ({
+                rows: [{ id: 202, serial_code: 'SN-OLD-TYPO', invoice_no: 'INV-1001' }],
+            }),
+            'SELECT id, name FROM suppliers WHERE id =': () => ({
+                rows: [{ id: 5, name: 'Supplier Tech' }],
+            }),
+            'UPDATE sales_item_serials': () => ({ rowCount: 1 }),
+            'UPDATE purchase_orders': () => ({ rowCount: 1 }),
+            'UPDATE purchase_order_items': () => ({ rowCount: 1 }),
+            'UPDATE products': () => ({ rowCount: 1 }),
+            'DELETE FROM purchase_order_serials': () => ({ rowCount: 1 }),
+            'INSERT INTO purchase_order_serials': () => ({ rowCount: 1 }),
+        });
+
+        const originalQuery = client.query;
+        client.query = jest.fn(async (text, params) => {
+            executedQueries.push({ text, params });
+            return originalQuery(text, params);
+        });
+
+        const req = {
+            params: { id: '20' },
+            body: {
+                supplier_id: 5,
+                items: [{
+                    id: 55,
+                    product_id: 10,
+                    cost_price: 5000,
+                    sale_price: 6000,
+                    quantity: 1,
+                    serials: ['SN-CORRECT-NEW'],
+                }],
+            },
+        };
+        const res = mockRes();
+
+        await purchase.updateOrder(req, res);
+
+        expect(res.status).toHaveBeenCalledWith(200);
+        // Verify sales_item_serials was automatically updated
+        const cascadeUpdate = executedQueries.find(q =>
+            /UPDATE sales_item_serials/i.test(q.text)
+        );
+        expect(cascadeUpdate).toBeDefined();
+        expect(cascadeUpdate.params).toEqual(['SN-CORRECT-NEW', 'SN-OLD-TYPO']);
+    });
 });
 
 
