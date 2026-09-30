@@ -2,6 +2,8 @@ const request = require('supertest');
 const express = require('express');
 const bodyParser = require('body-parser');
 
+const pool = require('../config/db');
+
 const masterRouter = require('../routes/masterRoute');
 const createEntityRouter = require('../routes/entityRouteFactory');
 
@@ -11,6 +13,17 @@ app.use('/api/master', masterRouter);
 app.use('/api/brands', createEntityRouter('brands'));
 
 describe('Master Brand Entity Endpoints', () => {
+    afterAll(async () => {
+        try {
+            await pool.query("DELETE FROM product_names WHERE name LIKE 'Item-For-A-%' OR name LIKE 'Test-%'");
+            await pool.query("DELETE FROM brands WHERE name LIKE 'Test-Master-%' OR name LIKE 'Brand-A-%' OR name LIKE 'Brand-B-%' OR name LIKE 'Test-Brand-%'");
+            await pool.query("DELETE FROM trash_records WHERE record_title ~* 'Test-' OR record_title ~* 'Brand-A' OR record_title ~* 'Brand-B' OR record_title ~* 'Item-For-A'");
+            await pool.end();
+        } catch (e) {
+            // ignore
+        }
+    });
+
     const testBrandName = `Test-Brand-${Date.now()}`;
     let createdBrandId;
 
@@ -35,6 +48,8 @@ describe('Master Brand Entity Endpoints', () => {
         expect(match.name).toBe(testBrandName);
     });
 
+    let altBrandId;
+
     it('POST /api/master/brands also creates a brand via master router', async () => {
         const altBrandName = `Test-Master-${Date.now()}`;
         const res = await request(app)
@@ -43,6 +58,7 @@ describe('Master Brand Entity Endpoints', () => {
 
         expect(res.status).toBe(201);
         expect(res.body.data.name).toBe(altBrandName);
+        altBrandId = res.body.data.id;
     });
 
     it('GET /api/master/product_names strictly isolates items by brand_id', async () => {
@@ -56,10 +72,11 @@ describe('Master Brand Entity Endpoints', () => {
         const brandBId = resB.body.data.id;
 
         // Add a product name for brand A
-        await request(app).post('/api/master/product_names').send({
+        const itemRes = await request(app).post('/api/master/product_names').send({
             name: `Item-For-A-${Date.now()}`,
             brand_id: brandAId
         });
+        const itemId = itemRes.body?.data?.id;
 
         // Query product_names for Brand B - must be EMPTY!
         const queryResB = await request(app).get(`/api/master/product_names?brand_id=${brandBId}`);
@@ -72,14 +89,21 @@ describe('Master Brand Entity Endpoints', () => {
         expect(queryResA.body.length).toBe(1);
         expect(queryResA.body[0].brand_id).toBe(brandAId);
 
-        // Cleanup
+        // Cleanup: remove child item first, then brands
+        if (itemId) {
+            await request(app).delete(`/api/master/product_names/${itemId}`);
+        }
         await request(app).delete(`/api/brands/${brandAId}`);
         await request(app).delete(`/api/brands/${brandBId}`);
     });
 
     it('DELETE /api/brands/:id cleans up created test brand', async () => {
-        if (!createdBrandId) return;
-        const res = await request(app).delete(`/api/brands/${createdBrandId}`);
-        expect([200, 204]).toContain(res.status);
+        if (createdBrandId) {
+            const res = await request(app).delete(`/api/brands/${createdBrandId}`);
+            expect([200, 204]).toContain(res.status);
+        }
+        if (altBrandId) {
+            await request(app).delete(`/api/brands/${altBrandId}`);
+        }
     });
 });
