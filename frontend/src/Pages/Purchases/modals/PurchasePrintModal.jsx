@@ -173,13 +173,16 @@ export default function PurchasePrintModal({
             min-height: auto !important;
             height: auto !important;
             margin: 0 !important;
-            padding: 0 !important;
+            padding: ${paperSize === 'thermal_80mm' ? '0' : (pageMargin === '1in' ? '18px 22px' : (pageMargin === '0.5in' ? '12px 16px' : '10px 14px'))} !important;
             box-shadow: none !important;
-            border: none !important;
-            border-radius: 0 !important;
+            border: ${paperSize === 'thermal_80mm' ? 'none' : '1.5px solid #0f172a'} !important;
+            border-radius: ${paperSize === 'thermal_80mm' ? '0' : '4px'} !important;
             font-size: ${paperSize === 'thermal_80mm' ? '9.5px' : (paperSize === 'a5' ? '10px' : '11px')} !important;
+            box-sizing: border-box !important;
             page-break-after: auto !important;
             break-after: auto !important;
+            -webkit-box-decoration-break: clone !important;
+            box-decoration-break: clone !important;
           }
           table {
             width: 100% !important;

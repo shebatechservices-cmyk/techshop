@@ -252,7 +252,7 @@ export default function SalePrintModal({
             max-height: ${isThermal ? 'none' : (paperSize === 'a5' ? '210mm' : '297mm')} !important;
             min-height: ${isThermal ? 'auto' : (paperSize === 'a5' ? '210mm' : '297mm')} !important;
             margin: 0 !important;
-            padding: ${pageMargin === '1in' ? '20mm 24mm' : (pageMargin === '0.5in' ? '12mm 14mm' : '8mm 10mm')} !important;
+            padding: ${isThermal ? '0' : (pageMargin === '1in' ? '12mm 14mm' : (pageMargin === '0.5in' ? '8mm 10mm' : '6mm 7mm'))} !important;
             box-sizing: border-box !important;
             background: #ffffff !important;
             box-shadow: none !important;
@@ -266,6 +266,20 @@ export default function SalePrintModal({
             page-break-inside: avoid !important;
             break-inside: avoid !important;
             overflow: hidden !important;
+          }
+          .invoice-page-border {
+            border: ${isThermal ? 'none' : '1.5px solid #0f172a'} !important;
+            border-radius: ${isThermal ? '0' : '4px'} !important;
+            padding: ${isThermal ? '0' : (pageMargin === '1in' ? '12px 16px' : (pageMargin === '0.5in' ? '10px 14px' : '8px 12px'))} !important;
+            height: 100% !important;
+            min-height: 100% !important;
+            display: flex !important;
+            flex-direction: column !important;
+            justify-content: space-between !important;
+            box-sizing: border-box !important;
+            position: relative !important;
+            -webkit-box-decoration-break: clone !important;
+            box-decoration-break: clone !important;
           }
           .print-watermark {
             display: flex !important;
@@ -329,7 +343,7 @@ export default function SalePrintModal({
           maxWidth: isThermal ? '380px' : (paperSize === 'a5' ? '600px' : '820px'),
           minHeight: isThermal ? 'auto' : (paperSize === 'a5' ? '195mm' : '275mm'),
           background: '#ffffff',
-          padding: pageMargin === '1in' ? '24px 28px' : (pageMargin === '0.5in' ? '16px 20px' : '14px 18px'),
+          padding: isThermal ? '10px' : (pageMargin === '1in' ? '16px 20px' : (pageMargin === '0.5in' ? '12px 14px' : '8px 10px')),
           boxSizing: 'border-box',
           borderRadius: '0 0 10px 10px',
           boxShadow: '0 8px 30px rgba(0,0,0,0.18)',
@@ -372,57 +386,74 @@ export default function SalePrintModal({
             printTime={printTime}
           />
         ) : (
-          <A4InvoiceView
-            store={store}
-            storeName={storeName}
-            storeSubtitle={storeSubtitle}
-            storeAddress={storeAddress}
-            storePhones={storePhones}
-            storeEmail={storeEmail}
-            storeWebsite={storeWebsite}
-            storeLogo={storeLogo}
-            storeSecondaryLogo={storeSecondaryLogo}
-            storeWatermarkLogo={storeWatermarkLogo}
-            showLogo={showLogo}
-            partnerLogos={partnerLogos}
-            returnPolicyText={returnPolicyText}
-            warrantyDisclaimerText={warrantyDisclaimerText}
-            invoiceFooterNote={invoiceFooterNote}
-            showFooterDetails={showFooterDetails}
-            customerName={customerName}
-            customerAddress={customerAddress}
-            customerPhone={customerPhone}
-            customerEmail={customerEmail}
-            customerAttention={customerAttention}
-            customerDestination={customerDestination}
-            docNumber={docNumber}
-            dateFormatted={dateFormatted}
-            timeFormatted={timeFormatted}
-            preparedBy={preparedBy}
-            salesPerson={salesPerson}
-            paymentStatus={paymentStatus}
-            isFullyPaid={isFullyPaid}
-            isPartialPaid={isPartialPaid}
-            items={items}
-            totalQuantity={totalQuantity}
-            subtotal={subtotal}
-            discount={discount}
-            vat={vat}
-            setupCharge={setupCharge}
-            extraCost={extraCost}
-            extraCostCategory={extraCostCategory}
-            extraCostNotes={extraCostNotes}
-            netPayable={netPayable}
-            previousDue={previousDue}
-            totalDueAmount={totalDueAmount}
-            paidAmount={paidAmount}
-            dueAmount={dueAmount}
-            narration={narration}
-            paymentTenders={paymentTenders}
-            isQuotation={isQuotation}
-            isChalan={isChalan}
-            printTime={printTime}
-          />
+          <div
+            className="invoice-page-border"
+            style={{
+              border: '1.5px solid #0f172a',
+              borderRadius: '4px',
+              padding: pageMargin === '1in' ? '14px 18px' : (pageMargin === '0.5in' ? '10px 14px' : '8px 12px'),
+              display: 'flex',
+              flexDirection: 'column',
+              justifyContent: 'space-between',
+              minHeight: '100%',
+              height: '100%',
+              boxSizing: 'border-box',
+              position: 'relative',
+              flex: 1,
+            }}
+          >
+            <A4InvoiceView
+              store={store}
+              storeName={storeName}
+              storeSubtitle={storeSubtitle}
+              storeAddress={storeAddress}
+              storePhones={storePhones}
+              storeEmail={storeEmail}
+              storeWebsite={storeWebsite}
+              storeLogo={storeLogo}
+              storeSecondaryLogo={storeSecondaryLogo}
+              storeWatermarkLogo={storeWatermarkLogo}
+              showLogo={showLogo}
+              partnerLogos={partnerLogos}
+              returnPolicyText={returnPolicyText}
+              warrantyDisclaimerText={warrantyDisclaimerText}
+              invoiceFooterNote={invoiceFooterNote}
+              showFooterDetails={showFooterDetails}
+              customerName={customerName}
+              customerAddress={customerAddress}
+              customerPhone={customerPhone}
+              customerEmail={customerEmail}
+              customerAttention={customerAttention}
+              customerDestination={customerDestination}
+              docNumber={docNumber}
+              dateFormatted={dateFormatted}
+              timeFormatted={timeFormatted}
+              preparedBy={preparedBy}
+              salesPerson={salesPerson}
+              paymentStatus={paymentStatus}
+              isFullyPaid={isFullyPaid}
+              isPartialPaid={isPartialPaid}
+              items={items}
+              totalQuantity={totalQuantity}
+              subtotal={subtotal}
+              discount={discount}
+              vat={vat}
+              setupCharge={setupCharge}
+              extraCost={extraCost}
+              extraCostCategory={extraCostCategory}
+              extraCostNotes={extraCostNotes}
+              netPayable={netPayable}
+              previousDue={previousDue}
+              totalDueAmount={totalDueAmount}
+              paidAmount={paidAmount}
+              dueAmount={dueAmount}
+              narration={narration}
+              paymentTenders={paymentTenders}
+              isQuotation={isQuotation}
+              isChalan={isChalan}
+              printTime={printTime}
+            />
+          </div>
         )}
       </div>
     </div>
