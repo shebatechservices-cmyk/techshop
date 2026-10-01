@@ -69,9 +69,7 @@ const buildFilters = (entity, query) => {
     }
 
     if (entity === 'brands' && subCategoryId !== null) {
-        filters.push(`(sub_category_id = $${index} OR sub_category_id IS NULL)`);
-        params.push(subCategoryId);
-        index += 1;
+        // Brands are globally unique catalog entities usable across multiple subcategories
     }
 
     if (entity === 'series') {

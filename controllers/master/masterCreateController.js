@@ -43,10 +43,18 @@ const create = async (req, res) => {
             if (!category_id) {
                 return res.status(400).json({ error: 'Please select a category' });
             }
-            result = await pool.query(
-                'INSERT INTO sub_categories (name, category_id) VALUES ($1, $2) RETURNING *',
+            const existing = await pool.query(
+                'SELECT * FROM sub_categories WHERE LOWER(TRIM(name)) = LOWER(TRIM($1)) AND category_id = $2 LIMIT 1',
                 [trimmedName, category_id]
             );
+            if (existing.rows.length > 0) {
+                result = existing;
+            } else {
+                result = await pool.query(
+                    'INSERT INTO sub_categories (name, category_id) VALUES ($1, $2) RETURNING *',
+                    [trimmedName, category_id]
+                );
+            }
         } else if (entity === 'series') {
             const existing = await pool.query(
                 'SELECT * FROM series WHERE LOWER(TRIM(name)) = LOWER(TRIM($1)) AND brand_id = $2 LIMIT 1',
@@ -64,10 +72,18 @@ const create = async (req, res) => {
                 );
             }
         } else if (entity === 'models') {
-            result = await pool.query(
-                'INSERT INTO models (name, brand_id, category_id, sub_category_id) VALUES ($1, $2, $3, $4) RETURNING *',
-                [trimmedName, brand_id, category_id, sub_category_id]
+            const existing = await pool.query(
+                'SELECT * FROM models WHERE LOWER(TRIM(name)) = LOWER(TRIM($1)) AND brand_id = $2 LIMIT 1',
+                [trimmedName, brand_id]
             );
+            if (existing.rows.length > 0) {
+                result = existing;
+            } else {
+                result = await pool.query(
+                    'INSERT INTO models (name, brand_id, category_id, sub_category_id) VALUES ($1, $2, $3, $4) RETURNING *',
+                    [trimmedName, brand_id, category_id, sub_category_id]
+                );
+            }
         } else if (entity === 'products') {
             const dupCheck = await pool.query(
                 `SELECT id FROM products 
@@ -194,10 +210,31 @@ const create = async (req, res) => {
                 );
             }
         } else if (entity === 'brands') {
-            result = await pool.query(
-                `INSERT INTO ${entity} (name, sub_category_id) VALUES ($1, $2) RETURNING *`,
-                [trimmedName, sub_category_id || null]
+            const existing = await pool.query(
+                'SELECT * FROM brands WHERE LOWER(TRIM(name)) = LOWER(TRIM($1)) LIMIT 1',
+                [trimmedName]
             );
+            if (existing.rows.length > 0) {
+                result = existing;
+            } else {
+                result = await pool.query(
+                    `INSERT INTO brands (name, sub_category_id) VALUES ($1, $2) RETURNING *`,
+                    [trimmedName, sub_category_id || null]
+                );
+            }
+        } else if (entity === 'categories') {
+            const existing = await pool.query(
+                'SELECT * FROM categories WHERE LOWER(TRIM(name)) = LOWER(TRIM($1)) LIMIT 1',
+                [trimmedName]
+            );
+            if (existing.rows.length > 0) {
+                result = existing;
+            } else {
+                result = await pool.query(
+                    'INSERT INTO categories (name) VALUES ($1) RETURNING *',
+                    [trimmedName]
+                );
+            }
         } else {
             result = await pool.query(
                 `INSERT INTO ${entity} (name) VALUES ($1) RETURNING *`,

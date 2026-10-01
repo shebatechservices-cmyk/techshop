@@ -105,14 +105,8 @@ export default function useProductAttributes({ onEntityCreated } = {}) {
   }, [subCategories, selectedCategory]);
 
   const catalogBrands = useMemo(() => {
-    return selectedSubCategory
-      ? brands.filter(
-          (item) =>
-            !item.sub_category_id ||
-            String(item.sub_category_id) === String(selectedSubCategory)
-        )
-      : brands;
-  }, [brands, selectedSubCategory]);
+    return Array.isArray(brands) ? brands : [];
+  }, [brands]);
 
   useEffect(() => {
     const isBrandValid = selectedBrand && selectedBrand !== "undefined" && selectedBrand !== "null";

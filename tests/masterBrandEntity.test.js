@@ -40,6 +40,19 @@ describe('Master Brand Entity Endpoints', () => {
         createdBrandId = res.body.data.id;
     });
 
+    it('POST /api/brands gracefully reuses existing brand instead of throwing duplicate error', async () => {
+        const brandName = `Brand-Dup-${Date.now()}`;
+        const first = await request(app).post('/api/brands').send({ name: brandName });
+        expect(first.status).toBe(201);
+        const firstId = first.body.data.id;
+
+        const second = await request(app).post('/api/brands').send({ name: brandName });
+        expect(second.status).toBe(201);
+        expect(second.body.data.id).toBe(firstId);
+
+        await request(app).delete(`/api/brands/${firstId}`);
+    });
+
     it('GET /api/brands retrieves the created brand', async () => {
         const res = await request(app).get('/api/brands');
         expect(res.status).toBe(200);
