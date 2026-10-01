@@ -116,23 +116,36 @@ export function newLineItem(product) {
   );
   const sale = Number(product.selling_price || product.sale_price || 0);
 
-  // Margin defaults to percentage (%)
-  let marginVal =
-    product.last_margin_value !== undefined && product.last_margin_value !== null
-      ? String(product.last_margin_value)
-      : '';
+  let marginVal = '';
+  const numMargin =
+    product.last_margin_value !== undefined && product.last_margin_value !== null && String(product.last_margin_value).trim() !== ''
+      ? Number(product.last_margin_value)
+      : null;
 
-  if (!marginVal && cost > 0 && sale > 0 && sale >= cost) {
+  if (numMargin !== null && !isNaN(numMargin) && numMargin > 0) {
+    marginVal = String(numMargin);
+    if (marginVal.endsWith('.00')) marginVal = marginVal.slice(0, -3);
+  } else if (cost > 0 && sale > cost) {
     marginVal = (((sale - cost) / cost) * 100).toFixed(2);
     if (marginVal.endsWith('.00')) marginVal = marginVal.slice(0, -3);
-  } else if (!marginVal) {
+  } else if (cost > 0 && (!sale || sale <= cost)) {
+    marginVal = '15'; // default 15% margin
+  } else if (numMargin !== null && !isNaN(numMargin)) {
+    marginVal = String(numMargin);
+  } else {
     marginVal = '15'; // default 15% margin
   }
 
   let finalSale = sale;
-  if (cost > 0 && Number(marginVal) >= 0) {
+  if (cost > 0 && Number(marginVal) > 0) {
     const m = Number(marginVal);
-    finalSale = Number((cost + (cost * m) / 100).toFixed(2));
+    if (sale > cost) {
+      finalSale = sale;
+    } else {
+      finalSale = Number((cost + (cost * m) / 100).toFixed(2));
+    }
+  } else if (sale > 0) {
+    finalSale = sale;
   }
 
   const warranty =

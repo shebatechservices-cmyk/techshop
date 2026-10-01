@@ -541,6 +541,79 @@ describe('updateOrder payment & ledger sync', () => {
         expect(cascadeUpdate).toBeDefined();
         expect(cascadeUpdate.params).toEqual(['SN-CORRECT-NEW', 'SN-OLD-TYPO']);
     });
+
+    it('persists margin_type and margin_value when updating purchase order items', async () => {
+        const executedQueries = [];
+        const client = setupClient({
+            'SELECT \\* FROM purchase_orders WHERE id =': () => ({
+                rows: [{
+                    id: 20,
+                    po_number: 'PO-20',
+                    created_at: new Date().toISOString(),
+                    supplier_id: 5,
+                    total_cost: 5000,
+                    total_sale: 6000,
+                    total_paid: 5000,
+                    total_due: 0,
+                    unit_count: 1,
+                }],
+            }),
+            'SELECT \\* FROM purchase_order_items WHERE purchase_order_id =': () => ({
+                rows: [{
+                    id: 55,
+                    purchase_order_id: 20,
+                    product_id: 10,
+                    quantity: 1,
+                    cost_price: 5000,
+                    sale_price: 6000,
+                    margin_type: 'percent',
+                    margin_value: 20,
+                }],
+            }),
+            'SELECT id, name FROM suppliers WHERE id =': () => ({
+                rows: [{ id: 5, name: 'Supplier Tech' }],
+            }),
+            'UPDATE purchase_orders': () => ({ rowCount: 1 }),
+            'UPDATE purchase_order_items': () => ({ rowCount: 1 }),
+            'UPDATE products': () => ({ rowCount: 1 }),
+        });
+
+        const originalQuery = client.query;
+        client.query = jest.fn(async (text, params) => {
+            executedQueries.push({ text, params });
+            return originalQuery(text, params);
+        });
+
+        const req = {
+            params: { id: '20' },
+            body: {
+                supplier_id: 5,
+                items: [{
+                    id: 55,
+                    product_id: 10,
+                    cost_price: 5000,
+                    sale_price: 6000,
+                    final_sale_price: 6000,
+                    margin_type: 'percent',
+                    margin_value: 20,
+                    quantity: 1,
+                }],
+            },
+        };
+        const res = mockRes();
+
+        await purchase.updateOrder(req, res);
+
+        expect(res.status).toHaveBeenCalledWith(200);
+        const itemUpdate = executedQueries.find(q =>
+            /UPDATE purchase_order_items/i.test(q.text)
+        );
+        expect(itemUpdate).toBeDefined();
+        expect(itemUpdate.text).toContain('margin_type');
+        expect(itemUpdate.text).toContain('margin_value');
+        expect(itemUpdate.params).toContain('percent');
+        expect(itemUpdate.params).toContain(20);
+    });
 });
 
 

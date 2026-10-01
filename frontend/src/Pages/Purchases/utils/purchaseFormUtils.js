@@ -48,17 +48,41 @@ export const mapOrderToFormItems = (
     );
     const serials = Array.isArray(it.serials) ? it.serials : [];
     const cost = Number(it.cost_price || 0);
-    const sale = Number(it.final_sale_price || it.sale_price || 0);
+    const rawFinalSale = Number(it.final_sale_price || 0);
+    const rawSalePrice = Number(it.sale_price || 0);
+    const prodSalePrice = Number(prod.selling_price || prod.sale_price || 0);
+    let sale = Math.max(rawFinalSale, rawSalePrice, prodSalePrice);
 
-    let marginVal =
-      it.margin_value !== undefined && it.margin_value !== null
-        ? String(it.margin_value)
-        : '';
-    if (!marginVal && cost > 0 && sale > 0 && sale >= cost) {
-      marginVal = (((sale - cost) / cost) * 100).toFixed(2);
+    let marginType = it.margin_type || 'percent';
+    let marginVal = '';
+    const rawMargin = it.margin_value;
+    const numMargin =
+      rawMargin !== undefined && rawMargin !== null && String(rawMargin).trim() !== ''
+        ? Number(rawMargin)
+        : null;
+
+    if (numMargin !== null && !isNaN(numMargin) && numMargin > 0) {
+      marginVal = String(numMargin);
       if (marginVal.endsWith('.00')) marginVal = marginVal.slice(0, -3);
-    } else if (!marginVal) {
+    } else if (cost > 0 && sale > cost) {
+      if (marginType === 'amount') {
+        marginVal = String(Number((sale - cost).toFixed(2)));
+      } else {
+        marginVal = (((sale - cost) / cost) * 100).toFixed(2);
+        if (marginVal.endsWith('.00')) marginVal = marginVal.slice(0, -3);
+      }
+    } else if (cost > 0 && (!sale || sale <= cost)) {
       marginVal = '15';
+      sale = Number((cost + (cost * 15) / 100).toFixed(2));
+    } else if (numMargin !== null && !isNaN(numMargin)) {
+      marginVal = String(numMargin);
+    } else {
+      marginVal = '15';
+    }
+
+    if (!sale && cost > 0) {
+      const m = Number(marginVal) || 15;
+      sale = marginType === 'amount' ? cost + m : Number((cost + (cost * m) / 100).toFixed(2));
     }
 
     const rawWarranty =
@@ -91,12 +115,12 @@ export const mapOrderToFormItems = (
         : Number(it.quantity || 1),
       cost_price: cost > 0 ? cost : '',
       sale_price: sale > 0 ? sale : '',
-      margin_type: it.margin_type || 'percent',
+      margin_type: marginType,
       margin_value: marginVal,
       previous_margin: marginVal || null,
       previous_cost: cost > 0 ? cost : null,
       final_sale_price: sale > 0 ? sale : '',
-      final_sale_manual: false,
+      final_sale_manual: Boolean(sale > 0 && sale > cost),
       expected_date: it.expected_date
         ? it.expected_date.split('T')[0]
         : (today ? today() : new Date().toISOString().split('T')[0]),
