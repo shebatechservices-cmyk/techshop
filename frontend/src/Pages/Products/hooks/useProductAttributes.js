@@ -164,19 +164,19 @@ export default function useProductAttributes({ onEntityCreated } = {}) {
   }, [selectedBrand, selectedCategory, selectedSubCategory]);
 
   useEffect(() => {
-    const isModelValid = selectedModel && selectedModel !== "undefined" && selectedModel !== "null";
-    if (!isModelValid) {
+    const isBrandValid = selectedBrand && selectedBrand !== "undefined" && selectedBrand !== "null";
+    if (!isBrandValid) {
       setSeries([]);
       return;
     }
-    fetchJson(`${API}/series?model_id=${selectedModel}`)
+    fetchJson(`${API}/series?brand_id=${selectedBrand}`)
       .then((data) => {
         const items = Array.isArray(data) ? data : (data?.data || []);
-        const filtered = items.filter((s) => String(s.model_id) === String(selectedModel));
+        const filtered = items.filter((s) => String(s.brand_id) === String(selectedBrand));
         setSeries(filtered);
       })
       .catch(() => setSeries([]));
-  }, [selectedModel]);
+  }, [selectedBrand]);
 
   const mergeCreatedItem = (entity, item) => {
     const setters = {

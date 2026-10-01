@@ -11,6 +11,7 @@ const app = express();
 app.use(bodyParser.json());
 app.use('/api/master', masterRouter);
 app.use('/api/brands', createEntityRouter('brands'));
+app.use('/api/series', createEntityRouter('series'));
 
 describe('Master Brand Entity Endpoints', () => {
     afterAll(async () => {
@@ -97,6 +98,36 @@ describe('Master Brand Entity Endpoints', () => {
         await request(app).delete(`/api/brands/${brandBId}`);
     });
 
+    it('POST /api/series gracefully reuses existing series for the same brand instead of throwing duplicate error', async () => {
+        const brandRes = await request(app).post('/api/brands').send({ name: `Brand-Series-${Date.now()}` });
+        const brandId = brandRes.body.data.id;
+
+        const seriesName = `Series-Test-${Date.now()}`;
+        const firstRes = await request(app).post('/api/series').send({
+            name: seriesName,
+            brand_id: brandId,
+            model_id: 1,
+        });
+
+        expect(firstRes.status).toBe(201);
+        expect(firstRes.body.data).toBeDefined();
+        const firstId = firstRes.body.data.id;
+
+        // Attempt to create the same series again for the same brand with different model_id
+        const secondRes = await request(app).post('/api/series').send({
+            name: seriesName,
+            brand_id: brandId,
+            model_id: 2,
+        });
+
+        expect(secondRes.status).toBe(201);
+        expect(secondRes.body.data.id).toBe(firstId);
+
+        // Cleanup
+        await pool.query('DELETE FROM series WHERE id = $1', [firstId]);
+        await request(app).delete(`/api/brands/${brandId}`);
+    });
+
     it('DELETE /api/brands/:id cleans up created test brand', async () => {
         if (createdBrandId) {
             const res = await request(app).delete(`/api/brands/${createdBrandId}`);
@@ -107,3 +138,4 @@ describe('Master Brand Entity Endpoints', () => {
         }
     });
 });
+

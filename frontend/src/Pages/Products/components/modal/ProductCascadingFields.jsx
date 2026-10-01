@@ -270,11 +270,11 @@ export default function ProductCascadingFields({
               {!selectedModel
                 ? "Select model first"
                 : series.length === 0
-                ? "No series for this model (click + to add)"
+                ? "No series for this brand (click + to add)"
                 : "Select series"}
             </option>
             {series
-              .filter((item) => String(item.model_id) === String(selectedModel))
+              .filter((item) => !selectedBrand || String(item.brand_id) === String(selectedBrand))
               .map((item) => (
                 <option key={item.id} value={item.id}>
                   {item.name}
@@ -287,9 +287,9 @@ export default function ProductCascadingFields({
             onClick={(e) => {
               e.preventDefault();
               e.stopPropagation();
-              openQuickAddModal("series", { parentName: activeModel?.name, parentType: "Model" });
+              openQuickAddModal("series", { parentName: activeBrand?.name || activeModel?.name, parentType: "Brand" });
             }}
-            title={selectedModel ? `Add new series for ${activeModel?.name || 'selected model'}` : "Select model first"}
+            title={selectedBrand ? `Add new series for ${activeBrand?.name || 'selected brand'}` : "Select brand first"}
             className="w-10 h-10 border border-sky-300 bg-sky-50 hover:bg-sky-600 hover:text-white text-sky-700 font-bold rounded-lg flex items-center justify-center transition-colors cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed text-lg"
           >
             +

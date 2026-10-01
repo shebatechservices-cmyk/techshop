@@ -104,10 +104,12 @@ export const buildQuickAddConfig = (
         catalogBrands.find((b) => String(b.id) === String(selectedBrand))?.name ||
         "";
       parentType = context?.productName ? "Product Name" : "Brand";
-    } else if (entity === "series" && selectedModel) {
+    } else if (entity === "series") {
       parentName =
-        models.find((m) => String(m.id) === String(selectedModel))?.name || "";
-      parentType = "Model";
+        catalogBrands.find((b) => String(b.id) === String(selectedBrand))?.name ||
+        models.find((m) => String(m.id) === String(selectedModel))?.name ||
+        "";
+      parentType = "Brand";
     }
   }
 

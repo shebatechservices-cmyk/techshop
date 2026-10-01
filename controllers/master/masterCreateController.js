@@ -48,10 +48,21 @@ const create = async (req, res) => {
                 [trimmedName, category_id]
             );
         } else if (entity === 'series') {
-            result = await pool.query(
-                'INSERT INTO series (name, brand_id, model_id) VALUES ($1, $2, $3) RETURNING *',
-                [trimmedName, brand_id, model_id || null]
+            const existing = await pool.query(
+                'SELECT * FROM series WHERE LOWER(TRIM(name)) = LOWER(TRIM($1)) AND brand_id = $2 LIMIT 1',
+                [trimmedName, brand_id]
             );
+            if (existing.rows.length > 0) {
+                result = existing;
+            } else {
+                result = await pool.query(
+                    `INSERT INTO series (name, brand_id, model_id)
+                     VALUES ($1, $2, $3)
+                     ON CONFLICT (name, brand_id) DO UPDATE SET model_id = COALESCE(series.model_id, EXCLUDED.model_id)
+                     RETURNING *`,
+                    [trimmedName, brand_id, model_id || null]
+                );
+            }
         } else if (entity === 'models') {
             result = await pool.query(
                 'INSERT INTO models (name, brand_id, category_id, sub_category_id) VALUES ($1, $2, $3, $4) RETURNING *',
