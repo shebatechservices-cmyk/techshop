@@ -156,7 +156,15 @@ const applyPurchasePayment = async (client, opts) => {
     const resolvedAccountId = targetAccount ? targetAccount.id : (payment.account_id || null);
     const subOption = payment.sub_option || (targetAccount ? targetAccount.name : null);
 
-    let paymentMethodId = payment.payment_method_id ? parseInt(payment.payment_method_id, 10) : null;
+    let paymentMethodId = null;
+    if (payment.payment_method_id) {
+        try {
+            const pmCheck = await client.query('SELECT id FROM payment_methods WHERE id = $1', [parseInt(payment.payment_method_id, 10)]);
+            if (pmCheck.rows.length > 0) {
+                paymentMethodId = pmCheck.rows[0].id;
+            }
+        } catch (_) {}
+    }
     if (!paymentMethodId && paymentMethod) {
         try {
             const pmRes = await client.query(
@@ -165,6 +173,14 @@ const applyPurchasePayment = async (client, opts) => {
             );
             if (pmRes.rows.length > 0) {
                 paymentMethodId = pmRes.rows[0].id;
+            } else if (targetAccount && targetAccount.account_type) {
+                const pmTypeRes = await client.query(
+                    "SELECT id FROM payment_methods WHERE LOWER(type) = LOWER($1) LIMIT 1",
+                    [targetAccount.account_type]
+                );
+                if (pmTypeRes.rows.length > 0) {
+                    paymentMethodId = pmTypeRes.rows[0].id;
+                }
             }
         } catch (_) {}
     }

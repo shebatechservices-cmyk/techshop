@@ -134,7 +134,8 @@ export default function MultiTenderPaymentTable({
     const defaultAccount = defaultAccounts[0] || '';
     onUpdateTender(index, {
       method: newMethodName,
-      payment_method_id: newMethodId || null,
+      account_id: newMethodId || null,
+      payment_method_id: null,
       sub_option: defaultAccount,
       transaction_id: '',
     });
