@@ -244,6 +244,8 @@ export default function PurchaseOrderModal(props) {
                 setExtraCost={setExtraCost}
                 extraCostCategory={extraCostCategory}
                 setExtraCostCategory={setExtraCostCategory}
+                extraCostNotes={extraCostNotes}
+                setExtraCostNotes={setExtraCostNotes}
                 reference={reference}
                 setReference={setReference}
                 extra={extra}

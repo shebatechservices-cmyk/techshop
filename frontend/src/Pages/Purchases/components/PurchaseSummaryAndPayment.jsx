@@ -9,6 +9,8 @@ export default function PurchaseSummaryAndPayment({
   setExtraCost,
   extraCostCategory,
   setExtraCostCategory,
+  extraCostNotes = '',
+  setExtraCostNotes,
   reference,
   setReference,
   extra = 0,
@@ -106,8 +108,8 @@ export default function PurchaseSummaryAndPayment({
               </label>
               <input
                 type="text"
-                value={reference}
-                onChange={(e) => setReference(e.target.value)}
+                value={extraCostNotes}
+                onChange={(e) => setExtraCostNotes && setExtraCostNotes(e.target.value)}
                 placeholder="e.g. Courier Challan #48291 / Memo"
                 className="w-full py-2 px-2.5 rounded-md border border-slate-300 text-sm box-border bg-white focus:outline-none focus:border-emerald-500"
               />

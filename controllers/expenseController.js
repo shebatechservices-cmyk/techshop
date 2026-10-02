@@ -41,6 +41,7 @@ async function ensureExpenseTables() {
             ALTER TABLE expenses ADD COLUMN IF NOT EXISTS reference_no VARCHAR(100);
             ALTER TABLE expenses ADD COLUMN IF NOT EXISTS note TEXT;
             ALTER TABLE expense_categories ADD COLUMN IF NOT EXISTS created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP;
+            CREATE UNIQUE INDEX IF NOT EXISTS idx_expenses_voucher_no ON expenses (voucher_no);
         `);
 
         // Seed default categories if empty

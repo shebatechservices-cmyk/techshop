@@ -406,25 +406,38 @@ const updateOrder = async (req, res) => {
 
         // Sync extra cost as expense if configured
         const effectiveExtraCost = money(extra_cost !== undefined ? extra_cost : po.extra_cost);
+        const currentPoNumber = po.po_number || id;
         if (effectiveExtraCost > 0) {
             try {
+                await client.query('CREATE UNIQUE INDEX IF NOT EXISTS idx_expenses_voucher_no ON expenses (voucher_no)');
                 const catName = (extra_cost_category !== undefined ? extra_cost_category : po.extra_cost_category) || 'Transportation & Logistics';
                 const payeeName = supplierName || 'Supplier';
                 const expNote = (extra_cost_notes !== undefined ? extra_cost_notes : po.extra_cost_notes)
-                    ? `PO ${po.po_number || id} - ${(extra_cost_notes !== undefined ? extra_cost_notes : po.extra_cost_notes)}`
-                    : `Purchase Order ${po.po_number || id} Extra Cost (${catName})`;
+                    ? `PO ${currentPoNumber} - ${(extra_cost_notes !== undefined ? extra_cost_notes : po.extra_cost_notes)}`
+                    : `Purchase Order ${currentPoNumber} Extra Cost (${catName})`;
+
+                let categoryId = null;
+                const catRes = await client.query(
+                    'SELECT id FROM expense_categories WHERE LOWER(name) LIKE $1 OR LOWER(name) LIKE $2 LIMIT 1',
+                    [`%${catName.toLowerCase().slice(0, 10)}%`, '%transport%']
+                );
+                if (catRes.rows.length > 0) {
+                    categoryId = catRes.rows[0].id;
+                }
+
                 await client.query(
-                    `INSERT INTO expenses (voucher_no, category_name, amount, expense_date, payee_name, reference_no, note)
-                     VALUES ($1, $2, $3, CURRENT_DATE, $4, $5, $6)
+                    `INSERT INTO expenses (voucher_no, category_id, category_name, amount, expense_date, payee_name, reference_no, note)
+                     VALUES ($1, $2, $3, CURRENT_DATE, $4, $5, $6, $7)
                      ON CONFLICT (voucher_no) DO UPDATE 
-                     SET category_name = EXCLUDED.category_name, amount = EXCLUDED.amount, note = EXCLUDED.note`,
-                    [`EXP-${po.po_number || id}`, catName, effectiveExtraCost, payeeName, po.po_number || id, expNote]
+                     SET category_id = EXCLUDED.category_id, category_name = EXCLUDED.category_name, 
+                         amount = EXCLUDED.amount, payee_name = EXCLUDED.payee_name, note = EXCLUDED.note`,
+                    [`EXP-${currentPoNumber}`, categoryId, catName, effectiveExtraCost, payeeName, currentPoNumber, expNote]
                 );
             } catch (expErr) {
                 console.warn('Expense update for PO extra cost notice:', expErr.message);
             }
         } else if (effectiveExtraCost === 0 && money(po.extra_cost) > 0) {
-            await client.query('DELETE FROM expenses WHERE voucher_no = $1', [`EXP-${po.po_number || id}`]).catch(() => null);
+            await client.query('DELETE FROM expenses WHERE voucher_no = $1', [`EXP-${currentPoNumber}`]).catch(() => null);
         }
 
         await client.query('COMMIT');

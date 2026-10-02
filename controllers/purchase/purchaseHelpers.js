@@ -58,6 +58,7 @@ const ensurePurchaseColumns = async () => {
                 serial_code VARCHAR(120) NOT NULL
             );
             CREATE UNIQUE INDEX IF NOT EXISTS idx_purchase_order_serials_code_unique ON purchase_order_serials (TRIM(LOWER(serial_code)));
+            CREATE UNIQUE INDEX IF NOT EXISTS idx_expenses_voucher_no ON expenses (voucher_no);
         `);
         purchaseMigrated = true;
     } catch (e) {

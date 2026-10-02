@@ -255,6 +255,7 @@ export function usePurchasePersistenceAndSave({
       setSupplierId(String(fullPo.supplier_id));
     }
     setReference(fullPo.transaction_reference || fullPo.po_number || '');
+    setHasExtraCost(Number(fullPo.extra_cost || 0) > 0);
     setExtraCost(fullPo.extra_cost ? String(fullPo.extra_cost) : '');
     if (fullPo.extra_cost_category) setExtraCostCategory(fullPo.extra_cost_category);
     if (fullPo.extra_cost_notes) setExtraCostNotes(fullPo.extra_cost_notes);
