@@ -135,6 +135,7 @@ export default function PurchaseOrderModal(props) {
     acceptTender,
     cancelTender,
     handlePayFull,
+    handlePayOrder,
     handleFullDue,
     handleClearForm,
     handleLoadOrderInForm,
@@ -254,6 +255,7 @@ export default function PurchaseOrderModal(props) {
                 totalPayable={totalPayable}
                 currentDue={currentDue}
                 handlePayFull={handlePayFull}
+                handlePayOrder={handlePayOrder}
                 handleFullDue={handleFullDue}
                 tenders={tenders}
                 updateTender={updateTender}

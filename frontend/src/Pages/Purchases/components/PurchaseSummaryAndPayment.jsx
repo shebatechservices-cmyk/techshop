@@ -20,6 +20,7 @@ export default function PurchaseSummaryAndPayment({
   totalPayable = 0,
   currentDue = 0,
   handlePayFull,
+  handlePayOrder,
   handleFullDue,
   tenders = [],
   updateTender,
@@ -243,13 +244,32 @@ export default function PurchaseSummaryAndPayment({
             <span className="text-xs font-bold text-slate-500 uppercase">
               Quick Settle:
             </span>
-            <button
-              type="button"
-              onClick={handlePayFull}
-              className="py-1 px-2.5 rounded border border-emerald-300 bg-emerald-50 text-xs font-bold text-emerald-800 cursor-pointer hover:bg-emerald-100 transition-colors"
-            >
-              Pay Full ({taka(totalPayable)})
-            </button>
+            {previousDue > 0 ? (
+              <>
+                <button
+                  type="button"
+                  onClick={handlePayOrder}
+                  className="py-1 px-2.5 rounded border border-blue-300 bg-blue-50 text-xs font-bold text-blue-800 cursor-pointer hover:bg-blue-100 transition-colors"
+                >
+                  Pay Order ({taka(payableAmount)})
+                </button>
+                <button
+                  type="button"
+                  onClick={handlePayFull}
+                  className="py-1 px-2.5 rounded border border-emerald-300 bg-emerald-50 text-xs font-bold text-emerald-800 cursor-pointer hover:bg-emerald-100 transition-colors"
+                >
+                  Pay Total ({taka(totalPayable)})
+                </button>
+              </>
+            ) : (
+              <button
+                type="button"
+                onClick={handlePayFull}
+                className="py-1 px-2.5 rounded border border-emerald-300 bg-emerald-50 text-xs font-bold text-emerald-800 cursor-pointer hover:bg-emerald-100 transition-colors"
+              >
+                Pay Full ({taka(totalPayable)})
+              </button>
+            )}
             <button
               type="button"
               onClick={handleFullDue}

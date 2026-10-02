@@ -105,6 +105,7 @@ export function useNewSale({
     customerId,
     customers,
     customerSummary,
+    editSale,
   });
 
   const {

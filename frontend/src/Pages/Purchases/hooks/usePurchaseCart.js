@@ -187,6 +187,7 @@ export function usePurchaseCart(props = {}) {
     acceptTender,
     cancelTender,
     handlePayFull,
+    handlePayOrder,
     handleFullDue,
   } = usePurchasePricingAndPayment({
     items,
@@ -196,6 +197,7 @@ export function usePurchaseCart(props = {}) {
     hasExtraCost,
     extraCost,
     isOpen,
+    orderToEdit,
   });
 
   // 7. Persistence, Drafts & Save Mutation Sub-hook
@@ -386,6 +388,7 @@ export function usePurchaseCart(props = {}) {
     acceptTender,
     cancelTender,
     handlePayFull,
+    handlePayOrder,
     handleFullDue,
     handleClearForm,
     handleLoadOrderInForm,

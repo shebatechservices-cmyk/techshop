@@ -10,6 +10,7 @@ export function usePurchasePricingAndPayment({
   hasExtraCost = false,
   extraCost = '',
   isOpen = true,
+  orderToEdit = null,
 }) {
   const [discount, setDiscount] = useState(0);
   const [tenders, setTenders] = useState([]);
@@ -116,7 +117,20 @@ export function usePurchasePricingAndPayment({
   }, [summary, suppliers, supplierId]);
 
   const supplierPayable = Number(selectedSupplierObj?.payable_balance || 0);
-  const previousDue = supplierPayable;
+
+  // If editing an existing purchase order for the same supplier,
+  // this order's balance is ALREADY part of supplierPayable in the DB.
+  // We must deduct the current order's existing due so we don't double-count it!
+  const isEditingSameSupplier = Boolean(
+    orderToEdit &&
+    orderToEdit.id &&
+    (!orderToEdit.supplier_id || String(orderToEdit.supplier_id) === String(supplierId))
+  );
+  const existingOrderDue = isEditingSameSupplier
+    ? Number(orderToEdit.total_due ?? (Number(orderToEdit.total_cost || 0) - Number(orderToEdit.total_paid || 0)))
+    : 0;
+
+  const previousDue = Math.max(0, Number((supplierPayable - existingOrderDue).toFixed(2)));
   const totalPayable = Math.max(0, Number((payableAmount + previousDue).toFixed(2)));
 
   const supplierWallet = Number(
@@ -188,7 +202,25 @@ export function usePurchasePricingAndPayment({
       (walletAccounts || []).find((a) =>
         ['cash', 'drawer'].includes(String(a.account_type || '').toLowerCase())
       ) || (walletAccounts || [])[0];
-    const amountToPay = payableAmount > 0 ? payableAmount : totalPayable;
+    const amountToPay = totalPayable;
+    setTenders([
+      {
+        ...newTender(amountToPay, true),
+        method: 'Cash',
+        sub_option: defaultAcc,
+        account_id: accObj?.id || 1,
+      },
+    ]);
+    setPaymentConfirmed(true);
+  };
+
+  const handlePayOrder = () => {
+    const defaultAcc = cashAccounts[0] || 'Cash Drawer';
+    const accObj =
+      (walletAccounts || []).find((a) =>
+        ['cash', 'drawer'].includes(String(a.account_type || '').toLowerCase())
+      ) || (walletAccounts || [])[0];
+    const amountToPay = payableAmount;
     setTenders([
       {
         ...newTender(amountToPay, true),
@@ -243,6 +275,7 @@ export function usePurchasePricingAndPayment({
     acceptTender,
     cancelTender,
     handlePayFull,
+    handlePayOrder,
     handleFullDue,
   };
 }

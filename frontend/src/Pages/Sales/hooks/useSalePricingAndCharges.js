@@ -8,6 +8,7 @@ export default function useSalePricingAndCharges({
   customerId = '',
   customers = [],
   customerSummary = null,
+  editSale = null,
 }) {
   const [discount, setDiscount] = useState(0);
   const [discountTouched, setDiscountTouched] = useState(false);
@@ -83,11 +84,24 @@ export default function useSalePricingAndCharges({
 
   const payableAmount = Math.max(0, netAmount - totalDiscount);
   const selectedCustomer = (customers || []).find((c) => String(c.id) === String(customerId));
-  const previousDue = money(
+
+  // If editing an existing sale for the same customer, this sale's balance is ALREADY part of receivable_balance in DB.
+  // We must deduct the current sale's existing due so we don't double-count it!
+  const isEditingSameCustomer = Boolean(
+    editSale &&
+    editSale.id &&
+    (!editSale.customer_id || String(editSale.customer_id) === String(customerId))
+  );
+  const existingSaleDue = isEditingSameCustomer
+    ? money(editSale.due_amount ?? (money(editSale.total_amount) - money(editSale.paid_amount)))
+    : 0;
+
+  const rawPrevDue = money(
     customerSummary?.customer?.receivable_balance ??
       selectedCustomer?.receivable_balance ??
       0
   );
+  const previousDue = Math.max(0, rawPrevDue - existingSaleDue);
   const totalPayable = Math.max(0, payableAmount + previousDue);
 
   const customerWalletBalance = money(
