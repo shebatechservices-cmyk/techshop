@@ -147,7 +147,11 @@ export default function SalePaymentSection({
             <span className="text-xs text-slate-500">
               Paid: <strong className="text-slate-900">{taka(paid)}</strong>
             </span>
-            {due === 0 && paid > 0 ? (
+            {paid > totalPayable ? (
+              <span className="text-amber-800 bg-amber-100 border border-amber-300 font-extrabold text-[0.72rem] py-0.5 px-2 rounded inline-flex items-center gap-1" title="Paid amount exceeds total payable">
+                ⚠️ Overpaid: +{taka(paid - totalPayable)}
+              </span>
+            ) : due === 0 && paid > 0 ? (
               <span className="text-emerald-600 font-bold text-xs inline-flex items-center gap-0.5">
                 ✓ Paid
               </span>

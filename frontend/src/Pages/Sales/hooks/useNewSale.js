@@ -639,6 +639,11 @@ export function useNewSale({
         '⚠️ You have unconfirmed payment rows. Please click "✓ Accept" to confirm each payment entry, or "Cancel" to remove it before saving.'
       );
     }
+    if (paid > totalPayable) {
+      return setPopupMsg(
+        `⚠️ Total paid amount (${taka(paid)}) exceeds Total Payable (${taka(totalPayable)}). Please click "Pay Full (${taka(totalPayable)})" to adjust, or edit the payment amount.`
+      );
+    }
 
     try {
       setSaving(true);
