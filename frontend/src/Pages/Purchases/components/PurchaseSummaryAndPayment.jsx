@@ -60,7 +60,13 @@ export default function PurchaseSummaryAndPayment({
           <input
             type="checkbox"
             checked={hasExtraCost}
-            onChange={(e) => setHasExtraCost(e.target.checked)}
+            onChange={(e) => {
+              const isChecked = e.target.checked;
+              setHasExtraCost(isChecked);
+              if (isChecked && (!extraCost || Number(extraCost) === 0)) {
+                setExtraCost('');
+              }
+            }}
             className="w-4 h-4 cursor-pointer accent-orange-500"
           />
           <span>🚚 Logistics & Extra Cost (Recorded as Expense)</span>
@@ -76,8 +82,10 @@ export default function PurchaseSummaryAndPayment({
               <input
                 type="number"
                 step="any"
+                min="0"
                 value={extraCost}
                 onChange={(e) => setExtraCost(e.target.value)}
+                onFocus={(e) => e.target.select()}
                 placeholder="0.00"
                 className="w-full py-2 px-2.5 rounded-md border border-slate-300 text-sm box-border bg-white focus:outline-none focus:border-emerald-500"
               />

@@ -12,12 +12,13 @@ export function usePurchaseInitialData({
   const [accounts, setAccounts] = useState([]);
   const [summary, setSummary] = useState(null);
 
-  // 1. Fetch Master Products catalog
+  // 1. Fetch Master Products catalog on mount
   useEffect(() => {
+    let isMounted = true;
     const fetchMasterProducts = async () => {
       try {
         const res = await fetch(`${API_BASE}/master/products`);
-        if (res.ok) {
+        if (res.ok && isMounted) {
           const data = await res.json();
           setProductList(Array.isArray(data) ? data : data.data || []);
         }
@@ -26,7 +27,10 @@ export function usePurchaseInitialData({
       }
     };
     fetchMasterProducts();
-  }, [initialProducts]);
+    return () => {
+      isMounted = false;
+    };
+  }, []);
 
   // 2. Fetch Suppliers and Accounts
   useEffect(() => {

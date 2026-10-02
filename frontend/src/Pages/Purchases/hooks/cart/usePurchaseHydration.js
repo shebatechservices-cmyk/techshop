@@ -1,4 +1,4 @@
-import { useEffect } from 'react';
+import { useEffect, useRef } from 'react';
 import {
   money,
   today,
@@ -31,59 +31,83 @@ export function usePurchaseHydration({
   mfsAccounts = [],
   cashAccounts = [],
 }) {
-  // 1. Initialize state from orderToEdit or newlyCreatedSupplier
+  const hydratedOrderIdRef = useRef(null);
+  const hydratedSupplierIdRef = useRef(null);
+
+  // 1. Initialize state from orderToEdit once per order ID
   useEffect(() => {
-    if (orderToEdit) {
-      if (orderToEdit.supplier_id) setSupplierId(String(orderToEdit.supplier_id));
-      if (orderToEdit.transaction_reference)
-        setReference(orderToEdit.transaction_reference);
-      if (Number(orderToEdit.extra_cost || 0) > 0) setHasExtraCost(true);
-      if (orderToEdit.extra_cost) setExtraCost(String(orderToEdit.extra_cost));
-      if (orderToEdit.extra_cost_category)
-        setExtraCostCategory(orderToEdit.extra_cost_category);
-      if (orderToEdit.extra_cost_notes)
-        setExtraCostNotes(orderToEdit.extra_cost_notes);
-
-      if (Array.isArray(orderToEdit.items)) {
-        const loaded = mapOrderToFormItems(
-          orderToEdit.items,
-          productList,
-          isProductSerialTracked,
-          isProductWarrantyRequired,
-          productLabel,
-          fullCatalogName,
-          today
-        );
-        setItems(loaded);
-        if (loaded.length > 0) setExpandedId(loaded[0].localId);
-      }
-
-      if (orderToEdit.discount !== undefined && orderToEdit.discount !== null) {
-        setDiscount(money(orderToEdit.discount));
-      }
-
-      if (Array.isArray(orderToEdit.payments) && orderToEdit.payments.length > 0) {
-        setTenders(
-          orderToEdit.payments.map((p, i) => ({
-            id: p.id || `edit-pay-${i}`,
-            method: p.payment_method || 'Cash',
-            sub_option: p.sub_option || p.account_name || '',
-            amount: p.amount || 0,
-            receiver_name: p.receiver_name || '',
-            transaction_id: p.transaction_id || '',
-            payment_method_id: p.payment_method_id || null,
-            account_id: p.account_id || null,
-            isAccepted: true,
-          }))
-        );
-        setPaymentConfirmed(true);
-      } else {
-        setTenders([]);
-        setPaymentConfirmed(false);
-      }
+    if (!orderToEdit || !orderToEdit.id) {
+      hydratedOrderIdRef.current = null;
+      return;
     }
 
+    if (hydratedOrderIdRef.current === orderToEdit.id) {
+      return;
+    }
+    hydratedOrderIdRef.current = orderToEdit.id;
+
+    if (orderToEdit.supplier_id) setSupplierId(String(orderToEdit.supplier_id));
+    if (orderToEdit.transaction_reference)
+      setReference(orderToEdit.transaction_reference);
+
+    const extraVal = Number(orderToEdit.extra_cost || 0);
+    if (extraVal > 0) {
+      setHasExtraCost(true);
+      setExtraCost(String(extraVal));
+    } else {
+      setHasExtraCost(false);
+      setExtraCost('');
+    }
+
+    if (orderToEdit.extra_cost_category)
+      setExtraCostCategory(orderToEdit.extra_cost_category);
+    if (orderToEdit.extra_cost_notes)
+      setExtraCostNotes(orderToEdit.extra_cost_notes);
+
+    if (Array.isArray(orderToEdit.items)) {
+      const loaded = mapOrderToFormItems(
+        orderToEdit.items,
+        productList,
+        isProductSerialTracked,
+        isProductWarrantyRequired,
+        productLabel,
+        fullCatalogName,
+        today
+      );
+      setItems(loaded);
+      if (loaded.length > 0) setExpandedId(loaded[0].localId);
+    }
+
+    if (orderToEdit.discount !== undefined && orderToEdit.discount !== null) {
+      setDiscount(money(orderToEdit.discount));
+    }
+
+    if (Array.isArray(orderToEdit.payments) && orderToEdit.payments.length > 0) {
+      setTenders(
+        orderToEdit.payments.map((p, i) => ({
+          id: p.id || `edit-pay-${i}`,
+          method: p.payment_method || 'Cash',
+          sub_option: p.sub_option || p.account_name || '',
+          amount: p.amount || 0,
+          receiver_name: p.receiver_name || '',
+          transaction_id: p.transaction_id || '',
+          payment_method_id: p.payment_method_id || null,
+          account_id: p.account_id || null,
+          isAccepted: true,
+        }))
+      );
+      setPaymentConfirmed(true);
+    } else {
+      setTenders([]);
+      setPaymentConfirmed(false);
+    }
+  }, [orderToEdit, productList]);
+
+  // Handle newlyCreatedSupplier once per supplier ID
+  useEffect(() => {
     if (newlyCreatedSupplier && newlyCreatedSupplier.id) {
+      if (hydratedSupplierIdRef.current === newlyCreatedSupplier.id) return;
+      hydratedSupplierIdRef.current = newlyCreatedSupplier.id;
       if (setSuppliers) {
         setSuppliers((prev) => {
           const found = prev.some((s) => s.id === newlyCreatedSupplier.id);
@@ -93,7 +117,7 @@ export function usePurchaseHydration({
       }
       setSupplierId(String(newlyCreatedSupplier.id));
     }
-  }, [orderToEdit, newlyCreatedSupplier, productList]);
+  }, [newlyCreatedSupplier]);
 
   // 2. Load order details when clicking recent PO
   const handleLoadOrderInForm = async (po) => {
@@ -110,12 +134,22 @@ export function usePurchaseHydration({
       }
     }
 
+    hydratedOrderIdRef.current = fullPo.id;
+
     if (fullPo.supplier_id) {
       setSupplierId(String(fullPo.supplier_id));
     }
     setReference(fullPo.transaction_reference || fullPo.po_number || '');
-    setHasExtraCost(Number(fullPo.extra_cost || 0) > 0);
-    setExtraCost(fullPo.extra_cost ? String(fullPo.extra_cost) : '');
+
+    const extraVal = Number(fullPo.extra_cost || 0);
+    if (extraVal > 0) {
+      setHasExtraCost(true);
+      setExtraCost(String(extraVal));
+    } else {
+      setHasExtraCost(false);
+      setExtraCost('');
+    }
+
     if (fullPo.extra_cost_category) setExtraCostCategory(fullPo.extra_cost_category);
     if (fullPo.extra_cost_notes) setExtraCostNotes(fullPo.extra_cost_notes);
 

@@ -40,7 +40,7 @@ export {
 export function usePurchaseCart(props = {}) {
   const {
     isOpen = true,
-    initialProducts = [],
+    initialProducts = props.products || props.initialProducts || [],
     orderToEdit = null,
     newlyCreatedSupplier = null,
     onSaved,
