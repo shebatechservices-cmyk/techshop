@@ -94,7 +94,11 @@ export default function SaleProductTable({
                   <div className="font-bold text-slate-800 text-xs leading-snug flex items-center gap-1.5 flex-wrap">
                     <span>{it.full_name || it.name}</span>
                     <span className="text-[0.66rem] font-bold py-px px-1.5 rounded text-emerald-700 bg-emerald-50 border border-emerald-200 shrink-0">
-                      Stock: {it.stock || 0}
+                      Stock: {it.sub_unit_name && Number(it.conversion_rate || 1) > 1
+                        ? it.unit_type === 'sub_unit'
+                          ? `${it.stock || 0} ${it.sub_unit_name}`
+                          : `${(Number(it.stock || 0) / Number(it.conversion_rate)).toFixed(2)} ${it.base_unit_name || 'Roll'}`
+                        : `${it.stock || 0} ${it.unit_name || ''}`.trim()}
                     </span>
                     {it.is_bundle && (
                       <span className="text-[0.66rem] font-extrabold py-px px-1.5 rounded text-purple-700 bg-purple-100 border border-purple-200 shrink-0">

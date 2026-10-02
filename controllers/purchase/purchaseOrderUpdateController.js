@@ -119,19 +119,24 @@ const updateOrder = async (req, res) => {
                             error: `Cannot remove product ID ${oldPid} from purchase order because units from this PO have already been sold.`
                         });
                     }
+                    const pInfo = await client.query('SELECT conversion_rate, unit_name, sub_unit_name FROM products WHERE id = $1', [oldPid]);
+                    const convRate = Number(pInfo.rows[0]?.conversion_rate || 1);
+                    const isSubUnit = oldPoi.unit_type === 'sub_unit' || (pInfo.rows[0]?.sub_unit_name && (oldPoi.unit === pInfo.rows[0]?.sub_unit_name || oldPoi.unit_name === pInfo.rows[0]?.sub_unit_name));
+                    const decrementQty = isSubUnit ? Number(oldPoi.quantity || 0) : Number(oldPoi.quantity || 0) * (convRate > 1 ? convRate : 1);
+
                     await client.query(
                         `UPDATE products 
                          SET stock = GREATEST(0, COALESCE(stock, 0) - $1), 
                              purchase_count = GREATEST(0, COALESCE(purchase_count, 0) - 1),
                              updated_at = NOW() 
                          WHERE id = $2`,
-                        [Number(oldPoi.quantity || 0), oldPid]
+                        [decrementQty, oldPid]
                     );
                     await client.query(
                         `UPDATE stock_levels 
                          SET quantity = GREATEST(0, COALESCE(quantity, 0) - $1) 
                          WHERE product_id = $2 AND warehouse_id = 1`,
-                        [Number(oldPoi.quantity || 0), oldPid]
+                        [decrementQty, oldPid]
                     ).catch(() => null);
 
                     await client.query('DELETE FROM purchase_order_serials WHERE purchase_order_item_id = $1', [oldPoiId]);
@@ -223,17 +228,22 @@ const updateOrder = async (req, res) => {
                 }
 
                 if (qtyDiff !== 0) {
+                    const pInfo = await client.query('SELECT conversion_rate, unit_name, sub_unit_name FROM products WHERE id = $1', [pid]);
+                    const convRate = Number(pInfo.rows[0]?.conversion_rate || 1);
+                    const isSubUnit = item.unit_type === 'sub_unit' || (pInfo.rows[0]?.sub_unit_name && (item.unit === pInfo.rows[0]?.sub_unit_name || item.unit_name === pInfo.rows[0]?.sub_unit_name));
+                    const effectiveDiff = isSubUnit ? qtyDiff : qtyDiff * (convRate > 1 ? convRate : 1);
+
                     await client.query(
                         `UPDATE products 
                          SET stock = GREATEST(0, COALESCE(stock, 0) + $1), updated_at = NOW() 
                          WHERE id = $2`,
-                        [qtyDiff, pid]
+                        [effectiveDiff, pid]
                     );
                     await client.query(
                         `UPDATE stock_levels 
                          SET quantity = GREATEST(0, COALESCE(quantity, 0) + $1) 
                          WHERE product_id = $2 AND warehouse_id = 1`,
-                        [qtyDiff, pid]
+                        [effectiveDiff, pid]
                     ).catch(() => null);
                 }
 

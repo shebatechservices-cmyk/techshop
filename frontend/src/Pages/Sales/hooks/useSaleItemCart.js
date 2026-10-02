@@ -252,11 +252,14 @@ export default function useSaleItemCart({ products = [], setError = () => {} }) 
             unit_price: subPrice,
           };
         } else {
+          const convRate = Number(it.conversion_rate || 1);
+          const maxBaseStock = convRate > 1 ? Math.floor(Number(it.stock || 0) / convRate) : Number(it.stock || 0);
           return {
             ...it,
             unit_type: 'base_unit',
             unit_name: it.base_unit_name || 'Pcs',
             unit_price: Number(it.base_unit_price || it.unit_price),
+            quantity: it.quantity > maxBaseStock && maxBaseStock > 0 ? maxBaseStock : it.quantity,
           };
         }
       })
@@ -269,11 +272,18 @@ export default function useSaleItemCart({ products = [], setError = () => {} }) 
         if (it.localId !== localId) return it;
         let safePatch = { ...patch };
         if (safePatch.quantity !== undefined && safePatch.quantity !== '') {
-          const maxStock = Number(it.stock || 0);
+          const isSubUnit = it.unit_type === 'sub_unit';
+          const convRate = Number(it.conversion_rate || 1);
+          const maxStock = isSubUnit
+            ? Number(it.stock || 0)
+            : convRate > 1
+            ? Math.floor(Number(it.stock || 0) / convRate)
+            : Number(it.stock || 0);
+
           const numQty = Number(safePatch.quantity);
-          if (numQty > maxStock) {
+          if (numQty > maxStock && maxStock > 0) {
             safePatch.quantity = maxStock;
-            if (setError) setError(`Cannot exceed available stock (${maxStock}) for "${it.name}".`);
+            if (setError) setError(`Cannot exceed available stock (${maxStock} ${it.unit_name || ''}) for "${it.name}".`);
           } else if (numQty <= 0) {
             safePatch.quantity = 1;
           }

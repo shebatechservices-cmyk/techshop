@@ -418,6 +418,15 @@ export function useNewSale({
             serials: serialsList,
             is_serial_tracked: isTracked,
             is_warranty_required: isWarrantyReq,
+            unit_type: it.unit_type || 'base_unit',
+            unit_name: it.unit_name || prodInList?.unit_name || 'Pcs',
+            base_unit_name: prodInList?.unit_name || 'Pcs',
+            sub_unit_name: prodInList?.sub_unit_name || null,
+            conversion_rate: Number(prodInList?.conversion_rate || it.conversion_rate || 1),
+            sub_unit_selling_price: prodInList?.sub_unit_selling_price ? Number(prodInList.sub_unit_selling_price) : null,
+            sub_unit_barcode: prodInList?.sub_unit_barcode || null,
+            base_unit_price: prodInList ? Number(prodInList.selling_price || prodInList.sale_price || it.unit_price) : Number(it.unit_price),
+            base_unit_cost: prodInList ? Number(prodInList.purchase_price || it.cost_price) : Number(it.cost_price),
           };
         })
       );
