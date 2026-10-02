@@ -264,14 +264,23 @@ export const buildPurchaseApiPayload = ({
   computeFinalSale = defaultComputeFinalSale,
   money = defaultMoney,
 }) => {
+  const extraVal = hasExtraCost ? (typeof extra === 'number' ? extra : money(extra)) : 0;
+  const totalGoodsCost = items.reduce(
+    (sum, it) => sum + money(it.cost_price) * Math.max(1, parseInt(it.quantity, 10) || 1),
+    0
+  );
+  const overheadRatio = totalGoodsCost > 0 && extraVal > 0 ? extraVal / totalGoodsCost : 0;
+
   return {
     supplier_id: Number(supplierId || selectedSupplierObj?.id),
     transaction_reference: reference || '',
     discount: money(discount),
-    extra_cost: hasExtraCost ? (typeof extra === 'number' ? extra : money(extra)) : 0,
+    extra_cost: extraVal,
     extra_cost_category: hasExtraCost ? extraCostCategory : null,
     extra_cost_notes: hasExtraCost ? (extraCostNotes || '') : '',
     items: items.map((item) => {
+      const costPrice = money(item.cost_price);
+      const finalUnitCost = Number((costPrice * (1 + overheadRatio)).toFixed(2));
       const rawCustWarranty =
         item.customer_warranty_months !== undefined
           ? item.customer_warranty_months
@@ -288,12 +297,13 @@ export const buildPurchaseApiPayload = ({
         id: item.id || undefined,
         product_id: parseInt(item.product_id, 10) || 0,
         quantity: Math.max(1, parseInt(item.quantity, 10) || 1),
-        cost_price: money(item.cost_price),
+        cost_price: costPrice,
+        final_cost: finalUnitCost,
         sale_price: money(item.sale_price),
         margin_type: item.margin_type || 'percent',
         margin_value: money(item.margin_value),
         final_sale_price: computeFinalSale
-          ? computeFinalSale(item)
+          ? computeFinalSale(item, finalUnitCost)
           : Number(item.final_sale_price || item.sale_price || 0),
         expected_date:
           item.expected_date || new Date().toISOString().split('T')[0],

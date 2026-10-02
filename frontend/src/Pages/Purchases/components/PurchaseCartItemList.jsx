@@ -15,6 +15,8 @@ const PurchaseCartItemList = React.memo(function PurchaseCartItemList({
   handleAddBarcode,
   handleRemoveBarcode,
   handleRemoveItem,
+  totalGoodsCost = 0,
+  extraCostValue = 0,
 }) {
   return (
     <div className="flex flex-col gap-3">
@@ -38,6 +40,8 @@ const PurchaseCartItemList = React.memo(function PurchaseCartItemList({
           handleAddBarcode={handleAddBarcode}
           handleRemoveBarcode={handleRemoveBarcode}
           handleRemoveItem={handleRemoveItem}
+          totalGoodsCost={totalGoodsCost}
+          extraCostValue={extraCostValue}
         />
       ))}
     </div>

@@ -52,6 +52,7 @@ const ensurePurchaseColumns = async () => {
             ALTER TABLE purchase_order_items ADD COLUMN IF NOT EXISTS supplier_warranty_months INTEGER;
             ALTER TABLE purchase_order_items ADD COLUMN IF NOT EXISTS customer_warranty_months INTEGER;
             ALTER TABLE purchase_order_items ADD COLUMN IF NOT EXISTS supplier_warranty_expire_date DATE;
+            ALTER TABLE purchase_order_items ADD COLUMN IF NOT EXISTS final_cost NUMERIC(15, 2);
             CREATE TABLE IF NOT EXISTS purchase_order_serials (
                 id SERIAL PRIMARY KEY,
                 purchase_order_item_id INTEGER REFERENCES purchase_order_items(id) ON DELETE CASCADE,

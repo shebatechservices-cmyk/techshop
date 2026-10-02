@@ -180,13 +180,15 @@ const updateOrder = async (req, res) => {
                     }
                 }
 
+                const finalCost = money(item.final_cost || costPrice);
+
                 if (oldPoi) {
                     await client.query(
                         `UPDATE purchase_order_items 
                          SET cost_price = $1, sale_price = $2, final_sale_price = $3, quantity = $4, line_total = $5,
                              warranty_months = $6, expected_date = $7, supplier_warranty_months = $8, customer_warranty_months = $9,
-                             margin_type = $10, margin_value = $11, updated_at = NOW()
-                         WHERE id = $12`,
+                             margin_type = $10, margin_value = $11, final_cost = $12, updated_at = NOW()
+                         WHERE id = $13`,
                         [
                             costPrice,
                             salePrice,
@@ -199,14 +201,15 @@ const updateOrder = async (req, res) => {
                             item.customer_warranty_months || 0,
                             marginType,
                             marginVal,
+                            finalCost,
                             poiId
                         ]
                     );
                 } else {
                     const newPoi = await client.query(
                         `INSERT INTO purchase_order_items 
-                         (purchase_order_id, product_id, cost_price, sale_price, final_sale_price, quantity, line_total, warranty_months, expected_date, supplier_warranty_months, customer_warranty_months, margin_type, margin_value)
-                         VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13)
+                         (purchase_order_id, product_id, cost_price, sale_price, final_sale_price, quantity, line_total, warranty_months, expected_date, supplier_warranty_months, customer_warranty_months, margin_type, margin_value, final_cost)
+                         VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14)
                          RETURNING id`,
                         [
                             id,
@@ -221,7 +224,8 @@ const updateOrder = async (req, res) => {
                             item.supplier_warranty_months || 0,
                             item.customer_warranty_months || 0,
                             marginType,
-                            marginVal
+                            marginVal,
+                            finalCost
                         ]
                     );
                     poiId = newPoi.rows[0].id;

@@ -234,6 +234,8 @@ export default function PurchaseOrderModal(props) {
                 handleAddBarcode={handleAddBarcode}
                 handleRemoveBarcode={handleRemoveBarcode}
                 handleRemoveItem={handleRemoveItem}
+                totalGoodsCost={totals?.cost || 0}
+                extraCostValue={hasExtraCost ? (typeof extra === 'number' ? extra : Number(extraCost || 0)) : 0}
               />
 
               {/* Bottom Section: Summary & Payment Component */}

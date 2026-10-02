@@ -92,6 +92,7 @@ const createOrder = async (req, res) => {
                 product_id: parseInt(item.product_id, 10) || 0,
                 quantity: Math.max(1, parseInt(item.quantity, 10) || 1),
                 cost_price: costPrice,
+                final_cost: money(item.final_cost || costPrice),
                 sale_price: salePrice,
                 margin_type: item.margin_type || 'percentage',
                 margin_value: money(item.margin_value),
@@ -239,8 +240,8 @@ const createOrder = async (req, res) => {
                     purchase_order_id, product_id, quantity, cost_price, sale_price,
                     margin_type, margin_value, final_sale_price, line_total,
                     expected_date, warranty_months, sort_order, supplier_warranty_expire_date,
-                    supplier_warranty_months, customer_warranty_months
-                 ) VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15)
+                    supplier_warranty_months, customer_warranty_months, final_cost
+                 ) VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16)
                   RETURNING id`,
                 [
                     orderId,
@@ -258,6 +259,7 @@ const createOrder = async (req, res) => {
                     supplierWarrantyExpireDate,
                     supplierWarrantyMonths,
                     customerWarrantyMonths,
+                    item.final_cost || item.cost_price,
                 ]
             );
 

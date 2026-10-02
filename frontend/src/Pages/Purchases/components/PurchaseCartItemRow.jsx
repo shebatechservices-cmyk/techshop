@@ -19,6 +19,8 @@ const PurchaseCartItemRow = React.memo(function PurchaseCartItemRow({
   handleAddBarcode,
   handleRemoveBarcode,
   handleRemoveItem,
+  totalGoodsCost = 0,
+  extraCostValue = 0,
 }) {
   const [tempBarcode, setTempBarcode] = useState('');
   const [isCameraScannerOpen, setIsCameraScannerOpen] = useState(false);
@@ -27,7 +29,14 @@ const PurchaseCartItemRow = React.memo(function PurchaseCartItemRow({
   const cost = money(item.cost_price);
   const qty = Number(item.quantity || 1);
   const lineTotal = Number((cost * qty).toFixed(2));
-  const finalSale = computeFinalSale(item) || money(item.sale_price);
+  const safeTotalGoodsCost = money(totalGoodsCost);
+  const safeExtraCost = money(extraCostValue);
+  const overheadRatio = safeTotalGoodsCost > 0 && safeExtraCost > 0
+    ? safeExtraCost / safeTotalGoodsCost
+    : 0;
+  const finalUnitCost = Number((cost * (1 + overheadRatio)).toFixed(2));
+  const finalLineTotal = Number((finalUnitCost * qty).toFixed(2));
+  const finalSale = computeFinalSale(item, finalUnitCost) || money(item.sale_price);
   const displayName =
     (item?.full_name && item.full_name !== 'Product' ? item.full_name : '') ||
     (item?.product_name && item.product_name !== 'Product' ? item.product_name : '') ||
@@ -129,20 +138,31 @@ const PurchaseCartItemRow = React.memo(function PurchaseCartItemRow({
           <span className="bg-emerald-50 border border-emerald-200 text-emerald-800 py-0.5 px-2 rounded-full font-bold">
             Unit Cost: {taka(cost)}
           </span>
+          {overheadRatio > 0 && (
+            <span
+              className="bg-indigo-50 border border-indigo-200 text-indigo-800 py-0.5 px-2 rounded-full font-bold"
+              title={`Landed / Final Cost: ${taka(finalUnitCost)} per unit (includes +${(overheadRatio * 100).toFixed(2)}% recurring logistics/extra cost)`}
+            >
+              Final Cost: {taka(finalUnitCost)}
+              <span className="text-[10px] ml-1 text-indigo-600 font-black">
+                (+{(overheadRatio * 100).toFixed(2)}%)
+              </span>
+            </span>
+          )}
           <span className="bg-amber-50 border border-amber-200 text-amber-800 py-0.5 px-2 rounded-full font-bold">
             Sale Margin: {item.margin_value || 15}
             {item.margin_type === 'percent' ? '%' : '৳'}
           </span>
           <span className="bg-sky-50 border border-sky-200 text-sky-700 py-0.5 px-2 rounded-full font-bold">
-            Total Cost: {taka(lineTotal)}
+            Total Cost: {taka(overheadRatio > 0 ? finalLineTotal : lineTotal)}
           </span>
           <span className="bg-emerald-50 border border-emerald-200 text-emerald-700 py-0.5 px-2 rounded-full font-bold">
             Total Sale: {taka(Number((finalSale * qty).toFixed(2)))}
           </span>
         </div>
 
-        {/* Editable Form Controls - Stacked Grid: Quantity, Cost Price, Sales Margin (%), Final Sale (Unit) */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 mb-2.5 items-center">
+        {/* Editable Form Controls - Stacked Grid: Quantity, Cost Price, Final Cost (Auto), Sales Margin (%), Final Sale (Unit) */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-3 mb-2.5 items-center">
           {/* Quantity */}
           <div className="flex flex-col gap-1">
             <label className="text-xs font-bold text-slate-700 whitespace-nowrap">
@@ -191,6 +211,34 @@ const PurchaseCartItemRow = React.memo(function PurchaseCartItemRow({
               onChange={(e) => handleItemCostChange(item, e.target.value)}
               placeholder="0.00"
               className="w-full min-w-[90px] py-1 px-2 rounded-md border border-sky-400 text-xs box-border font-semibold focus:outline-none focus:border-sky-500"
+            />
+          </div>
+
+          {/* Final Cost (Auto-adjusted Landed Cost) */}
+          <div className="flex flex-col gap-1">
+            <div className="flex items-center justify-between">
+              <label className="text-xs font-bold text-indigo-700 whitespace-nowrap">
+                Final Cost ৳
+              </label>
+              {overheadRatio > 0 && (
+                <span
+                  className="text-[10px] font-black text-indigo-700 bg-indigo-100/90 px-1 py-0.5 rounded border border-indigo-200 leading-none"
+                  title={`+${(overheadRatio * 100).toFixed(2)}% logistics overhead added from total extra cost`}
+                >
+                  +{(overheadRatio * 100).toFixed(2)}%
+                </span>
+              )}
+            </div>
+            <input
+              type="text"
+              readOnly
+              value={finalUnitCost > 0 ? taka(finalUnitCost) : '৳ 0.00'}
+              className="w-full min-w-[90px] py-1 px-2 rounded-md border border-indigo-300 bg-indigo-50/70 text-indigo-950 text-xs font-black text-center box-border cursor-default focus:outline-none"
+              title={
+                overheadRatio > 0
+                  ? `Final Landed Cost: Base ${taka(cost)} + ${taka(finalUnitCost - cost)} transport/logistics per unit`
+                  : 'Final unit cost is automatically calculated from Cost Price + pro-rata logistics/extra cost.'
+              }
             />
           </div>
 
@@ -251,7 +299,7 @@ const PurchaseCartItemRow = React.memo(function PurchaseCartItemRow({
               readOnly
               value={finalSale > 0 ? taka(finalSale) : '৳ 0.00'}
               className="w-full min-w-[90px] py-1 px-2 rounded-md border border-emerald-300 bg-emerald-50 text-emerald-700 text-xs font-extrabold text-center box-border cursor-default"
-              title="Final sale price is strictly calculated from Cost Price + Margin and cannot be manually modified."
+              title="Final sale price is calculated from Landed Cost + Margin and cannot be manually modified."
             />
           </div>
         </div>
@@ -478,12 +526,17 @@ const PurchaseCartItemRow = React.memo(function PurchaseCartItemRow({
             <span className="bg-emerald-50 text-emerald-800 border border-emerald-200 py-0.5 px-1.5 rounded font-bold">
               Unit Cost: {taka(cost)}
             </span>
+            {overheadRatio > 0 && (
+              <span className="bg-indigo-50 text-indigo-800 border border-indigo-200 py-0.5 px-1.5 rounded font-bold" title="Landed / Final Cost including logistics">
+                Final Cost: {taka(finalUnitCost)}
+              </span>
+            )}
             <span className="bg-amber-50 text-amber-800 border border-amber-200 py-0.5 px-1.5 rounded font-bold">
               Sale Margin: {item.margin_value || 15}
               {item.margin_type === 'percent' ? '%' : '৳'}
             </span>
             <span className="bg-sky-50 text-sky-700 border border-sky-200 py-0.5 px-1.5 rounded font-bold">
-              Total Cost: {taka(lineTotal)}
+              Total Cost: {taka(overheadRatio > 0 ? finalLineTotal : lineTotal)}
             </span>
             <span className="bg-emerald-50 text-emerald-700 border border-emerald-200 py-0.5 px-1.5 rounded font-bold">
               Total Sale: {taka(Number((finalSale * qty).toFixed(2)))}

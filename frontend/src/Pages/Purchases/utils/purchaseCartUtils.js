@@ -45,10 +45,22 @@ export const EXTRA_COST_CATEGORIES = [
   'Other Overhead',
 ];
 
-export function computeFinalSale(item) {
+export function calculateItemFinalCost(costPrice, totalGoodsCost = 0, extraCostValue = 0) {
+  const cost = money(costPrice);
+  if (cost <= 0) return 0;
+  const extra = money(extraCostValue);
+  const totalCost = money(totalGoodsCost);
+  if (extra <= 0 || totalCost <= 0) return cost;
+  const overheadRatio = extra / totalCost;
+  return Number((cost * (1 + overheadRatio)).toFixed(2));
+}
+
+export function computeFinalSale(item, finalCost = null) {
   if (item.final_sale_manual && money(item.final_sale_price) > 0)
     return money(item.final_sale_price);
-  const cost = money(item.cost_price);
+  const cost = finalCost !== null && finalCost !== undefined && money(finalCost) > 0
+    ? money(finalCost)
+    : money(item.cost_price);
   const margin = money(item.margin_value);
   if (cost <= 0) return money(item.sale_price || item.final_sale_price || 0);
   if (item.margin_type === 'amount') return Number((cost + margin).toFixed(2));
