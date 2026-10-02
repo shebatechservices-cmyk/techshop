@@ -13,6 +13,12 @@ export default function Products({ initialTab = "catalog", initialSearch = "" } 
     setActiveTab,
     productFilterQuery,
     setProductFilterQuery,
+    categoryFilter,
+    setCategoryFilter,
+    statusFilter,
+    setStatusFilter,
+    categoriesList,
+    resetFilters,
     isAddProductOpen,
     setIsAddProductOpen,
     editingProductId,
@@ -141,6 +147,12 @@ export default function Products({ initialTab = "catalog", initialSearch = "" } 
           selectedProductIds={selectedProductIds}
           productFilterQuery={productFilterQuery}
           setProductFilterQuery={setProductFilterQuery}
+          categoryFilter={categoryFilter}
+          setCategoryFilter={setCategoryFilter}
+          statusFilter={statusFilter}
+          setStatusFilter={setStatusFilter}
+          categoriesList={categoriesList}
+          resetFilters={resetFilters}
           currentPage={currentPage}
           setCurrentPage={setCurrentPage}
           totalProductPages={totalProductPages}

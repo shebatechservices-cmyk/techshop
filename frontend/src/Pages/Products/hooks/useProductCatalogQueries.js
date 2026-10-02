@@ -1,4 +1,4 @@
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
 import API_BASE from "../../../services/api";
 
 const API = `${API_BASE}/master`;
@@ -11,9 +11,16 @@ export default function useProductCatalogQueries({
 } = {}) {
   const [products, setProducts] = useState([]);
   const [productFilterQuery, setProductFilterQuery] = useState(initialSearch || "");
+  const [categoryFilter, setCategoryFilter] = useState("ALL");
+  const [statusFilter, setStatusFilter] = useState("ALL");
   const [selectedProductIds, setSelectedProductIds] = useState([]);
   const [currentPage, setCurrentPage] = useState(1);
   const [openProductAction, setOpenProductAction] = useState(null);
+
+  // Reset to page 1 whenever search query or filters change
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [productFilterQuery, categoryFilter, statusFilter]);
 
   const fetchJson = async (url) => {
     const res = await fetch(url);
@@ -36,24 +43,63 @@ export default function useProductCatalogQueries({
       .filter((value, index, values) => values.indexOf(value) === index)
       .join(" ");
 
+  const categoriesList = useMemo(() => {
+    const set = new Set();
+    products.forEach((p) => {
+      if (p.category_name && p.category_name.trim()) {
+        set.add(p.category_name.trim());
+      }
+    });
+    return Array.from(set).sort((a, b) => a.localeCompare(b));
+  }, [products]);
+
+  const resetFilters = () => {
+    setProductFilterQuery("");
+    setCategoryFilter("ALL");
+    setStatusFilter("ALL");
+    setCurrentPage(1);
+  };
+
   const filteredProducts = useMemo(() => {
     return products.filter((p) => {
+      // 1. Status Filter
+      if (statusFilter === "active" && p.status !== "active") return false;
+      if (statusFilter === "inactive" && p.status === "active") return false;
+      if (statusFilter === "low_stock" && !(Number(p.stock) <= Number(p.min_stock))) return false;
+
+      // 2. Category Filter
+      if (categoryFilter && categoryFilter !== "ALL" && (p.category_name || "") !== categoryFilter) {
+        return false;
+      }
+
+      // 3. Search Query Filter
       if (!productFilterQuery.trim()) return true;
       const q = productFilterQuery.trim().toLowerCase();
       const label = productLabel(p).toLowerCase();
+      const name = (p.name || p.product_name || "").toLowerCase();
+      const brand = (p.brand_name || p.brand || "").toLowerCase();
+      const model = (p.model_name || p.model || "").toLowerCase();
+      const series = (p.series_name || p.series || "").toLowerCase();
       const sku = (p.sku || "").toLowerCase();
       const barcode = (p.barcode || "").toLowerCase();
       const cat = (p.category_name || "").toLowerCase();
       const sub = (p.sub_category_name || "").toLowerCase();
+      const desc = (p.description || "").toLowerCase();
+
       return (
         label.includes(q) ||
+        name.includes(q) ||
+        brand.includes(q) ||
+        model.includes(q) ||
+        series.includes(q) ||
         sku.includes(q) ||
         barcode.includes(q) ||
         cat.includes(q) ||
-        sub.includes(q)
+        sub.includes(q) ||
+        desc.includes(q)
       );
     });
-  }, [products, productFilterQuery]);
+  }, [products, productFilterQuery, statusFilter, categoryFilter]);
 
   const totalProductPages = Math.max(1, Math.ceil(filteredProducts.length / productsPerPage));
   const visibleProducts = filteredProducts.slice(
@@ -179,6 +225,12 @@ export default function useProductCatalogQueries({
     setProducts,
     productFilterQuery,
     setProductFilterQuery,
+    categoryFilter,
+    setCategoryFilter,
+    statusFilter,
+    setStatusFilter,
+    categoriesList,
+    resetFilters,
     selectedProductIds,
     setSelectedProductIds,
     currentPage,
