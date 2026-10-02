@@ -102,7 +102,9 @@ export default function PurchaseOrderModal(props) {
     accountLabelToBalance,
     matches,
     totals,
+    itemsSubtotal,
     extra,
+    totalLandedCost,
     netAmount,
     payableAmount,
     totalCost,
@@ -251,6 +253,8 @@ export default function PurchaseOrderModal(props) {
                 reference={reference}
                 setReference={setReference}
                 extra={extra}
+                itemsSubtotal={itemsSubtotal}
+                totalLandedCost={totalLandedCost}
                 netAmount={netAmount}
                 discount={discount}
                 setDiscount={setDiscount}

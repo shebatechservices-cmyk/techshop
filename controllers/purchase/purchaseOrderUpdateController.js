@@ -45,13 +45,16 @@ const updateOrder = async (req, res) => {
 
         const {
             transaction_reference,
+            discount,
             extra_cost,
             extra_cost_category,
             extra_cost_notes,
             items = []
         } = req.body;
 
-        let totalCost = money(extra_cost !== undefined ? extra_cost : po.extra_cost);
+        const effectiveDiscount = money(discount !== undefined ? discount : po.discount);
+        let itemsCost = 0;
+        let totalCost = 0;
         let totalSale = 0;
         let unitCount = 0;
 
@@ -161,7 +164,7 @@ const updateOrder = async (req, res) => {
                     }
                 }
 
-                totalCost += costPrice * quantity;
+                itemsCost += costPrice * quantity;
                 totalSale += finalSale * quantity;
                 unitCount += quantity;
 
@@ -251,6 +254,7 @@ const updateOrder = async (req, res) => {
                     ).catch(() => null);
                 }
 
+                const itemFinalCost = Number(finalCost || costPrice) || 0;
                 await client.query(
                     `UPDATE products 
                      SET purchase_price = $1, 
@@ -258,7 +262,7 @@ const updateOrder = async (req, res) => {
                          mrp = CASE WHEN $2::numeric > 0 THEN $2::numeric ELSE mrp END,
                          updated_at = NOW() 
                      WHERE id = $3`,
-                    [costPrice, finalSale, pid]
+                    [itemFinalCost, finalSale, pid]
                 );
 
                 if (Array.isArray(item.serials)) {
@@ -311,6 +315,7 @@ const updateOrder = async (req, res) => {
                     }
                 }
             }
+            totalCost = Math.max(0, itemsCost - effectiveDiscount);
         } else {
             totalCost = money(po.total_cost);
             totalSale = money(po.total_sale);
@@ -365,8 +370,8 @@ const updateOrder = async (req, res) => {
         await client.query(
             `UPDATE purchase_orders 
              SET supplier_id = $1, total_cost = $2, total_sale = $3, extra_cost = $4, extra_cost_category = $5, extra_cost_notes = $6,
-                 total_paid = $7, total_due = $8, unit_count = $9, transaction_reference = $10, status = $11, updated_at = NOW()
-             WHERE id = $12`,
+                 discount = $7, total_paid = $8, total_due = $9, unit_count = $10, transaction_reference = $11, status = $12, updated_at = NOW()
+             WHERE id = $13`,
             [
                 targetSupplierId,
                 totalCost,
@@ -374,6 +379,7 @@ const updateOrder = async (req, res) => {
                 money(extra_cost !== undefined ? extra_cost : po.extra_cost),
                 extra_cost_category !== undefined ? extra_cost_category : po.extra_cost_category,
                 extra_cost_notes !== undefined ? extra_cost_notes : po.extra_cost_notes,
+                effectiveDiscount,
                 totalPaid,
                 newDue,
                 unitCount,

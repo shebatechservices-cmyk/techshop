@@ -166,6 +166,8 @@ export function usePurchaseCart(props = {}) {
     accountLabelToId,
     accountLabelToBalance,
     totals,
+    itemsSubtotal,
+    totalLandedCost,
     netAmount,
     payableAmount,
     totalCost,
@@ -349,7 +351,9 @@ export function usePurchaseCart(props = {}) {
     // Filter matches & totals
     matches,
     totals,
+    itemsSubtotal,
     extra,
+    totalLandedCost,
     netAmount,
     payableAmount,
     totalCost,

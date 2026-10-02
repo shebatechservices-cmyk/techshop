@@ -45,6 +45,7 @@ const ensurePurchaseColumns = async () => {
             ALTER TABLE suppliers ADD COLUMN IF NOT EXISTS wallet_balance NUMERIC(14,2) DEFAULT 0;
             ALTER TABLE purchase_orders ADD COLUMN IF NOT EXISTS extra_cost_category VARCHAR(100);
             ALTER TABLE purchase_orders ADD COLUMN IF NOT EXISTS extra_cost_notes TEXT;
+            ALTER TABLE purchase_orders ADD COLUMN IF NOT EXISTS discount NUMERIC(14,2) DEFAULT 0;
             ALTER TABLE purchase_order_payments ADD COLUMN IF NOT EXISTS receiver_name VARCHAR(150);
             ALTER TABLE purchase_order_payments ADD COLUMN IF NOT EXISTS transaction_id VARCHAR(100);
             ALTER TABLE purchase_order_payments ADD COLUMN IF NOT EXISTS sub_option VARCHAR(150);

@@ -99,11 +99,18 @@ export function usePurchasePricingAndPayment({
   }, [items]);
 
   const extra = hasExtraCost ? money(extraCost) : 0;
-  const netAmount = Number((totals.cost + extra).toFixed(2));
-  const payableAmount = Math.max(0, Number((netAmount - money(discount)).toFixed(2)));
-  const totalCost = payableAmount;
+  const itemsSubtotal = Number(totals.cost.toFixed(2));
+  const discountVal = money(discount);
+  // Order Supplier Payable is strictly the goods cost minus supplier discount:
+  const orderSupplierPayable = Math.max(0, Number((itemsSubtotal - discountVal).toFixed(2)));
+  // Total Landed Cost reflects inventory valuation including extra logistics expense:
+  const totalLandedCost = Number((orderSupplierPayable + extra).toFixed(2));
+
+  const payableAmount = orderSupplierPayable;
+  const totalCost = orderSupplierPayable;
+  const netAmount = itemsSubtotal;
   const totalSale = totals.sale > 0 ? totals.sale : 0;
-  const estimatedProfit = Math.max(0, totalSale - totalCost);
+  const estimatedProfit = Math.max(0, totalSale - totalLandedCost);
 
   // Supplier balances
   const selectedSupplierObj = useMemo(() => {
@@ -253,7 +260,9 @@ export function usePurchasePricingAndPayment({
     accountLabelToId,
     accountLabelToBalance,
     totals,
+    itemsSubtotal,
     extra,
+    totalLandedCost,
     netAmount,
     payableAmount,
     totalCost,

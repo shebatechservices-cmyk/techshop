@@ -11,6 +11,7 @@ const createOrder = async (req, res) => {
     const {
         supplier_id,
         transaction_reference,
+        discount,
         extra_cost,
         extra_cost_category,
         extra_cost_notes,
@@ -57,7 +58,8 @@ const createOrder = async (req, res) => {
         }
 
         const extraCost = money(extra_cost);
-        let totalCost = extraCost;
+        const discountVal = money(discount || req.body.discount);
+        let itemsCost = 0;
         let totalSale = 0;
         let unitCount = 0;
 
@@ -75,7 +77,7 @@ const createOrder = async (req, res) => {
             if (!item.expected_date) {
                 throw Object.assign(new Error('Please provide expected date for each item'), { status: 400 });
             }
-            totalCost += costPrice * quantity;
+            itemsCost += costPrice * quantity;
             totalSale += finalSale * quantity;
             unitCount += quantity;
 
@@ -145,23 +147,26 @@ const createOrder = async (req, res) => {
             }
         }
 
+        const supplierOrderCost = Math.max(0, itemsCost - discountVal);
+        const totalCost = supplierOrderCost;
+
         const tenders = Array.isArray(payments) ? payments : [];
         let totalPaid = 0;
         for (const tender of tenders) {
             totalPaid += money(tender.amount || 0);
         }
 
-        const totalDue = tenders.length === 0 ? totalCost : Math.max(0, totalCost - totalPaid);
-        const paymentStatus = totalDue === 0 ? 'PAID' : 'approved';
+        const totalDue = tenders.length === 0 ? supplierOrderCost : Math.max(0, supplierOrderCost - totalPaid);
+        const paymentStatus = totalDue === 0 ? 'PAID' : (totalPaid > 0 ? 'PARTIAL' : 'approved');
 
         const poNumber = makePoNumber();
 
         const order = await client.query(
             `INSERT INTO purchase_orders (
                 po_number, supplier_id, transaction_reference,
-                total_cost, total_sale, extra_cost, extra_cost_category, extra_cost_notes, total_paid, total_due,
+                total_cost, total_sale, discount, extra_cost, extra_cost_category, extra_cost_notes, total_paid, total_due,
                 item_count, unit_count, status
-             ) VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13)
+             ) VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14)
               RETURNING *`,
             [
                 poNumber,
@@ -169,6 +174,7 @@ const createOrder = async (req, res) => {
                 transaction_reference || null,
                 totalCost,
                 totalSale,
+                discountVal,
                 extraCost,
                 extra_cost_category || null,
                 extra_cost_notes || null,

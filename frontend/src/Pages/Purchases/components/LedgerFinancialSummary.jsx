@@ -60,25 +60,37 @@ export default function LedgerFinancialSummary({
           <span>Items Subtotal:</span>
           <span>{taka(itemsSubtotal)}</span>
         </div>
-        {extraCost > 0 && (
-          <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.84rem', color: '#475569' }}>
-            <span>Extra Cost ({order?.extra_cost_category || 'Logistics'}):</span>
-            <span>{taka(extraCost)}</span>
+        {Number(order?.discount || 0) > 0 && (
+          <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.84rem', color: '#dc2626' }}>
+            <span>Less Discount:</span>
+            <span>- {taka(order.discount)}</span>
           </div>
         )}
-        <div style={{ height: '1px', background: '#e2e8f0', margin: '2px 0' }} />
-        <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.94rem', fontWeight: 800, color: '#0f172a' }}>
-          <span>Grand Total Cost:</span>
+        <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.88rem', fontWeight: 700, color: '#1e293b' }}>
+          <span>Supplier Bill:</span>
           <span>{taka(totalCost)}</span>
         </div>
         <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.84rem', color: '#10b981', fontWeight: 600 }}>
-          <span>Total Paid:</span>
+          <span>Paid to Supplier:</span>
           <span>{taka(totalPaid)}</span>
         </div>
         <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.9rem', fontWeight: 700, color: remainingDue > 0 ? '#dc2626' : '#10b981' }}>
-          <span>Remaining Due:</span>
-          <span>{remainingDue > 0 ? taka(remainingDue) : '✓ No Dues'}</span>
+          <span>Supplier Due:</span>
+          <span>{remainingDue > 0 ? taka(remainingDue) : '✓ Paid in Full'}</span>
         </div>
+
+        {extraCost > 0 && (
+          <div style={{ marginTop: '4px', paddingTop: '8px', borderTop: '1px dashed #cbd5e1', display: 'flex', flexDirection: 'column', gap: '6px' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.8rem', color: '#d97706', fontWeight: 600 }}>
+              <span>🚚 Logistics ({order?.extra_cost_category || 'Expense'}):</span>
+              <span>+ {taka(extraCost)} (In Expenses)</span>
+            </div>
+            <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.88rem', fontWeight: 800, color: '#334155' }}>
+              <span>Total Landed Cost:</span>
+              <span>{taka(Number(totalCost) + Number(extraCost))}</span>
+            </div>
+          </div>
+        )}
       </div>
     </div>
   );

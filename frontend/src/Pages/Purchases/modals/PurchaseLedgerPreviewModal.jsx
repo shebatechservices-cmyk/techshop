@@ -107,14 +107,17 @@ export default function PurchaseLedgerPreviewModal({
     (sum, it) => sum + Number(it.cost_price || 0) * Number(it.quantity || 0),
     0
   );
+  const discount = Number(order?.discount || 0);
   const extraCost = Number(order?.extra_cost || 0);
-  const totalCost = Number(order?.total_cost || itemsSubtotal + extraCost);
+  const totalCost = Number(order?.total_cost !== undefined ? order.total_cost : Math.max(0, itemsSubtotal - discount));
   const totalPaid = Number(
     order?.total_paid !== undefined
       ? order.total_paid
       : payments.reduce((sum, p) => sum + Number(p.amount || 0), 0)
   );
-  const remainingDue = Math.max(0, totalCost - totalPaid);
+  const remainingDue = Number(
+    order?.total_due !== undefined ? order.total_due : Math.max(0, totalCost - totalPaid)
+  );
 
   const handleShareWhatsApp = () => {
     let text = `*PURCHASE INVOICE - SHEBA TECHNOLOGY*\n`;
@@ -139,12 +142,17 @@ export default function PurchaseLedgerPreviewModal({
     });
     text += `-------------------------------------\n`;
     text += `*Items Subtotal:* ${taka(itemsSubtotal)}\n`;
-    if (extraCost > 0) {
-      text += `*Extra Cost (${order?.extra_cost_category || 'Logistics'}):* ${taka(extraCost)}\n`;
+    if (discount > 0) {
+      text += `*Less Discount:* -${taka(discount)}\n`;
     }
-    text += `*Grand Total Cost:* ${taka(totalCost)}\n`;
+    text += `*Supplier Bill:* ${taka(totalCost)}\n`;
     text += `*Paid Amount:* ${taka(totalPaid)}\n`;
     text += `*Remaining Due:* ${remainingDue > 0 ? taka(remainingDue) : 'No Dues (Paid in Full)'}\n`;
+    if (extraCost > 0) {
+      text += `-------------------------------------\n`;
+      text += `*Logistics Expense (${order?.extra_cost_category || 'Transport'}):* ${taka(extraCost)}\n`;
+      text += `*Total Landed Cost:* ${taka(totalCost + extraCost)}\n`;
+    }
     text += `━━━━━━━━━━━━━━━━━━━━━\n`;
 
     let cleanPhone = supplierPhone.replace(/[^0-9]/g, '');

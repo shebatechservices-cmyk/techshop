@@ -14,6 +14,8 @@ export default function PurchaseSummaryAndPayment({
   reference,
   setReference,
   extra = 0,
+  itemsSubtotal = 0,
+  totalLandedCost = 0,
   netAmount = 0,
   discount = 0,
   setDiscount,
@@ -134,27 +136,25 @@ export default function PurchaseSummaryAndPayment({
             Purchase Order Calculation
           </div>
 
-          {/* Net Amount (Subtotal) */}
+          {/* Goods Subtotal */}
           <div className="flex justify-between items-center py-2 px-3 bg-white border border-slate-200 rounded-md">
             <div>
-              <label className="block text-xs font-bold text-slate-500">
-                Net Amount (Subtotal)
+              <label className="block text-xs font-bold text-slate-600">
+                Goods Subtotal (পণ্যের মূল্য)
               </label>
-              {extra > 0 && (
-                <div className="text-[0.66rem] text-orange-700">
-                  Includes logistics: +{taka(extra)}
-                </div>
-              )}
+              <div className="text-[0.66rem] text-slate-400">
+                Total item purchase cost from supplier
+              </div>
             </div>
             <span className="font-extrabold text-sm text-slate-800">
-              {taka(netAmount)}
+              {taka(itemsSubtotal || totals.cost || netAmount)}
             </span>
           </div>
 
           {/* Less Discount */}
           <div className="flex justify-between items-center py-1.5 px-3 bg-white border border-slate-200 rounded-md gap-2">
             <label className="text-xs font-bold text-rose-600 whitespace-nowrap">
-              Less Discount
+              Less Discount (ডিসকাউন্ট)
             </label>
             <div className="flex items-center gap-1 max-w-[140px]">
               <span className="text-sm text-rose-600 font-bold">-৳</span>
@@ -173,15 +173,51 @@ export default function PurchaseSummaryAndPayment({
             </div>
           </div>
 
-          {/* Payable Amount (Net Amount - Discount) */}
+          {/* Supplier Payable (Goods Subtotal - Discount) */}
           <div className="flex justify-between items-center py-2 px-3 bg-blue-50 border border-blue-200 rounded-md">
-            <label className="text-xs font-extrabold text-blue-800 uppercase">
-              Payable Amount
-            </label>
+            <div>
+              <label className="text-xs font-extrabold text-blue-900 uppercase">
+                Supplier Payable (প্রদেয় বিল)
+              </label>
+              <div className="text-[0.66rem] text-blue-700">
+                Amount owed to supplier for goods
+              </div>
+            </div>
             <span className="font-black text-base text-blue-700">
               {taka(payableAmount)}
             </span>
           </div>
+
+          {/* If Extra Cost exists: Display Logistics Expense and Total Landed Cost */}
+          {extra > 0 && (
+            <div className="mt-1 pt-2 border-t border-dashed border-slate-300 flex flex-col gap-1.5">
+              <div className="flex justify-between items-center py-1.5 px-2.5 bg-orange-50 border border-orange-200 rounded-md text-xs">
+                <div className="flex items-center gap-1.5 text-orange-900 font-bold">
+                  <span>🚚 Logistics & Transport (Expense)</span>
+                  <span className="text-[0.65rem] bg-orange-200 text-orange-800 px-1.5 py-0.5 rounded font-semibold">
+                    Logged in Expenses
+                  </span>
+                </div>
+                <span className="font-bold text-orange-800">
+                  +{taka(extra)}
+                </span>
+              </div>
+
+              <div className="flex justify-between items-center py-1.5 px-2.5 bg-slate-100 border border-slate-300 rounded-md text-xs">
+                <div>
+                  <div className="font-extrabold text-slate-700 uppercase tracking-wide">
+                    Total Landed Cost (ইনভেন্টরি খরচ)
+                  </div>
+                  <div className="text-[0.66rem] text-slate-500">
+                    Pro-rata distributed to Product Final Cost
+                  </div>
+                </div>
+                <span className="font-black text-sm text-slate-800">
+                  {taka(totalLandedCost || (payableAmount + extra))}
+                </span>
+              </div>
+            </div>
+          )}
         </div>
 
         {/* Right Column */}
