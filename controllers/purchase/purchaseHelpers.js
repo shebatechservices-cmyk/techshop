@@ -349,6 +349,11 @@ const reversePurchasePayment = async (client, opts) => {
     }
 };
 
+const {
+    adjustSupplierPayableBalance,
+    syncPurchaseExtraCostExpense,
+} = require('./purchaseExpenseSync');
+
 module.exports = {
     money,
     formatProductFullName,
@@ -358,4 +363,6 @@ module.exports = {
     resolvePaymentAccount,
     applyPurchasePayment,
     reversePurchasePayment,
+    adjustSupplierPayableBalance,
+    syncPurchaseExtraCostExpense,
 };

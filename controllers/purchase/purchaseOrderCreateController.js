@@ -4,6 +4,7 @@ const {
     makePoNumber,
     ensurePurchaseColumns,
     applyPurchasePayment,
+    syncPurchaseExtraCostExpense,
 } = require('./purchaseHelpers');
 
 const createOrder = async (req, res) => {
@@ -188,35 +189,13 @@ const createOrder = async (req, res) => {
         const orderId = order.rows[0].id;
 
         if (extraCost > 0) {
-            try {
-                await client.query('CREATE UNIQUE INDEX IF NOT EXISTS idx_expenses_voucher_no ON expenses (voucher_no)');
-                const catName = extra_cost_category || 'Transportation & Logistics';
-                const payeeName = supplier.rows[0]?.name || 'Supplier';
-                const expNote = extra_cost_notes
-                    ? `PO ${poNumber} - ${extra_cost_notes}`
-                    : `Purchase Order ${poNumber} Extra Cost (${catName})`;
-
-                let categoryId = null;
-                const catRes = await client.query(
-                    'SELECT id FROM expense_categories WHERE LOWER(name) LIKE $1 OR LOWER(name) LIKE $2 LIMIT 1',
-                    [`%${catName.toLowerCase().slice(0, 10)}%`, '%transport%']
-                );
-                if (catRes.rows.length > 0) {
-                    categoryId = catRes.rows[0].id;
-                }
-
-                await client.query(
-                    `INSERT INTO expenses (voucher_no, category_id, category_name, expense_date, amount, payee_name, reference_no, note)
-                     VALUES ($1, $2, $3, CURRENT_DATE, $4, $5, $6, $7)
-                     ON CONFLICT (voucher_no) DO UPDATE 
-                     SET category_id = EXCLUDED.category_id, category_name = EXCLUDED.category_name, 
-                         amount = EXCLUDED.amount, payee_name = EXCLUDED.payee_name, note = EXCLUDED.note`,
-                    [`EXP-${poNumber}`, categoryId, catName, extraCost, payeeName, poNumber, expNote]
-                );
-            } catch (expErr) {
-                console.warn('Expense recording for PO extra cost notice:', expErr.message);
-                throw expErr;
-            }
+            await syncPurchaseExtraCostExpense(client, {
+                poNumber,
+                extraCost,
+                extraCostCategory,
+                extraCostNotes,
+                payeeName: supplier.rows[0]?.name || 'Supplier',
+            });
         }
 
         for (const item of normalizedItems) {
