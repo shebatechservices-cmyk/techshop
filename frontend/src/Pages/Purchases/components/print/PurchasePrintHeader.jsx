@@ -17,43 +17,65 @@ export default function PurchasePrintHeader({
       paddingBottom: '10px',
       marginBottom: '10px',
     }}>
-      <div>
-        <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-          <div style={{
-            width: '36px',
-            height: '36px',
-            borderRadius: '8px',
-            background: 'linear-gradient(135deg, #0284c7, #0f172a)',
-            color: '#fff',
-            display: 'grid',
-            placeItems: 'center',
-            fontWeight: 900,
-            fontSize: '1.1rem',
-          }}>
-            ST
+      <div style={{ flex: 1, paddingRight: '16px' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+          {showLogo && company.logo ? (
+            <img
+              src={company.logo}
+              alt={company.name || 'Company Logo'}
+              style={{
+                maxHeight: '52px',
+                maxWidth: '140px',
+                objectFit: 'contain',
+                display: 'block',
+              }}
+              onError={(e) => {
+                e.currentTarget.style.display = 'none';
+                const fallback = e.currentTarget.parentElement?.querySelector('.brand-avatar-fallback');
+                if (fallback) fallback.style.display = 'grid';
+              }}
+            />
+          ) : null}
+
+          <div
+            className="brand-avatar-fallback"
+            style={{
+              width: '42px',
+              height: '42px',
+              borderRadius: '8px',
+              background: 'linear-gradient(135deg, #0284c7, #0f172a)',
+              color: '#fff',
+              display: showLogo && company.logo ? 'none' : 'grid',
+              placeItems: 'center',
+              fontWeight: 900,
+              fontSize: '1.15rem',
+              flexShrink: 0,
+            }}
+          >
+            {company.name ? company.name.substring(0, 2).toUpperCase() : 'ST'}
           </div>
+
           <div>
-            <h1 style={{ margin: 0, fontSize: '1.35rem', fontWeight: 900, color: '#0f172a', letterSpacing: '-0.02em', textTransform: 'uppercase' }}>
+            <h1 style={{ margin: 0, fontSize: '1.38rem', fontWeight: 900, color: '#0f172a', letterSpacing: '-0.02em', textTransform: 'uppercase', lineHeight: 1.15 }}>
               {company.name}
             </h1>
             {company.tagline && (
-              <p style={{ margin: '1px 0 0', fontSize: '0.74rem', color: '#64748b', fontWeight: 600 }}>
+              <p style={{ margin: '2px 0 0', fontSize: '0.74rem', color: '#64748b', fontWeight: 600 }}>
                 {company.tagline}
               </p>
             )}
           </div>
         </div>
-        {showLogo && company.logo && (
-          <img
-            src={company.logo}
-            alt={company.name}
-            style={{ width: '48px', height: '48px', objectFit: 'contain', borderRadius: '6px', marginTop: '6px' }}
-            onError={(e) => { e.currentTarget.style.display = 'none'; }}
-          />
-        )}
-        <div style={{ marginTop: '5px', fontSize: '0.75rem', color: '#475569', lineHeight: 1.35 }}>
-          <div>{company.address}</div>
-          <div>Phone: {company.phone} · Email: {company.email}</div>
+
+        <div style={{ marginTop: '6px', fontSize: '0.75rem', color: '#475569', lineHeight: 1.4 }}>
+          {company.address && <div>{company.address}</div>}
+          <div>
+            {company.phone && `Phone: ${company.phone}`}
+            {company.phone && company.email && ' · '}
+            {company.email && `Email: ${company.email}`}
+            {(company.phone || company.email) && company.web && ' · '}
+            {company.web && `Web: ${company.web}`}
+          </div>
         </div>
       </div>
 

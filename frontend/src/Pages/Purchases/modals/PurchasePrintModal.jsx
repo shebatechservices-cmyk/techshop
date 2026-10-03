@@ -53,8 +53,8 @@ export default function PurchasePrintModal({
     address: shop.address || propCompany.address,
     phone: [shop.phone, shop.alt_phone].filter(Boolean).join(', ') || propCompany.phone,
     email: shop.email || propCompany.email,
-    web: shop.website || propCompany.web,
-    logo: shop.logo_url || '',
+    web: shop.website || shop.web || propCompany.web,
+    logo: shop.logo_url || shop.logo || propCompany.logo || '',
   };
 
   const showLogo = shop.show_logo_on_invoice !== false;

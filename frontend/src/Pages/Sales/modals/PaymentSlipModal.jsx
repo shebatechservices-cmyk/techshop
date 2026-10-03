@@ -53,6 +53,7 @@ export default function PaymentSlipModal({
   const shopName = shopSettings?.shop_name || 'SHEBA TECHNOLOGY';
   const shopPhone = shopSettings?.shop_phone || shopSettings?.phone || '';
   const shopAddress = shopSettings?.shop_address || shopSettings?.address || '';
+  const shopLogo = shopSettings?.logo_url || shopSettings?.logo || '';
 
   const handlePrint = () => {
     window.print();
@@ -126,6 +127,14 @@ export default function PaymentSlipModal({
             <div className="max-w-[340px] mx-auto text-xs font-mono p-4 border border-slate-200 rounded-xl bg-slate-50/50 print:border-none print:p-0 print:max-w-full">
               {/* Header */}
               <div className="text-center pb-3 border-b border-dashed border-slate-300 space-y-1">
+                {shopLogo && (
+                  <img
+                    src={shopLogo}
+                    alt={shopName}
+                    style={{ maxHeight: '36px', maxWidth: '80px', objectFit: 'contain', margin: '0 auto 4px auto', display: 'block' }}
+                    onError={(e) => { e.currentTarget.style.display = 'none'; }}
+                  />
+                )}
                 <div className="font-extrabold text-base tracking-wider text-slate-900 uppercase">
                   {shopName}
                 </div>
@@ -254,12 +263,22 @@ export default function PaymentSlipModal({
             <div className="p-6 border border-slate-300 rounded-2xl bg-white space-y-4">
               {/* Header */}
               <div className="flex justify-between items-start border-b pb-4">
-                <div>
-                  <h2 className="text-lg font-black tracking-tight text-slate-900 uppercase">
-                    {shopName}
-                  </h2>
-                  <p className="text-xs text-slate-500">{shopAddress}</p>
-                  <p className="text-xs text-slate-500">Phone: {shopPhone}</p>
+                <div className="flex items-center gap-3">
+                  {shopLogo && (
+                    <img
+                      src={shopLogo}
+                      alt={shopName}
+                      style={{ maxHeight: '48px', maxWidth: '120px', objectFit: 'contain' }}
+                      onError={(e) => { e.currentTarget.style.display = 'none'; }}
+                    />
+                  )}
+                  <div>
+                    <h2 className="text-lg font-black tracking-tight text-slate-900 uppercase">
+                      {shopName}
+                    </h2>
+                    <p className="text-xs text-slate-500">{shopAddress}</p>
+                    <p className="text-xs text-slate-500">Phone: {shopPhone}</p>
+                  </div>
                 </div>
                 <div className="text-right">
                   <span className="inline-block text-xs font-black uppercase tracking-wider bg-slate-900 text-white px-3 py-1 rounded-md">
