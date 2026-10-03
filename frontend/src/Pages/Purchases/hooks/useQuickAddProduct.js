@@ -8,7 +8,7 @@ export const generateSku = (brand, name) => {
   return `${b}-${n}-${rand}`;
 };
 
-export default function useQuickAddProduct({ isOpen, onClose, onProductCreated }) {
+export default function useQuickAddProduct({ isOpen, initialName = '', onClose, onProductCreated }) {
   const [formData, setFormData] = useState({
     name: '',
     category_id: '',
@@ -49,8 +49,9 @@ export default function useQuickAddProduct({ isOpen, onClose, onProductCreated }
     loadLookups();
 
     // Auto-generate a fresh SKU
+    const defaultName = initialName || '';
     setFormData({
-      name: '',
+      name: defaultName,
       category_id: '',
       category_name: '',
       brand_id: '',
@@ -59,7 +60,7 @@ export default function useQuickAddProduct({ isOpen, onClose, onProductCreated }
       series_name: '',
       purchase_price: '',
       selling_price: '',
-      sku: generateSku('', ''),
+      sku: generateSku('', defaultName),
       barcode: '',
       warranty_months: '12',
       isSerialRequired: true,
@@ -67,7 +68,7 @@ export default function useQuickAddProduct({ isOpen, onClose, onProductCreated }
     });
     setError('');
     setDuplicateAlert(false);
-  }, [isOpen]);
+  }, [isOpen, initialName]);
 
   const handleChange = (field, value) => {
     setFormData((prev) => {

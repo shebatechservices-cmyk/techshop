@@ -3,6 +3,7 @@ import useQuickAddProduct from '../hooks/useQuickAddProduct';
 
 export default function QuickAddProductModal({
   isOpen,
+  initialName = '',
   onClose,
   onProductCreated,
 }) {
@@ -17,7 +18,7 @@ export default function QuickAddProductModal({
     handleChange,
     handleSubmit,
     generateSku,
-  } = useQuickAddProduct({ isOpen, onClose, onProductCreated });
+  } = useQuickAddProduct({ isOpen, initialName, onClose, onProductCreated });
 
   if (!isOpen) return null;
 

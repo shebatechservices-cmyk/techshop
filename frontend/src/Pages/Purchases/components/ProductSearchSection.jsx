@@ -51,19 +51,21 @@ export default React.memo(function ProductSearchSection({
           </div>
         </div>
 
-        {/* Inline '+' Button: Triggers global add product */}
+        {/* Inline '+' Button: Triggers inline Quick Add Product modal popup */}
         <button
           type="button"
           onClick={() => {
-            if (onClose) onClose();
-            if (onOpenAddProduct) {
+            setIsSearchOpen(false);
+            if (setIsAddProductOpen) {
+              setIsAddProductOpen(true);
+            } else if (onOpenAddProduct) {
               onOpenAddProduct();
             } else {
               window.dispatchEvent(new CustomEvent('open-add-product'));
             }
           }}
           className="w-[38px] h-[38px] rounded-lg border-[1.5px] border-slate-300 bg-slate-50 text-emerald-500 text-xl font-bold flex items-center justify-center cursor-pointer hover:bg-slate-100 transition-colors"
-          title="Add Product to Catalog"
+          title="Quick Add Product to Catalog (Popup)"
         >
           +
         </button>

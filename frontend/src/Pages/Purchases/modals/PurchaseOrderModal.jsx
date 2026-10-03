@@ -313,12 +313,14 @@ export default function PurchaseOrderModal(props) {
       {isAddProductOpen && (
         <QuickAddProductModal
           isOpen={isAddProductOpen}
+          initialName={query?.trim() || ''}
           onClose={() => setIsAddProductOpen(false)}
           existingProducts={productList}
           onProductCreated={(createdProd) => {
             if (createdProd && createdProd.id) {
               setProductList((prev) => [createdProd, ...prev]);
               addProduct(createdProd);
+              if (setQuery) setQuery('');
             }
             setIsAddProductOpen(false);
           }}
