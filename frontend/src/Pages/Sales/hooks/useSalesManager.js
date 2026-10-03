@@ -58,6 +58,11 @@ export default function useSalesManager({
   const [quotationsCount, setQuotationsCount] = useState(0);
   const [customersCount, setCustomersCount] = useState(0);
   const [modalCustomers, setModalCustomers] = useState([]);
+
+  // Quick-view Drawer state
+  const [selectedSaleForDrawer, setSelectedSaleForDrawer] = useState(null);
+  const [isSaleDrawerOpen, setIsSaleDrawerOpen] = useState(false);
+  const [isSaleDrawerLoading, setIsSaleDrawerLoading] = useState(false);
   const [products, setProducts] = useState([]);
   const [loading, setLoading] = useState(true);
   const [invoiceSearchQuery, setInvoiceSearchQuery] = useState(
@@ -230,6 +235,38 @@ export default function useSalesManager({
         });
       }
     }
+  };
+
+  // Open Quick-View Drawer for Sale
+  const handleOpenSaleDrawer = async (saleOrId) => {
+    const saleId = typeof saleOrId === 'object' ? saleOrId?.id : saleOrId;
+    if (typeof saleOrId === 'object' && saleOrId !== null) {
+      setSelectedSaleForDrawer(saleOrId);
+      setIsSaleDrawerOpen(true);
+      if (Array.isArray(saleOrId.items) && saleOrId.items.length > 0) {
+        return;
+      }
+    } else {
+      setIsSaleDrawerOpen(true);
+    }
+
+    try {
+      setIsSaleDrawerLoading(true);
+      const res = await fetch(`${API}/sales/${saleId}`);
+      if (res.ok) {
+        const json = await res.json();
+        setSelectedSaleForDrawer(json.data || json);
+      }
+    } catch (err) {
+      console.error('Error fetching sale details for drawer:', err);
+    } finally {
+      setIsSaleDrawerLoading(false);
+    }
+  };
+
+  const handleCloseSaleDrawer = () => {
+    setIsSaleDrawerOpen(false);
+    setSelectedSaleForDrawer(null);
   };
 
   // Sale created callback
@@ -562,6 +599,13 @@ export default function useSalesManager({
     setPrintData,
     isPrintOpen,
     setIsPrintOpen,
+    selectedSaleForDrawer,
+    setSelectedSaleForDrawer,
+    isSaleDrawerOpen,
+    setIsSaleDrawerOpen,
+    isSaleDrawerLoading,
+    handleOpenSaleDrawer,
+    handleCloseSaleDrawer,
     loadAllData,
     handleCustomerCreated,
     handleSaleCreated,

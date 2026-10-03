@@ -25,6 +25,40 @@ export function usePurchaseActions({
     message: '',
     linkedInvoices: [],
   });
+  const [selectedOrderForDrawer, setSelectedOrderForDrawer] = useState(null);
+  const [isOrderDrawerOpen, setIsOrderDrawerOpen] = useState(false);
+  const [isOrderDrawerLoading, setIsOrderDrawerLoading] = useState(false);
+
+  const handleOpenOrderDrawer = async (orderOrId) => {
+    const orderId = typeof orderOrId === 'object' ? orderOrId?.id : orderOrId;
+    if (typeof orderOrId === 'object' && orderOrId !== null) {
+      setSelectedOrderForDrawer(orderOrId);
+      setIsOrderDrawerOpen(true);
+      if (Array.isArray(orderOrId.items) && orderOrId.items.length > 0) {
+        return;
+      }
+    } else {
+      setIsOrderDrawerOpen(true);
+    }
+
+    try {
+      setIsOrderDrawerLoading(true);
+      const res = await fetch(`${API}/purchase/${orderId}`);
+      if (res.ok) {
+        const fullData = await res.json();
+        setSelectedOrderForDrawer(fullData);
+      }
+    } catch (err) {
+      console.error('Error fetching purchase order details for drawer:', err);
+    } finally {
+      setIsOrderDrawerLoading(false);
+    }
+  };
+
+  const handleCloseOrderDrawer = () => {
+    setIsOrderDrawerOpen(false);
+    setSelectedOrderForDrawer(null);
+  };
 
   const handleOpenPrintOrder = async (orderId) => {
     try {
@@ -240,6 +274,13 @@ export function usePurchaseActions({
     setProfileModalTab,
     deleteBlockedDialog,
     setDeleteBlockedDialog,
+    selectedOrderForDrawer,
+    setSelectedOrderForDrawer,
+    isOrderDrawerOpen,
+    setIsOrderDrawerOpen,
+    isOrderDrawerLoading,
+    handleOpenOrderDrawer,
+    handleCloseOrderDrawer,
     handleOpenPrintOrder,
     handleOpenAddSupplier,
     handleSupplierCreated,

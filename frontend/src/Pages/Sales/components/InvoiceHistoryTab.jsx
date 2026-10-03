@@ -12,6 +12,7 @@ export default function InvoiceHistoryTab({
   setIsSaleModalOpen,
   setEditingSale,
   handleOpenPrintSale,
+  handleOpenSaleDrawer,
   setExchangeSaleId,
   handleInitiateEditSale,
   handleInitiateDeleteSale,
@@ -143,8 +144,12 @@ export default function InvoiceHistoryTab({
                     <td className="py-3 px-3.5 font-bold text-sky-600">
                       <button
                         type="button"
-                        onClick={() => handleOpenPrintSale(sale.id)}
-                        title="Click to view & print invoice"
+                        onClick={() =>
+                          handleOpenSaleDrawer
+                            ? handleOpenSaleDrawer(sale)
+                            : handleOpenPrintSale(sale.id)
+                        }
+                        title="Click to view full invoice details in sidebar"
                         className="bg-transparent border-0 p-0 font-inherit font-bold text-sky-600 hover:text-sky-800 cursor-pointer text-left underline underline-offset-2"
                       >
                         {sale.invoice_no || `INV-${sale.id}`}
@@ -217,6 +222,20 @@ export default function InvoiceHistoryTab({
 
                         return (
                           <div className="flex gap-1.5 justify-center items-center">
+                            {/* Quick View Drawer Button */}
+                            <button
+                              type="button"
+                              onClick={() =>
+                                handleOpenSaleDrawer
+                                  ? handleOpenSaleDrawer(sale)
+                                  : handleOpenPrintSale(sale.id)
+                              }
+                              className="bg-sky-50 hover:bg-sky-100 text-sky-700 border border-sky-200 rounded-md py-1.5 px-2.5 text-xs font-semibold cursor-pointer inline-flex items-center gap-1 transition-colors"
+                              title="Quick view invoice in sidebar"
+                            >
+                              <span>👁️</span> View
+                            </button>
+
                             {/* Print Button */}
                             <button
                               type="button"

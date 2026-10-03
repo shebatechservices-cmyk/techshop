@@ -10,6 +10,7 @@ import PurchaseHistoryTab from './components/PurchaseHistoryTab';
 import PurchaseQuotationsTab from './components/PurchaseQuotationsTab';
 import PurchaseSuppliersTab from './components/PurchaseSuppliersTab';
 import PurchaseDeleteBlockedModal from './components/PurchaseDeleteBlockedModal';
+import PurchaseDetailDrawer from './components/PurchaseDetailDrawer';
 
 export default function Purchases({ onOpenAddProduct, initialTab = 'history', initialSearch = '', navKey = 0 }) {
   const {
@@ -46,6 +47,11 @@ export default function Purchases({ onOpenAddProduct, initialTab = 'history', in
     setProfileModalTab,
     deleteBlockedDialog,
     setDeleteBlockedDialog,
+    selectedOrderForDrawer,
+    isOrderDrawerOpen,
+    isOrderDrawerLoading,
+    handleOpenOrderDrawer,
+    handleCloseOrderDrawer,
     loadAllData,
     handleOpenPrintOrder,
     handleOpenAddSupplier,
@@ -233,6 +239,7 @@ export default function Purchases({ onOpenAddProduct, initialTab = 'history', in
               openActionOrderId={openActionOrderId}
               setOpenActionOrderId={setOpenActionOrderId}
               handleOpenPrintOrder={handleOpenPrintOrder}
+              handleOpenOrderDrawer={handleOpenOrderDrawer}
               handleEditOrder={handleEditOrder}
               handleDeleteOrder={handleDeleteOrder}
               totalPurchasesCost={totalPurchasesCost}
@@ -368,6 +375,21 @@ export default function Purchases({ onOpenAddProduct, initialTab = 'history', in
       <PurchaseDeleteBlockedModal
         deleteBlockedDialog={deleteBlockedDialog}
         onClose={() => setDeleteBlockedDialog({ isOpen: false, poNumber: '', message: '', linkedInvoices: [] })}
+      />
+
+      {/* QUICK-VIEW PURCHASE ORDER DRAWER */}
+      <PurchaseDetailDrawer
+        isOpen={isOrderDrawerOpen}
+        onClose={handleCloseOrderDrawer}
+        order={selectedOrderForDrawer}
+        loading={isOrderDrawerLoading}
+        onPrint={(ord) => {
+          handleOpenPrintOrder(ord.id);
+        }}
+        onEdit={(ord) => {
+          handleCloseOrderDrawer();
+          handleEditOrder(ord);
+        }}
       />
     </div>
   );

@@ -12,6 +12,7 @@ export default function PurchaseHistoryTab({
   openActionOrderId,
   setOpenActionOrderId,
   handleOpenPrintOrder,
+  handleOpenOrderDrawer,
   handleEditOrder,
   handleDeleteOrder,
   totalPurchasesCost,
@@ -134,7 +135,29 @@ export default function PurchaseHistoryTab({
                 {filteredOrders.map((order) => (
                   <tr key={order.id} style={{ borderBottom: '1px solid #f1f5f9' }}>
                     <td style={{ padding: '12px 16px', fontWeight: 700, color: '#0284c7' }}>
-                      {order.po_number}
+                      <button
+                        type="button"
+                        onClick={() =>
+                          handleOpenOrderDrawer
+                            ? handleOpenOrderDrawer(order)
+                            : handleOpenPrintOrder(order.id)
+                        }
+                        title="Click to view purchase order in sidebar"
+                        style={{
+                          background: 'transparent',
+                          border: 'none',
+                          padding: 0,
+                          font: 'inherit',
+                          fontWeight: 700,
+                          color: '#0284c7',
+                          cursor: 'pointer',
+                          textAlign: 'left',
+                          textDecoration: 'underline',
+                          textUnderlineOffset: '2px',
+                        }}
+                      >
+                        {order.po_number}
+                      </button>
                     </td>
                     <td style={{ padding: '12px 16px', color: '#1e293b', fontWeight: 600 }}>
                       {order.supplier_name || `Supplier #${order.supplier_id}`}
@@ -180,10 +203,20 @@ export default function PurchaseHistoryTab({
                             triggerClassName="bg-slate-50 border border-slate-300 rounded px-2.5 py-1 text-sm font-extrabold text-slate-700 hover:bg-slate-100"
                             items={[
                               {
+                                key: 'view',
+                                label: 'Quick View',
+                                icon: '👁️',
+                                className: 'text-sky-700 hover:bg-sky-50 font-bold',
+                                onClick: () =>
+                                  handleOpenOrderDrawer
+                                    ? handleOpenOrderDrawer(order)
+                                    : handleOpenPrintOrder(order.id),
+                              },
+                              {
                                 key: 'print',
                                 label: 'Print / Preview',
                                 icon: '🖨️',
-                                className: 'text-sky-600 hover:bg-sky-50',
+                                className: 'text-slate-700 hover:bg-slate-50',
                                 onClick: () => handleOpenPrintOrder(order.id),
                               },
                               {

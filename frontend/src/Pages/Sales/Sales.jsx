@@ -9,6 +9,7 @@ import CustomerList from './CustomerList';
 import SalesQuotations from './SalesQuotations';
 import SalesMetrics from './components/SalesMetrics';
 import InvoiceHistoryTab from './components/InvoiceHistoryTab';
+import SaleDetailDrawer from './components/SaleDetailDrawer';
 import useSalesManager from './hooks/useSalesManager';
 
 export default function Sales({
@@ -50,6 +51,11 @@ export default function Sales({
     setPrintData,
     isPrintOpen,
     setIsPrintOpen,
+    selectedSaleForDrawer,
+    isSaleDrawerOpen,
+    isSaleDrawerLoading,
+    handleOpenSaleDrawer,
+    handleCloseSaleDrawer,
     loadAllData,
     handleCustomerCreated,
     handleSaleCreated,
@@ -154,6 +160,7 @@ export default function Sales({
           setIsSaleModalOpen={setIsSaleModalOpen}
           setEditingSale={setEditingSale}
           handleOpenPrintSale={handleOpenPrintSale}
+          handleOpenSaleDrawer={handleOpenSaleDrawer}
           setExchangeSaleId={setExchangeSaleId}
           handleInitiateEditSale={handleInitiateEditSale}
           handleInitiateDeleteSale={handleInitiateDeleteSale}
@@ -233,6 +240,22 @@ export default function Sales({
         overrideModal={overrideModal}
         setOverrideModal={setOverrideModal}
         handleConfirmOverride={handleConfirmOverride}
+        taka={taka}
+      />
+
+      {/* 5. Quick-View Sale Details Drawer */}
+      <SaleDetailDrawer
+        isOpen={isSaleDrawerOpen}
+        onClose={handleCloseSaleDrawer}
+        sale={selectedSaleForDrawer}
+        loading={isSaleDrawerLoading}
+        onPrint={(s) => {
+          handleOpenPrintSale(s);
+        }}
+        onEdit={(s) => {
+          handleCloseSaleDrawer();
+          handleInitiateEditSale(s);
+        }}
         taka={taka}
       />
     </div>
