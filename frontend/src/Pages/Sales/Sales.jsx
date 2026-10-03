@@ -173,6 +173,7 @@ export default function Sales({
           setExchangeSaleId={setExchangeSaleId}
           handleInitiateEditSale={handleInitiateEditSale}
           handleInitiateDeleteSale={handleInitiateDeleteSale}
+          handleOpenDuePayment={handleOpenDuePayment}
           actionLoading={actionLoading}
           getSaleLockStatus={getSaleLockStatus}
           isAdmin={isAdmin}
