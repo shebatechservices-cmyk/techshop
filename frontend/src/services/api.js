@@ -13,7 +13,7 @@ const getApiBase = () => {
     // Production web hosts (Vercel, Render, or custom domains) fallback to relative /api
     return '/api';
   } else {
-    base = 'http://localhost:3000';
+    base = '/api';
   }
 
   // Remove trailing slashes
@@ -38,12 +38,27 @@ export const pingServer = async () => {
     clearTimeout(timeoutId);
     return res.ok;
   } catch {
-    if (typeof window !== 'undefined' && window.location?.hostname?.endsWith('.vercel.app')) {
-      return false;
+    // If running in production on a public domain (e.g. sdb.shebatechnologybd.com or *.vercel.app),
+    // NEVER attempt loopback / localhost requests (violates browser CORS & Private Network Access policy)
+    if (typeof window !== 'undefined') {
+      const hostname = window.location?.hostname || '';
+      const isLocal = hostname === 'localhost' || hostname === '127.0.0.1';
+      if (!isLocal) {
+        if (import.meta.env?.VITE_FALLBACK_API_URL) {
+          try {
+            const res2 = await fetch(import.meta.env.VITE_FALLBACK_API_URL, { signal: AbortSignal.timeout(60000) });
+            return res2.ok;
+          } catch {
+            return false;
+          }
+        }
+        return false;
+      }
     }
-    // If /api fails, attempt direct cloud endpoint
+
+    // Only attempt localhost fallback if already in local dev environment
     try {
-      const fallback = import.meta.env.VITE_FALLBACK_API_URL || 'http://localhost:3000/api';
+      const fallback = import.meta.env?.VITE_FALLBACK_API_URL || 'http://localhost:3000/api';
       const res2 = await fetch(fallback, { signal: AbortSignal.timeout(60000) });
       return res2.ok;
     } catch {

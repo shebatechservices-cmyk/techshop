@@ -33,6 +33,8 @@ const defaultOrigins = [
     'http://localhost:3000',
     'https://sheba-technology.vercel.app',
     'https://sheba-technology.onrender.com',
+    'https://sdb.shebatechnologybd.com',
+    'https://shebatechnologybd.com',
 ];
 const envOrigins = (process.env.CORS_ORIGINS || '')
     .split(',').map((origin) => origin.trim()).filter(Boolean);
@@ -42,6 +44,7 @@ const allowedOrigins = new Set([...defaultOrigins, ...envOrigins]);
 const TRUSTED_ORIGIN_PATTERNS = [
     /^https:\/\/([a-z0-9-]+\.)?vercel\.app$/,
     /^https:\/\/([a-z0-9-]+\.)?onrender\.com$/,
+    /^https:\/\/([a-z0-9-]+\.)?shebatechnologybd\.com$/,
 ];
 const isLocalhostOrigin = (origin) => {
     try {
