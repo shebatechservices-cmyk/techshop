@@ -157,7 +157,12 @@ export function useSalesActions({
 
   // Open Edit Sale Form with full invoice details
   const executeEditSale = useCallback(
-    async (id, adminPin = null) => {
+    async (idOrSale, adminPin = null) => {
+      const id =
+        typeof idOrSale === 'object' && idOrSale !== null
+          ? idOrSale.id || idOrSale.invoice_id
+          : idOrSale;
+      if (!id) return;
       try {
         setActionLoading((prev) => ({ ...prev, [id]: 'edit' }));
         const res = await fetch(`${API}/sales/${id}`);
@@ -184,7 +189,13 @@ export function useSalesActions({
   );
 
   const handleInitiateEditSale = useCallback(
-    (id, saleObj) => {
+    (idOrSale, maybeSaleObj) => {
+      const saleObj =
+        typeof idOrSale === 'object' && idOrSale !== null ? idOrSale : maybeSaleObj;
+      const id =
+        typeof idOrSale === 'object' && idOrSale !== null
+          ? idOrSale.id || idOrSale.invoice_id
+          : idOrSale;
       const lockStatus = getSaleLockStatus?.(saleObj) || {};
       if (lockStatus.isEditLocked) {
         if (!isAdmin) {
@@ -209,7 +220,13 @@ export function useSalesActions({
 
   // Delete Sale with optional Admin PIN override
   const executeDeleteSale = useCallback(
-    async (id, saleObj, adminPin = null) => {
+    async (idOrSale, maybeSaleObj, adminPin = null) => {
+      const saleObj =
+        typeof idOrSale === 'object' && idOrSale !== null ? idOrSale : maybeSaleObj;
+      const id =
+        typeof idOrSale === 'object' && idOrSale !== null
+          ? idOrSale.id || idOrSale.invoice_id
+          : idOrSale;
       if (
         !adminPin &&
         !window.confirm(
@@ -255,7 +272,13 @@ export function useSalesActions({
   );
 
   const handleInitiateDeleteSale = useCallback(
-    (id, saleObj) => {
+    (idOrSale, maybeSaleObj) => {
+      const saleObj =
+        typeof idOrSale === 'object' && idOrSale !== null ? idOrSale : maybeSaleObj;
+      const id =
+        typeof idOrSale === 'object' && idOrSale !== null
+          ? idOrSale.id || idOrSale.invoice_id
+          : idOrSale;
       const lockStatus = getSaleLockStatus?.(saleObj) || {};
       if (lockStatus.isDeleteLocked) {
         if (!isAdmin) {

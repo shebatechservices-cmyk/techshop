@@ -108,7 +108,7 @@ export default function SaleDetailDrawer({
                 <button
                   type="button"
                   onClick={() => onPrint(sale)}
-                  className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-sky-50 text-sky-700 border border-sky-200 rounded-md text-xs font-bold hover:bg-sky-100 transition-colors"
+                  className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-sky-50 text-sky-700 border border-sky-200 rounded-md text-xs font-bold hover:bg-sky-100 transition-colors cursor-pointer"
                 >
                   <span>🖨️</span> Print Invoice
                 </button>
@@ -118,7 +118,7 @@ export default function SaleDetailDrawer({
                 <button
                   type="button"
                   onClick={() => onEdit(sale)}
-                  className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-amber-50 text-amber-700 border border-amber-200 rounded-md text-xs font-bold hover:bg-amber-100 transition-colors"
+                  className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-amber-50 text-amber-700 border border-amber-200 rounded-md text-xs font-bold hover:bg-amber-100 transition-colors cursor-pointer"
                 >
                   <span>✏️</span> Edit Sale
                 </button>
@@ -128,7 +128,7 @@ export default function SaleDetailDrawer({
                 <button
                   type="button"
                   onClick={() => onCollectDue(sale)}
-                  className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-emerald-50 text-emerald-700 border border-emerald-300 rounded-md text-xs font-bold hover:bg-emerald-100 transition-colors shadow-sm"
+                  className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-emerald-50 text-emerald-700 border border-emerald-300 rounded-md text-xs font-bold hover:bg-emerald-100 transition-colors shadow-sm cursor-pointer"
                 >
                   <span>💳</span> Collect Due
                 </button>

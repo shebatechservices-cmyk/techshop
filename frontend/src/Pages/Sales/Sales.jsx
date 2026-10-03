@@ -264,7 +264,7 @@ export default function Sales({
         }}
         onEdit={(s) => {
           handleCloseSaleDrawer();
-          handleInitiateEditSale(s);
+          handleInitiateEditSale(s?.id || s, s);
         }}
         onCollectDue={(s) => {
           handleOpenDuePayment(s);
