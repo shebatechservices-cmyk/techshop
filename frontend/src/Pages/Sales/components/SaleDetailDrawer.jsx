@@ -7,6 +7,7 @@ export default function SaleDetailDrawer({
   loading = false,
   onPrint,
   onEdit,
+  onCollectDue,
   taka = (v) => `৳ ${Number(v || 0).toLocaleString('en-IN', { minimumFractionDigits: 2 })}`,
 }) {
   useEffect(() => {
@@ -122,6 +123,16 @@ export default function SaleDetailDrawer({
                   <span>✏️</span> Edit Sale
                 </button>
               )}
+
+              {onCollectDue && (due > 0 || Number(sale?.customer_receivable_balance || 0) > 0) && (
+                <button
+                  type="button"
+                  onClick={() => onCollectDue(sale)}
+                  className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-emerald-50 text-emerald-700 border border-emerald-300 rounded-md text-xs font-bold hover:bg-emerald-100 transition-colors shadow-sm"
+                >
+                  <span>💳</span> Collect Due
+                </button>
+              )}
             </div>
 
             <span className="text-[0.7rem] text-slate-400">Quick View</span>
@@ -163,9 +174,18 @@ export default function SaleDetailDrawer({
                     {sale.customer_receivable_balance !== undefined && (
                       <div className="text-right">
                         <span className="text-[0.68rem] text-slate-500 block">Total Due</span>
-                        <span className="text-xs font-extrabold text-rose-600">
+                        <span className="text-xs font-extrabold text-rose-600 block">
                           {taka(sale.customer_receivable_balance)}
                         </span>
+                        {onCollectDue && Number(sale.customer_receivable_balance) > 0 && (
+                          <button
+                            type="button"
+                            onClick={() => onCollectDue(sale)}
+                            className="inline-block mt-0.5 text-[10px] font-bold text-sky-600 hover:text-sky-800 hover:underline"
+                          >
+                            Collect Due
+                          </button>
+                        )}
                       </div>
                     )}
                   </div>
@@ -276,6 +296,18 @@ export default function SaleDetailDrawer({
                         {due > 0 ? taka(due) : 'No Due (Cleared)'}
                       </span>
                     </div>
+
+                    {onCollectDue && due > 0 && (
+                      <div className="pt-2">
+                        <button
+                          type="button"
+                          onClick={() => onCollectDue(sale)}
+                          className="w-full py-2 px-3 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg text-xs font-bold flex items-center justify-center gap-1.5 shadow transition-colors"
+                        >
+                          <span>💳</span> Settle / Collect Due ({taka(due)})
+                        </button>
+                      </div>
+                    )}
                   </div>
                 </div>
 

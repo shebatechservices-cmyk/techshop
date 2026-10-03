@@ -10,6 +10,8 @@ import SalesQuotations from './SalesQuotations';
 import SalesMetrics from './components/SalesMetrics';
 import InvoiceHistoryTab from './components/InvoiceHistoryTab';
 import SaleDetailDrawer from './components/SaleDetailDrawer';
+import DuePaymentModal from './modals/DuePaymentModal';
+import PaymentSlipModal from './modals/PaymentSlipModal';
 import useSalesManager from './hooks/useSalesManager';
 
 export default function Sales({
@@ -51,6 +53,13 @@ export default function Sales({
     setPrintData,
     isPrintOpen,
     setIsPrintOpen,
+    duePaymentModal,
+    handleOpenDuePayment,
+    handleCloseDuePayment,
+    handlePaymentSuccess,
+    paymentSlipModal,
+    handleClosePaymentSlip,
+    shopSettings,
     selectedSaleForDrawer,
     isSaleDrawerOpen,
     isSaleDrawerLoading,
@@ -256,8 +265,32 @@ export default function Sales({
           handleCloseSaleDrawer();
           handleInitiateEditSale(s);
         }}
+        onCollectDue={(s) => {
+          handleOpenDuePayment(s);
+        }}
         taka={taka}
       />
+
+      {/* 6. Due Payment Modal (Single Invoice / Customer Bulk) */}
+      {duePaymentModal?.isOpen && (
+        <DuePaymentModal
+          isOpen={duePaymentModal.isOpen}
+          onClose={handleCloseDuePayment}
+          sale={duePaymentModal.sale}
+          customer={duePaymentModal.customer}
+          onPaymentSuccess={handlePaymentSuccess}
+        />
+      )}
+
+      {/* 7. Money Receipt / Payment Slip Modal (Thermal 80mm & A4/A5) */}
+      {paymentSlipModal?.isOpen && (
+        <PaymentSlipModal
+          isOpen={paymentSlipModal.isOpen}
+          onClose={handleClosePaymentSlip}
+          receiptData={paymentSlipModal.receiptData}
+          shopSettings={shopSettings}
+        />
+      )}
     </div>
   );
 }

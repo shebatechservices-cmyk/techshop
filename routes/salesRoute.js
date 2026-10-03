@@ -1,6 +1,7 @@
 const express = require('express');
 const router = express.Router();
 const salesController = require('../controllers/salesController');
+const salesPaymentController = require('../controllers/sales/salesPaymentController');
 const { upload, uploadTempShare } = require('../controllers/invoiceShareController');
 
 // 1. Quotations (must come before /:id)
@@ -17,10 +18,12 @@ router.post('/customers', salesController.createCustomer);
 router.put('/customers/:id', salesController.updateCustomer);
 router.patch('/customers/:id/group', salesController.updateCustomerGroup);
 router.get('/customers/:id/summary', salesController.getCustomerSummary);
+router.post('/customers/:id/bulk-due-payment', salesPaymentController.collectCustomerBulkDuePayment);
 router.delete('/customers/:id', salesController.deleteCustomer);
 
 // 3. Sales & POS
 router.get('/', salesController.getSales);
+router.post('/:id/payments', salesPaymentController.collectSaleInvoicePayment);
 router.post('/exchange', salesController.createExchangeSale);
 router.post('/', salesController.createSale);
 router.post('/create', salesController.createSale);
