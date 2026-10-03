@@ -14,6 +14,7 @@ export const buildPurchaseApiPayload = ({
   discount,
   hasExtraCost,
   extra,
+  extraCost,
   extraCostCategory,
   extraCostNotes,
   items = [],
@@ -23,7 +24,9 @@ export const buildPurchaseApiPayload = ({
   computeFinalSale = defaultComputeFinalSale,
   money = defaultMoney,
 }) => {
-  const extraVal = hasExtraCost ? (typeof extra === 'number' ? extra : money(extra)) : 0;
+  const extraVal = hasExtraCost
+    ? (typeof extra === 'number' && extra > 0 ? extra : money(extraCost !== undefined && extraCost !== '' ? extraCost : extra))
+    : 0;
   const totalGoodsCost = items.reduce(
     (sum, it) => sum + money(it.cost_price) * Math.max(1, parseInt(it.quantity, 10) || 1),
     0

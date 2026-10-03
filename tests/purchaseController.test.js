@@ -614,6 +614,93 @@ describe('updateOrder payment & ledger sync', () => {
         expect(itemUpdate.params).toContain('percent');
         expect(itemUpdate.params).toContain(20);
     });
+
+    it('persists extra_cost, extra_cost_category, extra_cost_notes and records expense voucher correctly', async () => {
+        const executedQueries = [];
+        const client = setupClient({
+            'SELECT \\* FROM purchase_orders WHERE id =': () => ({
+                rows: [{
+                    id: 30,
+                    po_number: 'PO-30-EXTRA',
+                    supplier_id: 5,
+                    created_at: new Date().toISOString(),
+                    total_cost: 10000,
+                    total_paid: 10000,
+                    extra_cost: 0,
+                }],
+            }),
+            'SELECT \\* FROM purchase_order_items WHERE purchase_order_id =': () => ({
+                rows: [{
+                    id: 60,
+                    purchase_order_id: 30,
+                    product_id: 10,
+                    cost_price: 10000,
+                    sale_price: 12000,
+                    final_sale_price: 12000,
+                    quantity: 1,
+                    margin_type: 'percent',
+                    margin_value: 20,
+                }],
+            }),
+            'SELECT id, name FROM suppliers WHERE id =': () => ({
+                rows: [{ id: 5, name: 'Supplier Logistics' }],
+            }),
+            'UPDATE purchase_orders': () => ({ rowCount: 1 }),
+            'UPDATE purchase_order_items': () => ({ rowCount: 1 }),
+            'UPDATE products': () => ({ rowCount: 1 }),
+            'CREATE UNIQUE INDEX IF NOT EXISTS idx_expenses_voucher_no': () => ({ rowCount: 1 }),
+            'SELECT id FROM expense_categories WHERE': () => ({
+                rows: [{ id: 3 }],
+            }),
+            'INSERT INTO expenses': () => ({ rowCount: 1 }),
+        });
+
+        const originalQuery = client.query;
+        client.query = jest.fn(async (text, params) => {
+            executedQueries.push({ text, params });
+            return originalQuery(text, params);
+        });
+
+        const req = {
+            params: { id: '30' },
+            body: {
+                supplier_id: 5,
+                extra_cost: 800,
+                extra_cost_category: 'Transportation & Logistics',
+                extra_cost_notes: 'Truck delivery charges',
+                items: [{
+                    id: 60,
+                    product_id: 10,
+                    cost_price: 10000,
+                    sale_price: 12000,
+                    final_sale_price: 12000,
+                    quantity: 1,
+                }],
+            },
+        };
+        const res = mockRes();
+
+        await purchase.updateOrder(req, res);
+
+        expect(res.status).toHaveBeenCalledWith(200);
+
+        // Check purchase_orders UPDATE has extra_cost
+        const poUpdate = executedQueries.find(q => /UPDATE purchase_orders/i.test(q.text));
+        expect(poUpdate).toBeDefined();
+        expect(poUpdate.text).toContain('extra_cost');
+        expect(poUpdate.params).toContain(800);
+        expect(poUpdate.params).toContain('Transportation & Logistics');
+        expect(poUpdate.params).toContain('Truck delivery charges');
+
+        // Check expenses INSERT has voucher and amount in right columns
+        const expInsert = executedQueries.find(q => /INSERT INTO expenses/i.test(q.text));
+        expect(expInsert).toBeDefined();
+        expect(expInsert.text).toContain('expense_date');
+        expect(expInsert.text).toContain('amount');
+        expect(expInsert.params[0]).toBe('EXP-PO-30-EXTRA');
+        expect(expInsert.params[3]).toBe(800); // amount is $4
+    });
 });
+
 
 

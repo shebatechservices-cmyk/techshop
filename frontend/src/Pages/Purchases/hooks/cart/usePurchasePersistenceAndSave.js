@@ -198,6 +198,7 @@ export function usePurchasePersistenceAndSave({
         discount,
         hasExtraCost,
         extra,
+        extraCost,
         extraCostCategory,
         extraCostNotes,
         items,

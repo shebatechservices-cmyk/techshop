@@ -436,7 +436,7 @@ const updateOrder = async (req, res) => {
                 }
 
                 await client.query(
-                    `INSERT INTO expenses (voucher_no, category_id, category_name, amount, expense_date, payee_name, reference_no, note)
+                    `INSERT INTO expenses (voucher_no, category_id, category_name, expense_date, amount, payee_name, reference_no, note)
                      VALUES ($1, $2, $3, CURRENT_DATE, $4, $5, $6, $7)
                      ON CONFLICT (voucher_no) DO UPDATE 
                      SET category_id = EXCLUDED.category_id, category_name = EXCLUDED.category_name, 
@@ -445,6 +445,7 @@ const updateOrder = async (req, res) => {
                 );
             } catch (expErr) {
                 console.warn('Expense update for PO extra cost notice:', expErr.message);
+                throw expErr;
             }
         } else if (effectiveExtraCost === 0 && money(po.extra_cost) > 0) {
             await client.query('DELETE FROM expenses WHERE voucher_no = $1', [`EXP-${currentPoNumber}`]).catch(() => null);
@@ -461,6 +462,10 @@ const updateOrder = async (req, res) => {
                 supplier_id: targetSupplierId,
                 total_cost: totalCost,
                 total_sale: totalSale,
+                extra_cost: effectiveExtraCost,
+                extra_cost_category: extra_cost_category !== undefined ? extra_cost_category : po.extra_cost_category,
+                extra_cost_notes: extra_cost_notes !== undefined ? extra_cost_notes : po.extra_cost_notes,
+                discount: effectiveDiscount,
                 total_paid: totalPaid,
                 total_due: newDue,
                 status: paymentStatus,

@@ -206,7 +206,7 @@ const createOrder = async (req, res) => {
                 }
 
                 await client.query(
-                    `INSERT INTO expenses (voucher_no, category_id, category_name, amount, expense_date, payee_name, reference_no, note)
+                    `INSERT INTO expenses (voucher_no, category_id, category_name, expense_date, amount, payee_name, reference_no, note)
                      VALUES ($1, $2, $3, CURRENT_DATE, $4, $5, $6, $7)
                      ON CONFLICT (voucher_no) DO UPDATE 
                      SET category_id = EXCLUDED.category_id, category_name = EXCLUDED.category_name, 
@@ -215,6 +215,7 @@ const createOrder = async (req, res) => {
                 );
             } catch (expErr) {
                 console.warn('Expense recording for PO extra cost notice:', expErr.message);
+                throw expErr;
             }
         }
 
