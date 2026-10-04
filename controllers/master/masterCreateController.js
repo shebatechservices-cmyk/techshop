@@ -31,6 +31,27 @@ const create = async (req, res) => {
             supplier_phone
         } = req.body;
 
+        const safeNum = (v, defaultVal = 0) => {
+            if (v === undefined || v === null || v === '' || v === 'null') return defaultVal;
+            const n = Number(v);
+            return isNaN(n) ? defaultVal : n;
+        };
+        const safeIntOrNull = (v) => {
+            if (v === undefined || v === null || v === '' || v === 'null') return null;
+            const n = parseInt(v, 10);
+            return isNaN(n) ? null : n;
+        };
+        const safeNumOrNull = (v) => {
+            if (v === undefined || v === null || v === '' || v === 'null') return null;
+            const n = Number(v);
+            return isNaN(n) ? null : n;
+        };
+        const safeStrOrNull = (v) => {
+            if (v === undefined || v === null) return null;
+            const s = String(v).trim();
+            return s === '' || s === 'null' ? null : s;
+        };
+
         const trimmedName = String(name || '').trim();
         if (entity !== 'products' && !trimmedName) {
             return res.status(400).json({ error: 'Name is required' });
@@ -40,25 +61,28 @@ const create = async (req, res) => {
         let result;
 
         if (entity === 'sub_categories') {
-            if (!category_id) {
+            const catId = safeIntOrNull(category_id);
+            if (!catId) {
                 return res.status(400).json({ error: 'Please select a category' });
             }
             const existing = await pool.query(
                 'SELECT * FROM sub_categories WHERE LOWER(TRIM(name)) = LOWER(TRIM($1)) AND category_id = $2 LIMIT 1',
-                [trimmedName, category_id]
+                [trimmedName, catId]
             );
             if (existing.rows.length > 0) {
                 result = existing;
             } else {
                 result = await pool.query(
                     'INSERT INTO sub_categories (name, category_id) VALUES ($1, $2) RETURNING *',
-                    [trimmedName, category_id]
+                    [trimmedName, catId]
                 );
             }
         } else if (entity === 'series') {
+            const brId = safeIntOrNull(brand_id);
+            const moId = safeIntOrNull(model_id);
             const existing = await pool.query(
                 'SELECT * FROM series WHERE LOWER(TRIM(name)) = LOWER(TRIM($1)) AND brand_id = $2 LIMIT 1',
-                [trimmedName, brand_id]
+                [trimmedName, brId]
             );
             if (existing.rows.length > 0) {
                 result = existing;
@@ -68,23 +92,32 @@ const create = async (req, res) => {
                      VALUES ($1, $2, $3)
                      ON CONFLICT (name, brand_id) DO UPDATE SET model_id = COALESCE(series.model_id, EXCLUDED.model_id)
                      RETURNING *`,
-                    [trimmedName, brand_id, model_id || null]
+                    [trimmedName, brId, moId]
                 );
             }
         } else if (entity === 'models') {
+            const brId = safeIntOrNull(brand_id);
+            const catId = safeIntOrNull(category_id);
+            const subCatId = safeIntOrNull(sub_category_id);
             const existing = await pool.query(
                 'SELECT * FROM models WHERE LOWER(TRIM(name)) = LOWER(TRIM($1)) AND brand_id = $2 LIMIT 1',
-                [trimmedName, brand_id]
+                [trimmedName, brId]
             );
             if (existing.rows.length > 0) {
                 result = existing;
             } else {
                 result = await pool.query(
                     'INSERT INTO models (name, brand_id, category_id, sub_category_id) VALUES ($1, $2, $3, $4) RETURNING *',
-                    [trimmedName, brand_id, category_id, sub_category_id]
+                    [trimmedName, brId, catId, subCatId]
                 );
             }
         } else if (entity === 'products') {
+            const catId = safeIntOrNull(category_id);
+            const subCatId = safeIntOrNull(sub_category_id);
+            const brId = safeIntOrNull(brand_id);
+            const moId = safeIntOrNull(model_id);
+            const seId = safeIntOrNull(series_id);
+
             const dupCheck = await pool.query(
                 `SELECT id FROM products 
                  WHERE deleted_at IS NULL AND (
@@ -101,14 +134,14 @@ const create = async (req, res) => {
                  )
                  LIMIT 1`,
                 [
-                    sku ? String(sku).trim() : null,
-                    barcode ? String(barcode).trim() : null,
-                    name ? String(name).trim() : '',
-                    category_id ? Number(category_id) : null,
-                    sub_category_id ? Number(sub_category_id) : null,
-                    brand_id ? Number(brand_id) : null,
-                    model_id ? Number(model_id) : null,
-                    series_id ? Number(series_id) : null,
+                    safeStrOrNull(sku),
+                    safeStrOrNull(barcode),
+                    safeStrOrNull(name) || '',
+                    catId,
+                    subCatId,
+                    brId,
+                    moId,
+                    seId,
                 ]
             );
             if (dupCheck.rows.length > 0) {
@@ -127,7 +160,7 @@ const create = async (req, res) => {
             const isWarrantyReq = Boolean(
                 parseBool(req.body.is_warranty_required) ??
                 parseBool(req.body.isWarrantyRequired) ??
-                (Number(warranty_months || req.body.warranty_months || 0) > 0)
+                (safeNum(warranty_months || req.body.warranty_months, 0) > 0)
             );
             const isBundleVal = Boolean(
                 parseBool(req.body.is_bundle) ??
@@ -146,37 +179,37 @@ const create = async (req, res) => {
                 ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, $19, $20, $21, $22, $23, $24, $25, $26, $27, $28, $29, $30, $31)
                 RETURNING *`,
                 [
-                    name,
-                    category_id,
-                    sub_category_id,
-                    brand_id,
-                    model_id,
-                    series_id,
-                    sku || null,
-                    barcode || null,
-                    short_name || null,
-                    description || null,
-                    purchase_price || 0,
-                    selling_price || 0,
-                    mrp || 0,
-                    stock || 0,
-                    min_stock || 0,
-                    location || null,
-                    warranty_months || 0,
-                    status || 'active',
-                    image_url || null,
-                    is_featured || false,
-                    supplier_name || null,
-                    supplier_phone || null,
+                    safeStrOrNull(name),
+                    catId,
+                    subCatId,
+                    brId,
+                    moId,
+                    seId,
+                    safeStrOrNull(sku),
+                    safeStrOrNull(barcode),
+                    safeStrOrNull(short_name),
+                    safeStrOrNull(description),
+                    safeNum(purchase_price, 0),
+                    safeNum(selling_price, 0),
+                    safeNum(mrp, 0),
+                    safeNum(stock, 0),
+                    safeNum(min_stock, 0),
+                    safeStrOrNull(location),
+                    safeIntOrNull(warranty_months) || 0,
+                    safeStrOrNull(status) || 'active',
+                    safeStrOrNull(image_url),
+                    Boolean(parseBool(is_featured) ?? false),
+                    safeStrOrNull(supplier_name),
+                    safeStrOrNull(supplier_phone),
                     isSerialReq,
                     isSerialReq,
                     isWarrantyReq,
                     isBundleVal,
-                    req.body.unit_name || 'Pcs',
-                    req.body.sub_unit_name || null,
-                    req.body.conversion_rate ? Number(req.body.conversion_rate) : 1,
-                    req.body.sub_unit_selling_price ? Number(req.body.sub_unit_selling_price) : null,
-                    req.body.sub_unit_barcode ? String(req.body.sub_unit_barcode).trim() : null,
+                    safeStrOrNull(req.body.unit_name) || 'Pcs',
+                    safeStrOrNull(req.body.sub_unit_name),
+                    safeNum(req.body.conversion_rate, 1),
+                    safeNumOrNull(req.body.sub_unit_selling_price),
+                    safeStrOrNull(req.body.sub_unit_barcode),
                 ]
             );
 
@@ -196,12 +229,15 @@ const create = async (req, res) => {
                 createdProd.bundle_items = parsed;
             }
         } else if (entity === 'product_names') {
+            const brId = safeIntOrNull(brand_id);
+            const catId = safeIntOrNull(category_id);
+            const subCatId = safeIntOrNull(sub_category_id);
             result = await pool.query(
                 `INSERT INTO product_names (name, brand_id, category_id, sub_category_id)
                  VALUES ($1, $2, $3, $4)
                  ON CONFLICT DO NOTHING
                  RETURNING *`,
-                [trimmedName, brand_id || null, category_id || null, sub_category_id || null]
+                [trimmedName, brId, catId, subCatId]
             );
             if (!result.rows.length) {
                 result = await pool.query(
@@ -210,6 +246,7 @@ const create = async (req, res) => {
                 );
             }
         } else if (entity === 'brands') {
+            const subCatId = safeIntOrNull(sub_category_id);
             const existing = await pool.query(
                 'SELECT * FROM brands WHERE LOWER(TRIM(name)) = LOWER(TRIM($1)) LIMIT 1',
                 [trimmedName]
@@ -219,7 +256,7 @@ const create = async (req, res) => {
             } else {
                 result = await pool.query(
                     `INSERT INTO brands (name, sub_category_id) VALUES ($1, $2) RETURNING *`,
-                    [trimmedName, sub_category_id || null]
+                    [trimmedName, subCatId]
                 );
             }
         } else if (entity === 'categories') {
@@ -262,8 +299,8 @@ const create = async (req, res) => {
                 error: `A ${label.toLowerCase()} with this name already exists! Please use a different name.`
             });
         }
-        console.error(error);
-        res.status(500).json({ error: 'Server error!' });
+        console.error(`[masterCreateController error]:`, error);
+        res.status(500).json({ error: error.message || 'Server error!' });
     }
 };
 

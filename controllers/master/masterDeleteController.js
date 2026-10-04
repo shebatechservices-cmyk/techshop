@@ -279,8 +279,8 @@ const remove = async (req, res) => {
                 error: 'Cannot delete this item because it is referenced by other active records. Cascading deletion requires deleting child records first.'
             });
         }
-        console.error(error);
-        res.status(500).json({ error: 'Server error!' });
+        console.error(`[masterDeleteController error]:`, error);
+        res.status(500).json({ error: error.message || 'Server error!' });
     }
 };
 

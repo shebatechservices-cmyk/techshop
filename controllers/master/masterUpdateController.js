@@ -77,17 +77,54 @@ const update = async (req, res) => {
                 cleanPayload.is_bundle = isBundleVal;
             }
 
+            const intCols = new Set(['category_id', 'sub_category_id', 'brand_id', 'model_id', 'series_id', 'stock', 'min_stock', 'warranty_months']);
+            const numCols = new Set(['purchase_price', 'selling_price', 'mrp', 'conversion_rate', 'sub_unit_selling_price']);
+            const boolCols = new Set(['is_featured', 'is_serial_tracked', 'is_serial_required', 'is_warranty_required', 'is_bundle', 'is_ecommerce_active']);
+
             Object.entries(cleanPayload).forEach(([key, value]) => {
                 if (!validProductColumns.includes(key)) return;
+                let sanitizedValue = value;
+                if (intCols.has(key)) {
+                    if (value === '' || value === null || value === undefined || value === 'null') {
+                        sanitizedValue = (key === 'stock' || key === 'min_stock' || key === 'warranty_months') ? 0 : null;
+                    } else {
+                        const parsed = parseInt(value, 10);
+                        sanitizedValue = isNaN(parsed) ? null : parsed;
+                    }
+                } else if (numCols.has(key)) {
+                    if (value === '' || value === null || value === undefined || value === 'null') {
+                        sanitizedValue = (key === 'conversion_rate') ? 1 : (key.includes('price') || key === 'mrp' ? 0 : null);
+                    } else {
+                        const parsed = Number(value);
+                        sanitizedValue = isNaN(parsed) ? null : parsed;
+                    }
+                } else if (boolCols.has(key)) {
+                    sanitizedValue = Boolean(parseBool(value));
+                } else {
+                    if (value === '' || value === 'null') {
+                        sanitizedValue = null;
+                    }
+                }
                 columns.push(`${key} = $${index}`);
-                values.push(value);
+                values.push(sanitizedValue);
                 index += 1;
             });
         } else {
             Object.entries(payload).forEach(([key, value]) => {
                 if (key === 'id') return;
+                let sanitizedValue = value;
+                if (key.endsWith('_id')) {
+                    if (value === '' || value === null || value === undefined || value === 'null') {
+                        sanitizedValue = null;
+                    } else {
+                        const parsed = parseInt(value, 10);
+                        sanitizedValue = isNaN(parsed) ? null : parsed;
+                    }
+                } else if (value === '' || value === 'null') {
+                    sanitizedValue = null;
+                }
                 columns.push(`${key} = $${index}`);
-                values.push(value);
+                values.push(sanitizedValue);
                 index += 1;
             });
         }
@@ -143,8 +180,8 @@ const update = async (req, res) => {
                 error: `A ${label.toLowerCase()} with this name already exists!`
             });
         }
-        console.error(error);
-        res.status(500).json({ error: 'Server error!' });
+        console.error(`[masterUpdateController error]:`, error);
+        res.status(500).json({ error: error.message || 'Server error!' });
     }
 };
 
