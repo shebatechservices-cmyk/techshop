@@ -95,13 +95,15 @@ export async function redeemCode(code) {
           message: data.message || 'License successfully verified and activated with Vendor!',
           data: data.data || data,
         };
-      } else if (res.status === 400 || res.status === 403 || res.status === 404) {
-        const errMsg = (data && (data.error || data.message)) || `Vendor rejected code (${res.status})`;
+      } else if (res.status === 400 && data?.error === 'Code already used') {
         return {
           success: false,
-          message: errMsg,
-          error: errMsg,
+          message: data.error,
+          error: data.error,
         };
+      } else {
+        // If 404 or other vendor status, fall through to Application Backend proxy
+        console.warn(`[licenseRedeem] Direct Vendor API returned status ${res.status}. Falling back to Backend proxy.`);
       }
     } catch (err) {
       logNetworkError('Redeem (Direct Vendor API)', targetUrl, err);

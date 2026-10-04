@@ -77,7 +77,7 @@ export async function verifyLicenseOnline() {
 
       if (res.ok) {
         return formatVerificationResponse(data);
-      } else if (res.status === 402 || res.status === 403 || res.status === 404) {
+      } else if (res.status === 402 || res.status === 403) {
         return formatVerificationResponse({
           ...data,
           authorized: false,

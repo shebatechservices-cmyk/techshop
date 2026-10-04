@@ -84,6 +84,15 @@ export function getVendorUrl() {
     (import.meta.env && import.meta.env.VITE_VENDOR_URL) ||
     '';
   const trimmed = String(rawUrl || '').trim().replace(/\/+$/, '');
+
+  // Guard against browser trying to connect to localhost from public domains (CORS & PNA violation)
+  if (typeof window !== 'undefined' && trimmed) {
+    const isLocalhost = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
+    if (!isLocalhost && (trimmed.includes('localhost') || trimmed.includes('127.0.0.1'))) {
+      return '';
+    }
+  }
+
   return trimmed;
 }
 
