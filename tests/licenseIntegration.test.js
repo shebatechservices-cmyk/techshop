@@ -4,6 +4,13 @@ const express = require('express');
 describe('License & Vendor Integration Module', () => {
     jest.setTimeout(20000);
     let app;
+    const fs = require('fs');
+    const dotenv = require('dotenv');
+    let vendorDbUrl = 'postgresql://neondb_owner:npg_oT8Ryml2BNWj@ep-autumn-mountain-b3038g43-pooler.c-4.ap-southeast-1.aws.neon.tech/neondb?sslmode=require';
+    try {
+        const parsed = dotenv.parse(fs.readFileSync('/home/sheba/Vendor/.env'));
+        if (parsed.DATABASE_URL) vendorDbUrl = parsed.DATABASE_URL;
+    } catch (_) {}
     const licenseController = require('../controllers/licenseController');
     const { checkLicenseKillSwitch, resetLicenseCache } = require('../middlewares/licenseMiddleware');
 
@@ -65,7 +72,7 @@ describe('License & Vendor Integration Module', () => {
         // Create an active test code in Vendor DB
         const { PrismaClient } = require('/home/sheba/Vendor/node_modules/@prisma/client');
         const vendorPrisma = new PrismaClient({
-            datasources: { db: { url: 'file:/home/sheba/Vendor/prisma/dev.db' } }
+            datasources: { db: { url: vendorDbUrl } }
         });
         const testCode = 'TEST-JEST-LIC-' + Date.now();
         await vendorPrisma.licenseCode.create({
@@ -109,7 +116,7 @@ describe('License & Vendor Integration Module', () => {
         // Create an active unblock code in Vendor DB
         const { PrismaClient } = require('/home/sheba/Vendor/node_modules/@prisma/client');
         const vendorPrisma = new PrismaClient({
-            datasources: { db: { url: 'file:/home/sheba/Vendor/prisma/dev.db' } }
+            datasources: { db: { url: vendorDbUrl } }
         });
         const unblockCode = 'TEST-UNBLOCK-' + Date.now();
         await vendorPrisma.licenseCode.create({
