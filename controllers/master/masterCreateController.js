@@ -214,11 +214,16 @@ const create = async (req, res) => {
             );
 
             const createdProd = result.rows[0];
-            const rawBundleItems = req.body.bundle_items || req.body.bundleItems;
+            const rawBundleItems = req.body.bundle_items !== undefined ? req.body.bundle_items : req.body.bundleItems;
             if (isBundleVal && rawBundleItems) {
-                const parsed = typeof rawBundleItems === 'string' ? JSON.parse(rawBundleItems) : (Array.isArray(rawBundleItems) ? rawBundleItems : []);
+                let parsed = [];
+                try {
+                    parsed = typeof rawBundleItems === 'string' ? (rawBundleItems.trim() ? JSON.parse(rawBundleItems) : []) : (Array.isArray(rawBundleItems) ? rawBundleItems : []);
+                } catch {
+                    parsed = [];
+                }
                 for (const bi of parsed) {
-                    if (bi.product_id) {
+                    if (bi && bi.product_id) {
                         await pool.query(
                             `INSERT INTO product_bundle_items (bundle_id, product_id, quantity, unit_price)
                              VALUES ($1, $2, $3, $4)`,

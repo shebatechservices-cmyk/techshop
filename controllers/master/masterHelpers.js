@@ -29,11 +29,49 @@ async function ensureMasterSchema() {
             id SERIAL PRIMARY KEY,
             bundle_id INT NOT NULL REFERENCES products(id) ON DELETE CASCADE,
             product_id INT NOT NULL REFERENCES products(id) ON DELETE CASCADE,
-            quantity INT NOT NULL DEFAULT 1,
+            quantity NUMERIC(10,2) NOT NULL DEFAULT 1,
             unit_price NUMERIC(12,2) DEFAULT 0,
             created_at TIMESTAMP DEFAULT NOW(),
             updated_at TIMESTAMP DEFAULT NOW()
         )
+    `).catch(() => null);
+    await pool.query(`
+        DO $$
+        BEGIN
+            IF EXISTS (
+                SELECT 1 FROM information_schema.columns 
+                WHERE table_name = 'product_bundle_items' AND column_name = 'parent_product_id'
+            ) AND NOT EXISTS (
+                SELECT 1 FROM information_schema.columns 
+                WHERE table_name = 'product_bundle_items' AND column_name = 'bundle_id'
+            ) THEN
+                ALTER TABLE product_bundle_items RENAME COLUMN parent_product_id TO bundle_id;
+            END IF;
+            IF EXISTS (
+                SELECT 1 FROM information_schema.columns 
+                WHERE table_name = 'product_bundle_items' AND column_name = 'child_product_id'
+            ) AND NOT EXISTS (
+                SELECT 1 FROM information_schema.columns 
+                WHERE table_name = 'product_bundle_items' AND column_name = 'product_id'
+            ) THEN
+                ALTER TABLE product_bundle_items RENAME COLUMN child_product_id TO product_id;
+            END IF;
+            IF EXISTS (
+                SELECT 1 FROM information_schema.columns 
+                WHERE table_name = 'product_bundle_items' AND column_name = 'custom_price'
+            ) AND NOT EXISTS (
+                SELECT 1 FROM information_schema.columns 
+                WHERE table_name = 'product_bundle_items' AND column_name = 'unit_price'
+            ) THEN
+                ALTER TABLE product_bundle_items RENAME COLUMN custom_price TO unit_price;
+            END IF;
+        END $$;
+        ALTER TABLE product_bundle_items ADD COLUMN IF NOT EXISTS bundle_id INT REFERENCES products(id) ON DELETE CASCADE;
+        ALTER TABLE product_bundle_items ADD COLUMN IF NOT EXISTS product_id INT REFERENCES products(id) ON DELETE CASCADE;
+        ALTER TABLE product_bundle_items ADD COLUMN IF NOT EXISTS quantity NUMERIC(10,2) DEFAULT 1;
+        ALTER TABLE product_bundle_items ADD COLUMN IF NOT EXISTS unit_price NUMERIC(12,2) DEFAULT 0;
+        ALTER TABLE product_bundle_items ADD COLUMN IF NOT EXISTS created_at TIMESTAMP DEFAULT NOW();
+        ALTER TABLE product_bundle_items ADD COLUMN IF NOT EXISTS updated_at TIMESTAMP DEFAULT NOW();
     `).catch(() => null);
     await pool.query(`
         CREATE TABLE IF NOT EXISTS trash_records (

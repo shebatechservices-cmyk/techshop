@@ -143,12 +143,17 @@ const update = async (req, res) => {
 
         const updatedRow = result.rows[0];
         if (entity === 'products') {
-            const rawBundleItems = payload.bundle_items || payload.bundleItems;
+            const rawBundleItems = payload.bundle_items !== undefined ? payload.bundle_items : payload.bundleItems;
             if (rawBundleItems !== undefined) {
-                const parsed = typeof rawBundleItems === 'string' ? JSON.parse(rawBundleItems) : (Array.isArray(rawBundleItems) ? rawBundleItems : []);
+                let parsed = [];
+                try {
+                    parsed = typeof rawBundleItems === 'string' ? (rawBundleItems.trim() ? JSON.parse(rawBundleItems) : []) : (Array.isArray(rawBundleItems) ? rawBundleItems : []);
+                } catch {
+                    parsed = [];
+                }
                 await pool.query('DELETE FROM product_bundle_items WHERE bundle_id = $1', [Number(id)]);
                 for (const bi of parsed) {
-                    if (bi.product_id) {
+                    if (bi && bi.product_id) {
                         await pool.query(
                             `INSERT INTO product_bundle_items (bundle_id, product_id, quantity, unit_price)
                              VALUES ($1, $2, $3, $4)`,
