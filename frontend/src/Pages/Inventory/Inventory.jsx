@@ -3,6 +3,7 @@ import WarehouseManageModal from './modals/WarehouseManageModal';
 import WarrantyModal from './modals/WarrantyModal';
 import LabelPrintModal from './modals/LabelPrintModal';
 import StockTransferModal from './modals/StockTransferModal';
+import ProductDetailsModal from './modals/ProductDetailsModal';
 import useInventoryManager, { taka, getWarrantyValidity } from './hooks/useInventoryManager';
 import InventoryMetrics from './components/InventoryMetrics';
 import InventoryFilters from './components/InventoryFilters';
@@ -73,6 +74,9 @@ export default function Inventory({ onOpenNewSale, readOnly = false }) {
     handleCopyPriceList,
     handlePrintPriceList,
     setCurrentPage,
+    detailModalProduct,
+    handleOpenProductDetails,
+    handleCloseProductDetails,
   } = useInventoryManager({ onOpenNewSale });
 
   return (
@@ -183,6 +187,7 @@ export default function Inventory({ onOpenNewSale, readOnly = false }) {
         onOpenNewSale={onOpenNewSale}
         handleOpenLabelModal={handleOpenLabelModal}
         handleOpenTransferModal={handleOpenTransferModal}
+        onViewProductDetails={handleOpenProductDetails}
         currentPageSafe={currentPageSafe}
         totalPages={totalPages}
         itemsPerPage={itemsPerPage}
@@ -191,14 +196,26 @@ export default function Inventory({ onOpenNewSale, readOnly = false }) {
         getWarrantyValidity={getWarrantyValidity}
       />
 
-      {/* Modal 1: Warranty & Serial Numbers */}
+      {/* Modal 1: Product Detailed View Modal */}
+      <ProductDetailsModal
+        product={detailModalProduct}
+        onClose={handleCloseProductDetails}
+        onOpenNewSale={onOpenNewSale}
+        handleOpenTransferModal={handleOpenTransferModal}
+        handleOpenLabelModal={handleOpenLabelModal}
+        handleOpenWarrantyModal={handleOpenWarrantyModal}
+        taka={taka}
+        getWarrantyValidity={getWarrantyValidity}
+      />
+
+      {/* Modal 2: Warranty & Serial Numbers */}
       <WarrantyModal
         product={warrantyModalProduct}
         warrantyData={warrantyData}
         onClose={() => setWarrantyModalProduct(null)}
       />
 
-      {/* Modal 2: Print Barcode & Price Labels */}
+      {/* Modal 3: Print Barcode & Price Labels */}
       <LabelPrintModal
         product={labelModalProduct}
         labelQuantity={labelQuantity}
@@ -208,7 +225,7 @@ export default function Inventory({ onOpenNewSale, readOnly = false }) {
         printLabelRef={printLabelRef}
       />
 
-      {/* Modal 3: Stock Transfer */}
+      {/* Modal 4: Stock Transfer */}
       <StockTransferModal
         isOpen={isTransferModalOpen}
         onClose={() => setIsTransferModalOpen(false)}
@@ -220,7 +237,7 @@ export default function Inventory({ onOpenNewSale, readOnly = false }) {
         transferSubmitting={transferSubmitting}
       />
 
-      {/* Modal 4: Centralized Warehouse Management Modal */}
+      {/* Modal 5: Centralized Warehouse Management Modal */}
       <WarehouseManageModal
         isOpen={isWarehouseModalOpen}
         onClose={() => setIsWarehouseModalOpen(false)}
