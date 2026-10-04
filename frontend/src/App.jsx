@@ -94,6 +94,7 @@ export default function App() {
   } = useAppGlobalState();
 
   const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
+  const [isTrialBannerDismissed, setIsTrialBannerDismissed] = useState(false);
 
   const {
     isValid: isLicenseValid,
@@ -210,7 +211,7 @@ export default function App() {
           />
 
           {/* 15-Day Free Trial Alert Banner */}
-          {!licenseLoading && isTrial && !hasCommercialLicense && isLicenseValid && !isLicenseBlocked && (
+          {!licenseLoading && isTrial && !hasCommercialLicense && isLicenseValid && !isLicenseBlocked && !isTrialBannerDismissed && (
             <div className="w-full mb-4 px-4 py-2.5 bg-amber-50 border border-amber-200 rounded-xl flex items-center justify-between text-xs text-amber-900 shadow-sm animate-fadeIn">
               <div className="flex items-center gap-2">
                 <span className="text-base">⏳</span>
@@ -221,9 +222,23 @@ export default function App() {
                   </span>
                 </span>
               </div>
-              <span className="text-[10px] bg-amber-200 text-amber-900 border border-amber-300 font-extrabold px-2 py-0.5 rounded-md uppercase tracking-wider">
-                15-Day Trial
-              </span>
+              <div className="flex items-center gap-2">
+                <button
+                  type="button"
+                  onClick={() => handleGlobalNavigate({ section: 'settings', tab: 'license' })}
+                  className="px-2.5 py-1 bg-amber-600 hover:bg-amber-700 text-white rounded-md font-bold text-[11px] shadow-xs cursor-pointer transition-colors"
+                >
+                  Activate License
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setIsTrialBannerDismissed(true)}
+                  className="text-amber-700 hover:text-amber-900 text-sm font-bold px-1.5 py-0.5 rounded cursor-pointer"
+                  title="Dismiss for this session"
+                >
+                  ✕
+                </button>
+              </div>
             </div>
           )}
 

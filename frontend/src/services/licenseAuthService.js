@@ -318,6 +318,10 @@ export const licenseAuthService = {
 
       if (res.ok) {
         if (data.status === 'active' && data.full_license_key && !data.is_trial) {
+          try {
+            localStorage.setItem('sheba_custom_license_key', data.full_license_key);
+            localStorage.removeItem('sheba_trial_license_v1');
+          } catch (_) {}
           return formatVerificationResponse(data);
         } else if (data.status === 'expired' || data.status === 'suspended') {
           return formatVerificationResponse(data);

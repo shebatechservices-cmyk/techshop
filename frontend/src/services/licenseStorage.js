@@ -124,6 +124,9 @@ export function saveCachedToken(payload) {
     };
     dataToSave.checksum = createChecksum(dataToSave);
     localStorage.setItem(STORAGE_KEY, JSON.stringify(dataToSave));
+    if (payload.hasCommercialLicense) {
+      localStorage.removeItem(TRIAL_STORAGE_KEY);
+    }
   } catch (_) {}
 }
 
