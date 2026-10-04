@@ -107,7 +107,7 @@ const redeemLicenseCode = async (req, res) => {
 
         // 2. Offline / Local fallback validation for standalone demo & test codes
         if (!vendorResponse) {
-            const isValidStructuredKey = /^(VEND-[A-Z0-9]{4}-[A-Z0-9]{4}-[A-Z0-9]{4}-[A-Z0-9]{4}|SHEBA-[A-Z0-9]+(-[A-Z0-9]+){2,})$/i.test(code);
+            const isValidStructuredKey = /^(VEND|SHEBA|REN|DOM|HOST|LIC|SAAS)-[A-Z0-9]+(-[A-Z0-9]+){1,5}$/i.test(code);
 
             if (code.includes('DOMAIN') || code.startsWith('DOM-')) {
                 // Domain Renewal Code (+1 Year)
