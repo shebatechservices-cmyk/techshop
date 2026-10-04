@@ -26,6 +26,12 @@ const getInventory = async (req, res) => {
                 m.name AS model_name,
                 p.series_id,
                 s.name AS series_name,
+                p.unit_name,
+                p.sub_unit_name,
+                p.conversion_rate,
+                p.sub_unit_selling_price,
+                p.is_serial_tracked,
+                p.is_serial_required,
                 COALESCE(NULLIF(p.purchase_price, 0), (
                     SELECT poi.cost_price 
                     FROM purchase_order_items poi 
@@ -167,6 +173,14 @@ const getInventory = async (req, res) => {
 
             const costPrice = Number(p.cost_price || p.purchase_price || 0);
             const salePrice = Number(p.sale_price || p.selling_price || p.mrp || costPrice);
+            const convRate = Number(p.conversion_rate || 1) > 1 ? Number(p.conversion_rate) : 1;
+            const effectiveCostPerStockUnit = convRate > 1 ? (costPrice / convRate) : costPrice;
+            const effectiveSalePerStockUnit = convRate > 1 ? (salePrice / convRate) : salePrice;
+            const stockValuation = stock * effectiveCostPerStockUnit;
+            const retailValuation = stock * effectiveSalePerStockUnit;
+            const stockDisplay = p.sub_unit_name && convRate > 1
+                ? `${stock} ${p.sub_unit_name} (${(stock / convRate).toFixed(2)} ${p.unit_name || 'Roll'})`
+                : `${stock} ${p.unit_name || 'pcs'}`;
 
             return {
                 ...p,
@@ -177,6 +191,14 @@ const getInventory = async (req, res) => {
                 salePrice: salePrice,
                 selling_price: salePrice,
                 purchase_price: costPrice,
+                conversion_rate: convRate,
+                unit_name: p.unit_name || 'pcs',
+                sub_unit_name: p.sub_unit_name || null,
+                stock_display: stockDisplay,
+                effective_cost_per_unit: effectiveCostPerStockUnit,
+                effective_sale_per_unit: effectiveSalePerStockUnit,
+                stock_valuation: stockValuation,
+                retail_valuation: retailValuation,
                 mrp: Number(p.mrp || 0),
                 stock: stock,
                 min_stock: minStock,
@@ -193,8 +215,8 @@ const getInventory = async (req, res) => {
         // Compute Overview Metrics across entire catalog
         const totalProducts = items.length;
         const totalUnits = items.reduce((sum, p) => sum + p.stock, 0);
-        const totalCostValuation = items.reduce((sum, p) => sum + (p.stock * p.cost_price), 0);
-        const totalRetailValuation = items.reduce((sum, p) => sum + (p.stock * p.sale_price), 0);
+        const totalCostValuation = items.reduce((sum, p) => sum + (p.stock_valuation || 0), 0);
+        const totalRetailValuation = items.reduce((sum, p) => sum + (p.retail_valuation || 0), 0);
         const lowStockCount = items.filter((p) => p.stock_status === 'low_stock').length;
         const outOfStockCount = items.filter((p) => p.stock_status === 'out_of_stock').length;
 

@@ -167,8 +167,14 @@ exports.getFinancialAnalytics = async (req, res) => {
             SELECT 
                 COUNT(*) AS total_skus,
                 COALESCE(SUM(stock), 0) AS total_stock_units,
-                COALESCE(SUM(stock * COALESCE(purchase_price, 0)), 0) AS total_cost_value,
-                COALESCE(SUM(stock * COALESCE(selling_price, 0)), 0) AS total_retail_value,
+                COALESCE(SUM(
+                    (stock / CASE WHEN COALESCE(conversion_rate, 1) > 1 THEN conversion_rate ELSE 1 END) 
+                    * COALESCE(purchase_price, 0)
+                ), 0) AS total_cost_value,
+                COALESCE(SUM(
+                    (stock / CASE WHEN COALESCE(conversion_rate, 1) > 1 THEN conversion_rate ELSE 1 END) 
+                    * COALESCE(selling_price, 0)
+                ), 0) AS total_retail_value,
                 COUNT(CASE WHEN stock <= COALESCE(min_stock, 5) AND stock > 0 THEN 1 END) AS low_stock_skus,
                 COUNT(CASE WHEN stock <= 0 THEN 1 END) AS out_of_stock_skus
             FROM products

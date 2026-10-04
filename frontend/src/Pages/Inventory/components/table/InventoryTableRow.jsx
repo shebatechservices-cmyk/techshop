@@ -139,13 +139,13 @@ export default function InventoryTableRow({
             title={`Available in ${warehouseName}`}
           >
             <span>{isOut ? '🚫' : isLow ? '⚠️' : '✓'}</span>
-            <span>{stock} pcs</span>
+            <span>{p.stock_display || `${stock} ${p.unit_name || 'pcs'}`}</span>
           </span>
           <span
             className="text-[0.62rem] text-slate-400 font-semibold whitespace-nowrap"
             title="Total recorded inflow"
           >
-            Inflow: {p.total_inflow_units || p.purchase_count || stock}
+            Inflow: {p.total_inflow_units || p.purchase_count || stock} {p.unit_name || 'pcs'}
           </span>
         </div>
       </td>
@@ -155,11 +155,26 @@ export default function InventoryTableRow({
         <div className="flex flex-col items-end gap-px">
           <span className="font-extrabold text-slate-900 text-xs" title="Retail Selling Price">
             {taka(p.sale_price)}
+            {p.conversion_rate > 1 && p.unit_name && (
+              <span className="text-[0.65rem] font-normal text-slate-500"> /{p.unit_name}</span>
+            )}
           </span>
+          {p.conversion_rate > 1 && p.sub_unit_name && (
+            <span className="text-[0.62rem] text-slate-500 font-medium leading-none">
+              {taka(p.effective_sale_per_unit)}/{p.sub_unit_name}
+            </span>
+          )}
           <div className="inline-flex items-center gap-1 text-[0.66rem] text-slate-500">
             <span>Cost:</span>
             <span className="font-bold text-slate-600 font-mono">
-              {revealedCostIds?.has(p.id) ? taka(p.cost_price) : '৳••••'}
+              {revealedCostIds?.has(p.id) ? (
+                <>
+                  {taka(p.cost_price)}
+                  {p.conversion_rate > 1 && p.sub_unit_name && (
+                    <span className="font-sans font-normal text-[0.62rem] text-slate-500"> ({taka(p.effective_cost_per_unit)}/{p.sub_unit_name})</span>
+                  )}
+                </>
+              ) : '৳••••'}
             </span>
             <button
               type="button"

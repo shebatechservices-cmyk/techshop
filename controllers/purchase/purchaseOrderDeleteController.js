@@ -51,9 +51,12 @@ const deleteOrder = async (req, res) => {
             FROM sales_items si
             JOIN sales s ON s.id = si.sale_id
             JOIN purchase_order_items poi ON poi.product_id = si.product_id
+            JOIN products p ON p.id = poi.product_id
             WHERE poi.purchase_order_id = $1 
+              AND p.is_serial_tracked = false
               AND s.created_at > (SELECT created_at FROM purchase_orders WHERE id = $1)
               AND s.deleted_at IS NULL
+              AND p.stock < poi.quantity
         `, [id]).catch(() => ({ rows: [] }));
 
         const allLinkedInvoices = [...new Set([

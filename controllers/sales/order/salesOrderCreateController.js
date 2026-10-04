@@ -180,6 +180,12 @@ const createSale = async (req, res) => {
             const expireDate = warrantyMonths > 0
                 ? new Date(Date.now() + warrantyMonths * 30 * 24 * 60 * 60 * 1000)
                 : null;
+            let itemCostPrice = money(item.cost_price);
+            const itemConvRate = Number(item.conversion_rate || 1);
+            if (item.unit_type === 'sub_unit' && itemConvRate > 1 && itemCostPrice > money(item.unit_price) * 2) {
+                itemCostPrice = money(itemCostPrice / itemConvRate);
+            }
+
             const savedItem = await client.query(
                 `INSERT INTO sales_items (sale_id, product_id, quantity, unit_price, cost_price, line_total, warranty_expire_date, warranty_months, unit_name, unit_type, conversion_rate)
                  VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11) RETURNING id`,
@@ -188,7 +194,7 @@ const createSale = async (req, res) => {
                     item.product_id,
                     item.quantity,
                     item.unit_price,
-                    item.cost_price,
+                    itemCostPrice,
                     item.line_total,
                     expireDate,
                     warrantyMonths,

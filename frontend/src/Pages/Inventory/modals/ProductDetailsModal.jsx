@@ -23,9 +23,12 @@ export default function ProductDetailsModal({
   const costPrice = Number(product.cost_price || product.purchase_price || 0);
   const salePrice = Number(product.sale_price || product.selling_price || product.mrp || 0);
   const mrp = Number(product.mrp || 0);
+  const convRate = Number(product.conversion_rate || 1) > 1 ? Number(product.conversion_rate) : 1;
+  const effectiveCost = convRate > 1 ? (costPrice / convRate) : costPrice;
+  const effectiveSale = convRate > 1 ? (salePrice / convRate) : salePrice;
   const margin = salePrice > 0 && costPrice > 0 ? salePrice - costPrice : 0;
   const marginPercent = costPrice > 0 ? ((margin / costPrice) * 100).toFixed(1) : 0;
-  const totalValuation = stock * costPrice;
+  const totalValuation = stock * effectiveCost;
 
   // Supplier warranty calculation
   const supMonths = Number(product.supplier_warranty_months || product.warranty_months || 0);
@@ -269,14 +272,30 @@ export default function ProductDetailsModal({
                 <span className="text-[0.72rem] text-slate-500 block font-semibold">Selling Price</span>
                 <span className="text-lg font-black text-emerald-700">
                   {formatMoney(salePrice)}
+                  {convRate > 1 && <span className="text-xs font-normal text-slate-500"> /{product.unit_name || 'Box'}</span>}
                 </span>
+                {convRate > 1 && (
+                  <span className="text-[0.68rem] text-slate-500 block font-medium">
+                    {formatMoney(effectiveSale)} /{product.sub_unit_name || 'Unit'}
+                  </span>
+                )}
               </div>
 
               <div>
                 <span className="text-[0.72rem] text-slate-500 block font-semibold">Purchase Cost</span>
                 <span className="text-lg font-mono font-bold text-slate-700">
-                  {showCost ? formatMoney(costPrice) : '••••••'}
+                  {showCost ? (
+                    <>
+                      {formatMoney(costPrice)}
+                      {convRate > 1 && <span className="text-xs font-normal text-slate-500 font-sans"> /{product.unit_name || 'Box'}</span>}
+                    </>
+                  ) : '••••••'}
                 </span>
+                {showCost && convRate > 1 && (
+                  <span className="text-[0.68rem] text-slate-500 block font-medium font-mono">
+                    {formatMoney(effectiveCost)} /{product.sub_unit_name || 'Unit'}
+                  </span>
+                )}
               </div>
 
               <div>
