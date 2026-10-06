@@ -208,6 +208,20 @@ const createSale = async (req, res) => {
                 itemCostPrice = money(itemCostPrice / itemConvRate);
             }
 
+            // If product is a bundle and no explicit cost provided, compute sum of component costs
+            if (itemCostPrice <= 0 && item.product_id) {
+                const bCostRes = await client.query(
+                    `SELECT SUM(bi.quantity * COALESCE(p.purchase_price, 0)) AS total_bundle_cost
+                     FROM product_bundle_items bi
+                     JOIN products p ON p.id = bi.product_id
+                     WHERE bi.bundle_id = $1`,
+                    [item.product_id]
+                );
+                if (bCostRes.rows[0]?.total_bundle_cost > 0) {
+                    itemCostPrice = money(bCostRes.rows[0].total_bundle_cost);
+                }
+            }
+
             const savedItem = await client.query(
                 `INSERT INTO sales_items (sale_id, product_id, quantity, unit_price, cost_price, line_total, warranty_expire_date, warranty_months, unit_name, unit_type, conversion_rate)
                  VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11) RETURNING id`,
