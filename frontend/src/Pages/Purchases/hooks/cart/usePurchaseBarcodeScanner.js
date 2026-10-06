@@ -47,7 +47,16 @@ export function usePurchaseBarcodeScanner({
       }
     }
 
-    // 2. Check pattern / length consistency with first scanned serial (Reference Serial)
+    // 2. Reject item codes / material part numbers with dots (e.g. Dahua/Hikvision 1.0.01.12.26599)
+    if (code.includes('.') || /^(\d+\.)+\d+$/.test(code)) {
+      setBarcodeScanErrors((prev) => ({
+        ...prev,
+        [localId]: `⚠️ "${code}" কোনো সিরিয়াল নম্বর নয়! এটি প্রোডাক্টের পার্ট নম্বর বা আইটেম কোড (Item Code)। অনুগ্রহ করে আসল S/N বারকোড স্ক্যান করুন।`,
+      }));
+      return;
+    }
+
+    // 3. Check pattern / length consistency with first scanned serial (Reference Serial)
     const targetItem = items.find((i) => i.localId === localId);
     if (targetItem) {
       const existingList = Array.isArray(targetItem.barcodes)
@@ -61,6 +70,16 @@ export function usePurchaseBarcodeScanner({
           setBarcodeScanErrors((prev) => ({
             ...prev,
             [localId]: `⚠️ Invalid length! Expected ${refSerial.length} characters (Ref: "${refSerial}"), but got ${code.length}.`,
+          }));
+          return;
+        }
+
+        const isRefAlphanumeric = /^[A-Z0-9]+$/i.test(refSerial);
+        const isCodeAlphanumeric = /^[A-Z0-9]+$/i.test(code);
+        if (isRefAlphanumeric && !isCodeAlphanumeric) {
+          setBarcodeScanErrors((prev) => ({
+            ...prev,
+            [localId]: `⚠️ প্যাটার্ন অমিল! ১ম রেফারেন্স সিরিয়াল "${refSerial}" অ্যালফানিউমেরিক, কিন্তু "${code}" এ বিশেষ চিহ্ন রয়েছে।`,
           }));
           return;
         }

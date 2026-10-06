@@ -65,10 +65,10 @@ export default function CartItemSerialsList({
             </label>
             {barcodesList.length > 0 && (
               <span
-                className="text-[0.62rem] text-sky-700 font-semibold bg-sky-100 py-0.25 px-1 rounded whitespace-nowrap"
-                title="All subsequent serials must match this length"
+                className="text-[0.62rem] text-sky-700 font-semibold bg-sky-100 py-0.25 px-1.5 rounded whitespace-nowrap"
+                title={`১ম রেফারেন্স সিরিয়াল: "${barcodesList[0]}" (${barcodesList[0].length} অক্ষর)`}
               >
-                Ref: {barcodesList[0].length}
+                Ref: {barcodesList[0].length} chars
               </span>
             )}
           </div>
