@@ -1,4 +1,5 @@
 import React, { useEffect } from 'react';
+import { fullCatalogName } from '../../../utils/productUtils';
 
 export default function PurchaseDetailDrawer({
   isOpen,
@@ -214,8 +215,13 @@ export default function PurchaseDetailDrawer({
                             <div className="flex justify-between items-start gap-2">
                               <div className="flex-1">
                                 <div className="font-bold text-slate-900 text-xs">
-                                  {item.product_name || item.name || 'Product'}
+                                  {item.full_name || item.name || fullCatalogName(item) || item.product_name || 'Product'}
                                 </div>
+                                {item.sku && (
+                                  <div className="text-[0.68rem] text-slate-400 font-mono mt-0.5">
+                                    SKU: {item.sku}
+                                  </div>
+                                )}
                                 <div className="text-[0.7rem] text-slate-500 mt-0.5">
                                   {itemQty} × {taka(itemCost)}
                                   {finalCost > itemCost && (

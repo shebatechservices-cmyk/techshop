@@ -85,8 +85,10 @@ const getOrderById = async (req, res) => {
             const fullTitle = formatProductFullName(it);
             return {
                 ...it,
+                raw_product_name: it.product_name,
                 name: fullTitle,
                 full_name: fullTitle,
+                product_name: fullTitle,
                 serials: serialsByItem[it.id] || [],
             };
         });

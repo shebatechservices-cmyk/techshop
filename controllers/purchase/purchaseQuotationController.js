@@ -1,4 +1,5 @@
 const pool = require('../../config/db');
+const { formatProductFullName } = require('./purchaseHelpers');
 
 // =========================================================
 // PURCHASE QUOTATIONS
@@ -165,13 +166,26 @@ const getQuotationById = async (req, res) => {
         if (!qRes.rows.length) return res.status(404).json({ error: 'Quotation not found' });
 
         const itemRes = await pool.query(
-            `SELECT qi.*, p.name AS product_name
+            `SELECT qi.*, p.name AS product_name, b.name AS brand_name, m.name AS model_name, s.name AS series_name, p.sku
              FROM purchase_quotation_items qi
              LEFT JOIN products p ON p.id = qi.product_id
+             LEFT JOIN brands b ON b.id = p.brand_id
+             LEFT JOIN models m ON m.id = p.model_id
+             LEFT JOIN series s ON s.id = p.series_id
              WHERE qi.quotation_id = $1`,
             [id]
         );
-        res.status(200).json({ data: { ...qRes.rows[0], items: itemRes.rows } });
+        const qItems = itemRes.rows.map((it) => {
+            const fullTitle = formatProductFullName(it);
+            return {
+                ...it,
+                raw_product_name: it.product_name,
+                name: fullTitle,
+                full_name: fullTitle,
+                product_name: fullTitle,
+            };
+        });
+        res.status(200).json({ data: { ...qRes.rows[0], items: qItems } });
     } catch (error) {
         console.error('getQuotationById error:', error);
         res.status(500).json({ error: 'Failed to load quotation' });
