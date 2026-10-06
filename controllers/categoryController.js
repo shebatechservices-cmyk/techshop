@@ -26,7 +26,7 @@ const addCategory = async (req, res) => {
 
 const getCategories = async (req, res) => {
     try {
-        const result = await pool.query('SELECT * FROM categories WHERE deleted_at IS NULL ORDER BY id ASC');
+        const result = await pool.query('SELECT * FROM categories WHERE deleted_at IS NULL ORDER BY LOWER(name) ASC, name ASC');
         res.status(200).json(result.rows);
     } catch (error) {
         console.error('getCategories error:', error);
@@ -73,10 +73,10 @@ const getSubCategories = async (req, res) => {
         const categoryId = req.query.category_id ? Number(req.query.category_id) : null;
         const result = categoryId
             ? await pool.query(
-                'SELECT * FROM sub_categories WHERE category_id = $1 AND deleted_at IS NULL ORDER BY id ASC',
+                'SELECT * FROM sub_categories WHERE category_id = $1 AND deleted_at IS NULL ORDER BY LOWER(name) ASC, name ASC',
                 [categoryId]
             )
-            : await pool.query('SELECT * FROM sub_categories WHERE deleted_at IS NULL ORDER BY id ASC');
+            : await pool.query('SELECT * FROM sub_categories WHERE deleted_at IS NULL ORDER BY LOWER(name) ASC, name ASC');
         res.status(200).json(result.rows);
     } catch (error) {
         console.error('getSubCategories error:', error);

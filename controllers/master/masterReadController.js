@@ -179,7 +179,12 @@ const getAll = async (req, res) => {
             query += ` WHERE ${filters.join(' AND ')}`;
         }
 
-        query += entity === 'products' ? ' ORDER BY p.id ASC' : ' ORDER BY id ASC';
+        const hasNameColumn = ['categories', 'sub_categories', 'brands', 'models', 'series', 'product_names'].includes(entity);
+        query += entity === 'products'
+            ? ' ORDER BY p.id ASC'
+            : hasNameColumn
+            ? ' ORDER BY LOWER(name) ASC, name ASC'
+            : ' ORDER BY id ASC';
         const result = await pool.query(query, params);
         if (entity === 'products') {
             const bundleItemsRes = await pool.query(`

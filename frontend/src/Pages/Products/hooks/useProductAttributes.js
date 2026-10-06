@@ -2,6 +2,7 @@ import { useState, useEffect, useMemo } from "react";
 import API_BASE from "../../../services/api";
 import {
   getMergedArray,
+  sortAlphabetically,
   buildQuickAddConfig,
   buildQuickAddPayload,
   buildQuickEditConfig,
@@ -85,12 +86,12 @@ export default function useProductAttributes({ onEntityCreated } = {}) {
         fetchJson(`${API}/product_names`).catch(() => []),
       ]);
 
-      setCategories(Array.isArray(categoryData) ? categoryData : categoryData?.data || []);
-      setSubCategories(Array.isArray(subCategoryData) ? subCategoryData : subCategoryData?.data || []);
-      setBrands(Array.isArray(brandData) ? brandData : brandData?.data || []);
-      setModels(Array.isArray(modelData) ? modelData : modelData?.data || []);
-      setSeries(Array.isArray(seriesData) ? seriesData : seriesData?.data || []);
-      const allPNames = Array.isArray(productNamesData) ? productNamesData : productNamesData?.data || [];
+      setCategories(sortAlphabetically(Array.isArray(categoryData) ? categoryData : categoryData?.data || []));
+      setSubCategories(sortAlphabetically(Array.isArray(subCategoryData) ? subCategoryData : subCategoryData?.data || []));
+      setBrands(sortAlphabetically(Array.isArray(brandData) ? brandData : brandData?.data || []));
+      setModels(sortAlphabetically(Array.isArray(modelData) ? modelData : modelData?.data || []));
+      setSeries(sortAlphabetically(Array.isArray(seriesData) ? seriesData : seriesData?.data || []));
+      const allPNames = sortAlphabetically(Array.isArray(productNamesData) ? productNamesData : productNamesData?.data || []);
       setAllProductNames(allPNames);
       setProductNames([]);
     } catch (error) {
@@ -100,12 +101,12 @@ export default function useProductAttributes({ onEntityCreated } = {}) {
 
   const catalogSubCategories = useMemo(() => {
     return selectedCategory
-      ? subCategories.filter((item) => String(item.category_id) === String(selectedCategory))
+      ? sortAlphabetically(subCategories.filter((item) => String(item.category_id) === String(selectedCategory)))
       : [];
   }, [subCategories, selectedCategory]);
 
   const catalogBrands = useMemo(() => {
-    return Array.isArray(brands) ? brands : [];
+    return sortAlphabetically(Array.isArray(brands) ? brands : []);
   }, [brands]);
 
   useEffect(() => {
@@ -128,7 +129,7 @@ export default function useProductAttributes({ onEntityCreated } = {}) {
         const items = Array.isArray(data) ? data : (data?.data || []);
         // Strict brand matching: only items associated with this specific brand
         const filtered = items.filter((p) => String(p.brand_id) === String(selectedBrand));
-        setProductNames(filtered);
+        setProductNames(sortAlphabetically(filtered));
       })
       .catch(() => setProductNames([]));
   }, [selectedBrand, selectedSubCategory, selectedCategory]);
@@ -152,7 +153,7 @@ export default function useProductAttributes({ onEntityCreated } = {}) {
       .then((data) => {
         const items = Array.isArray(data) ? data : (data?.data || []);
         const filtered = items.filter((m) => String(m.brand_id) === String(selectedBrand));
-        setModels(filtered);
+        setModels(sortAlphabetically(filtered));
       })
       .catch(() => setModels([]));
   }, [selectedBrand, selectedCategory, selectedSubCategory]);
@@ -167,7 +168,7 @@ export default function useProductAttributes({ onEntityCreated } = {}) {
       .then((data) => {
         const items = Array.isArray(data) ? data : (data?.data || []);
         const filtered = items.filter((s) => String(s.brand_id) === String(selectedBrand));
-        setSeries(filtered);
+        setSeries(sortAlphabetically(filtered));
       })
       .catch(() => setSeries([]));
   }, [selectedBrand]);
@@ -211,7 +212,7 @@ export default function useProductAttributes({ onEntityCreated } = {}) {
       models: setModels,
       series: setSeries,
     };
-    if (setters[entity]) setters[entity](items);
+    if (setters[entity]) setters[entity](sortAlphabetically(items));
   };
 
   const saveAttributeItem = async (entity) => {

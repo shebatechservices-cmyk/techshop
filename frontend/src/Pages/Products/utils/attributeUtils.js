@@ -3,11 +3,22 @@
  */
 
 /**
- * Merge newly created/updated entity into existing array maintaining uniqueness by ID
+ * Sort array of attribute objects alphabetically by name (A-Z)
+ */
+export const sortAlphabetically = (arr = []) => {
+  if (!Array.isArray(arr)) return [];
+  return [...arr].sort((a, b) =>
+    String(a?.name || '').localeCompare(String(b?.name || ''), undefined, { sensitivity: 'base' })
+  );
+};
+
+/**
+ * Merge newly created/updated entity into existing array maintaining uniqueness by ID and alphabetical order
  */
 export const getMergedArray = (prevArray = [], newItem) => {
-  if (!newItem || newItem.id === undefined) return prevArray;
-  return [newItem, ...(prevArray || []).filter((p) => p.id !== newItem.id)];
+  if (!newItem || newItem.id === undefined) return sortAlphabetically(prevArray);
+  const merged = [newItem, ...(prevArray || []).filter((p) => p.id !== newItem.id)];
+  return sortAlphabetically(merged);
 };
 
 /**
