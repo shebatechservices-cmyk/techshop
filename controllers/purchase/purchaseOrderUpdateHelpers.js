@@ -283,12 +283,19 @@ const reconcilePurchaseOrderItems = async (client, { id, items, soldProductMap, 
         const itemFinalCost = Number(finalCost || costPrice) || 0;
         await client.query(
             `UPDATE products 
-             SET purchase_price = $1, 
-                 selling_price = CASE WHEN $2::numeric > 0 THEN $2::numeric ELSE selling_price END,
-                 mrp = CASE WHEN $2::numeric > 0 THEN $2::numeric ELSE mrp END,
+             SET purchase_price = COALESCE((
+                     SELECT COALESCE(NULLIF(poi.final_cost, 0), poi.cost_price)
+                     FROM purchase_order_items poi
+                     JOIN purchase_orders po ON po.id = poi.purchase_order_id
+                     WHERE poi.product_id = $1 AND po.deleted_at IS NULL
+                     ORDER BY po.created_at DESC, poi.id DESC
+                     LIMIT 1
+                 ), $2::numeric),
+                 selling_price = CASE WHEN $3::numeric > 0 THEN $3::numeric ELSE selling_price END,
+                 mrp = CASE WHEN $3::numeric > 0 THEN $3::numeric ELSE mrp END,
                  updated_at = NOW() 
-             WHERE id = $3`,
-            [itemFinalCost, finalSale, pid]
+             WHERE id = $1`,
+            [pid, itemFinalCost, finalSale]
         );
 
         if (Array.isArray(item.serials)) {

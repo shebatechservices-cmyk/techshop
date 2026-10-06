@@ -330,6 +330,62 @@ export default function ProductDetailsModal({
             )}
           </div>
 
+          {/* 4.1 Purchase Batches & Fixed Costs Breakdown */}
+          {Array.isArray(product.batches) && product.batches.length > 0 && (
+            <div className="rounded-xl border border-sky-200 bg-sky-50/40 p-4">
+              <div className="flex items-center justify-between mb-2.5">
+                <div className="flex items-center gap-2">
+                  <span className="p-1 bg-sky-100 rounded text-sky-700 text-xs">📋</span>
+                  <span className="font-extrabold text-sm text-slate-900">
+                    Purchase Batches &amp; Fixed Costs ({product.batches.length})
+                  </span>
+                </div>
+                <span className="text-[11px] font-bold text-sky-700 bg-sky-100 px-2 py-0.5 rounded border border-sky-200">
+                  Batch-Fixed Rates
+                </span>
+              </div>
+              <div className="divide-y divide-sky-100 border border-sky-100 rounded-lg bg-white overflow-hidden text-xs">
+                {product.batches.map((batch, bIdx) => {
+                  const bCost = Number(batch.cost_price || 0);
+                  const bFinal = Number(batch.final_cost || bCost);
+                  const bDate = batch.purchase_date
+                    ? new Date(batch.purchase_date).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' })
+                    : 'N/A';
+                  return (
+                    <div key={batch.purchase_order_id || bIdx} className="p-2.5 flex items-center justify-between hover:bg-slate-50 transition-colors">
+                      <div className="min-w-0 flex-1">
+                        <div className="flex items-center gap-2 flex-wrap">
+                          <span className="font-mono font-bold text-sky-800">{batch.po_number || `PO #${batch.purchase_order_id}`}</span>
+                          <span className="text-[10px] text-slate-400">• {bDate}</span>
+                          <span className="text-[11px] font-medium text-slate-600 truncate max-w-[150px]">{batch.supplier_name}</span>
+                        </div>
+                        <div className="text-[11px] text-slate-500 mt-0.5">
+                          Inflow: <strong className="text-slate-700">{batch.quantity} units</strong>
+                        </div>
+                      </div>
+                      <div className="text-right ml-3 shrink-0">
+                        <div className="font-mono font-black text-slate-900 text-xs">
+                          {formatMoney(bCost)} <span className="font-sans font-normal text-[10px] text-slate-400">/unit</span>
+                        </div>
+                        {bFinal > bCost && (
+                          <div className="text-[10px] text-orange-600 font-semibold font-mono">
+                            Final: {formatMoney(bFinal)}
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+              {product.batch_valuation > 0 && (
+                <div className="mt-2.5 flex items-center justify-between text-xs pt-1.5 border-t border-sky-200/60 text-slate-600">
+                  <span>Actual Batch Stock Valuation:</span>
+                  <strong className="font-mono text-sky-800">{formatMoney(product.batch_valuation)}</strong>
+                </div>
+              )}
+            </div>
+          )}
+
           {/* 5. Supplier Warranty Information */}
           <div className="rounded-xl border border-slate-200 bg-slate-50 p-4">
             <div className="flex items-center justify-between mb-2">

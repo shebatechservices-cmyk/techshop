@@ -129,9 +129,47 @@ const getInventory = async (req, res) => {
         const result = await pool.query(query, params);
         let items = result.rows;
 
+        // Fetch purchase order batches for all products to track fixed historical batch costs
+        const productIds = items.map((p) => p.id);
+        const batchesByProduct = {};
+        if (productIds.length > 0) {
+            const batchesRes = await pool.query(
+                `SELECT 
+                    poi.product_id,
+                    poi.purchase_order_id,
+                    po.po_number,
+                    po.created_at AS purchase_date,
+                    poi.quantity,
+                    poi.cost_price,
+                    poi.final_cost,
+                    sup.name AS supplier_name
+                 FROM purchase_order_items poi
+                 JOIN purchase_orders po ON po.id = poi.purchase_order_id
+                 LEFT JOIN suppliers sup ON sup.id = po.supplier_id
+                 WHERE po.deleted_at IS NULL AND poi.product_id = ANY($1::int[])
+                 ORDER BY po.created_at DESC, poi.id DESC`,
+                [productIds]
+            );
+            for (const b of batchesRes.rows) {
+                if (!batchesByProduct[b.product_id]) {
+                    batchesByProduct[b.product_id] = [];
+                }
+                batchesByProduct[b.product_id].push({
+                    purchase_order_id: b.purchase_order_id,
+                    po_number: b.po_number,
+                    purchase_date: b.purchase_date,
+                    quantity: Number(b.quantity || 0),
+                    cost_price: Number(b.cost_price || 0),
+                    final_cost: Number(b.final_cost || b.cost_price || 0),
+                    supplier_name: b.supplier_name || 'Authorized Supplier'
+                });
+            }
+        }
+
         // Build composite label and calculate aging + exact supplier warranty expiry
         const now = new Date();
         items = items.map((p) => {
+            const prodBatches = batchesByProduct[p.id] || [];
             const parts = [p.brand_name, p.name, p.model_name, p.series_name]
                 .filter(Boolean)
                 .filter((val, idx, arr) => arr.indexOf(val) === idx);
@@ -182,6 +220,21 @@ const getInventory = async (req, res) => {
                 ? `${stock} ${p.sub_unit_name} (${(stock / convRate).toFixed(2)} ${p.unit_name || 'Roll'})`
                 : `${stock} ${p.unit_name || 'pcs'}`;
 
+            // Compute exact batch valuation for available stock
+            let calculatedBatchValuation = 0;
+            let tempStock = stock;
+            for (const b of prodBatches) {
+                const takeQty = Math.min(tempStock, b.quantity);
+                if (takeQty > 0) {
+                    calculatedBatchValuation += takeQty * (b.final_cost || b.cost_price);
+                    tempStock -= takeQty;
+                }
+                if (tempStock <= 0) break;
+            }
+            if (tempStock > 0) {
+                calculatedBatchValuation += tempStock * effectiveCostPerStockUnit;
+            }
+
             return {
                 ...p,
                 composite_name: compositeName,
@@ -198,6 +251,7 @@ const getInventory = async (req, res) => {
                 effective_cost_per_unit: effectiveCostPerStockUnit,
                 effective_sale_per_unit: effectiveSalePerStockUnit,
                 stock_valuation: stockValuation,
+                batch_valuation: Number(calculatedBatchValuation.toFixed(2)),
                 retail_valuation: retailValuation,
                 mrp: Number(p.mrp || 0),
                 stock: stock,
@@ -209,6 +263,7 @@ const getInventory = async (req, res) => {
                 is_aged_60_plus: agingDays >= 60,
                 supplier_warranty_months: supWarrantyMonths,
                 supplier_warranty_expire_date: supWarrantyExpireDate,
+                batches: prodBatches,
             };
         });
 

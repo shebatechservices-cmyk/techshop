@@ -258,7 +258,7 @@ const barcodeLookup = async (req, res) => {
                     inventory: {
                         stock: row.stock,
                         unit_status: 'Available in Current Inventory',
-                        cost_price: row.cost_price,
+                        cost_price: row.purchase_cost_price || row.cost_price,
                         sale_price: row.sale_price,
                     },
                     sale: null,
