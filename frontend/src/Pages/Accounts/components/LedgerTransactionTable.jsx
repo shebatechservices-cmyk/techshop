@@ -1,4 +1,7 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
+import LedgerPagination from './LedgerPagination';
+
+const PAGE_SIZE = 20;
 
 export default function LedgerTransactionTable({
   wallets = [],
@@ -14,14 +17,35 @@ export default function LedgerTransactionTable({
   setSelectedTxForDetails = () => {},
   handleReverseTransaction = () => {}
 }) {
+  const [currentPage, setCurrentPage] = useState(1);
+
+  // Reset to first page when search query or filter changes
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [txSearchQuery, selectedTxTypeFilter, selectedWalletFilter]);
+
+  // Pagination calculation
+  const totalRecords = filteredTransactions.length;
+  const totalPages = Math.ceil(totalRecords / PAGE_SIZE) || 1;
+  const safeCurrentPage = Math.min(Math.max(1, currentPage), totalPages);
+
+  const startIndex = (safeCurrentPage - 1) * PAGE_SIZE;
+  const endIndex = Math.min(startIndex + PAGE_SIZE, totalRecords);
+  const paginatedTransactions = filteredTransactions.slice(startIndex, endIndex);
+
   return (
-    <div className="bg-white rounded-xl border border-slate-200 p-3.5 shadow-sm">
+    <div className="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden">
       {/* Central Transaction Ledger Header & Filter Toolbar */}
-      <div className="flex justify-between items-center flex-wrap gap-2 mb-2.5">
+      <div className="p-3.5 pb-2.5 flex justify-between items-center flex-wrap gap-2 border-b border-slate-100">
         <div>
-          <h3 className="text-sm font-extrabold text-slate-900 m-0">
-            Central Account Ledger
-          </h3>
+          <div className="flex items-center gap-2">
+            <h3 className="text-sm font-extrabold text-slate-900 m-0">
+              Central Account Ledger
+            </h3>
+            <span className="text-[0.7rem] font-bold py-0.5 px-2 rounded-full bg-sky-100 text-sky-700">
+              {totalRecords} records
+            </span>
+          </div>
           <span className="text-[0.72rem] text-slate-500">
             Complete audit trail of all cash, bank, and digital ledger movements
           </span>
@@ -84,115 +108,127 @@ export default function LedgerTransactionTable({
         </div>
       </div>
 
-      {filteredTransactions.length === 0 ? (
-        <div className="text-center py-7 text-slate-400 text-xs">
+      {totalRecords === 0 ? (
+        <div className="text-center py-10 text-slate-400 text-xs">
           No transaction records found matching the filter criteria.
         </div>
       ) : (
-        <div className="overflow-x-auto">
-          <table className="w-full border-collapse text-left text-xs">
-            <thead>
-              <tr className="bg-slate-50 border-b-2 border-slate-200 text-slate-500 text-[0.74rem] uppercase font-bold">
-                <th className="py-2 px-3">Date & Time</th>
-                <th className="py-2 px-3">Account / Drawer</th>
-                <th className="py-2 px-3">Type</th>
-                <th className="py-2 px-3">Reference</th>
-                <th className="py-2 px-3">Note / Description</th>
-                <th className="py-2 px-3 text-right">Amount</th>
-                <th className="py-2 px-3 text-right">Running Balance</th>
-                <th className="py-2 px-3 text-center">Action</th>
-              </tr>
-            </thead>
-            <tbody>
-              {filteredTransactions.map((tx) => {
-                const isCredit =
-                  tx.transaction_type === 'credit' ||
-                  ['credit', 'in', 'deposit', 'due_receive', 'advance_receive', 'sale_revenue'].includes(
-                    tx.type
-                  );
-                return (
-                  <tr key={tx.id} className="border-b border-slate-100 hover:bg-slate-50/60 transition-colors">
-                    <td className="py-2 px-3 text-slate-500 text-[0.76rem] whitespace-nowrap">
-                      {new Date(tx.created_at || tx.timestamp || tx.date).toLocaleString('en-GB', {
-                        dateStyle: 'short',
-                        timeStyle: 'short',
-                      })}
-                    </td>
-                    <td className="py-2 px-3 font-bold text-slate-900 whitespace-nowrap">
-                      {tx.account_name || tx.wallet_name || `A/C #${tx.account_id || tx.wallet_id}`}
-                    </td>
-                    <td className="py-2 px-3 whitespace-nowrap">
-                      <span
-                        className={`text-[0.7rem] font-bold py-0.5 px-1.5 rounded uppercase ${
-                          isCredit ? 'bg-emerald-100 text-emerald-700' : 'bg-red-100 text-red-700'
+        <>
+          <div className="overflow-x-auto">
+            <table className="w-full border-collapse text-left text-xs">
+              <thead>
+                <tr className="bg-slate-50 border-b-2 border-slate-200 text-slate-500 text-[0.74rem] uppercase font-bold">
+                  <th className="py-2.5 px-3">Date & Time</th>
+                  <th className="py-2.5 px-3">Account / Drawer</th>
+                  <th className="py-2.5 px-3">Type</th>
+                  <th className="py-2.5 px-3">Reference</th>
+                  <th className="py-2.5 px-3">Note / Description</th>
+                  <th className="py-2.5 px-3 text-right">Amount</th>
+                  <th className="py-2.5 px-3 text-right">Running Balance</th>
+                  <th className="py-2.5 px-3 text-center">Action</th>
+                </tr>
+              </thead>
+              <tbody>
+                {paginatedTransactions.map((tx) => {
+                  const isCredit =
+                    tx.transaction_type === 'credit' ||
+                    ['credit', 'in', 'deposit', 'due_receive', 'advance_receive', 'sale_revenue'].includes(
+                      tx.type
+                    );
+                  return (
+                    <tr key={tx.id} className="border-b border-slate-100 hover:bg-slate-50/60 transition-colors">
+                      <td className="py-2 px-3 text-slate-500 text-[0.76rem] whitespace-nowrap">
+                        {new Date(tx.created_at || tx.timestamp || tx.date).toLocaleString('en-GB', {
+                          dateStyle: 'short',
+                          timeStyle: 'short',
+                        })}
+                      </td>
+                      <td className="py-2 px-3 font-bold text-slate-900 whitespace-nowrap">
+                        {tx.account_name || tx.wallet_name || `A/C #${tx.account_id || tx.wallet_id}`}
+                      </td>
+                      <td className="py-2 px-3 whitespace-nowrap">
+                        <span
+                          className={`text-[0.7rem] font-bold py-0.5 px-1.5 rounded uppercase ${
+                            isCredit ? 'bg-emerald-100 text-emerald-700' : 'bg-red-100 text-red-700'
+                          }`}
+                        >
+                          {isCredit ? 'Inflow' : 'Outflow'}
+                        </span>
+                      </td>
+                      <td className="py-2 px-3">
+                        <div className="font-semibold text-sky-700 text-xs">
+                          {tx.reference || '—'}
+                        </div>
+                        {tx.transaction_id && (
+                          <div className="text-[0.7rem] text-slate-400 font-mono">
+                            TrxID: {tx.transaction_id}
+                          </div>
+                        )}
+                      </td>
+                      <td
+                        className="py-2 px-3 text-slate-600 text-xs max-w-[220px] whitespace-nowrap overflow-hidden text-ellipsis"
+                        title={tx.note || tx.description || '—'}
+                      >
+                        {tx.note || tx.description || '—'}
+                      </td>
+                      <td
+                        className={`py-2 px-3 text-right font-bold whitespace-nowrap font-mono ${
+                          isCredit ? 'text-green-600' : 'text-red-600'
                         }`}
                       >
-                        {isCredit ? 'Inflow' : 'Outflow'}
-                      </span>
-                    </td>
-                    <td className="py-2 px-3">
-                      <div className="font-semibold text-sky-700 text-xs">
-                        {tx.reference || '—'}
-                      </div>
-                      {tx.transaction_id && (
-                        <div className="text-[0.7rem] text-slate-400 font-mono">
-                          TrxID: {tx.transaction_id}
-                        </div>
-                      )}
-                    </td>
-                    <td
-                      className="py-2 px-3 text-slate-600 text-xs max-w-[220px] whitespace-nowrap overflow-hidden text-ellipsis"
-                      title={tx.note || tx.description || '—'}
-                    >
-                      {tx.note || tx.description || '—'}
-                    </td>
-                    <td
-                      className={`py-2 px-3 text-right font-bold whitespace-nowrap font-mono ${
-                        isCredit ? 'text-green-600' : 'text-red-600'
-                      }`}
-                    >
-                      {isCredit ? '+ ' : '- '}৳{' '}
-                      {Number(tx.amount || 0).toLocaleString('en-IN', {
-                        minimumFractionDigits: 2,
-                        maximumFractionDigits: 2,
-                      })}
-                    </td>
-                    <td className="py-2 px-3 text-right font-semibold text-slate-900 whitespace-nowrap font-mono">
-                      {tx.balance_after !== null && tx.balance_after !== undefined
-                        ? `৳ ${Number(tx.balance_after || 0).toLocaleString('en-IN', {
-                            minimumFractionDigits: 2,
-                            maximumFractionDigits: 2,
-                          })}`
-                        : '—'}
-                    </td>
-                    <td className="py-2 px-3 text-center whitespace-nowrap">
-                      <div className="inline-flex items-center gap-1">
-                        <button
-                          type="button"
-                          onClick={() => setSelectedTxForDetails(tx)}
-                          className="py-0.5 px-2 bg-white hover:bg-slate-50 border border-slate-300 rounded text-slate-700 text-xs font-semibold cursor-pointer transition-colors"
-                          title="View Details"
-                        >
-                          📄 Details
-                        </button>
-                        {tx.is_reversible && (
+                        {isCredit ? '+ ' : '- '}৳{' '}
+                        {Number(tx.amount || 0).toLocaleString('en-IN', {
+                          minimumFractionDigits: 2,
+                          maximumFractionDigits: 2,
+                        })}
+                      </td>
+                      <td className="py-2 px-3 text-right font-semibold text-slate-900 whitespace-nowrap font-mono">
+                        {tx.balance_after !== null && tx.balance_after !== undefined
+                          ? `৳ ${Number(tx.balance_after || 0).toLocaleString('en-IN', {
+                              minimumFractionDigits: 2,
+                              maximumFractionDigits: 2,
+                            })}`
+                          : '—'}
+                      </td>
+                      <td className="py-2 px-3 text-center whitespace-nowrap">
+                        <div className="inline-flex items-center gap-1">
                           <button
                             type="button"
-                            onClick={() => handleReverseTransaction(tx)}
-                            className="py-0.5 px-2 bg-red-50 hover:bg-red-100 border border-red-200 rounded text-rose-600 text-xs font-semibold cursor-pointer transition-colors"
-                            title="Reverse Transaction"
+                            onClick={() => setSelectedTxForDetails(tx)}
+                            className="py-0.5 px-2 bg-white hover:bg-slate-50 border border-slate-300 rounded text-slate-700 text-xs font-semibold cursor-pointer transition-colors"
+                            title="View Details"
                           >
-                            ↩️ Reverse
+                            📄 Details
                           </button>
-                        )}
-                      </div>
-                    </td>
-                  </tr>
-                );
-              })}
-            </tbody>
-          </table>
-        </div>
+                          {tx.is_reversible && (
+                            <button
+                              type="button"
+                              onClick={() => handleReverseTransaction(tx)}
+                              className="py-0.5 px-2 bg-red-50 hover:bg-red-100 border border-red-200 rounded text-rose-600 text-xs font-semibold cursor-pointer transition-colors"
+                              title="Reverse Transaction"
+                            >
+                              ↩️ Reverse
+                            </button>
+                          )}
+                        </div>
+                      </td>
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
+          </div>
+
+          {/* 20-Item Ledger Pagination Bar */}
+          <LedgerPagination
+            currentPage={safeCurrentPage}
+            totalPages={totalPages}
+            totalRecords={totalRecords}
+            startIndex={startIndex}
+            endIndex={endIndex}
+            onPageChange={setCurrentPage}
+          />
+        </>
       )}
     </div>
   );
