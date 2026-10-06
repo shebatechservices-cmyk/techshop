@@ -1,65 +1,18 @@
-import "./style.css";
-import React, { lazy, Suspense, useState } from "react";
-import useAppGlobalState from "./hooks/useAppGlobalState";
-import useLicenseCheck from "./hooks/useLicenseCheck";
-import ClassicSidebar from "./components/layout/LeftHoverNav";
-import TopWelcomeBar from "./components/layout/TopWelcomeBar";
-import MobileQuickActionFab from "./components/layout/MobileQuickActionFab";
-import MobileNavDrawer from "./components/layout/MobileNavDrawer";
-import PurchaseOrderModal from "./Pages/Purchases/modals/PurchaseOrderModal";
-import DeviceLimitModal from "./components/modals/DeviceLimitModal";
-import LoginModal from "./components/modals/LoginModal";
-import DeveloperConsoleModal from "./components/modals/DeveloperConsoleModal";
-import LicenseLockScreen from "./components/layout/LicenseLockScreen";
-import RegisterClosingModal from "./components/modals/RegisterClosingModal";
-import PwaInstallPrompt from "./components/shared/PwaInstallPrompt";
-
-const lazyWithRetry = (componentImport) =>
-  lazy(async () => {
-    try {
-      return await componentImport();
-    } catch (initialError) {
-      try {
-        await new Promise((r) => setTimeout(r, 250));
-        return await componentImport();
-      } catch (retryError) {
-        const lastReload = Number(window.sessionStorage.getItem("last_chunk_reload") || "0");
-        const now = Date.now();
-        if (now - lastReload > 10000) {
-          window.sessionStorage.setItem("last_chunk_reload", String(now));
-          window.location.reload();
-          return { default: () => null };
-        }
-        throw retryError;
-      }
-    }
-  });
-
-const Dashboard = lazyWithRetry(() => import("./Pages/Dashboard/Dashboard"));
-const Products = lazyWithRetry(() => import("./Pages/Products/Products"));
-const Purchases = lazyWithRetry(() => import("./Pages/Purchases/Purchases"));
-const Inventory = lazyWithRetry(() => import("./Pages/Inventory/Inventory"));
-const Sales = lazyWithRetry(() => import("./Pages/Sales/Sales"));
-const Accounts = lazyWithRetry(() => import("./Pages/Accounts/Accounts"));
-const Expenses = lazyWithRetry(() => import("./Pages/Accounts/Expenses"));
-const Reports = lazyWithRetry(() => import("./Pages/Reports/Reports"));
-const Projects = lazyWithRetry(() => import("./Pages/Projects/Projects"));
-const Ecommerce = lazyWithRetry(() => import("./Pages/Ecommerce/Ecommerce"));
-const Security = lazyWithRetry(() => import("./Pages/SOC_Security/Security"));
-const Warranty = lazyWithRetry(() => import("./Pages/Warranty/Warranty"));
-const Staff = lazyWithRetry(() => import("./Pages/Staff/Staff"));
-const TechnicianWallet = lazyWithRetry(() => import("./Pages/Staff/TechnicianWallet"));
-const Trash = lazyWithRetry(() => import("./Pages/Trash/Trash"));
-const Settings = lazyWithRetry(() => import("./Pages/Settings/Settings"));
-
-function PageFallback() {
-  return (
-    <div className="py-24 px-5 text-center text-slate-500">
-      <div className="w-8 h-8 border-3 border-slate-200 border-t-sky-600 rounded-full animate-spin mx-auto mb-3" />
-      <div className="text-xs font-semibold text-slate-600">Loading module...</div>
-    </div>
-  );
-}
+import './style.css';
+import React, { useState, useEffect } from 'react';
+import useAppGlobalState from './hooks/useAppGlobalState';
+import useLicenseCheck from './hooks/useLicenseCheck';
+import ClassicSidebar from './components/layout/LeftHoverNav';
+import TopWelcomeBar from './components/layout/TopWelcomeBar';
+import MobileQuickActionFab from './components/layout/MobileQuickActionFab';
+import MobileNavDrawer from './components/layout/MobileNavDrawer';
+import LicenseLockScreen from './components/layout/LicenseLockScreen';
+import LoginModal from './components/modals/LoginModal';
+import DeveloperConsoleModal from './components/modals/DeveloperConsoleModal';
+import AppModuleRouter from './routes/AppModuleRouter';
+import MobileBottomNav from './components/layout/MobileBottomNav';
+import TrialBanner from './components/layout/TrialBanner';
+import AppModalsContainer from './components/layout/AppModalsContainer';
 
 export default function App() {
   const {
@@ -83,8 +36,6 @@ export default function App() {
     isDevMode,
     exitDevModeToUserMode,
     toggleDevMode,
-    licenseState,
-    fetchLicenseCheck,
     deviceBlocked,
     setDeviceBlocked,
     currentDeviceId,
@@ -95,7 +46,6 @@ export default function App() {
   } = useAppGlobalState();
 
   const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
-  const [isTrialBannerDismissed, setIsTrialBannerDismissed] = useState(false);
 
   const {
     isValid: isLicenseValid,
@@ -110,20 +60,20 @@ export default function App() {
     recheckLicense,
   } = useLicenseCheck();
 
-  const userRole = (currentUser?.role || "").toUpperCase();
-  const userRoleName = (currentUser?.role_name || "").toLowerCase();
+  const userRole = (currentUser?.role || '').toUpperCase();
+  const userRoleName = (currentUser?.role_name || '').toLowerCase();
   const isTechnician =
-    userRole === "TECHNICIAN" ||
-    userRoleName.includes("technician") ||
-    userRoleName.includes("tech") ||
+    userRole === 'TECHNICIAN' ||
+    userRoleName.includes('technician') ||
+    userRoleName.includes('tech') ||
     currentUser?.role_id === 4;
 
   // Strict Technician Route Guard: Technicians can ONLY access projects, inventory, and wallet
-  React.useEffect(() => {
+  useEffect(() => {
     if (isTechnician) {
-      const allowedTechSections = ["projects", "inventory", "wallet"];
+      const allowedTechSections = ['projects', 'inventory', 'wallet'];
       if (!allowedTechSections.includes(section)) {
-        setSection("projects");
+        setSection('projects');
       }
     }
   }, [isTechnician, section, setSection]);
@@ -167,16 +117,16 @@ export default function App() {
       <ClassicSidebar
         activeSlug={section}
         currentUser={currentUser}
-        shopName={shopInfo.shop_name || "Sheba Technology"}
+        shopName={shopInfo.shop_name || 'Sheba Technology'}
         isCollapsed={isSidebarCollapsed}
         onToggleCollapse={() => setIsSidebarCollapsed(!isSidebarCollapsed)}
         onLogout={handleLogout}
         onSelect={(slug) => {
           setSection(slug);
-          if (slug === "products") {
-            setActiveTab("catalog");
+          if (slug === 'products') {
+            setActiveTab('catalog');
           } else {
-            setActiveTab("module");
+            setActiveTab('module');
           }
         }}
       />
@@ -184,15 +134,15 @@ export default function App() {
       {/* Main Content Workspace Shell */}
       <div
         className={`flex-1 flex flex-col min-w-0 transition-all duration-200 ease-in-out ${
-          isSidebarCollapsed ? "md:pl-16" : "md:pl-60"
+          isSidebarCollapsed ? 'md:pl-16' : 'md:pl-60'
         }`}
       >
         <div className="page-shell w-full max-w-[1600px] mx-auto p-4 sm:p-6 lg:p-7 pb-20 md:pb-8 flex-1 flex flex-col">
           {/* Classic Top Navigation Bar */}
           <TopWelcomeBar
-            shopName={shopInfo.shop_name || "Sheba Technology"}
-            userName={currentUser?.name || "Super Admin"}
-            branchName={shopInfo.branch_name || "Head Office - Dhaka"}
+            shopName={shopInfo.shop_name || 'Sheba Technology'}
+            userName={currentUser?.name || 'Super Admin'}
+            branchName={shopInfo.branch_name || 'Head Office - Dhaka'}
             currentUser={currentUser}
             isSidebarCollapsed={isSidebarCollapsed}
             onToggleSidebar={() => setIsSidebarCollapsed(!isSidebarCollapsed)}
@@ -203,7 +153,7 @@ export default function App() {
               handleLoginSuccess(user);
               exitDevModeToUserMode();
             }}
-            onQuickSale={isTechnician ? undefined : () => handleGlobalNavigate({ section: "sales", tab: "new" })}
+            onQuickSale={isTechnician ? undefined : () => handleGlobalNavigate({ section: 'sales', tab: 'new' })}
             onQuickPurchase={isTechnician ? undefined : () => setIsPurchaseOpen(true)}
             onOpenRegisterModal={isTechnician ? undefined : () => setIsRegisterModalOpen(true)}
             onLogout={handleLogout}
@@ -212,228 +162,59 @@ export default function App() {
           />
 
           {/* 15-Day Free Trial Alert Banner */}
-          {!licenseLoading && isTrial && !hasCommercialLicense && isLicenseValid && !isLicenseBlocked && !isTrialBannerDismissed && (
-            <div className="w-full mb-4 px-4 py-2.5 bg-amber-50 border border-amber-200 rounded-xl flex items-center justify-between text-xs text-amber-900 shadow-sm animate-fadeIn">
-              <div className="flex items-center gap-2">
-                <span className="text-base">⏳</span>
-                <span>
-                  <strong className="font-bold">Trial Active: {trialDaysRemaining} day(s) remaining</strong>
-                  <span className="hidden sm:inline text-amber-800 ml-1.5 font-normal">
-                    (Full ERP features unlocked until {trialEndDate ? new Date(trialEndDate).toLocaleDateString() : '15 days'})
-                  </span>
-                </span>
-              </div>
-              <div className="flex items-center gap-2">
-                <button
-                  type="button"
-                  onClick={() => handleGlobalNavigate({ section: 'settings', tab: 'license' })}
-                  className="px-2.5 py-1 bg-amber-600 hover:bg-amber-700 text-white rounded-md font-bold text-[11px] shadow-xs cursor-pointer transition-colors"
-                >
-                  Activate License
-                </button>
-                <button
-                  type="button"
-                  onClick={() => setIsTrialBannerDismissed(true)}
-                  className="text-amber-700 hover:text-amber-900 text-sm font-bold px-1.5 py-0.5 rounded cursor-pointer"
-                  title="Dismiss for this session"
-                >
-                  ✕
-                </button>
-              </div>
-            </div>
-          )}
+          <TrialBanner
+            licenseLoading={licenseLoading}
+            isTrial={isTrial}
+            hasCommercialLicense={hasCommercialLicense}
+            isLicenseValid={isLicenseValid}
+            isLicenseBlocked={isLicenseBlocked}
+            trialDaysRemaining={trialDaysRemaining}
+            trialEndDate={trialEndDate}
+            onActivate={() => handleGlobalNavigate({ section: 'settings', tab: 'license' })}
+          />
 
-          {/* Dynamic Module Route View inside Distinct Global Page Frame */}
-          <main className="flex-1 mt-4">
-            <div className="erp-global-frame bg-gray-50/50 p-4 md:p-6 border border-gray-200 rounded-2xl shadow-xs min-h-[calc(100vh-140px)]">
-              <Suspense fallback={<PageFallback />}>
-                {section === "wallet" ? (
-                  <TechnicianWallet currentUser={currentUser} />
-                ) : section === "inventory" ? (
-                  <Inventory
-                    readOnly={isTechnician}
-                    onOpenNewSale={
-                      isTechnician
-                        ? undefined
-                        : (product) => {
-                            setSection("sales");
-                            setGlobalNav({
-                              section: "sales",
-                              tab: "history",
-                              search: product.name || "",
-                              key: Date.now(),
-                            });
-                          }
-                    }
-                  />
-                ) : section === "projects" ? (
-                  <Projects currentUser={currentUser} />
-                ) : section === "dashboard" && !isTechnician ? (
-                  <Dashboard />
-                ) : section === "products" && !isTechnician ? (
-                  <Products
-                    initialTab={activeTab || "catalog"}
-                    initialSearch={globalNav.section === "products" ? globalNav.search : ""}
-                  />
-                ) : section === "accounts" && !isTechnician ? (
-                  <Accounts onNavigateToExpenses={() => setSection("expenses")} />
-                ) : section === "expenses" && !isTechnician ? (
-                  <Expenses />
-                ) : section === "sales" && !isTechnician ? (
-                  <Sales
-                    initialTab={globalNav.section === "sales" ? globalNav.tab || "history" : "history"}
-                    initialSearch={globalNav.section === "sales" ? globalNav.search || "" : ""}
-                    navKey={globalNav.key}
-                    currentUser={currentUser}
-                  />
-                ) : section === "purchases" && !isTechnician ? (
-                  <Purchases
-                    initialTab={globalNav.section === "purchases" ? globalNav.tab || "history" : "history"}
-                    initialSearch={globalNav.section === "purchases" ? globalNav.search || "" : ""}
-                    navKey={globalNav.key}
-                    onOpenAddProduct={() => {
-                      setSection("products");
-                      window.dispatchEvent(new CustomEvent("open-add-product"));
-                    }}
-                  />
-                ) : section === "ecommerce" && !isTechnician ? (
-                  <Ecommerce />
-                ) : section === "soc" && !isTechnician ? (
-                  <Security />
-                ) : section === "warranty" && !isTechnician ? (
-                  <Warranty />
-                ) : section === "staff" && !isTechnician ? (
-                  <Staff currentUser={currentUser} />
-                ) : section === "trash" && !isTechnician ? (
-                  <Trash />
-                ) : section === "settings" && !isTechnician ? (
-                  <Settings onLogout={handleLogout} currentUser={currentUser} />
-                ) : section === "reports" && !isTechnician ? (
-                  <Reports />
-                ) : (
-                  <div className="bg-white p-10 rounded-2xl text-center border border-slate-200 shadow-sm">
-                    <p className="text-sky-600 font-extrabold text-xs uppercase tracking-widest">
-                      Sheba Technology ERP
-                    </p>
-                    <h2 className="text-lg font-bold text-slate-900 my-2.5">
-                      {section.toUpperCase()}
-                    </h2>
-                    <p className="text-xs text-slate-500">
-                      This module is restricted or under configuration for your role. Please use the sidebar to navigate to permitted modules.
-                    </p>
-                  </div>
-                )}
-              </Suspense>
-            </div>
-          </main>
+          {/* Dynamic Module Route View */}
+          <AppModuleRouter
+            section={section}
+            activeTab={activeTab}
+            globalNav={globalNav}
+            currentUser={currentUser}
+            isTechnician={isTechnician}
+            setSection={setSection}
+            setGlobalNav={setGlobalNav}
+            handleLogout={handleLogout}
+          />
 
-          {/* Mobile Bottom Navigation Bar (Strictly Hidden on Desktop) */}
-          <nav className="mobile-bottom-nav md:hidden">
-            {isTechnician ? (
-              <>
-                <button
-                  type="button"
-                  className={`mobile-nav-item ${section === "projects" ? "active" : ""}`}
-                  onClick={() => handleGlobalNavigate({ section: "projects" })}
-                >
-                  <span>🛠️</span>
-                  <small>Projects</small>
-                </button>
-                <button
-                  type="button"
-                  className={`mobile-nav-item ${section === "inventory" ? "active" : ""}`}
-                  onClick={() => handleGlobalNavigate({ section: "inventory" })}
-                >
-                  <span>🏢</span>
-                  <small>Prices</small>
-                </button>
-                <button
-                  type="button"
-                  className={`mobile-nav-item ${section === "wallet" ? "active" : ""}`}
-                  onClick={() => handleGlobalNavigate({ section: "wallet" })}
-                >
-                  <span>👛</span>
-                  <small>My Wallet</small>
-                </button>
-                <button
-                  type="button"
-                  className="mobile-nav-item"
-                  onClick={() => setIsMobileDrawerOpen(true)}
-                  title="Menu"
-                >
-                  <span>☰</span>
-                  <small>Menu</small>
-                </button>
-              </>
-            ) : (
-              <>
-                <button
-                  type="button"
-                  className={`mobile-nav-item ${section === "dashboard" ? "active" : ""}`}
-                  onClick={() => handleGlobalNavigate({ section: "dashboard" })}
-                >
-                  <span>📊</span>
-                  <small>Dashboard</small>
-                </button>
-                <button
-                  type="button"
-                  className={`mobile-nav-item ${section === "sales" ? "active" : ""}`}
-                  onClick={() => handleGlobalNavigate({ section: "sales" })}
-                >
-                  <span>🛍️</span>
-                  <small>Sales</small>
-                </button>
-                <button
-                  type="button"
-                  className={`mobile-nav-item ${section === "purchases" ? "active" : ""}`}
-                  onClick={() => handleGlobalNavigate({ section: "purchases" })}
-                >
-                  <span>📦</span>
-                  <small>Purchase</small>
-                </button>
-                <button
-                  type="button"
-                  className={`mobile-nav-item ${section === "inventory" ? "active" : ""}`}
-                  onClick={() => handleGlobalNavigate({ section: "inventory" })}
-                >
-                  <span>🏬</span>
-                  <small>Stock</small>
-                </button>
-                <button
-                  type="button"
-                  className="mobile-nav-item"
-                  onClick={() => setIsMobileDrawerOpen(true)}
-                  title="More Modules"
-                >
-                  <span>☰</span>
-                  <small>All Menus</small>
-                </button>
-              </>
-            )}
-          </nav>
+          {/* Mobile Bottom Navigation Bar (Hidden on Desktop) */}
+          <MobileBottomNav
+            section={section}
+            isTechnician={isTechnician}
+            onNavigate={handleGlobalNavigate}
+            onOpenDrawer={() => setIsMobileDrawerOpen(true)}
+          />
         </div>
       </div>
 
-      {/* Mobile Floating Action Button Speed Dial (Strictly Hidden on Desktop & for Technicians) */}
+      {/* Mobile Floating Action Button (Hidden on Desktop & for Technicians) */}
       {!isTechnician && (
         <div className="md:hidden">
           <MobileQuickActionFab
             onQuickSale={() => {
-              setSection("sales");
-              setGlobalNav({ section: "sales", tab: "new", key: Date.now() });
+              setSection('sales');
+              setGlobalNav({ section: 'sales', tab: 'new', key: Date.now() });
             }}
             onQuickPurchase={() => setIsPurchaseOpen(true)}
             onQuickExpense={() => {
-              setSection("expenses");
-              setGlobalNav({ section: "expenses", key: Date.now() });
+              setSection('expenses');
+              setGlobalNav({ section: 'expenses', key: Date.now() });
             }}
             onQuickScanner={() => {
-              setSection("inventory");
-              setGlobalNav({ section: "inventory", key: Date.now() });
+              setSection('inventory');
+              setGlobalNav({ section: 'inventory', key: Date.now() });
             }}
             onQuickAddProduct={() => {
-              setSection("products");
-              window.dispatchEvent(new CustomEvent("open-add-product"));
+              setSection('products');
+              window.dispatchEvent(new CustomEvent('open-add-product'));
             }}
           />
         </div>
@@ -446,71 +227,37 @@ export default function App() {
         activeSlug={section}
         onSelect={(slug) => {
           setSection(slug);
-          if (slug === "products") {
-            setActiveTab("catalog");
+          if (slug === 'products') {
+            setActiveTab('catalog');
           } else {
-            setActiveTab("module");
+            setActiveTab('module');
           }
         }}
-        shopName={shopInfo.shop_name || "Sheba Technology"}
-        userName={currentUser?.name || "Super Admin"}
+        shopName={shopInfo.shop_name || 'Sheba Technology'}
+        userName={currentUser?.name || 'Super Admin'}
         currentUser={currentUser}
         onLogout={handleLogout}
       />
 
-      {/* Purchase Order Modal */}
-      {isPurchaseOpen && (
-        <PurchaseOrderModal
-          products={[]}
-          onClose={() => setIsPurchaseOpen(false)}
-          onSaved={() => {
-            setIsPurchaseOpen(false);
-            window.dispatchEvent(new CustomEvent("products_changed"));
-          }}
-        />
-      )}
-
-      {/* Device Session Limit Barrier Modal */}
-      {deviceBlocked && (
-        <DeviceLimitModal
-          currentDeviceId={currentDeviceId}
-          deviceType={deviceBlocked.deviceType}
-          activeDevices={deviceBlocked.activeDevices}
-          onRetry={checkDeviceAccess}
-          onClose={() => setDeviceBlocked(null)}
-        />
-      )}
-
-      {/* Login Modal */}
-      <LoginModal
-        isOpen={showLoginModal || !currentUser}
-        onLoginSuccess={handleLoginSuccess}
-        canClose={!!currentUser}
-        onClose={() => setShowLoginModal(false)}
-        onOpenDevConsole={toggleDevMode}
-      />
-
-      {/* Super Admin & Developer Console Modal */}
-      <DeveloperConsoleModal
-        isOpen={showDevConsole}
-        onClose={exitDevModeToUserMode}
-        onSwitchToUserMode={exitDevModeToUserMode}
-        onDeveloperLogin={(user) => {
-          handleLoginSuccess(user);
-          exitDevModeToUserMode();
-        }}
-      />
-
-      {/* Cash Register Shift Closing Modal */}
-      <RegisterClosingModal
-        isOpen={isRegisterModalOpen}
-        onClose={() => setIsRegisterModalOpen(false)}
+      {/* Global Application Modals Container */}
+      <AppModalsContainer
+        isPurchaseOpen={isPurchaseOpen}
+        setIsPurchaseOpen={setIsPurchaseOpen}
+        deviceBlocked={deviceBlocked}
+        setDeviceBlocked={setDeviceBlocked}
+        currentDeviceId={currentDeviceId}
+        checkDeviceAccess={checkDeviceAccess}
+        showLoginModal={showLoginModal}
+        setShowLoginModal={setShowLoginModal}
         currentUser={currentUser}
+        handleLoginSuccess={handleLoginSuccess}
+        toggleDevMode={toggleDevMode}
+        showDevConsole={showDevConsole}
+        exitDevModeToUserMode={exitDevModeToUserMode}
+        isRegisterModalOpen={isRegisterModalOpen}
+        setIsRegisterModalOpen={setIsRegisterModalOpen}
         shopInfo={shopInfo}
       />
-
-      {/* PWA Android / Desktop Install Prompt */}
-      <PwaInstallPrompt />
     </div>
   );
 }
