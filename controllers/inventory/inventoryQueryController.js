@@ -142,6 +142,8 @@ const getInventory = async (req, res) => {
                     poi.quantity,
                     poi.cost_price,
                     poi.final_cost,
+                    poi.sale_price,
+                    poi.final_sale_price,
                     sup.name AS supplier_name
                  FROM purchase_order_items poi
                  JOIN purchase_orders po ON po.id = poi.purchase_order_id
@@ -161,6 +163,7 @@ const getInventory = async (req, res) => {
                     quantity: Number(b.quantity || 0),
                     cost_price: Number(b.cost_price || 0),
                     final_cost: Number(b.final_cost || b.cost_price || 0),
+                    sale_price: Number(b.final_sale_price || b.sale_price || 0),
                     supplier_name: b.supplier_name || 'Authorized Supplier'
                 });
             }

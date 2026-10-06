@@ -363,13 +363,20 @@ export default function ProductDetailsModal({
                           Inflow: <strong className="text-slate-700">{batch.quantity} units</strong>
                         </div>
                       </div>
-                      <div className="text-right ml-3 shrink-0">
-                        <div className="font-mono font-black text-slate-900 text-xs">
-                          {formatMoney(bCost)} <span className="font-sans font-normal text-[10px] text-slate-400">/unit</span>
+                      <div className="text-right ml-3 shrink-0 space-y-0.5">
+                        <div className="font-mono text-xs">
+                          <span className="text-[10px] text-slate-500 font-sans mr-1">Cost:</span>
+                          <strong className="text-slate-900">{formatMoney(bCost)}</strong>
+                          {bFinal > bCost && (
+                            <span className="text-[10px] text-orange-600 font-semibold ml-1">
+                              (Landed: {formatMoney(bFinal)})
+                            </span>
+                          )}
                         </div>
-                        {bFinal > bCost && (
-                          <div className="text-[10px] text-orange-600 font-semibold font-mono">
-                            Final: {formatMoney(bFinal)}
+                        {batch.sale_price > 0 && (
+                          <div className="font-mono text-xs">
+                            <span className="text-[10px] text-slate-500 font-sans mr-1">Batch Sale:</span>
+                            <strong className="text-emerald-700">{formatMoney(batch.sale_price)}</strong>
                           </div>
                         )}
                       </div>

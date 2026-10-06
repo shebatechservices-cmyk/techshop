@@ -176,6 +176,27 @@ exports.createExchangeSale = async (req, res) => {
             const expireDate = new Date();
             expireDate.setMonth(expireDate.getMonth() + Number(warrantyMonths || 0));
 
+            let itemCostPrice = Number(item.cost_price || catalogProduct?.purchase_price || 0);
+            if (Array.isArray(item.serials) && item.serials.length > 0 && item.product_id) {
+                const cleanSerials = item.serials.map(s => String(s).trim().toLowerCase()).filter(Boolean);
+                if (cleanSerials.length > 0) {
+                    const serialCostRes = await client.query(
+                        `SELECT COALESCE(poi.final_cost, poi.cost_price) AS batch_cost
+                         FROM purchase_order_serials pos
+                         JOIN purchase_order_items poi ON poi.id = pos.purchase_order_item_id
+                         JOIN purchase_orders po ON po.id = poi.purchase_order_id
+                         WHERE poi.product_id = $1
+                           AND LOWER(TRIM(pos.serial_code)) = ANY($2)
+                           AND po.deleted_at IS NULL`,
+                        [item.product_id, cleanSerials]
+                    );
+                    if (serialCostRes.rows.length > 0) {
+                        const totalBatchCost = serialCostRes.rows.reduce((sum, r) => sum + Number(r.batch_cost || 0), 0);
+                        itemCostPrice = Number((totalBatchCost / serialCostRes.rows.length).toFixed(2));
+                    }
+                }
+            }
+
             const savedItem = await client.query(
                 `INSERT INTO sales_items (
                     sale_id, product_id, product_name, quantity, unit_price, cost_price,
@@ -187,7 +208,7 @@ exports.createExchangeSale = async (req, res) => {
                     fullName,
                     item.quantity,
                     item.unit_price,
-                    item.cost_price,
+                    itemCostPrice,
                     item.line_total,
                     expireDate,
                     warrantyMonths,
