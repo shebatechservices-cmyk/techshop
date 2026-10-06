@@ -1,19 +1,4 @@
 import { useState, useRef } from 'react';
-import {
-  fullCatalogName,
-  productLabel,
-  isProductSerialTracked,
-  isProductWarrantyRequired,
-  PURCHASE_API,
-  money,
-  taka,
-  newTender,
-  today,
-  EXTRA_COST_CATEGORIES,
-  computeFinalSale,
-  getItemMissingFields,
-  newLineItem,
-} from '../utils/purchaseCartUtils';
 import { usePurchaseInitialData } from './cart/usePurchaseInitialData';
 import { usePurchaseLandingCosts } from './cart/usePurchaseLandingCosts';
 import { usePurchaseItems } from './cart/usePurchaseItems';
@@ -21,21 +6,7 @@ import { usePurchaseBarcodeScanner } from './cart/usePurchaseBarcodeScanner';
 import { usePurchasePricingAndPayment } from './cart/usePurchasePricingAndPayment';
 import { usePurchasePersistenceAndSave } from './cart/usePurchasePersistenceAndSave';
 
-export {
-  fullCatalogName,
-  productLabel,
-  isProductSerialTracked,
-  isProductWarrantyRequired,
-  PURCHASE_API,
-  money,
-  taka,
-  newTender,
-  today,
-  EXTRA_COST_CATEGORIES,
-  computeFinalSale,
-  getItemMissingFields,
-  newLineItem,
-};
+export * from '../utils/purchaseCartUtils';
 
 export function usePurchaseCart(props = {}) {
   const {
@@ -64,34 +35,15 @@ export function usePurchaseCart(props = {}) {
   const [isSupplierOpen, setIsSupplierOpen] = useState(false);
   const supplierSelectRef = useRef(null);
 
-  // 1. Initial Data Sub-hook (Products, Suppliers, Accounts, Summary)
-  const {
-    productList,
-    setProductList,
-    suppliers,
-    setSuppliers,
-    accounts,
-    setAccounts,
-    summary,
-    setSummary,
-  } = usePurchaseInitialData({
+  // 1. Initial Catalog & Financial Data Sub-hook
+  const initialData = usePurchaseInitialData({
     initialProducts,
     supplierId,
     setError,
   });
 
   // 2. Landing / Logistics Extra Costs Sub-hook
-  const {
-    hasExtraCost,
-    setHasExtraCost,
-    extraCost,
-    setExtraCost,
-    extraCostCategory,
-    setExtraCostCategory,
-    extraCostNotes,
-    setExtraCostNotes,
-    extraCostValue: extra,
-  } = usePurchaseLandingCosts();
+  const landingCosts = usePurchaseLandingCosts();
 
   // 3. Barcode & Serials Sub-hook Refs
   const barcodeRefs = useRef({
@@ -100,166 +52,82 @@ export function usePurchaseCart(props = {}) {
     searchContainerRef: null,
   });
 
-  // 4. Items & Catalog Sub-hook
-  const {
-    items,
-    setItems,
-    expandedId,
-    setExpandedId,
-    query,
-    setQuery,
-    isSearchOpen,
-    setIsSearchOpen,
-    matches,
-    updateItem,
-    handleItemCostChange,
-    handleItemMarginChange,
-    handleItemSaleChange,
-    addProduct,
-    handleRemoveItem,
-    handleAddButtonClick,
-  } = usePurchaseItems({
-    productList,
+  // 4. Line Items & Catalog Search Sub-hook
+  const itemsData = usePurchaseItems({
+    productList: initialData.productList,
     barcodeInputRef: barcodeRefs.current.barcodeInputRef,
     searchInputRef: barcodeRefs.current.searchInputRef,
     setError,
     setPopupMsg,
   });
 
-  // 5. Barcode Scanner Sub-hook
-  const {
-    barcodeInput,
-    setBarcodeInput,
-    barcodeScanErrors,
-    setBarcodeScanErrors,
-    barcodeInputRef,
-    searchInputRef,
-    searchContainerRef,
-    handleAddBarcode,
-    handleRemoveBarcode,
-  } = usePurchaseBarcodeScanner({
-    items,
-    setItems,
+  // 5. Barcode Scanner Handling Sub-hook
+  const scannerData = usePurchaseBarcodeScanner({
+    items: itemsData.items,
+    setItems: itemsData.setItems,
     orderToEdit,
     setError,
     setPopupMsg,
   });
 
-  barcodeRefs.current.barcodeInputRef = barcodeInputRef;
-  barcodeRefs.current.searchInputRef = searchInputRef;
-  barcodeRefs.current.searchContainerRef = searchContainerRef;
+  barcodeRefs.current.barcodeInputRef = scannerData.barcodeInputRef;
+  barcodeRefs.current.searchInputRef = scannerData.searchInputRef;
+  barcodeRefs.current.searchContainerRef = scannerData.searchContainerRef;
 
-  // 6. Pricing & Payments Sub-hook
-  const {
-    discount,
-    setDiscount,
-    tenders,
-    setTenders,
-    paymentConfirmed,
-    setPaymentConfirmed,
-    walletAccounts,
-    setWalletAccounts,
-    cashAccounts,
-    bankAccounts,
-    mfsAccounts,
-    accountByLabel,
-    accountLabelToId,
-    accountLabelToBalance,
-    totals,
-    itemsSubtotal,
-    totalLandedCost,
-    netAmount,
-    payableAmount,
-    totalCost,
-    totalSale,
-    estimatedProfit,
-    selectedSupplierObj,
-    supplierPayable,
-    previousDue,
-    totalPayable,
-    supplierWallet,
-    supplierWalletLabel,
-    acceptedPaid,
-    paid,
-    currentDue,
-    remainingDue,
-    updateTender,
-    removeTender,
-    addTenderRow,
-    acceptTender,
-    cancelTender,
-    handlePayFull,
-    handlePayOrder,
-    handleFullDue,
-  } = usePurchasePricingAndPayment({
-    items,
+  // 6. Pricing, Totals & Tenders Sub-hook
+  const pricingData = usePurchasePricingAndPayment({
+    items: itemsData.items,
     supplierId,
-    suppliers,
-    summary,
-    hasExtraCost,
-    extraCost,
+    suppliers: initialData.suppliers,
+    summary: initialData.summary,
+    hasExtraCost: landingCosts.hasExtraCost,
+    extraCost: landingCosts.extraCost,
     isOpen,
     orderToEdit,
   });
 
   // 7. Persistence, Drafts & Save Mutation Sub-hook
-  const {
-    saving,
-    setSaving,
-    recoveredDraft,
-    setRecoveredDraft,
-    previewOrderId,
-    setPreviewOrderId,
-    previewOrderData,
-    setPreviewOrderData,
-    isLedgerPreviewOpen,
-    setIsLedgerPreviewOpen,
-    handleRestoreDraft,
-    handleDiscardDraft,
-    handleClearForm,
-    handleLoadOrderInForm,
-    handleOpenRecentPreview,
-    savePurchase,
-  } = usePurchasePersistenceAndSave({
+  const persistenceData = usePurchasePersistenceAndSave({
     props,
-    items,
-    setItems,
-    setExpandedId,
+    items: itemsData.items,
+    setItems: itemsData.setItems,
+    setExpandedId: itemsData.setExpandedId,
     supplierId,
     setSupplierId,
-    selectedSupplierObj,
-    setSummary,
+    selectedSupplierObj: pricingData.selectedSupplierObj,
+    setSummary: initialData.setSummary,
     reference,
     setReference,
-    hasExtraCost,
-    setHasExtraCost,
-    extraCost,
-    setExtraCost,
-    extraCostCategory,
-    setExtraCostCategory,
-    extraCostNotes,
-    setExtraCostNotes,
-    extra,
-    discount,
-    setDiscount,
-    tenders,
-    setTenders,
-    setPaymentConfirmed,
-    setBarcodeScanErrors,
-    setQuery,
-    setBarcodeInput,
+    hasExtraCost: landingCosts.hasExtraCost,
+    setHasExtraCost: landingCosts.setHasExtraCost,
+    extraCost: landingCosts.extraCost,
+    setExtraCost: landingCosts.setExtraCost,
+    extraCostCategory: landingCosts.extraCostCategory,
+    setExtraCostCategory: landingCosts.setExtraCostCategory,
+    extraCostNotes: landingCosts.extraCostNotes,
+    setExtraCostNotes: landingCosts.setExtraCostNotes,
+    extra: landingCosts.extraCostValue,
+    discount: pricingData.discount,
+    setDiscount: pricingData.setDiscount,
+    tenders: pricingData.tenders,
+    setTenders: pricingData.setTenders,
+    paymentConfirmed: pricingData.paymentConfirmed,
+    setPaymentConfirmed: pricingData.setPaymentConfirmed,
+    setBarcodeScanErrors: scannerData.setBarcodeScanErrors,
+    setQuery: itemsData.setQuery,
+    setBarcodeInput: scannerData.setBarcodeInput,
     setError,
     setPopupMsg,
     setPrintOrder,
     setIsPrintPreviewOnly,
     setIsPrintOpen,
-    walletAccounts,
-    cashAccounts,
-    bankAccounts,
-    mfsAccounts,
-    accountLabelToId,
-    productList,
-    setSuppliers,
+    walletAccounts: pricingData.walletAccounts,
+    cashAccounts: pricingData.cashAccounts,
+    bankAccounts: pricingData.bankAccounts,
+    mfsAccounts: pricingData.mfsAccounts,
+    accountLabelToId: pricingData.accountLabelToId,
+    productList: initialData.productList,
+    setSuppliers: initialData.setSuppliers,
     newlyCreatedSupplier,
     orderToEdit,
     isOpen,
@@ -269,138 +137,39 @@ export function usePurchaseCart(props = {}) {
   });
 
   return {
-    // State variables
-    productList,
-    setProductList,
-    suppliers,
-    setSuppliers,
-    accounts,
-    setAccounts,
+    // Sub-hook state & action spreads
+    ...initialData,
+    ...landingCosts,
+    extra: landingCosts.extraCostValue,
+    ...itemsData,
+    ...scannerData,
+    ...pricingData,
+    ...persistenceData,
+
+    // Dialog & UI feedback states
     supplierId,
     setSupplierId,
-    summary,
-    setSummary,
-    query,
-    setQuery,
-    isSearchOpen,
-    setIsSearchOpen,
-    items,
-    setItems,
-    expandedId,
-    setExpandedId,
-    barcodeInput,
-    setBarcodeInput,
     reference,
     setReference,
-    hasExtraCost,
-    setHasExtraCost,
-    extraCost,
-    setExtraCost,
-    extraCostCategory,
-    setExtraCostCategory,
-    extraCostNotes,
-    setExtraCostNotes,
-    discount,
-    setDiscount,
-    tenders,
-    setTenders,
-    paymentConfirmed,
-    setPaymentConfirmed,
-    barcodeScanErrors,
-    setBarcodeScanErrors,
     supplierSearch,
     setSupplierSearch,
     isSupplierOpen,
     setIsSupplierOpen,
     supplierSelectRef,
+    error,
+    setError,
+    popupMsg,
+    setPopupMsg,
+    isAddSupplierOpen,
+    setIsAddSupplierOpen,
+    isAddProductOpen,
+    setIsAddProductOpen,
     printOrder,
     setPrintOrder,
     isPrintOpen,
     setIsPrintOpen,
     isPrintPreviewOnly,
     setIsPrintPreviewOnly,
-    recoveredDraft,
-    setRecoveredDraft,
-    isAddSupplierOpen,
-    setIsAddSupplierOpen,
-    isAddProductOpen,
-    setIsAddProductOpen,
-    previewOrderId,
-    setPreviewOrderId,
-    previewOrderData,
-    setPreviewOrderData,
-    isLedgerPreviewOpen,
-    setIsLedgerPreviewOpen,
-    error,
-    setError,
-    popupMsg,
-    setPopupMsg,
-    saving,
-    setSaving,
-
-    // Account lookups
-    walletAccounts,
-    setWalletAccounts,
-    cashAccounts,
-    bankAccounts,
-    mfsAccounts,
-    accountByLabel,
-    accountLabelToId,
-    accountLabelToBalance,
-
-    // Filter matches & totals
-    matches,
-    totals,
-    itemsSubtotal,
-    extra,
-    totalLandedCost,
-    netAmount,
-    payableAmount,
-    totalCost,
-    totalSale,
-    estimatedProfit,
-
-    // Supplier balance
-    selectedSupplierObj,
-    supplierPayable,
-    previousDue,
-    totalPayable,
-    supplierWallet,
-    supplierWalletLabel,
-
-    // Payment calculations
-    acceptedPaid,
-    paid,
-    currentDue,
-    remainingDue,
-
-    // Action handlers
-    handleRestoreDraft,
-    handleDiscardDraft,
-    updateItem,
-    handleItemCostChange,
-    handleItemMarginChange,
-    handleItemSaleChange,
-    addProduct,
-    handleAddBarcode,
-    handleRemoveBarcode,
-    handleRemoveItem,
-    handleAddButtonClick,
-    updateTender,
-    removeTender,
-    addTenderRow,
-    acceptTender,
-    cancelTender,
-    handlePayFull,
-    handlePayOrder,
-    handleFullDue,
-    handleClearForm,
-    handleLoadOrderInForm,
-    handleOpenRecentPreview,
-    savePurchase,
-    barcodeInputRef,
-    searchInputRef,
-    searchContainerRef,
   };
 }
 

@@ -12,6 +12,7 @@ import LoginModal from "./components/modals/LoginModal";
 import DeveloperConsoleModal from "./components/modals/DeveloperConsoleModal";
 import LicenseLockScreen from "./components/layout/LicenseLockScreen";
 import RegisterClosingModal from "./components/modals/RegisterClosingModal";
+import PwaInstallPrompt from "./components/shared/PwaInstallPrompt";
 
 const lazyWithRetry = (componentImport) =>
   lazy(async () => {
@@ -507,6 +508,9 @@ export default function App() {
         currentUser={currentUser}
         shopInfo={shopInfo}
       />
+
+      {/* PWA Android / Desktop Install Prompt */}
+      <PwaInstallPrompt />
     </div>
   );
 }

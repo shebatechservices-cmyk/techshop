@@ -60,6 +60,8 @@ const createOrder = async (req, res) => {
 
         const extraCost = money(extra_cost);
         const discountVal = money(discount || req.body.discount);
+        const extraCostCategory = extra_cost_category || req.body.extraCostCategory || null;
+        const extraCostNotes = extra_cost_notes || req.body.extraCostNotes || null;
         let itemsCost = 0;
         let totalSale = 0;
         let unitCount = 0;
@@ -177,8 +179,8 @@ const createOrder = async (req, res) => {
                 totalSale,
                 discountVal,
                 extraCost,
-                extra_cost_category || null,
-                extra_cost_notes || null,
+                extraCostCategory,
+                extraCostNotes,
                 totalPaid,
                 totalDue,
                 normalizedItems.length,

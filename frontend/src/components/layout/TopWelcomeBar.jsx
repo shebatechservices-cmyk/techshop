@@ -3,6 +3,7 @@ import GlobalSearchBar from '../shared/GlobalSearchBar';
 import RealtimeNotificationCenter from '../shared/RealtimeNotificationCenter';
 import DeveloperConsoleModal from '../modals/DeveloperConsoleModal';
 import Calculator from '../shared/Calculator';
+import usePwaInstall from '../../hooks/usePwaInstall';
 
 export default function TopWelcomeBar({
   shopName = 'Sheba Technology',
@@ -30,6 +31,7 @@ export default function TopWelcomeBar({
   const [showUserMenu, setShowUserMenu] = useState(false);
   const calcRef = useRef(null);
   const userMenuRef = useRef(null);
+  const { canInstall, installApp } = usePwaInstall();
 
   const role = (currentUser?.role || '').toUpperCase();
   const roleName = (currentUser?.role_name || '').toLowerCase();
@@ -161,6 +163,21 @@ export default function TopWelcomeBar({
         {/* Realtime Notification Center */}
         <RealtimeNotificationCenter onNavigate={onNavigate} compact={true} />
 
+        {/* PWA Mobile/Desktop Install Button */}
+        {canInstall && (
+          <button
+            type="button"
+            onClick={installApp}
+            className="flex items-center gap-1.5 px-2.5 py-1.5 bg-sky-50 border border-sky-200 text-sky-700 hover:bg-sky-100 rounded-lg text-xs font-bold transition-colors shadow-xs"
+            title="Install Sheba App on Device"
+          >
+            <svg className="w-3.5 h-3.5 text-sky-600" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="2.5">
+              <path strokeLinecap="round" strokeLinejoin="round" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
+            </svg>
+            <span className="hidden sm:inline">Install App</span>
+          </button>
+        )}
+
         {/* Developer Console Shortcut (If Active) */}
         {isDevMode && (
           <button
@@ -282,6 +299,22 @@ export default function TopWelcomeBar({
                       <path strokeLinecap="round" strokeLinejoin="round" d="M10 20l4-16m4 4l4 4-4 4M6 16l-4-4 4-4" />
                     </svg>
                     <span>Developer Console</span>
+                  </button>
+                )}
+
+                {canInstall && (
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setShowUserMenu(false);
+                      installApp();
+                    }}
+                    className="w-full px-3.5 py-2 flex items-center gap-2.5 text-sky-700 hover:bg-sky-50 text-left font-medium transition-colors"
+                  >
+                    <svg className="w-4 h-4 text-sky-600" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="2">
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
+                    </svg>
+                    <span>Install App on Device</span>
                   </button>
                 )}
               </div>

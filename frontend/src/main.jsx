@@ -102,6 +102,30 @@ window.fetch = async (input, init = {}) => {
 
 import { BrowserRouter } from 'react-router-dom';
 
+// Register Service Worker for PWA (Android / WebAPK / Offline shell) support
+if ('serviceWorker' in navigator) {
+  window.addEventListener('load', () => {
+    navigator.serviceWorker
+      .register('/sw.js')
+      .then((registration) => {
+        // Check for updates
+        registration.onupdatefound = () => {
+          const installingWorker = registration.installing;
+          if (installingWorker) {
+            installingWorker.onstatechange = () => {
+              if (installingWorker.state === 'installed' && navigator.serviceWorker.controller) {
+                console.log('[PWA] New update available for Sheba POS.');
+              }
+            };
+          }
+        };
+      })
+      .catch((error) => {
+        console.warn('[PWA] ServiceWorker registration failed:', error);
+      });
+  });
+}
+
 ReactDOM.createRoot(document.getElementById('root')).render(
   <React.StrictMode>
     <ErrorBoundary>

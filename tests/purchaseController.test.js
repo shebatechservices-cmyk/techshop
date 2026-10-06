@@ -174,6 +174,81 @@ describe('createOrder serial duplicate prevention', () => {
     });
 });
 
+describe('createOrder extra cost handling', () => {
+    it('successfully creates order with extra_cost and syncs expense without ReferenceError', async () => {
+        const executedQueries = [];
+        const client = setupClient({
+            'SELECT id, name FROM suppliers': () => ({
+                rows: [{ id: 1, name: 'Main Supplier' }],
+            }),
+            'SELECT pos\\.serial_code': () => ({
+                rows: [],
+            }),
+            'INSERT INTO purchase_orders': () => ({
+                rows: [{ id: 99, po_number: 'PO-20261006-9999' }],
+            }),
+            'CREATE UNIQUE INDEX IF NOT EXISTS idx_expenses_voucher_no': () => ({ rowCount: 1 }),
+            'SELECT id FROM expense_categories WHERE': () => ({
+                rows: [{ id: 3 }],
+            }),
+            'INSERT INTO expenses': () => ({ rowCount: 1 }),
+            'SELECT id, conversion_rate, unit_name, sub_unit_name FROM products WHERE id =': () => ({
+                rows: [{ id: 10, conversion_rate: 1, unit_name: 'Pcs', sub_unit_name: null }],
+            }),
+            'INSERT INTO purchase_order_items': () => ({
+                rows: [{ id: 101 }],
+            }),
+            'UPDATE products': () => ({ rowCount: 1 }),
+            'UPDATE suppliers': () => ({ rowCount: 1 }),
+        });
+
+        const originalQuery = client.query;
+        client.query = jest.fn(async (text, params) => {
+            executedQueries.push({ text, params });
+            return originalQuery(text, params);
+        });
+
+        const req = {
+            body: {
+                supplier_id: 1,
+                extra_cost: 350,
+                extra_cost_category: 'Transportation & Logistics',
+                extra_cost_notes: 'Van courier delivery',
+                items: [
+                    {
+                        product_id: 10,
+                        quantity: 1,
+                        cost_price: 1000,
+                        sale_price: 1500,
+                        expected_date: '2026-10-06',
+                    },
+                ],
+                payments: [],
+            },
+        };
+        const res = mockRes();
+
+        await purchase.createOrder(req, res);
+
+        expect(res.status).toHaveBeenCalledWith(201);
+        expect(res.json).toHaveBeenCalledWith(
+            expect.objectContaining({
+                message: 'Purchase order saved successfully',
+            })
+        );
+
+        const poInsert = executedQueries.find((q) => /INSERT INTO purchase_orders/i.test(q.text));
+        expect(poInsert).toBeDefined();
+        expect(poInsert.params).toContain(350);
+        expect(poInsert.params).toContain('Transportation & Logistics');
+        expect(poInsert.params).toContain('Van courier delivery');
+
+        const expInsert = executedQueries.find((q) => /INSERT INTO expenses/i.test(q.text));
+        expect(expInsert).toBeDefined();
+        expect(expInsert.params).toContain(350);
+    });
+});
+
 describe('deleteOrder referral integrity & 7-day time lock', () => {
     it('blocks deletion when purchase is older than 7 days (168 hours)', async () => {
         const oldDate = new Date(Date.now() - 170 * 60 * 60 * 1000); // 170 hours old
