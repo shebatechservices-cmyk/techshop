@@ -11,6 +11,7 @@ import PurchaseQuotationsTab from './components/PurchaseQuotationsTab';
 import PurchaseSuppliersTab from './components/PurchaseSuppliersTab';
 import PurchaseDeleteBlockedModal from './components/PurchaseDeleteBlockedModal';
 import PurchaseDetailDrawer from './components/PurchaseDetailDrawer';
+import { loadDraft, PURCHASE_DRAFT_KEY } from '../../utils/draftRecovery';
 
 export default function Purchases({ onOpenAddProduct, initialTab = 'history', initialSearch = '', navKey = 0 }) {
   const {
@@ -72,6 +73,19 @@ export default function Purchases({ onOpenAddProduct, initialTab = 'history', in
     totalSupplierDue,
     getQuotationBadgeStyle,
   } = usePurchaseManager({ initialTab, initialSearch, navKey });
+
+  // Check for unsaved recoverable purchase draft
+  const purchaseDraftInfo = React.useMemo(() => {
+    try {
+      const d = loadDraft(PURCHASE_DRAFT_KEY);
+      if (d && d.data && ((Array.isArray(d.data.items) && d.data.items.length > 0) || d.data.supplierId)) {
+        return d;
+      }
+      return null;
+    } catch {
+      return null;
+    }
+  }, [isOrderModalOpen]);
 
   return (
     <div style={{ padding: '24px', background: '#f8fafc', minHeight: '100vh', fontFamily: 'inherit' }}>
@@ -195,9 +209,18 @@ export default function Purchases({ onOpenAddProduct, initialTab = 'history', in
               navigate('/history');
               setIsOrderModalOpen(true);
             }}
-            className="bg-sky-600 hover:bg-sky-700 text-white border-0 px-3.5 py-1.5 rounded-md font-bold text-xs sm:text-sm cursor-pointer flex items-center gap-1 shadow-sm transition-colors"
+            className="bg-sky-600 hover:bg-sky-700 text-white border-0 px-3.5 py-1.5 rounded-md font-bold text-xs sm:text-sm cursor-pointer flex items-center gap-1.5 shadow-sm transition-colors"
           >
-            <span>+</span> Order
+            <span>+</span>
+            <span>Order</span>
+            {purchaseDraftInfo && (
+              <span
+                className="bg-amber-400 text-amber-950 text-[10px] px-1.5 py-0.5 rounded-full font-black animate-pulse"
+                title={`Unsaved draft found with ${purchaseDraftInfo.itemCount || 0} items`}
+              >
+                ⚡ Draft ({purchaseDraftInfo.itemCount || 0})
+              </span>
+            )}
           </button>
 
           <button

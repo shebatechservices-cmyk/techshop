@@ -10,6 +10,7 @@ import {
 } from '../../utils/purchaseFormUtils';
 import { usePurchaseDraft } from './usePurchaseDraft';
 import { usePurchaseHydration } from './usePurchaseHydration';
+import { clearDraft, PURCHASE_DRAFT_KEY } from '../../../../utils/draftRecovery';
 import API from '../../../../services/api';
 
 export function usePurchasePersistenceAndSave({
@@ -140,6 +141,8 @@ export function usePurchasePersistenceAndSave({
     setPaymentConfirmed(false);
     setQuery('');
     setBarcodeInput('');
+    clearDraft(PURCHASE_DRAFT_KEY);
+    if (setRecoveredDraft) setRecoveredDraft(null);
     if (setError) setError('');
     if (setPopupMsg) setPopupMsg('');
   };
@@ -221,6 +224,8 @@ export function usePurchasePersistenceAndSave({
       }
 
       const createdOrder = payload.data || payload;
+      clearDraft(PURCHASE_DRAFT_KEY);
+      if (setRecoveredDraft) setRecoveredDraft(null);
       if (props?.onSaved) props.onSaved(createdOrder);
       if (onSaved) onSaved(createdOrder);
       if (onOrderSaved) onOrderSaved(createdOrder);
