@@ -15,15 +15,22 @@ export default function CustomerSearchToolbar({
       <div className="flex flex-wrap items-center gap-2.5 flex-1 min-w-[280px]">
         {/* Search Input */}
         <div className="relative w-full max-w-md">
-          <span className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-sm pointer-events-none">
-            🔍
-          </span>
+          <svg
+            className="w-4 h-4 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none"
+            fill="none"
+            stroke="currentColor"
+            viewBox="0 0 24 24"
+            strokeWidth="2"
+          >
+            <path strokeLinecap="round" strokeLinejoin="round" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+          </svg>
           <input
             type="text"
             value={customerSearchQuery}
             onChange={(e) => setCustomerSearchQuery(e.target.value)}
             placeholder="Search customers by name, phone, email, address..."
-            className="w-full pl-9 pr-9 py-2 text-sm border border-slate-300 rounded-lg outline-none bg-white focus:ring-2 focus:ring-sky-500/20 focus:border-sky-500 transition-all text-slate-900 placeholder:text-slate-400"
+            className="w-full pl-10 pr-9 py-2 text-sm border border-slate-300 rounded-lg outline-none bg-white focus:ring-2 focus:ring-sky-500/20 focus:border-sky-500 transition-all text-slate-900 placeholder:text-slate-400"
+            style={{ paddingLeft: '2.5rem' }}
           />
           {customerSearchQuery && (
             <button

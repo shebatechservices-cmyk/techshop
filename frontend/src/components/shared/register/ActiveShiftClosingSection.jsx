@@ -101,7 +101,8 @@ export default function ActiveShiftClosingSection({
                 value={actualCashCounted}
                 onChange={(e) => setActualCashCounted(e.target.value)}
                 placeholder="0.00"
-                className="w-full pl-8 pr-3.5 py-2.5 text-lg font-extrabold rounded-xl border-2 border-sky-500 bg-slate-50 text-slate-900 outline-none focus:ring-2 focus:ring-sky-100 transition-all"
+                className="w-full pl-10 pr-3.5 py-2.5 text-lg font-extrabold rounded-xl border-2 border-sky-500 bg-slate-50 text-slate-900 outline-none focus:ring-2 focus:ring-sky-100 transition-all"
+                style={{ paddingLeft: '2.5rem' }}
               />
             </div>
             <p className="mt-1.5 text-[11px] text-slate-500">

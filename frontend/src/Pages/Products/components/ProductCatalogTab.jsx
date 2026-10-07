@@ -116,8 +116,16 @@ export default function ProductCatalogTab({
       <div className="bg-white p-3.5 sm:p-4 rounded-2xl border border-slate-200 shadow-xs flex flex-col md:flex-row items-stretch md:items-center justify-between gap-3">
         {/* Search Bar Input */}
         <div className="flex-1 relative">
-          <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-slate-400 text-sm">
-            🔍
+          <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-slate-400">
+            <svg
+              className="w-4 h-4"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+              strokeWidth="2"
+            >
+              <path strokeLinecap="round" strokeLinejoin="round" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+            </svg>
           </div>
           <input
             type="text"
@@ -127,7 +135,8 @@ export default function ProductCatalogTab({
               setCurrentPage?.(1);
             }}
             placeholder="Search products by name, brand, model, SKU, barcode, category..."
-            className="w-full pl-9 pr-8 py-2 text-xs bg-slate-50 hover:bg-slate-100/80 focus:bg-white rounded-xl border border-slate-300 focus:border-sky-500 focus:ring-2 focus:ring-sky-100 transition-all outline-none font-medium text-slate-800 placeholder:text-slate-400"
+            className="w-full pl-10 pr-8 py-2 text-xs bg-slate-50 hover:bg-slate-100/80 focus:bg-white rounded-xl border border-slate-300 focus:border-sky-500 focus:ring-2 focus:ring-sky-100 transition-all outline-none font-medium text-slate-800 placeholder:text-slate-400"
+            style={{ paddingLeft: '2.5rem' }}
           />
           {productFilterQuery && (
             <button

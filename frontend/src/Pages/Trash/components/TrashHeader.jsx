@@ -43,13 +43,22 @@ export default function TrashHeader({
       {/* Center: Realtime Search */}
       <div className="min-w-[220px] max-w-[320px] flex-[1_1_220px]">
         <div className="relative flex items-center">
-          <span className="absolute left-2.5 text-xs text-gray-400">🔍</span>
+          <svg
+            className="w-3.5 h-3.5 text-gray-400 absolute left-2.5 top-1/2 -translate-y-1/2 pointer-events-none"
+            fill="none"
+            stroke="currentColor"
+            viewBox="0 0 24 24"
+            strokeWidth="2"
+          >
+            <path strokeLinecap="round" strokeLinejoin="round" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+          </svg>
           <input
             type="text"
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
             placeholder="Search trashed items by title, id, sku, amount..."
-            className="w-full py-1.5 pl-8 pr-7 bg-gray-50 border border-gray-200 rounded-lg text-gray-800 placeholder-gray-400 text-xs outline-none focus:bg-white focus:border-green-500 focus:ring-2 focus:ring-green-100 transition-all"
+            className="w-full py-1.5 pl-9 pr-7 bg-gray-50 border border-gray-200 rounded-lg text-gray-800 placeholder-gray-400 text-xs outline-none focus:bg-white focus:border-green-500 focus:ring-2 focus:ring-green-100 transition-all"
+            style={{ paddingLeft: '2.25rem' }}
           />
           {searchQuery && (
             <button

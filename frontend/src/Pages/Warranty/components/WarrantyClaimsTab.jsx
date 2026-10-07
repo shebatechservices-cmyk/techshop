@@ -40,15 +40,22 @@ export default function WarrantyClaimsTab({
 
         {/* Search input */}
         <div className="relative w-full sm:w-64">
-          <span className="absolute left-2.5 top-1/2 -translate-y-1/2 text-slate-400 text-xs">
-            🔍
-          </span>
+          <svg
+            className="w-3.5 h-3.5 text-slate-400 absolute left-2.5 top-1/2 -translate-y-1/2 pointer-events-none"
+            fill="none"
+            stroke="currentColor"
+            viewBox="0 0 24 24"
+            strokeWidth="2"
+          >
+            <path strokeLinecap="round" strokeLinejoin="round" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+          </svg>
           <input
             type="text"
             placeholder="Search claim, token, S/N, phone..."
             value={claimSearch}
             onChange={(e) => setClaimSearch(e.target.value)}
-            className="w-full pl-8 pr-3 py-1.5 text-xs rounded-lg border border-slate-300 bg-white focus:ring-2 focus:ring-sky-500/20 focus:border-sky-500 outline-none transition"
+            className="w-full pl-9 pr-3 py-1.5 text-xs rounded-lg border border-slate-300 bg-white focus:ring-2 focus:ring-sky-500/20 focus:border-sky-500 outline-none transition"
+            style={{ paddingLeft: '2.25rem' }}
           />
         </div>
       </div>

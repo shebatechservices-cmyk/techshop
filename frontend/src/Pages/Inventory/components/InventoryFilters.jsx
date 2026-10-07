@@ -58,13 +58,22 @@ export default function InventoryFilters({
 
         {/* Search Bar */}
         <div className="flex-1 min-w-[200px] relative">
-          <span className="absolute left-2.5 top-1/2 -translate-y-1/2 text-slate-400 text-xs">🔍</span>
+          <svg
+            className="w-3.5 h-3.5 text-slate-400 absolute left-2.5 top-1/2 -translate-y-1/2 pointer-events-none"
+            fill="none"
+            stroke="currentColor"
+            viewBox="0 0 24 24"
+            strokeWidth="2"
+          >
+            <path strokeLinecap="round" strokeLinejoin="round" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+          </svg>
           <input
             type="text"
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
             placeholder="Search product, SKU, barcode..."
-            className="w-full py-1 pl-7 pr-7 rounded-md border border-slate-300 text-xs outline-none box-border focus:border-sky-500"
+            className="w-full py-1 pl-9 pr-7 rounded-md border border-slate-300 text-xs outline-none box-border focus:border-sky-500"
+            style={{ paddingLeft: '2.25rem' }}
           />
           {searchQuery && (
             <button

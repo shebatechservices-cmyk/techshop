@@ -58,13 +58,22 @@ export default function WarehouseManageModal({ isOpen, onClose, onWarehouseUpdat
         {/* Action & Filter Bar */}
         <div className="px-5 py-2.5 bg-white border-b border-slate-200 flex items-center justify-between gap-2.5 flex-wrap">
           <div className="flex-1 min-w-[200px] relative">
-            <span className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-xs pointer-events-none">🔍</span>
+            <svg
+              className="w-4 h-4 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+              strokeWidth="2"
+            >
+              <path strokeLinecap="round" strokeLinejoin="round" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+            </svg>
             <input
               type="text"
               value={searchFilter}
               onChange={(e) => setSearchFilter(e.target.value)}
               placeholder="Search by warehouse name, code, location..."
-              className="w-full py-1.5 pl-9 pr-3 rounded-md border border-slate-300 text-sm outline-none focus:border-sky-500"
+              className="w-full py-1.5 pl-10 pr-3 rounded-md border border-slate-300 text-sm outline-none focus:border-sky-500"
+              style={{ paddingLeft: '2.5rem' }}
             />
           </div>
           <button

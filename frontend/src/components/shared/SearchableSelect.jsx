@@ -188,16 +188,27 @@ export default function SearchableSelect({
           {/* Search Box Header */}
           <div className="px-3 pb-2 pt-1 border-b border-slate-100">
             <div className="relative">
-              <span className="absolute left-2.5 top-1/2 -translate-y-1/2 text-slate-400 text-xs">
-                🔍
-              </span>
+              <svg
+                className="w-3.5 h-3.5 text-slate-400 absolute left-2.5 top-1/2 -translate-y-1/2 pointer-events-none"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+                strokeWidth="2"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
+                />
+              </svg>
               <input
                 ref={searchInputRef}
                 type="text"
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
                 placeholder={searchPlaceholder}
-                className="w-full pl-8 pr-7 py-1.5 bg-slate-50 border border-slate-200 rounded-lg text-xs outline-none focus:border-sky-500 focus:bg-white text-slate-800 font-medium transition-all"
+                className="w-full pl-9 pr-7 py-1.5 bg-slate-50 border border-slate-200 rounded-lg text-xs outline-none focus:border-sky-500 focus:bg-white text-slate-800 font-medium transition-all"
+                style={{ paddingLeft: '2.25rem' }}
               />
               {searchQuery && (
                 <button

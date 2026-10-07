@@ -58,7 +58,8 @@ export default function OpenShiftSection({
                 value={openBalance}
                 onChange={(e) => setOpenBalance(e.target.value)}
                 placeholder="0.00"
-                className="w-full pl-8 pr-3.5 py-2.5 text-base font-bold rounded-xl border border-slate-300 outline-none focus:border-emerald-500 focus:ring-2 focus:ring-emerald-100 transition-all text-slate-800"
+                className="w-full pl-10 pr-3.5 py-2.5 text-base font-bold rounded-xl border border-slate-300 outline-none focus:border-emerald-500 focus:ring-2 focus:ring-emerald-100 transition-all text-slate-800"
+                style={{ paddingLeft: '2.5rem' }}
               />
             </div>
           </div>

@@ -17,15 +17,22 @@ export default function WarrantySearchLookup({
       {/* Search Input Bar */}
       <form onSubmit={handleCheckWarranty} className="flex gap-2 items-center flex-wrap sm:flex-nowrap">
         <div className="relative flex-1 w-full">
-          <span className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-sm">
-            🔍
-          </span>
+          <svg
+            className="w-4 h-4 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none"
+            fill="none"
+            stroke="currentColor"
+            viewBox="0 0 24 24"
+            strokeWidth="2"
+          >
+            <path strokeLinecap="round" strokeLinejoin="round" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+          </svg>
           <input
             type="text"
             placeholder="Scan Barcode Serial Number (S/N) or type Invoice # to check warranty..."
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            className="w-full pl-9 pr-4 py-2 text-xs rounded-xl border border-slate-300 focus:ring-2 focus:ring-sky-500/20 focus:border-sky-500 outline-none transition font-mono"
+            className="w-full pl-10 pr-4 py-2 text-xs rounded-xl border border-slate-300 focus:ring-2 focus:ring-sky-500/20 focus:border-sky-500 outline-none transition font-mono"
+            style={{ paddingLeft: '2.5rem' }}
           />
         </div>
         <button

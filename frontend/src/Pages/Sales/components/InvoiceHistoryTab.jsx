@@ -32,13 +32,22 @@ export default function InvoiceHistoryTab({
       <div className="flex justify-between items-center mb-5 flex-wrap gap-3">
         <div className="flex items-center gap-2.5 flex-1 min-w-[280px] flex-wrap">
           <div className="relative w-full max-w-[440px]">
-            <span className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-sm">🔍</span>
+            <svg
+              className="w-4 h-4 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+              strokeWidth="2"
+            >
+              <path strokeLinecap="round" strokeLinejoin="round" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+            </svg>
             <input
               type="text"
               value={invoiceSearchQuery}
               onChange={(e) => setInvoiceSearchQuery(e.target.value)}
               placeholder="Search invoices by invoice #, customer, phone, salesperson..."
-              className="w-full py-2.5 pl-9 pr-9 rounded-lg border-[1.5px] border-slate-300 text-sm outline-none box-border bg-white focus:border-sky-500"
+              className="w-full py-2.5 pl-10 pr-9 rounded-lg border-[1.5px] border-slate-300 text-sm outline-none box-border bg-white focus:border-sky-500"
+              style={{ paddingLeft: '2.5rem' }}
             />
             {invoiceSearchQuery && (
               <button
