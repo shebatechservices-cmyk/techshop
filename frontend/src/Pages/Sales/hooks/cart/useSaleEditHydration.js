@@ -48,8 +48,33 @@ export function useSaleEditHydration({
       setPopupMsg('');
       setCustomerId(String(editSale.customer_id || ''));
       setError('');
+      const rawSaleItems = editSale.items || [];
+      const totalItemDiscount = rawSaleItems.reduce((acc, it) => acc + money(it.discount), 0);
+      const loyaltyUsed = Number(editSale.loyalty_points_used || 0);
+      const invoiceDiscount = Math.max(0, money(editSale.discount) - loyaltyUsed);
+
+      // If legacy invoice has no item-level discounts but had an overall invoice discount, distribute it
+      let distributedLegacyDiscounts = [];
+      if (totalItemDiscount === 0 && invoiceDiscount > 0 && rawSaleItems.length > 0) {
+        const rawSubtotal = rawSaleItems.reduce(
+          (acc, it) => acc + Number(it.quantity || 1) * Number(it.unit_price || 0),
+          0
+        );
+        let remaining = invoiceDiscount;
+        distributedLegacyDiscounts = rawSaleItems.map((it, idx) => {
+          if (idx === rawSaleItems.length - 1) {
+            return remaining;
+          }
+          const itemSub = Number(it.quantity || 1) * Number(it.unit_price || 0);
+          const share = rawSubtotal > 0 ? Math.round((itemSub / rawSubtotal) * invoiceDiscount) : 0;
+          const assigned = Math.min(remaining, share);
+          remaining = Math.max(0, remaining - assigned);
+          return assigned;
+        });
+      }
+
       setItems(
-        (editSale.items || []).map((it, idx) => {
+        rawSaleItems.map((it, idx) => {
           const prodInList = (products || []).find((p) => p.id === it.product_id);
           const fullName = fullCatalogName(prodInList || it);
           const isTracked =
@@ -58,6 +83,10 @@ export function useSaleEditHydration({
             isProductWarrantyRequired(prodInList) ||
             isProductWarrantyRequired(it);
           const serialsList = Array.isArray(it.serials) ? it.serials : [];
+          const itemDisc = money(it.discount) > 0
+            ? money(it.discount)
+            : (distributedLegacyDiscounts[idx] || 0);
+
           return {
             localId: `${Date.now()}-${idx}`,
             product_id: it.product_id,
@@ -68,7 +97,7 @@ export function useSaleEditHydration({
             quantity: isTracked ? serialsList.length : Number(it.quantity || 1),
             unit_price: money(it.unit_price),
             cost_price: money(it.cost_price),
-            discount: money(it.discount),
+            discount: money(itemDisc),
             warranty_months:
               it.warranty_months !== undefined && it.warranty_months !== null
                 ? Number(it.warranty_months)
@@ -90,9 +119,8 @@ export function useSaleEditHydration({
           };
         })
       );
-      const loyaltyUsed = Number(editSale.loyalty_points_used || 0);
       setDiscount(money(editSale.discount) - loyaltyUsed);
-      setDiscountTouched(true);
+      setDiscountTouched(false);
       setVat(money(editSale.vat));
       setLoyaltyPointsToUse(loyaltyUsed);
       setHasSetupCharge(money(editSale.setup_charge) > 0);

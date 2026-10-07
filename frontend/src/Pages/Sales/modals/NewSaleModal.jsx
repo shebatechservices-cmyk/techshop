@@ -94,6 +94,7 @@ export default function NewSaleModal({
     walletAccounts,
     filteredProducts,
     subtotal,
+    totalDiscount,
     totalSetupCharge,
     totalExtraCost,
     netAmount,
@@ -396,6 +397,7 @@ export default function NewSaleModal({
               due={due}
               netAmount={netAmount}
               discount={discount}
+              totalDiscount={totalDiscount}
               setDiscount={setDiscount}
               setDiscountTouched={setDiscountTouched}
               loyaltyPointsToUse={loyaltyPointsToUse}

@@ -9,9 +9,8 @@ export default function useSalePricingAndCharges({
   customers = [],
   customerSummary = null,
   editSale = null,
+  setItems = null,
 }) {
-  const [discount, setDiscount] = useState(0);
-  const [discountTouched, setDiscountTouched] = useState(false);
   const [vat, setVat] = useState(0);
   const [hasSetupCharge, setHasSetupCharge] = useState(false);
   const [cameraCount, setCameraCount] = useState(1);
@@ -69,13 +68,14 @@ export default function useSalePricingAndCharges({
     setSetupCharge(charge);
   };
 
-  // Financial Calculations
+  // Financial Calculations - STRICTLY PER-ITEM BASED
   const subtotal = items.reduce(
     (sum, it) => sum + Number(it.quantity || 1) * Number(it.unit_price || 0),
     0
   );
   const perItemDiscount = items.reduce((sum, it) => sum + money(it.discount), 0);
-  const totalDiscount = money(discount) + money(loyaltyPointsToUse);
+  const discount = perItemDiscount;
+  const totalDiscount = perItemDiscount + money(loyaltyPointsToUse);
   const totalVat = money(vat);
   const totalSetupCharge = hasSetupCharge ? money(setupCharge) : 0;
   const totalExtraCost = hasExtraCost ? money(extraCost) : 0;
@@ -126,37 +126,38 @@ export default function useSalePricingAndCharges({
   const groupDiscountAmount = isGroupCustomer ? Math.round(subtotal * 0.05) : 0;
   const isGroupDiscountActive =
     isGroupCustomer &&
-    Number(discount) === groupDiscountAmount &&
-    groupDiscountAmount > 0;
-
-  useEffect(() => {
-    if (!discountTouched) {
-      setDiscount(
-        isGroupCustomer && subtotal > 0 ? groupDiscountAmount : perItemDiscount
-      );
-    }
-  }, [
-    discountTouched,
-    groupDiscountAmount,
-    isGroupCustomer,
-    perItemDiscount,
-    subtotal,
-  ]);
+    subtotal > 0 &&
+    perItemDiscount > 0 &&
+    Math.abs(perItemDiscount - groupDiscountAmount) <= 1;
 
   const handleToggleGroupDiscount = () => {
-    setDiscountTouched(true);
+    if (!setItems) return;
     if (isGroupDiscountActive) {
-      setDiscount(0);
+      setItems((prev) =>
+        prev.map((it) => ({
+          ...it,
+          discount: 0,
+        }))
+      );
     } else {
-      setDiscount(groupDiscountAmount);
+      setItems((prev) =>
+        prev.map((it) => {
+          const qty = Number(it.quantity || 1);
+          const price = Number(it.unit_price || 0);
+          return {
+            ...it,
+            discount: Math.round(price * qty * 0.05),
+          };
+        })
+      );
     }
   };
 
   return {
     discount,
-    setDiscount,
-    discountTouched,
-    setDiscountTouched,
+    setDiscount: () => {},
+    discountTouched: false,
+    setDiscountTouched: () => {},
     vat,
     setVat,
     hasSetupCharge,

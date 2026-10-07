@@ -106,6 +106,7 @@ export function useNewSale({
     customers,
     customerSummary,
     editSale,
+    setItems,
   });
 
   const {
