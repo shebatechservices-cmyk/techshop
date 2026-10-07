@@ -8,6 +8,7 @@ export default function AddProductModal({
   isOpen,
   editingProductId,
   onClose,
+  zIndex = "z-50",
   categories,
   catalogSubCategories,
   catalogBrands,
@@ -56,7 +57,7 @@ export default function AddProductModal({
 
   return (
     <div
-      className="fixed inset-0 bg-slate-900/60 backdrop-blur-xs flex items-center justify-center z-50 p-4 sm:p-6"
+      className={`fixed inset-0 bg-slate-900/60 backdrop-blur-xs flex items-center justify-center ${zIndex || "z-50"} p-4 sm:p-6`}
       role="dialog"
       aria-modal="true"
       aria-labelledby="add-product-title"

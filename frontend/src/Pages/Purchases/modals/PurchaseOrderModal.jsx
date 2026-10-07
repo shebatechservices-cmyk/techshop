@@ -1,7 +1,7 @@
 import React from 'react';
 import PurchasePrintModal from './PurchasePrintModal';
 import PurchaseLedgerPreviewModal from './PurchaseLedgerPreviewModal';
-import QuickAddProductModal from './QuickAddProductModal';
+import PurchaseComprehensiveProductModal from './PurchaseComprehensiveProductModal';
 import AddSupplierModal from './AddSupplierModal';
 import PurchaseSupplierSidebar from '../components/PurchaseSupplierSidebar';
 import PurchaseCartItemList from '../components/PurchaseCartItemList';
@@ -309,13 +309,12 @@ export default function PurchaseOrderModal(props) {
         />
       )}
 
-      {/* Inline Quick Add Product to Catalog Modal with duplicate checking */}
+      {/* Inline Comprehensive Add Product to Catalog Modal */}
       {isAddProductOpen && (
-        <QuickAddProductModal
+        <PurchaseComprehensiveProductModal
           isOpen={isAddProductOpen}
           initialName={query?.trim() || ''}
           onClose={() => setIsAddProductOpen(false)}
-          existingProducts={productList}
           onProductCreated={(createdProd) => {
             if (createdProd && createdProd.id) {
               setProductList((prev) => [createdProd, ...prev]);

@@ -1,10 +1,10 @@
 import React from "react";
 
-export default function DuplicateProductModal({ message, onClose }) {
+export default function DuplicateProductModal({ message, onClose, zIndex = "z-50" }) {
   if (!message) return null;
 
   return (
-    <div className="fixed inset-0 z-50 bg-slate-900/75 backdrop-blur-xs flex items-center justify-center p-4">
+    <div className={`fixed inset-0 ${zIndex || "z-50"} bg-slate-900/75 backdrop-blur-xs flex items-center justify-center p-4`}>
       <div className="bg-white rounded-2xl max-w-md w-full p-6 shadow-2xl text-center border border-rose-200 animate-in fade-in zoom-in duration-150">
         <div className="w-14 h-14 rounded-full bg-rose-100 text-rose-500 text-2xl flex items-center justify-center mx-auto mb-4">
           ⚠️

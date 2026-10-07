@@ -12,6 +12,7 @@ export default function useProductSubmit({
   formState,
   attributesState,
   catalogState,
+  onProductCreated,
 }) {
   const handleSubmit = async (event) => {
     if (event?.preventDefault) {
@@ -126,7 +127,7 @@ export default function useProductSubmit({
         }).catch(() => {});
       }
 
-      await catalogState.reloadProducts();
+      const refreshedProducts = await catalogState.reloadProducts();
       formState.handleResetForm();
       formState.setIsAddProductOpen(false);
       formState.setSaveSuccess(
@@ -134,6 +135,12 @@ export default function useProductSubmit({
           ? "Product specifications updated successfully."
           : "Product added to catalog successfully."
       );
+      if (onProductCreated && !editingProductId) {
+        const created = (Array.isArray(refreshedProducts) ? refreshedProducts.find((p) => p.id === targetId) : null) || resData.data;
+        if (created) {
+          onProductCreated(created);
+        }
+      }
       setTimeout(() => formState.setSaveSuccess(""), 4000);
     } catch (error) {
       formState.setSaveError(error.message || "Failed to save product. Please check all fields.");

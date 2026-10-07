@@ -32,8 +32,10 @@ export default function useProductCatalogQueries({
     try {
       const productData = await fetchJson(`${API}/products`);
       setProducts(productData);
+      return productData;
     } catch (err) {
       console.error("Failed to reload products:", err);
+      return [];
     }
   };
 

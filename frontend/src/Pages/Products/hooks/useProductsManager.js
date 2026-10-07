@@ -5,7 +5,7 @@ import useProductCatalogQueries from "./useProductCatalogQueries";
 import useProductCascades from "./useProductCascades";
 import useProductSubmit from "./useProductSubmit";
 
-export default function useProductsManager({ initialTab = "catalog", initialSearch = "" } = {}) {
+export default function useProductsManager({ initialTab = "catalog", initialSearch = "", onProductCreated } = {}) {
   const [activeTab, setActiveTab] = useState(initialTab || "catalog");
 
   // 1. Attributes & Cascading Category/Brand/Model/Series
@@ -48,6 +48,7 @@ export default function useProductsManager({ initialTab = "catalog", initialSear
     formState,
     attributesState,
     catalogState,
+    onProductCreated,
   });
 
   // Initial load and global event synchronization

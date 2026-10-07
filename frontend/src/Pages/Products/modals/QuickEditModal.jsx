@@ -5,12 +5,13 @@ export default function QuickEditModal({
   onClose,
   onChangeValue,
   onSave,
+  zIndex = "z-50",
 }) {
   if (!quickEdit.isOpen) return null;
 
   return (
     <div
-      className="fixed inset-0 bg-slate-900/65 backdrop-blur-xs flex items-center justify-center z-50 p-4 sm:p-6"
+      className={`fixed inset-0 bg-slate-900/65 backdrop-blur-xs flex items-center justify-center ${zIndex || "z-50"} p-4 sm:p-6`}
       role="dialog"
       aria-modal="true"
       aria-labelledby="quick-edit-title"
