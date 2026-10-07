@@ -85,14 +85,23 @@ const createProduct = async (req, res) => {
 
     const isBundleVal = Boolean(parseBool(is_bundle) ?? parseBool(isBundle) ?? false);
 
+    let finalImageUrl = req.body.image_url || null;
+    if (req.files && req.files.length > 0) {
+      const featureFile = req.files.find(f => f.fieldname === 'feature_image' || f.fieldname === 'image' || f.fieldname === 'images') || req.files[0];
+      if (featureFile && featureFile.filename) {
+        finalImageUrl = `/uploads/products/${featureFile.filename}`;
+      }
+    }
+
     const query = `
       INSERT INTO products (
         name, category_id, sub_category_id, brand_id, model_id, series_id,
         sku, barcode, purchase_price, selling_price, mrp, stock, min_stock,
         warranty_months, is_serial_tracked, is_serial_required, is_warranty_required,
-        is_bundle, unit_name, sub_unit_name, conversion_rate, sub_unit_selling_price, sub_unit_barcode
+        is_bundle, unit_name, sub_unit_name, conversion_rate, sub_unit_selling_price, sub_unit_barcode,
+        image_url
       )
-      VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, $19, $20, $21, $22, $23)
+      VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, $19, $20, $21, $22, $23, $24)
       RETURNING *;
     `;
     const values = [
@@ -119,10 +128,20 @@ const createProduct = async (req, res) => {
       conversion_rate ? Number(conversion_rate) : 1,
       sub_unit_selling_price ? Number(sub_unit_selling_price) : null,
       sub_unit_barcode ? String(sub_unit_barcode).trim() : null,
+      finalImageUrl ? String(finalImageUrl).trim() : null,
     ];
 
     const result = await db.query(query, values);
     const createdProduct = result.rows[0];
+
+    if (finalImageUrl && String(finalImageUrl).trim()) {
+      await db.query(
+        `INSERT INTO product_images (product_id, image_url, image_type, sort_order)
+         VALUES ($1, $2, 'feature', 0)
+         ON CONFLICT DO NOTHING`,
+        [createdProduct.id, String(finalImageUrl).trim()]
+      ).catch(() => {});
+    }
 
     // Save bundle kit components if bundle
     let parsedBundleItems = [];

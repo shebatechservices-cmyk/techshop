@@ -68,6 +68,35 @@ app.use(cors({
     credentials: true,
 }));
 app.use(express.json());
+
+// Ensure upload directories exist and sync persistent default uploads
+const ensureUploadsExist = () => {
+    try {
+        const uploadsBase = path.join(__dirname, 'uploads');
+        const defaultBase = path.join(__dirname, 'storage', 'default_uploads');
+        ['logos', 'products', 'temp_shares'].forEach(sub => {
+            fs.mkdirSync(path.join(uploadsBase, sub), { recursive: true });
+        });
+        if (fs.existsSync(defaultBase)) {
+            ['logos', 'products'].forEach(sub => {
+                const srcDir = path.join(defaultBase, sub);
+                const destDir = path.join(uploadsBase, sub);
+                if (fs.existsSync(srcDir)) {
+                    fs.readdirSync(srcDir).forEach(file => {
+                        const destFile = path.join(destDir, file);
+                        if (!fs.existsSync(destFile)) {
+                            fs.copyFileSync(path.join(srcDir, file), destFile);
+                        }
+                    });
+                }
+            });
+        }
+    } catch (e) {
+        console.warn('Notice: upload sync fallback:', e.message);
+    }
+};
+ensureUploadsExist();
+
 app.use('/uploads', express.static(path.join(__dirname, 'uploads'), { setHeaders: (res) => res.setHeader('X-Content-Type-Options', 'nosniff') }));
 
 app.get('/api', (req, res) => {
@@ -200,11 +229,11 @@ if (fs.existsSync(distPath)) {
     app.use(express.static(distPath));
 }
 
-// 404 handler for unmatched /api requests (returns JSON, never HTML)
-app.use('/api', (req, res) => {
+// 404 handler for unmatched /api or /uploads requests (returns JSON, never HTML)
+app.use(['/api', '/uploads'], (req, res) => {
     res.status(404).json({
         success: false,
-        error: 'API endpoint not found',
+        error: `${req.baseUrl ? req.baseUrl.slice(1) : 'Resource'} not found`,
         path: req.originalUrl
     });
 });

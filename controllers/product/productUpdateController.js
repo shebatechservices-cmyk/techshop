@@ -68,6 +68,14 @@ const updateProduct = async (req, res) => {
     const hasSubUnitSellingPrice = sub_unit_selling_price !== undefined;
     const hasSubUnitBarcode = sub_unit_barcode !== undefined;
 
+    let finalImageUrl = req.body.image_url;
+    if (req.files && req.files.length > 0) {
+      const featureFile = req.files.find(f => f.fieldname === 'feature_image' || f.fieldname === 'image' || f.fieldname === 'images') || req.files[0];
+      if (featureFile && featureFile.filename) {
+        finalImageUrl = `/uploads/products/${featureFile.filename}`;
+      }
+    }
+
     const query = `
       UPDATE products SET
         name = COALESCE($1, name),
@@ -93,6 +101,7 @@ const updateProduct = async (req, res) => {
         conversion_rate = CASE WHEN $28::boolean THEN $20 ELSE conversion_rate END,
         sub_unit_selling_price = CASE WHEN $29::boolean THEN $21 ELSE sub_unit_selling_price END,
         sub_unit_barcode = CASE WHEN $30::boolean THEN $22 ELSE sub_unit_barcode END,
+        image_url = CASE WHEN $31::boolean THEN $32 ELSE image_url END,
         status = COALESCE($23, status),
         description = COALESCE($24, description),
         updated_at = NOW()
@@ -131,11 +140,22 @@ const updateProduct = async (req, res) => {
       hasConversionRate,
       hasSubUnitSellingPrice,
       hasSubUnitBarcode,
+      finalImageUrl !== undefined,
+      (finalImageUrl && String(finalImageUrl).trim()) ? String(finalImageUrl).trim() : null,
     ];
 
     const result = await db.query(query, values);
     if (result.rows.length === 0) {
       return res.status(404).json({ success: false, message: 'Product not found' });
+    }
+
+    if (finalImageUrl && String(finalImageUrl).trim()) {
+      await db.query(
+        `INSERT INTO product_images (product_id, image_url, image_type, sort_order)
+         VALUES ($1, $2, 'feature', 0)
+         ON CONFLICT DO NOTHING`,
+        [Number(id), String(finalImageUrl).trim()]
+      ).catch(() => {});
     }
 
     const updatedProduct = result.rows[0];
