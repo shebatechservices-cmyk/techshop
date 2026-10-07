@@ -19,6 +19,11 @@ async function autoInitDatabase() {
                 ALTER TABLE products ADD COLUMN IF NOT EXISTS is_serial_tracked BOOLEAN DEFAULT false;
                 ALTER TABLE products ADD COLUMN IF NOT EXISTS is_serial_required BOOLEAN DEFAULT false;
                 ALTER TABLE products ADD COLUMN IF NOT EXISTS is_warranty_required BOOLEAN DEFAULT false;
+                ALTER TABLE sales_items ADD COLUMN IF NOT EXISTS discount NUMERIC(12,2) DEFAULT 0;
+                ALTER TABLE sales_items ADD COLUMN IF NOT EXISTS warranty_months INT DEFAULT 0;
+                ALTER TABLE sales_items ADD COLUMN IF NOT EXISTS unit_name VARCHAR(50);
+                ALTER TABLE sales_items ADD COLUMN IF NOT EXISTS unit_type VARCHAR(20) DEFAULT 'base_unit';
+                ALTER TABLE sales_items ADD COLUMN IF NOT EXISTS conversion_rate NUMERIC(10,2) DEFAULT 1;
                 ALTER TABLE shop_settings ADD COLUMN IF NOT EXISTS client_app_id VARCHAR(100) DEFAULT 'CLIENT-SHEBA-TECH-8801';
                 ALTER TABLE shop_settings ADD COLUMN IF NOT EXISTS security_pin VARCHAR(20) DEFAULT '1234';
                 ALTER TABLE shop_settings ADD COLUMN IF NOT EXISTS allow_invoice_modification BOOLEAN DEFAULT true;

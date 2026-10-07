@@ -223,8 +223,8 @@ const createSale = async (req, res) => {
             }
 
             const savedItem = await client.query(
-                `INSERT INTO sales_items (sale_id, product_id, quantity, unit_price, cost_price, line_total, warranty_expire_date, warranty_months, unit_name, unit_type, conversion_rate)
-                 VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11) RETURNING id`,
+                `INSERT INTO sales_items (sale_id, product_id, quantity, unit_price, cost_price, line_total, warranty_expire_date, warranty_months, unit_name, unit_type, conversion_rate, discount)
+                 VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12) RETURNING id`,
                 [
                     saleId,
                     item.product_id,
@@ -236,7 +236,8 @@ const createSale = async (req, res) => {
                     warrantyMonths,
                     item.unit_name || null,
                     item.unit_type || 'base_unit',
-                    Number(item.conversion_rate || 1)
+                    Number(item.conversion_rate || 1),
+                    money(item.discount || 0)
                 ]
             );
 

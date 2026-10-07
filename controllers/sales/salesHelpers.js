@@ -21,6 +21,7 @@ const ensureSalesColumns = async (dbClient = pool) => {
             ALTER TABLE sales_items ADD COLUMN IF NOT EXISTS unit_name VARCHAR(50);
             ALTER TABLE sales_items ADD COLUMN IF NOT EXISTS unit_type VARCHAR(20) DEFAULT 'base_unit';
             ALTER TABLE sales_items ADD COLUMN IF NOT EXISTS conversion_rate NUMERIC(10,2) DEFAULT 1;
+            ALTER TABLE sales_items ADD COLUMN IF NOT EXISTS discount NUMERIC(12,2) DEFAULT 0;
             ALTER TABLE sales ADD COLUMN IF NOT EXISTS previous_due NUMERIC(14,2) DEFAULT 0;
             ALTER TABLE sales ADD COLUMN IF NOT EXISTS exchange_from_invoice_no VARCHAR(100);
             ALTER TABLE sales ADD COLUMN IF NOT EXISTS original_sale_id INT;
@@ -68,13 +69,15 @@ const normalizeSaleItems = (items) => {
         const qty = Math.max(1, Number(it.quantity || 1));
         const price = money(it.unit_price);
         const cost = money(it.cost_price);
-        const lineTotal = price * qty;
-        calculatedSubtotal += lineTotal;
+        const discount = money(it.discount);
+        const lineTotal = Math.max(0, price * qty - discount);
+        calculatedSubtotal += price * qty;
         return {
             ...it,
             quantity: qty,
             unit_price: price,
             cost_price: cost,
+            discount,
             line_total: lineTotal,
             sort_order: idx + 1,
             serials: Array.isArray(it.serials) ? it.serials : [],

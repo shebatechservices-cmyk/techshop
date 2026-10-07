@@ -232,9 +232,22 @@ const updateSale = async (req, res) => {
             }
 
             const savedItem = await client.query(
-                `INSERT INTO sales_items (sale_id, product_id, quantity, unit_price, cost_price, line_total, warranty_expire_date, warranty_months)
-                 VALUES ($1, $2, $3, $4, $5, $6, $7, $8) RETURNING id`,
-                [Number(id), item.product_id, item.quantity, item.unit_price, itemCostPrice, item.line_total, expireDate, warrantyMonths]
+                `INSERT INTO sales_items (sale_id, product_id, quantity, unit_price, cost_price, line_total, warranty_expire_date, warranty_months, unit_name, unit_type, conversion_rate, discount)
+                 VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12) RETURNING id`,
+                [
+                    Number(id),
+                    item.product_id,
+                    item.quantity,
+                    item.unit_price,
+                    itemCostPrice,
+                    item.line_total,
+                    expireDate,
+                    warrantyMonths,
+                    item.unit_name || null,
+                    item.unit_type || 'base_unit',
+                    Number(item.conversion_rate || 1),
+                    money(item.discount || 0)
+                ]
             );
             for (const serial of item.serials) {
                 const trimmed = String(serial).trim();

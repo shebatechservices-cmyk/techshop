@@ -70,6 +70,7 @@ const getSaleById = async (req, res) => {
 
         const itemsRes = await pool.query(
             `SELECT si.*,
+                    COALESCE(si.discount, 0) AS discount,
                     COALESCE(si.warranty_months, p.warranty_months, 0) AS warranty_months,
                     COALESCE(p.name, 'Product') AS product_name,
                     b.name AS brand_name,
@@ -108,6 +109,9 @@ const getSaleById = async (req, res) => {
             const fullTitle = formatProductFullName(it);
             return {
                 ...it,
+                discount: Number(it.discount || 0),
+                unit_price: Number(it.unit_price || 0),
+                line_total: Number(it.line_total || 0),
                 raw_product_name: it.product_name,
                 name: fullTitle,
                 full_name: fullTitle,
