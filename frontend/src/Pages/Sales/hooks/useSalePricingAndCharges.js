@@ -3,6 +3,8 @@ import { EXTRA_COST_CATEGORIES } from '../../Purchases/hooks/usePurchaseCart';
 
 export const money = (val) => Number.parseFloat(val || 0) || 0;
 
+const noop = () => {};
+
 export default function useSalePricingAndCharges({
   items = [],
   customerId = '',
@@ -155,9 +157,9 @@ export default function useSalePricingAndCharges({
 
   return {
     discount,
-    setDiscount: () => {},
+    setDiscount: noop,
     discountTouched: false,
-    setDiscountTouched: () => {},
+    setDiscountTouched: noop,
     vat,
     setVat,
     hasSetupCharge,

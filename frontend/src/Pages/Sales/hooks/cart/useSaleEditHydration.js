@@ -1,4 +1,4 @@
-import { useEffect } from 'react';
+import { useEffect, useRef } from 'react';
 import { EXTRA_COST_CATEGORIES } from '../../../Purchases/hooks/usePurchaseCart';
 import {
   fullCatalogName,
@@ -17,6 +17,8 @@ export function useSaleEditHydration({
   products,
   handlers,
 }) {
+  const hydratedSaleIdRef = useRef(null);
+
   const {
     setPaymentConfirmed,
     setPopupMsg,
@@ -43,11 +45,25 @@ export function useSaleEditHydration({
   } = handlers;
 
   useEffect(() => {
-    if (isOpen && editSale && editSale.id) {
-      setPaymentConfirmed(false);
-      setPopupMsg('');
-      setCustomerId(String(editSale.customer_id || ''));
-      setError('');
+    if (!isOpen) {
+      hydratedSaleIdRef.current = null;
+      return;
+    }
+
+    if (!editSale || !editSale.id) {
+      return;
+    }
+
+    // Guard: only hydrate once per editSale.id when opening modal
+    if (hydratedSaleIdRef.current === editSale.id) {
+      return;
+    }
+    hydratedSaleIdRef.current = editSale.id;
+
+    setPaymentConfirmed(false);
+    setPopupMsg('');
+    setCustomerId(String(editSale.customer_id || ''));
+    setError('');
       const rawSaleItems = editSale.items || [];
       const totalItemDiscount = rawSaleItems.reduce((acc, it) => acc + money(it.discount), 0);
       const loyaltyUsed = Number(editSale.loyalty_points_used || 0);
@@ -167,10 +183,9 @@ export function useSaleEditHydration({
       );
       setHasUserEditedPaid(true);
       setPaymentConfirmed(true);
-    }
   }, [
     isOpen,
-    editSale,
+    editSale?.id,
     products,
     setItems,
     setTenders,
