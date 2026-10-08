@@ -231,6 +231,11 @@ const updateSale = async (req, res) => {
                 }
             }
 
+            const itemConvRate = Number(item.conversion_rate || 1);
+            if (itemConvRate > 1 && (item.unit_type === 'sub_unit' || itemCostPrice > money(item.unit_price) * 2)) {
+                itemCostPrice = money(itemCostPrice / itemConvRate);
+            }
+
             const savedItem = await client.query(
                 `INSERT INTO sales_items (sale_id, product_id, quantity, unit_price, cost_price, line_total, warranty_expire_date, warranty_months, unit_name, unit_type, conversion_rate, discount)
                  VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12) RETURNING id`,

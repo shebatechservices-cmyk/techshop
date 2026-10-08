@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import API from "../../../services/api";
 
 export const taka = (val) =>
@@ -11,6 +11,17 @@ export const formatCountdown = (sec) => {
   const m = Math.floor(sec / 60);
   const s = sec % 60;
   return `${m}m ${s < 10 ? "0" : ""}${s}s`;
+};
+
+// Formats a Date/timestamp into local YYYY-MM-DD
+const getLocalDateString = (dateVal) => {
+  if (!dateVal) return "";
+  const d = new Date(dateVal);
+  if (isNaN(d.getTime())) return "";
+  const y = d.getFullYear();
+  const m = String(d.getMonth() + 1).padStart(2, "0");
+  const day = String(d.getDate()).padStart(2, "0");
+  return `${y}-${m}-${day}`;
 };
 
 export default function useDashboardManager() {
@@ -45,13 +56,21 @@ export default function useDashboardManager() {
   const [lastUpdated, setLastUpdated] = useState(new Date());
   const [countdown, setCountdown] = useState(300); // 5 minutes in seconds
 
-  const fetchDashboardData = async (isBackground = false) => {
+  const fetchDashboardData = useCallback(async (isBackground = false) => {
     try {
       if (!isBackground) setLoading(true);
       else setRefreshing(true);
       setError("");
 
-      const [productsRes, walletsRes, salesRes, purchasesRes, licenseRes] = await Promise.all([
+      const [
+        inventoryRes,
+        masterProductsRes,
+        accountsRes,
+        salesRes,
+        purchasesRes,
+        licenseRes,
+      ] = await Promise.all([
+        fetch(`${API}/inventory`).catch(() => null),
         fetch(`${API}/master/products`).catch(() => null),
         fetch(`${API}/accounts/wallets`).catch(() => null),
         fetch(`${API}/sales`).catch(() => null),
@@ -64,60 +83,82 @@ export default function useDashboardManager() {
         setLicenseInfo(licData);
       }
 
-      const productsData = productsRes && productsRes.ok ? await productsRes.json() : [];
-      const walletsData = walletsRes && walletsRes.ok ? await walletsRes.json() : { data: [] };
+      const invJson = inventoryRes && inventoryRes.ok ? await inventoryRes.json() : null;
+      const masterData = masterProductsRes && masterProductsRes.ok ? await masterProductsRes.json() : [];
+      const walletsData = accountsRes && accountsRes.ok ? await accountsRes.json() : { data: [] };
       const salesData = salesRes && salesRes.ok ? await salesRes.json() : [];
       const purchasesData = purchasesRes && purchasesRes.ok ? await purchasesRes.json() : [];
 
-      const productsList = Array.isArray(productsData) ? productsData : [];
+      const invList = Array.isArray(invJson?.data) ? invJson.data : [];
+      const masterList = Array.isArray(masterData) ? masterData : [];
+      const productsList = invList.length > 0 ? invList : masterList;
       const walletsList = walletsData.data || [];
       const salesList = Array.isArray(salesData) ? salesData : salesData.data || [];
       const purchasesList = Array.isArray(purchasesData) ? purchasesData : purchasesData.data || [];
 
       // 1. Inventory & Stock Valuation Stats
-      const totalProducts = productsList.length;
-      const activeProducts = productsList.filter((p) => p.status === "active").length;
-      const lowStockList = productsList.filter(
-        (p) => Number(p.stock) > 0 && Number(p.stock) <= Number(p.min_stock || 5)
-      );
-      const stockOutList = productsList.filter((p) => Number(p.stock) <= 0);
-      const lowStockCount = lowStockList.length;
-      const stockOutCount = stockOutList.length;
-
+      // Use exact server-side valuation from /inventory when available
       let inventoryCostValue = 0;
       let inventoryRetailValue = 0;
-      productsList.forEach((p) => {
-        const stockQty = Math.max(0, Number(p.stock || 0));
-        inventoryCostValue += stockQty * Number(p.purchase_price || p.cost_price || 0);
-        inventoryRetailValue += stockQty * Number(p.selling_price || p.sale_price || 0);
-      });
+      let lowStockCount = 0;
+      let stockOutCount = 0;
+      let totalProducts = productsList.length;
+      let activeProducts = productsList.filter((p) => p.status === "active").length;
+
+      if (invJson?.summary) {
+        inventoryCostValue = Number(invJson.summary.total_cost_valuation || 0);
+        inventoryRetailValue = Number(invJson.summary.total_retail_valuation || 0);
+        lowStockCount = Number(invJson.summary.low_stock_count || 0);
+        stockOutCount = Number(invJson.summary.out_of_stock_count || 0);
+        if (invJson.summary.total_products) {
+          totalProducts = Number(invJson.summary.total_products);
+        }
+      } else {
+        // Precise fallback accounting for conversion rate and skipping bundle double-counting
+        productsList.forEach((p) => {
+          if (p.is_bundle) return; // avoid double counting virtual bundle kit products
+          const stockQty = Math.max(0, Number(p.stock || 0));
+          const convRate = Number(p.conversion_rate || 1) > 1 ? Number(p.conversion_rate) : 1;
+          const costPrice = Number(p.cost_price ?? p.purchase_price ?? p.last_purchase_price ?? 0) / convRate;
+          const salePrice = Number(p.sale_price ?? p.selling_price ?? p.mrp ?? costPrice) / convRate;
+          inventoryCostValue += stockQty * costPrice;
+          inventoryRetailValue += stockQty * salePrice;
+        });
+
+        const lowStockListFallback = productsList.filter(
+          (p) => Number(p.stock) > 0 && Number(p.stock) <= Number(p.min_stock || 5)
+        );
+        const stockOutListFallback = productsList.filter((p) => Number(p.stock) <= 0);
+        lowStockCount = lowStockListFallback.length;
+        stockOutCount = stockOutListFallback.length;
+      }
 
       // 2. Wallet & Liquidity
       const totalWalletBalance = walletsList.reduce((sum, w) => sum + Number(w.balance || 0), 0);
 
-      // 3. Date Matching (YYYY-MM-DD)
-      const todayStr = new Date().toISOString().split("T")[0];
+      // 3. Local Date Matching (YYYY-MM-DD in local time)
+      const now = new Date();
+      const todayStr = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}-${String(now.getDate()).padStart(2, "0")}`;
 
       // Sales Metrics
       let todaySales = 0;
       let todayOrdersCount = 0;
+      let todayCogs = 0;
       let totalDueAmount = 0;
       let totalSales = 0;
 
       salesList.forEach((order) => {
-        const orderDate = (order.created_at || order.date || "").split("T")[0];
-        const orderTotal = Number(order.grand_total || order.total_amount || 0);
+        const orderDate = getLocalDateString(order.created_at || order.date || order.invoice_date);
+        const orderTotal = Number(order.total_amount ?? order.grand_total ?? 0);
         totalSales += orderTotal;
 
         if (orderDate === todayStr) {
           todaySales += orderTotal;
           todayOrdersCount += 1;
+          todayCogs += Number(order.total_cogs || 0);
         }
 
-        const due = Number(
-          order.due_amount ||
-            Number(order.grand_total || order.total_amount || 0) - Number(order.paid_amount || 0)
-        );
+        const due = Number(order.due_amount || 0);
         if (due > 0) {
           totalDueAmount += due;
         }
@@ -131,7 +172,7 @@ export default function useDashboardManager() {
 
       purchasesList.forEach((order) => {
         const orderTotal = Number(order.total_cost || 0);
-        const orderDate = (order.created_at || order.date || "").split("T")[0];
+        const orderDate = getLocalDateString(order.created_at || order.date);
         totalPurchases += orderTotal;
         supplierDueAmount += Math.max(Number(order.total_due || 0), 0);
 
@@ -141,8 +182,8 @@ export default function useDashboardManager() {
         }
       });
 
-      // Today's Gross Profit Estimate
-      const todayProfit = Math.max(0, todaySales - todayPurchases);
+      // Today's True Gross Profit Margin (Revenue - Cost of Goods Sold)
+      const todayProfit = todaySales > 0 ? Math.max(0, todaySales - todayCogs) : 0;
 
       setStats({
         totalProducts,
@@ -164,8 +205,13 @@ export default function useDashboardManager() {
         todayProfit,
       });
 
+      // Reorder and low stock alert items
+      const alertItems = productsList
+        .filter((p) => Number(p.stock || 0) <= Number(p.min_stock || 5))
+        .sort((a, b) => Number(a.stock || 0) - Number(b.stock || 0));
+
       setRecentProducts(productsList.slice(0, 5));
-      setLowStockItems([...stockOutList, ...lowStockList].slice(0, 6));
+      setLowStockItems(alertItems.slice(0, 6));
       setRecentSales(salesList.slice(0, 5));
       setRecentPurchases(purchasesList.slice(0, 5));
       setLastUpdated(new Date());
@@ -177,9 +223,9 @@ export default function useDashboardManager() {
       setLoading(false);
       setRefreshing(false);
     }
-  };
+  }, []);
 
-  // Initial Load + 5-Minute Periodic Background Refresh
+  // Initial Load + 5-Minute Periodic Background Refresh + Realtime Listeners
   useEffect(() => {
     fetchDashboardData(false);
 
@@ -193,11 +239,20 @@ export default function useDashboardManager() {
       setCountdown((prev) => (prev > 1 ? prev - 1 : 300));
     }, 1000);
 
+    // Instant update on inventory change or tab focus
+    const handleStockChanged = () => fetchDashboardData(true);
+    const handleFocus = () => fetchDashboardData(true);
+
+    window.addEventListener("inventory_stock_changed", handleStockChanged);
+    window.addEventListener("focus", handleFocus);
+
     return () => {
       clearInterval(intervalId);
       clearInterval(countdownId);
+      window.removeEventListener("inventory_stock_changed", handleStockChanged);
+      window.removeEventListener("focus", handleFocus);
     };
-  }, []);
+  }, [fetchDashboardData]);
 
   return {
     licenseInfo,

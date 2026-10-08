@@ -16,6 +16,7 @@ const getSales = async (_req, res) => {
                    c.email AS customer_email,
                    COALESCE((SELECT COUNT(*) FROM sales_items WHERE sale_id = s.id), 0) AS item_count,
                    COALESCE((SELECT SUM(quantity) FROM sales_items WHERE sale_id = s.id), 0) AS unit_count,
+                   COALESCE((SELECT SUM(quantity * cost_price) FROM sales_items WHERE sale_id = s.id), 0)::NUMERIC AS total_cogs,
                    COALESCE((
                        SELECT true FROM register_shifts rs 
                        WHERE rs.status = 'closed' 

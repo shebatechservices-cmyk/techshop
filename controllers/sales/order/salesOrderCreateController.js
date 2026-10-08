@@ -204,7 +204,7 @@ const createSale = async (req, res) => {
             }
 
             const itemConvRate = Number(item.conversion_rate || 1);
-            if (item.unit_type === 'sub_unit' && itemConvRate > 1 && itemCostPrice > money(item.unit_price) * 2) {
+            if (itemConvRate > 1 && (item.unit_type === 'sub_unit' || itemCostPrice > money(item.unit_price) * 2)) {
                 itemCostPrice = money(itemCostPrice / itemConvRate);
             }
 
