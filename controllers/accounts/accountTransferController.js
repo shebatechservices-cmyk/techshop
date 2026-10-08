@@ -128,6 +128,40 @@ exports.payDueViaWallet = async (req, res) => {
                 note: note || 'Due Payment to Supplier',
             });
 
+            // Settle supplier's pending unpaid/partial purchase orders FIFO
+            const accNameRes = await client.query('SELECT name FROM payment_accounts WHERE id = $1', [account_id]);
+            const accName = accNameRes.rows[0]?.name || 'Cash';
+            const pendingPurchases = await client.query(
+                `SELECT id, po_number, total_cost, total_paid, total_due, status
+                 FROM purchase_orders
+                 WHERE supplier_id = $1 AND total_due > 0 AND deleted_at IS NULL
+                 ORDER BY created_at ASC, id ASC
+                 FOR UPDATE`,
+                [party_id]
+            );
+            let remToAllocate = Number(amount || 0);
+            for (const po of pendingPurchases.rows) {
+                if (remToAllocate <= 0) break;
+                const poDue = Number(po.total_due || 0);
+                const alloc = Math.min(remToAllocate, poDue);
+                const poPaid = Number(po.total_paid || 0) + alloc;
+                const poNewDue = Math.max(0, poDue - alloc);
+                const poStatus = poNewDue <= 0 ? 'paid' : 'partial';
+
+                await client.query(
+                    `UPDATE purchase_orders
+                     SET total_paid = $1, total_due = $2, status = $3
+                     WHERE id = $4`,
+                    [poPaid, poNewDue, poStatus, po.id]
+                );
+                await client.query(
+                    `INSERT INTO purchase_order_payments (purchase_order_id, amount, payment_mode, created_at)
+                     VALUES ($1, $2, $3, NOW())`,
+                    [po.id, alloc, accName]
+                ).catch(() => {});
+                remToAllocate -= alloc;
+            }
+
         } else if (party_type === 'customer') {
             await client.query('UPDATE customers SET receivable_balance = receivable_balance - $1 WHERE id = $2', [amount, party_id]);
             await recordAccountTransaction(client, {
@@ -140,6 +174,56 @@ exports.payDueViaWallet = async (req, res) => {
                 reference: `Customer ID: #${party_id}`,
                 note: note || 'Due Received from Customer',
             });
+
+            // Settle customer's pending unpaid/partial sales invoices FIFO
+            const accNameRes = await client.query('SELECT name FROM payment_accounts WHERE id = $1', [account_id]);
+            const accName = accNameRes.rows[0]?.name || 'Cash';
+            const pendingSales = await client.query(
+                `SELECT id, invoice_no, total_amount, paid_amount, due_amount, payment_status, payment_details
+                 FROM sales
+                 WHERE customer_id = $1 AND due_amount > 0 AND deleted_at IS NULL
+                 ORDER BY created_at ASC, id ASC
+                 FOR UPDATE`,
+                [party_id]
+            );
+            let remToAllocate = Number(amount || 0);
+            for (const s of pendingSales.rows) {
+                if (remToAllocate <= 0) break;
+                const sDue = Number(s.due_amount || 0);
+                const alloc = Math.min(remToAllocate, sDue);
+                const sPaid = Number(s.paid_amount || 0) + alloc;
+                const sNewDue = Math.max(0, sDue - alloc);
+                const sStatus = sNewDue <= 0 ? 'paid' : 'partial';
+
+                let pDetails = [];
+                try {
+                    if (Array.isArray(s.payment_details)) pDetails = s.payment_details;
+                    else if (typeof s.payment_details === 'string') pDetails = JSON.parse(s.payment_details);
+                } catch {
+                    pDetails = [];
+                }
+                pDetails.push({
+                    date: new Date().toISOString(),
+                    amount: alloc,
+                    account_id: account_id,
+                    account_name: accName,
+                    payment_mode: accName,
+                    note: note || 'Due Received via Transfer',
+                });
+
+                await client.query(
+                    `UPDATE sales
+                     SET paid_amount = $1, due_amount = $2, payment_status = $3, payment_details = $4
+                     WHERE id = $5`,
+                    [sPaid, sNewDue, sStatus, JSON.stringify(pDetails), s.id]
+                );
+                await client.query(
+                    `INSERT INTO payments (sale_id, payment_mode, account_name, amount, created_at)
+                     VALUES ($1, $2, $3, $4, NOW())`,
+                    [s.id, accName, accName, alloc]
+                ).catch(() => {});
+                remToAllocate -= alloc;
+            }
         }
 
         await client.query('COMMIT');
