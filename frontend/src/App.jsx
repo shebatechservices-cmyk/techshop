@@ -45,9 +45,8 @@ export default function App() {
     handleGlobalNavigate,
   } = useAppGlobalState();
 
-  const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
-  const [isAutoHide, setIsAutoHide] = useState(() => {
-    return localStorage.getItem('sheba_sidebar_autohide') === 'true';
+  const [isSidebarPinned, setIsSidebarPinned] = useState(() => {
+    return localStorage.getItem('sheba_sidebar_pinned') === 'true';
   });
 
   const {
@@ -121,13 +120,11 @@ export default function App() {
         activeSlug={section}
         currentUser={currentUser}
         shopName={shopInfo.shop_name || 'Sheba Technology'}
-        isCollapsed={isSidebarCollapsed}
-        onToggleCollapse={() => setIsSidebarCollapsed(!isSidebarCollapsed)}
-        isAutoHide={isAutoHide}
-        onToggleAutoHide={() => {
-          const next = !isAutoHide;
-          setIsAutoHide(next);
-          localStorage.setItem('sheba_sidebar_autohide', String(next));
+        isPinned={isSidebarPinned}
+        onTogglePin={() => {
+          const next = !isSidebarPinned;
+          setIsSidebarPinned(next);
+          localStorage.setItem('sheba_sidebar_pinned', String(next));
         }}
         onLogout={handleLogout}
         onSelect={(slug) => {
@@ -143,7 +140,7 @@ export default function App() {
       {/* Main Content Workspace Shell */}
       <div
         className={`flex-1 flex flex-col min-w-0 transition-all duration-200 ease-in-out ${
-          isAutoHide || isSidebarCollapsed ? 'md:pl-16' : 'md:pl-60'
+          isSidebarPinned ? 'md:pl-64' : 'md:pl-16'
         }`}
       >
         <div className="page-shell w-full max-w-[1600px] mx-auto p-4 sm:p-6 lg:p-7 pb-20 md:pb-8 flex-1 flex flex-col">
@@ -153,8 +150,12 @@ export default function App() {
             userName={currentUser?.name || 'Super Admin'}
             branchName={shopInfo.branch_name || 'Head Office - Dhaka'}
             currentUser={currentUser}
-            isSidebarCollapsed={isSidebarCollapsed}
-            onToggleSidebar={() => setIsSidebarCollapsed(!isSidebarCollapsed)}
+            isSidebarCollapsed={!isSidebarPinned}
+            onToggleSidebar={() => {
+              const next = !isSidebarPinned;
+              setIsSidebarPinned(next);
+              localStorage.setItem('sheba_sidebar_pinned', String(next));
+            }}
             isDevMode={isDevMode}
             onOpenDevConsole={toggleDevMode}
             onSwitchToUserMode={exitDevModeToUserMode}
