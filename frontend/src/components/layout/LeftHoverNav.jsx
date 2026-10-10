@@ -54,7 +54,6 @@ const TECHNICIAN_MENU_ITEMS = [
   { slug: 'ecommerce', label: 'E-Commerce', icon: '🌐' },
   { slug: 'warranty', label: 'Warranty & RMA', icon: '🏷️' },
   { slug: 'wallet', label: 'My Wallet & Earnings', icon: '👛' },
-  { slug: 'inventory', label: 'Inventory (Prices)', icon: '🏢' },
 ];
 
 export default function LeftHoverNav({

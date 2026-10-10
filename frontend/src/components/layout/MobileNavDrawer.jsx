@@ -51,7 +51,6 @@ const TECHNICIAN_DRAWER_ITEMS = [
   { slug: 'ecommerce', label: 'E-Commerce', icon: '🌐', desc: 'Online Orders & Storefront' },
   { slug: 'warranty', label: 'Warranty & RMA', icon: '🏷️', desc: 'Serial Verification & Claims' },
   { slug: 'wallet', label: 'My Wallet & Earnings', icon: '👛', desc: 'Personal Commission & Balance' },
-  { slug: 'inventory', label: 'Inventory (Prices)', icon: '🏢', desc: 'Product Stock & Price Lookup' },
 ];
 
 export default function MobileNavDrawer({

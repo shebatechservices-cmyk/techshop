@@ -63,24 +63,18 @@ export default function AppModuleRouter({
         <Suspense fallback={<PageFallback />}>
           {section === 'wallet' ? (
             <TechnicianWallet currentUser={currentUser} />
-          ) : section === 'inventory' ? (
+          ) : section === 'inventory' && !isTechnician ? (
             <Inventory
-              readOnly={isTechnician}
-              isTechnician={isTechnician}
               currentUser={currentUser}
-              onOpenNewSale={
-                isTechnician
-                  ? undefined
-                  : (product) => {
-                      setSection('sales');
-                      setGlobalNav({
-                        section: 'sales',
-                        tab: 'history',
-                        search: product.name || '',
-                        key: Date.now(),
-                      });
-                    }
-              }
+              onOpenNewSale={(product) => {
+                setSection('sales');
+                setGlobalNav({
+                  section: 'sales',
+                  tab: 'history',
+                  search: product.name || '',
+                  key: Date.now(),
+                });
+              }}
             />
           ) : section === 'projects' ? (
             <Projects currentUser={currentUser} isTechnician={isTechnician} />

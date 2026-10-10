@@ -71,10 +71,10 @@ export default function App() {
     userRoleName.includes('tech') ||
     currentUser?.role_id === 4;
 
-  // Technician Route Guard: Technicians can access Services & Commerce (projects, ecommerce, warranty), wallet, and inventory
+  // Technician Route Guard: Technicians can access Services & Commerce (projects, ecommerce, warranty) and wallet
   useEffect(() => {
     if (isTechnician) {
-      const allowedTechSections = ['projects', 'ecommerce', 'warranty', 'wallet', 'inventory'];
+      const allowedTechSections = ['projects', 'ecommerce', 'warranty', 'wallet'];
       if (!allowedTechSections.includes(section)) {
         setSection('projects');
       }
