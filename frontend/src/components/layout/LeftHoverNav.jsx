@@ -162,9 +162,9 @@ export default function LeftHoverNav({
     <aside
       onMouseEnter={() => !isPinned && setIsHovered(true)}
       onMouseLeave={() => !isPinned && setIsHovered(false)}
-      className={`fixed top-0 left-0 bottom-0 z-40 bg-slate-900 border-r border-slate-800 text-slate-300 transition-all duration-200 ease-in-out flex flex-col select-none hidden md:flex ${
+      className={`sticky top-0 h-screen z-40 bg-slate-900 border-r border-slate-800 text-slate-300 transition-all duration-200 ease-in-out flex flex-col select-none hidden md:flex flex-shrink-0 ${
         effectiveCollapsed ? 'w-16' : 'w-64'
-      } ${!isPinned && isHovered ? 'shadow-2xl z-50 ring-1 ring-sky-500/30' : ''}`}
+      } ${!isPinned && isHovered ? 'shadow-xl ring-1 ring-sky-500/20' : ''}`}
       aria-label="Sidebar Navigation"
     >
       {/* Brand Header */}

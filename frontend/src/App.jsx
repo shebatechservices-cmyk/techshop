@@ -138,11 +138,7 @@ export default function App() {
       />
 
       {/* Main Content Workspace Shell */}
-      <div
-        className={`flex-1 flex flex-col min-w-0 transition-all duration-200 ease-in-out ${
-          isSidebarPinned ? 'md:pl-64' : 'md:pl-16'
-        }`}
-      >
+      <div className="flex-1 flex flex-col min-w-0 transition-all duration-200 ease-in-out">
         <div className="page-shell w-full max-w-[1600px] mx-auto p-4 sm:p-6 lg:p-7 pb-20 md:pb-8 flex-1 flex flex-col">
           {/* Classic Top Navigation Bar */}
           <TopWelcomeBar
