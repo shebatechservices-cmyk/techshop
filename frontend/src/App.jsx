@@ -46,7 +46,8 @@ export default function App() {
   } = useAppGlobalState();
 
   const [isSidebarPinned, setIsSidebarPinned] = useState(() => {
-    return localStorage.getItem('sheba_sidebar_pinned') === 'true';
+    const saved = localStorage.getItem('sheba_sidebar_pinned');
+    return saved !== null ? saved === 'true' : true;
   });
 
   const {
