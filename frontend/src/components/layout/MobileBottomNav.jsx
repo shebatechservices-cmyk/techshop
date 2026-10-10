@@ -27,11 +27,19 @@ export default function MobileBottomNav({
           </button>
           <button
             type="button"
-            className={navItemClass(section === 'inventory')}
-            onClick={() => onNavigate({ section: 'inventory' })}
+            className={navItemClass(section === 'ecommerce')}
+            onClick={() => onNavigate({ section: 'ecommerce' })}
           >
-            <span className="icon text-xl leading-none mb-0.5">🏢</span>
-            <span className="text-[10px] tracking-tight leading-tight">Prices</span>
+            <span className="icon text-xl leading-none mb-0.5">🌐</span>
+            <span className="text-[10px] tracking-tight leading-tight">E-Com</span>
+          </button>
+          <button
+            type="button"
+            className={navItemClass(section === 'warranty')}
+            onClick={() => onNavigate({ section: 'warranty' })}
+          >
+            <span className="icon text-xl leading-none mb-0.5">🏷️</span>
+            <span className="text-[10px] tracking-tight leading-tight">Warranty</span>
           </button>
           <button
             type="button"
@@ -39,7 +47,7 @@ export default function MobileBottomNav({
             onClick={() => onNavigate({ section: 'wallet' })}
           >
             <span className="icon text-xl leading-none mb-0.5">👛</span>
-            <span className="text-[10px] tracking-tight leading-tight">My Wallet</span>
+            <span className="text-[10px] tracking-tight leading-tight">Wallet</span>
           </button>
           <button
             type="button"

@@ -71,10 +71,10 @@ export default function App() {
     userRoleName.includes('tech') ||
     currentUser?.role_id === 4;
 
-  // Strict Technician Route Guard: Technicians can ONLY access projects, inventory, and wallet
+  // Technician Route Guard: Technicians can access Services & Commerce (projects, ecommerce, warranty), wallet, and inventory
   useEffect(() => {
     if (isTechnician) {
-      const allowedTechSections = ['projects', 'inventory', 'wallet'];
+      const allowedTechSections = ['projects', 'ecommerce', 'warranty', 'wallet', 'inventory'];
       if (!allowedTechSections.includes(section)) {
         setSection('projects');
       }

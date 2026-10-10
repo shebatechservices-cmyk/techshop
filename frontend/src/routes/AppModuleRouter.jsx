@@ -112,11 +112,11 @@ export default function AppModuleRouter({
                 window.dispatchEvent(new CustomEvent('open-add-product'));
               }}
             />
-          ) : section === 'ecommerce' && !isTechnician ? (
+          ) : section === 'ecommerce' ? (
             <Ecommerce />
           ) : section === 'soc' && !isTechnician ? (
             <Security />
-          ) : section === 'warranty' && !isTechnician ? (
+          ) : section === 'warranty' ? (
             <Warranty />
           ) : section === 'staff' && !isTechnician ? (
             <Staff currentUser={currentUser} />

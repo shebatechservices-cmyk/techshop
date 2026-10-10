@@ -51,8 +51,10 @@ const ERP_MENU_GROUPS = [
 
 const TECHNICIAN_MENU_ITEMS = [
   { slug: 'projects', label: 'Projects & Services', icon: '🛠️' },
-  { slug: 'inventory', label: 'Inventory (Prices)', icon: '🏢' },
+  { slug: 'ecommerce', label: 'E-Commerce', icon: '🌐' },
+  { slug: 'warranty', label: 'Warranty & RMA', icon: '🏷️' },
   { slug: 'wallet', label: 'My Wallet & Earnings', icon: '👛' },
+  { slug: 'inventory', label: 'Inventory (Prices)', icon: '🏢' },
 ];
 
 export default function LeftHoverNav({
