@@ -1,7 +1,9 @@
-import { useState, useEffect, useMemo } from 'react';
-import API from '../../../services/api';
-import { isValidBDPhone } from '../../../utils/phoneUtils';
-import { fullCatalogName } from '../../../utils/productUtils';
+import { useState } from 'react';
+import useStorefrontCart from './storefront/useStorefrontCart';
+import useStorefrontAuth from './storefront/useStorefrontAuth';
+import useStorefrontTracking from './storefront/useStorefrontTracking';
+import useStorefrontCatalog from './storefront/useStorefrontCatalog';
+import useStorefrontCheckout from './storefront/useStorefrontCheckout';
 
 export const money = (val) => Number.parseFloat(val || 0) || 0;
 export const taka = (val) =>
@@ -16,367 +18,57 @@ export const COURIER_PRESETS = [
 
 export default function useStorefrontManager({ products = [], onOrderPlaced } = {}) {
   const [activeView, setActiveView] = useState('store'); // 'store' | 'track' | 'account'
-  const [cart, setCart] = useState([]);
-  const [isCartOpen, setIsCartOpen] = useState(false);
 
-  // Customer state (local simulation of customer session)
-  const [customer, setCustomer] = useState(() => {
-    try {
-      const saved = localStorage.getItem('sheba_ecommerce_customer');
-      return saved ? JSON.parse(saved) : null;
-    } catch {
-      return null;
-    }
+  // Modular Sub-Hooks
+  const cartHook = useStorefrontCart();
+  const authHook = useStorefrontAuth();
+  const trackHook = useStorefrontTracking();
+  const catalogHook = useStorefrontCatalog(products);
+
+  const checkoutHook = useStorefrontCheckout({
+    cart: cartHook.cart,
+    customer: authHook.customer,
+    setCart: cartHook.setCart,
+    setIsCartOpen: cartHook.setIsCartOpen,
+    onOrderPlaced,
+    setActiveView,
+    setTrackQuery: trackHook.setTrackQuery,
+    handleTrackSearch: trackHook.handleTrackSearch,
   });
 
-  // Auth Form
-  const [authName, setAuthName] = useState('');
-  const [authPhone, setAuthPhone] = useState('');
-  const [authAddress, setAuthAddress] = useState('');
-  const [authEmail, setAuthEmail] = useState('');
-  const [authLoading, setAuthLoading] = useState(false);
-  const [authMsg, setAuthMsg] = useState('');
+  const cartGrandTotal = cartHook.cartSubtotal + Number(checkoutHook.checkoutDeliveryFee || 0);
 
-  // Checkout Form
-  const [checkoutName, setCheckoutName] = useState('');
-  const [checkoutPhone, setCheckoutPhone] = useState('');
-  const [checkoutAddress, setCheckoutAddress] = useState('');
-  const [checkoutCourier, setCheckoutCourier] = useState('Steadfast Courier');
-  const [checkoutDeliveryFee, setCheckoutDeliveryFee] = useState(80);
-  const [checkoutPaymentMethod, setCheckoutPaymentMethod] = useState('cod');
-  const [checkoutNotes, setCheckoutNotes] = useState('');
-  const [placingOrder, setPlacingOrder] = useState(false);
-  const [checkoutError, setCheckoutError] = useState('');
-
-  // Tracking State
-  const [trackQuery, setTrackQuery] = useState('');
-  const [trackingOrders, setTrackingOrders] = useState([]);
-  const [trackingLoading, setTrackingLoading] = useState(false);
-  const [trackingError, setTrackingError] = useState('');
-
-  // Store Catalog filters
-  const [storeSearch, setStoreSearch] = useState('');
-  const [selectedCategory, setSelectedCategory] = useState('all');
-  const [sortBy, setSortBy] = useState('featured'); // 'featured' | 'price-asc' | 'price-desc' | 'stock'
-
-  // Pre-fill checkout when customer exists
-  useEffect(() => {
-    if (customer) {
-      setCheckoutName(customer.name || '');
-      setCheckoutPhone(customer.phone || '');
-      setCheckoutAddress(customer.address || '');
-    }
-  }, [customer]);
-
-  // Cart operations
-  const addToCart = (prod, openDrawer = true) => {
-    setCart((prev) => {
-      const existing = prev.find((item) => item.product_id === prod.id);
-      if (existing) {
-        return prev.map((item) =>
-          item.product_id === prod.id ? { ...item, quantity: item.quantity + 1 } : item
-        );
-      }
-      return [
-        ...prev,
-        {
-          product_id: prod.id,
-          name: fullCatalogName(prod) || prod.name,
-          sku: prod.sku,
-          image_url: prod.image_url,
-          brand_name: prod.brand_name || prod.brand,
-          warranty_period: prod.warranty_period,
-          price: Number(prod.selling_price || prod.purchase_price || 0),
-          quantity: 1,
-          stock: Number(prod.stock || 0),
-        },
-      ];
-    });
-    if (openDrawer) {
-      setIsCartOpen(true);
-    }
-  };
-
-  const buyNow = (prod) => {
-    addToCart(prod, false);
-    setIsCartOpen(true);
-  };
-
-  const updateCartQty = (productId, delta) => {
-    setCart((prev) =>
-      prev
-        .map((item) => {
-          if (item.product_id === productId) {
-            const newQty = item.quantity + delta;
-            return newQty > 0 ? { ...item, quantity: newQty } : null;
-          }
-          return item;
-        })
-        .filter(Boolean)
-    );
-  };
-
-  const cartSubtotal = cart.reduce((sum, item) => sum + item.quantity * item.price, 0);
-  const cartGrandTotal = cartSubtotal + Number(checkoutDeliveryFee || 0);
-
-  // Customer Signup/Login
-  const handleAuthSubmit = async (e) => {
-    e.preventDefault();
-    if (!authName.trim() || !authPhone.trim()) {
-      setAuthMsg('Please enter both name and phone number.');
-      return;
-    }
-    if (!isValidBDPhone(authPhone)) {
-      setAuthMsg('Please enter a valid 10-digit phone number after +880 (e.g. 17-XXXXXXXX).');
-      return;
-    }
-    try {
-      setAuthLoading(true);
-      setAuthMsg('');
-      const res = await fetch(`${API}/ecommerce/customer/signup`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          name: authName.trim(),
-          phone: authPhone.trim(),
-          address: authAddress.trim(),
-          email: authEmail.trim(),
-        }),
-      });
-      const data = await res.json();
-      if (res.ok && data.success) {
-        const custData = data.data;
-        setCustomer(custData);
-        localStorage.setItem('sheba_ecommerce_customer', JSON.stringify(custData));
-        setAuthMsg('✓ Signed in successfully! Welcome to Sheba Online Store.');
-        setCheckoutName(custData.name);
-        setCheckoutPhone(custData.phone);
-        setCheckoutAddress(custData.address || '');
-      } else {
-        setAuthMsg(data.message || 'Failed to sign up.');
-      }
-    } catch (err) {
-      setAuthMsg(err.message || 'Connection error.');
-    } finally {
-      setAuthLoading(false);
-    }
-  };
-
-  // Customer Logout
+  // Sync logout with checkout form fields
   const handleCustomerLogout = () => {
-    setCustomer(null);
-    localStorage.removeItem('sheba_ecommerce_customer');
-    setCheckoutName('');
-    setCheckoutPhone('');
-    setCheckoutAddress('');
+    authHook.handleCustomerLogout();
+    checkoutHook.setCheckoutName('');
+    checkoutHook.setCheckoutPhone('');
+    checkoutHook.setCheckoutAddress('');
   };
-
-  // Place Online Order
-  const handleCheckoutSubmit = async (e) => {
-    e.preventDefault();
-    if (cart.length === 0) {
-      setCheckoutError('Your shopping cart is empty.');
-      return;
-    }
-    if (!checkoutName.trim() || !checkoutPhone.trim() || !checkoutAddress.trim()) {
-      setCheckoutError('Please provide delivery recipient name, phone number, and address.');
-      return;
-    }
-    if (!isValidBDPhone(checkoutPhone)) {
-      setCheckoutError('Please enter a valid 10-digit delivery phone number after +880 (e.g. 17-XXXXXXXX).');
-      return;
-    }
-
-    try {
-      setPlacingOrder(true);
-      setCheckoutError('');
-      const payload = {
-        customer_name: checkoutName.trim(),
-        customer_phone: checkoutPhone.trim(),
-        shipping_address: checkoutAddress.trim(),
-        customer_notes: checkoutNotes.trim(),
-        courier_name: checkoutCourier,
-        delivery_charge: Number(checkoutDeliveryFee || 0),
-        payment_method: checkoutPaymentMethod,
-        payment_status: 'unpaid',
-        items: cart.map((it) => ({
-          product_id: it.product_id,
-          quantity: it.quantity,
-          unit_price: it.price,
-        })),
-      };
-
-      const res = await fetch(`${API}/ecommerce/orders`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(payload),
-      });
-      const data = await res.json();
-      if (res.ok && data.success) {
-        const createdOrder = data.data;
-        alert(`🎉 Order Placed Successfully! Your Order No is: ${createdOrder.order_no}`);
-        setCart([]);
-        setIsCartOpen(false);
-        if (onOrderPlaced) onOrderPlaced();
-
-        // Automatically switch to parcel tracker for this order!
-        setActiveView('track');
-        setTrackQuery(createdOrder.order_no);
-        handleTrackSearch(createdOrder.order_no);
-      } else {
-        setCheckoutError(data.message || 'Failed to complete order.');
-      }
-    } catch (err) {
-      setCheckoutError(err.message || 'Connection error.');
-    } finally {
-      setPlacingOrder(false);
-    }
-  };
-
-  // Parcel Tracking Search
-  const handleTrackSearch = async (overrideQuery) => {
-    const q = (overrideQuery || trackQuery).trim();
-    if (!q) {
-      setTrackingError('Please enter an Order Number (e.g. ECOM-123456) or Phone Number.');
-      return;
-    }
-    try {
-      setTrackingLoading(true);
-      setTrackingError('');
-      setTrackingOrders([]);
-      const res = await fetch(`${API}/ecommerce/track/${encodeURIComponent(q)}`);
-      const data = await res.json();
-      if (res.ok && data.success) {
-        setTrackingOrders(data.data || []);
-      } else {
-        setTrackingError(data.message || 'No orders found matching this query.');
-      }
-    } catch (err) {
-      setTrackingError(err.message || 'Error tracking parcel.');
-    } finally {
-      setTrackingLoading(false);
-    }
-  };
-
-  // Extract unique categories from products
-  const categories = useMemo(() => {
-    const set = new Set();
-    products.forEach((p) => {
-      const cat = p.category_name || p.category;
-      if (cat && typeof cat === 'string') {
-        set.add(cat.trim());
-      }
-    });
-    return Array.from(set);
-  }, [products]);
-
-  // Filtered and sorted store catalog
-  const filteredProducts = useMemo(() => {
-    const list = products.filter((p) => {
-      if (selectedCategory && selectedCategory !== 'all') {
-        const cat = String(p.category_name || p.category || '').toLowerCase();
-        if (!cat.includes(selectedCategory.toLowerCase())) return false;
-      }
-      if (storeSearch.trim()) {
-        const q = storeSearch.toLowerCase();
-        const catalogName = fullCatalogName(p).toLowerCase();
-        const matchName = String(p.name || '').toLowerCase().includes(q) || catalogName.includes(q);
-        const matchSku = String(p.sku || '').toLowerCase().includes(q);
-        const matchBrand = String(p.brand_name || p.brand || '').toLowerCase().includes(q);
-        const matchModel = String(p.model_name || p.model || '').toLowerCase().includes(q);
-        if (!matchName && !matchSku && !matchBrand && !matchModel) return false;
-      }
-      return true;
-    });
-
-    if (sortBy === 'price-asc') {
-      list.sort((a, b) => Number(a.selling_price || a.purchase_price || 0) - Number(b.selling_price || b.purchase_price || 0));
-    } else if (sortBy === 'price-desc') {
-      list.sort((a, b) => Number(b.selling_price || b.purchase_price || 0) - Number(a.selling_price || a.purchase_price || 0));
-    } else if (sortBy === 'stock') {
-      list.sort((a, b) => Number(b.stock || 0) - Number(a.stock || 0));
-    }
-
-    return list;
-  }, [products, storeSearch, selectedCategory, sortBy]);
 
   return {
     // Navigation & Views
     activeView,
     setActiveView,
 
-    // Cart State
-    cart,
-    setCart,
-    isCartOpen,
-    setIsCartOpen,
-    addToCart,
-    buyNow,
-    updateCartQty,
-    cartSubtotal,
+    // Cart State & Actions
+    ...cartHook,
     cartGrandTotal,
 
     // Customer & Auth State
-    customer,
-    setCustomer,
-    authName,
-    setAuthName,
-    authPhone,
-    setAuthPhone,
-    authAddress,
-    setAuthAddress,
-    authEmail,
-    setAuthEmail,
-    authLoading,
-    setAuthLoading,
-    authMsg,
-    setAuthMsg,
-    handleAuthSubmit,
+    ...authHook,
     handleCustomerLogout,
 
-    // Checkout Form State
-    checkoutName,
-    setCheckoutName,
-    checkoutPhone,
-    setCheckoutPhone,
-    checkoutAddress,
-    setCheckoutAddress,
-    checkoutCourier,
-    setCheckoutCourier,
-    checkoutDeliveryFee,
-    setCheckoutDeliveryFee,
-    checkoutPaymentMethod,
-    setCheckoutPaymentMethod,
-    checkoutNotes,
-    setCheckoutNotes,
-    placingOrder,
-    setPlacingOrder,
-    checkoutError,
-    setCheckoutError,
-    handleCheckoutSubmit,
+    // Checkout Form State & Actions
+    ...checkoutHook,
 
-    // Tracking State
-    trackQuery,
-    setTrackQuery,
-    trackingOrders,
-    setTrackingOrders,
-    trackingLoading,
-    setTrackingLoading,
-    trackingError,
-    setTrackingError,
-    handleTrackSearch,
+    // Tracking State & Actions
+    ...trackHook,
 
     // Catalog, Search & Sorting
-    storeSearch,
-    setStoreSearch,
-    selectedCategory,
-    setSelectedCategory,
-    categories,
-    sortBy,
-    setSortBy,
-    filteredProducts,
+    ...catalogHook,
 
-    // Utilities & Constants
+    // Utilities & Presets
     COURIER_PRESETS,
     money,
     taka,
