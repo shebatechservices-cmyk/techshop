@@ -152,13 +152,51 @@ export default function NewSaleModal({
     onSaleUpdated,
   });
 
+  // POS Cashier Keyboard Shortcuts & Auto-Focus
+  useEffect(() => {
+    if (!isOpen) return;
+    const timer = setTimeout(() => {
+      searchInputRef.current?.focus();
+    }, 120);
+
+    const handleKeyDown = (e) => {
+      if (e.key === 'F2') {
+        e.preventDefault();
+        searchInputRef.current?.focus();
+        searchInputRef.current?.select();
+      } else if (e.key === 'F3') {
+        e.preventDefault();
+        customerSelectRef.current?.querySelector('input')?.focus();
+      } else if ((e.ctrlKey && e.key === 'Enter') || e.key === 'F9') {
+        e.preventDefault();
+        if (!saving && items.length > 0) {
+          handleSaveSale();
+        }
+      } else if (e.key === 'Escape') {
+        if (isSearchOpen) {
+          e.preventDefault();
+          setIsSearchOpen(false);
+        } else if (isCustomerOpen) {
+          e.preventDefault();
+          setIsCustomerOpen(false);
+        }
+      }
+    };
+
+    window.addEventListener('keydown', handleKeyDown);
+    return () => {
+      clearTimeout(timer);
+      window.removeEventListener('keydown', handleKeyDown);
+    };
+  }, [isOpen, isSearchOpen, isCustomerOpen, items, saving, handleSaveSale, searchInputRef, customerSelectRef, setIsSearchOpen, setIsCustomerOpen]);
+
   if (!isOpen) return null;
 
   return createPortal(
     <div className="fixed inset-0 z-[50000] bg-slate-900/75 flex items-center justify-center p-4 backdrop-blur-[3px]">
       <div className="bg-slate-50 rounded-2xl w-[min(1180px,calc(100vw-32px))] max-h-[calc(100vh-32px)] shadow-2xl overflow-hidden grid grid-rows-[auto_minmax(0,1fr)_auto]">
         {/* Header */}
-        <div className="px-6 py-4 bg-white border-b border-gray-200 flex justify-between items-center">
+        <div className="px-6 py-3.5 bg-white border-b border-gray-200 flex justify-between items-center gap-3">
           <div className="flex items-center gap-3">
             <span className="text-2xl text-gray-500">{editSale ? '✏️' : '🛒'}</span>
             <div>
@@ -172,14 +210,22 @@ export default function NewSaleModal({
               </p>
             </div>
           </div>
-          <button
-            type="button"
-            onClick={onClose}
-            className="w-8 h-8 rounded-full bg-gray-100 hover:bg-gray-200 border border-gray-200 text-gray-500 hover:text-gray-800 flex items-center justify-center font-bold text-sm cursor-pointer transition-colors"
-            title="Close modal"
-          >
-            ✕
-          </button>
+          <div className="flex items-center gap-3">
+            <div className="hidden lg:flex items-center gap-1.5 text-[11px] font-semibold text-slate-500 bg-slate-100 border border-slate-200 py-1 px-2.5 rounded-lg">
+              <span>⚡ Shortcuts:</span>
+              <kbd className="bg-white px-1.5 py-0.5 rounded border border-slate-300 font-mono text-[10px] text-slate-800">F2</kbd> <span>Scan</span>
+              <kbd className="bg-white px-1.5 py-0.5 rounded border border-slate-300 font-mono text-[10px] text-slate-800">F3</kbd> <span>Customer</span>
+              <kbd className="bg-white px-1.5 py-0.5 rounded border border-slate-300 font-mono text-[10px] text-slate-800">Ctrl+Enter</kbd> <span>Pay</span>
+            </div>
+            <button
+              type="button"
+              onClick={onClose}
+              className="w-8 h-8 rounded-full bg-gray-100 hover:bg-gray-200 border border-gray-200 text-gray-500 hover:text-gray-800 flex items-center justify-center font-bold text-sm cursor-pointer transition-colors"
+              title="Close modal"
+            >
+              ✕
+            </button>
+          </div>
         </div>
 
         {/* Main Grid: Sidebar + Form Content */}

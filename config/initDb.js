@@ -249,6 +249,18 @@ async function autoInitDatabase() {
                 console.warn('⚠️ No initial admin was created. Set INITIAL_ADMIN_PASSWORD and an email or phone before first deployment.');
             }
         }
+
+        // Ensure Performance B-Tree Indexes
+        try {
+            const indexSqlPath = path.join(__dirname, '..', 'database', 'add_performance_indexes.sql');
+            if (fs.existsSync(indexSqlPath)) {
+                const indexSql = fs.readFileSync(indexSqlPath, 'utf8');
+                await pool.query(indexSql);
+                console.log('⚡ Performance database indexes ensured.');
+            }
+        } catch (idxErr) {
+            console.warn('⚠️ Performance indexes init notice:', idxErr.message);
+        }
     } catch (err) {
         console.error('⚠️ Database auto-initialization notice:', err.message);
     }

@@ -1,7 +1,8 @@
 import React, { useState } from 'react';
 import API from '../../../services/api';
-import BangladeshiPhoneInput from '../../../components/ui/BangladeshiPhoneInput';
 import { isValidBDPhone } from '../../../utils/phoneUtils';
+import TechnicianCustomerLookup from './technician/TechnicianCustomerLookup';
+import TechnicianFormFields from './technician/TechnicianFormFields';
 
 export default function AddTechnicianModal({ isOpen, onClose, onSuccess }) {
   // Form field states
@@ -247,334 +248,35 @@ export default function AddTechnicianModal({ isOpen, onClose, onSuccess }) {
             </div>
           )}
 
-          {/* RULE 1 & 2: Search from Existing Customers (Auto-fill section) */}
-          <div
-            style={{
-              background: '#f8fafc',
-              border: '1px solid #e2e8f0',
-              borderRadius: '12px',
-              padding: '12px 14px',
-              marginBottom: '18px'
-            }}
-          >
-            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '8px' }}>
-              <label style={{ fontSize: '0.8rem', fontWeight: 700, color: '#334155', display: 'flex', alignItems: 'center', gap: '6px' }}>
-                <span>🔍</span> Search from Existing Customers
-              </label>
-              <span style={{ fontSize: '0.72rem', color: '#64748b' }}>
-                Auto-fill details without re-typing
-              </span>
-            </div>
+          <TechnicianCustomerLookup
+            searchPhone={searchPhone}
+            setSearchPhone={setSearchPhone}
+            handleSearchCustomer={handleSearchCustomer}
+            searchingCustomer={searchingCustomer}
+            searched={searched}
+            customerResults={customerResults}
+            handleAutoFillCustomer={handleAutoFillCustomer}
+            importedCustomer={importedCustomer}
+            handleClearImport={handleClearImport}
+          />
 
-            <div style={{ display: 'flex', gap: '8px' }}>
-              <input
-                type="text"
-                placeholder="Enter customer phone number..."
-                value={searchPhone}
-                onChange={(e) => setSearchPhone(e.target.value)}
-                onKeyDown={(e) => {
-                  if (e.key === 'Enter') {
-                    e.preventDefault();
-                    handleSearchCustomer();
-                  }
-                }}
-                style={{
-                  flex: 1,
-                  padding: '7px 12px',
-                  borderRadius: '8px',
-                  border: '1px solid #cbd5e1',
-                  fontSize: '0.82rem',
-                  background: '#fff'
-                }}
-              />
-              <button
-                type="button"
-                onClick={handleSearchCustomer}
-                disabled={searchingCustomer || !searchPhone.trim()}
-                style={{
-                  padding: '7px 14px',
-                  borderRadius: '8px',
-                  border: 'none',
-                  background: '#0284c7',
-                  color: '#fff',
-                  fontSize: '0.8rem',
-                  fontWeight: 600,
-                  cursor: (searchingCustomer || !searchPhone.trim()) ? 'not-allowed' : 'pointer',
-                  whiteSpace: 'nowrap'
-                }}
-              >
-                {searchingCustomer ? 'Searching...' : 'Search'}
-              </button>
-            </div>
-
-            {/* Search Results List */}
-            {searched && customerResults.length > 0 && (
-              <div style={{ marginTop: '10px', borderTop: '1px dashed #cbd5e1', paddingTop: '8px', display: 'flex', flexDirection: 'column', gap: '6px' }}>
-                <span style={{ fontSize: '0.72rem', fontWeight: 600, color: '#475569' }}>
-                  Matching Customers ({customerResults.length}):
-                </span>
-                {customerResults.map((cust) => (
-                  <div
-                    key={cust.id}
-                    style={{
-                      display: 'flex',
-                      alignItems: 'center',
-                      justifyContent: 'space-between',
-                      background: '#ffffff',
-                      border: '1px solid #bfdbfe',
-                      padding: '8px 10px',
-                      borderRadius: '8px'
-                    }}
-                  >
-                    <div>
-                      <div style={{ fontSize: '0.82rem', fontWeight: 700, color: '#0f172a' }}>
-                        {cust.name}
-                      </div>
-                      <div style={{ fontSize: '0.74rem', color: '#64748b' }}>
-                        📞 {cust.phone} {cust.address ? `• 📍 ${cust.address}` : ''}
-                      </div>
-                    </div>
-                    <button
-                      type="button"
-                      onClick={() => handleAutoFillCustomer(cust)}
-                      style={{
-                        padding: '4px 10px',
-                        background: '#e0f2fe',
-                        border: '1px solid #7dd3fc',
-                        borderRadius: '6px',
-                        color: '#0369a1',
-                        fontSize: '0.75rem',
-                        fontWeight: 700,
-                        cursor: 'pointer'
-                      }}
-                    >
-                      ⚡ Auto-fill
-                    </button>
-                  </div>
-                ))}
-              </div>
-            )}
-
-            {searched && customerResults.length === 0 && (
-              <div style={{ marginTop: '8px', fontSize: '0.75rem', color: '#94a3b8', textAlign: 'center' }}>
-                No customer found with phone &quot;{searchPhone}&quot;. You can manually type below.
-              </div>
-            )}
-
-            {/* Active Auto-fill Alert Banner */}
-            {importedCustomer && (
-              <div
-                style={{
-                  marginTop: '10px',
-                  background: '#ecfdf5',
-                  border: '1px solid #a7f3d0',
-                  borderRadius: '8px',
-                  padding: '8px 10px',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'space-between',
-                  fontSize: '0.76rem',
-                  color: '#065f46'
-                }}
-              >
-                <span>
-                  ✓ Auto-filled from Customer: <strong>{importedCustomer.name}</strong> ({importedCustomer.phone})
-                </span>
-                <button
-                  type="button"
-                  onClick={handleClearImport}
-                  style={{
-                    background: 'none',
-                    border: 'none',
-                    color: '#059669',
-                    fontWeight: 700,
-                    cursor: 'pointer',
-                    fontSize: '0.72rem'
-                  }}
-                >
-                  Clear
-                </button>
-              </div>
-            )}
-          </div>
-
-          {/* Registration Form */}
           <form onSubmit={handleSubmit}>
-            {/* Name */}
-            <div style={{ marginBottom: '14px' }}>
-              <label style={{ display: 'block', fontSize: '0.82rem', fontWeight: 600, color: '#334155', marginBottom: '4px' }}>
-                Technician Full Name *
-              </label>
-              <input
-                type="text"
-                required
-                placeholder="e.g. Md. Sohel Rana"
-                value={name}
-                onChange={(e) => setName(e.target.value)}
-                style={{
-                  width: '100%',
-                  padding: '8px 12px',
-                  borderRadius: '6px',
-                  border: '1px solid #cbd5e1',
-                  fontSize: '0.85rem',
-                  boxSizing: 'border-box'
-                }}
-              />
-            </div>
-
-            {/* Phone Input with Bangladesh prefix */}
-            <div style={{ marginBottom: '14px' }}>
-              <BangladeshiPhoneInput
-                label="Phone Number *"
-                placeholder="1X-XXXXXXXX"
-                value={phone}
-                onChange={(e) => setPhone(e.target.value)}
-              />
-            </div>
-
-            {/* Address */}
-            <div style={{ marginBottom: '14px' }}>
-              <label style={{ display: 'block', fontSize: '0.82rem', fontWeight: 600, color: '#334155', marginBottom: '4px' }}>
-                Address / Work Location
-              </label>
-              <input
-                type="text"
-                placeholder="e.g. House 12, Road 4, Sector 7, Uttara"
-                value={address}
-                onChange={(e) => setAddress(e.target.value)}
-                style={{
-                  width: '100%',
-                  padding: '8px 12px',
-                  borderRadius: '6px',
-                  border: '1px solid #cbd5e1',
-                  fontSize: '0.85rem',
-                  boxSizing: 'border-box'
-                }}
-              />
-            </div>
-
-            {/* Email / Username */}
-            <div style={{ marginBottom: '14px' }}>
-              <label style={{ display: 'block', fontSize: '0.82rem', fontWeight: 600, color: '#334155', marginBottom: '4px' }}>
-                Email / Login ID <span style={{ fontSize: '0.75rem', color: '#64748b' }}>(Optional)</span>
-              </label>
-              <input
-                type="email"
-                placeholder="sohel.tech@example.com"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                style={{
-                  width: '100%',
-                  padding: '8px 12px',
-                  borderRadius: '6px',
-                  border: '1px solid #cbd5e1',
-                  fontSize: '0.85rem',
-                  boxSizing: 'border-box'
-                }}
-              />
-            </div>
-
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px', marginBottom: '16px' }}>
-              {/* Password */}
-              <div>
-                <label style={{ display: 'block', fontSize: '0.82rem', fontWeight: 600, color: '#334155', marginBottom: '4px' }}>
-                  Default Password *
-                </label>
-                <input
-                  type="text"
-                  required
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  style={{
-                    width: '100%',
-                    padding: '8px 12px',
-                    borderRadius: '6px',
-                    border: '1px solid #cbd5e1',
-                    fontSize: '0.85rem',
-                    boxSizing: 'border-box'
-                  }}
-                />
-              </div>
-
-              {/* Designation */}
-              <div>
-                <label style={{ display: 'block', fontSize: '0.82rem', fontWeight: 600, color: '#334155', marginBottom: '4px' }}>
-                  Designation
-                </label>
-                <input
-                  type="text"
-                  value={designation}
-                  onChange={(e) => setDesignation(e.target.value)}
-                  style={{
-                    width: '100%',
-                    padding: '8px 12px',
-                    borderRadius: '6px',
-                    border: '1px solid #cbd5e1',
-                    fontSize: '0.85rem',
-                    boxSizing: 'border-box'
-                  }}
-                />
-              </div>
-            </div>
-
-            {/* Role Pill Indicator */}
-            <div
-              style={{
-                background: '#f0fdf4',
-                border: '1px solid #bbf7d0',
-                borderRadius: '8px',
-                padding: '8px 12px',
-                fontSize: '0.78rem',
-                color: '#166534',
-                display: 'flex',
-                alignItems: 'center',
-                gap: '6px',
-                marginBottom: '20px'
-              }}
-            >
-              <span>🛡️</span>
-              <span>Assigned Role: <strong>Field Technician (Staff Role ID: 4)</strong></span>
-            </div>
-
-            {/* Action Buttons */}
-            <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '10px' }}>
-              <button
-                type="button"
-                onClick={onClose}
-                disabled={loading}
-                style={{
-                  padding: '8px 16px',
-                  borderRadius: '8px',
-                  border: '1px solid #cbd5e1',
-                  background: '#ffffff',
-                  color: '#475569',
-                  fontSize: '0.85rem',
-                  fontWeight: 600,
-                  cursor: 'pointer'
-                }}
-              >
-                Cancel
-              </button>
-              <button
-                type="submit"
-                disabled={loading}
-                style={{
-                  padding: '8px 20px',
-                  borderRadius: '8px',
-                  border: 'none',
-                  background: loading ? '#93c5fd' : '#0284c7',
-                  color: '#ffffff',
-                  fontSize: '0.85rem',
-                  fontWeight: 600,
-                  cursor: loading ? 'not-allowed' : 'pointer',
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: '6px'
-                }}
-              >
-                {loading ? 'Creating...' : '✓ Add Technician'}
-              </button>
-            </div>
+            <TechnicianFormFields
+              name={name}
+              setName={setName}
+              phone={phone}
+              setPhone={setPhone}
+              address={address}
+              setAddress={setAddress}
+              email={email}
+              setEmail={setEmail}
+              password={password}
+              setPassword={setPassword}
+              designation={designation}
+              setDesignation={setDesignation}
+              loading={loading}
+              onClose={onClose}
+            />
           </form>
         </div>
       </div>

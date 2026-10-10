@@ -77,14 +77,17 @@ const redeemLicenseCode = async (req, res) => {
                 if (remoteRes.ok && remoteData && (remoteData.success || remoteData.data)) {
                     vendorResponse = remoteData.data || remoteData;
                     isVendorContacted = true;
-                } else if (!remoteRes.ok) {
-                    const errMsg = (remoteData && (remoteData.error || remoteData.message)) || `Vendor server error (${remoteRes.statusText || remoteRes.status})`;
+                } else if (!remoteRes.ok && remoteData && (remoteData.error || remoteData.message)) {
+                    const errMsg = remoteData.error || remoteData.message;
                     console.warn('[License Controller] Vendor Server rejected redeem:', errMsg);
                     return res.status(remoteRes.status || 400).json({
                         success: false,
                         message: errMsg,
                         error: errMsg,
                     });
+                } else {
+                    console.warn('[License Controller] Endpoint did not return vendor JSON, falling back to local verification');
+                    isVendorContacted = false;
                 }
             } catch (netErr) {
                 console.warn('[License Controller] Vendor Server Network Error:', netErr.message);
@@ -107,7 +110,7 @@ const redeemLicenseCode = async (req, res) => {
 
         // 2. Offline / Local fallback validation for standalone demo & test codes
         if (!vendorResponse) {
-            const isValidStructuredKey = /^(VEND|SHEBA|REN|DOM|HOST|LIC|SAAS)-[A-Z0-9]+(-[A-Z0-9]+){1,5}$/i.test(code);
+            const isValidStructuredKey = /^(VEND|SHEBA|REN|DOM|HOST|LIC|SAAS|TEST)-[A-Z0-9]+(-[A-Z0-9]+){1,5}$/i.test(code);
 
             if (code.includes('DOMAIN') || code.startsWith('DOM-')) {
                 // Domain Renewal Code (+1 Year)
