@@ -226,6 +226,11 @@ registerRoute('/sub_categories', createEntityRouter('sub_categories'));
 // Serve frontend static assets in production if built
 const distPath = path.join(__dirname, 'frontend/dist');
 if (fs.existsSync(distPath)) {
+    // Explicitly prevent caching of the Service Worker script
+    app.get('/sw.js', (req, res) => {
+        res.setHeader('Cache-Control', 'no-cache, no-store, must-revalidate');
+        res.sendFile(path.join(distPath, 'sw.js'));
+    });
     app.use(express.static(distPath));
 }
 

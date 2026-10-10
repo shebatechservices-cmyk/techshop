@@ -167,6 +167,27 @@ export default function useProjectsManager() {
     }
   };
 
+  // 6. Admin Respond to Rejection Request
+  const handleAdminRespondRejection = async (projectId, approve, adminNote = '') => {
+    try {
+      const res = await fetch(`${API}/projects/${projectId}/admin-respond-rejection`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ approve, admin_note: adminNote }),
+      });
+      const data = await res.json();
+      if (res.ok && data.success) {
+        alert(data.message || 'Action executed successfully');
+        loadData();
+      } else {
+        alert(data.message || 'Action failed');
+      }
+    } catch (err) {
+      console.error(err);
+      alert('Server error');
+    }
+  };
+
   // Pipeline Counts
   const counts = useMemo(() => {
     return {
@@ -178,6 +199,11 @@ export default function useProjectsManager() {
         (p) =>
           p.technician_status === 'accepted' ||
           p.status === 'awaiting_incharge_confirmation'
+      ).length,
+      rejection_requested: projects.filter(
+        (p) =>
+          p.technician_status === 'rejection_requested' ||
+          p.status === 'rejection_requested'
       ).length,
       in_progress: projects.filter(
         (p) => p.technician_status === 'in_progress' || p.status === 'in_progress'
@@ -205,6 +231,11 @@ export default function useProjectsManager() {
         return (
           p.technician_status === 'accepted' ||
           p.status === 'awaiting_incharge_confirmation'
+        );
+      if (stageFilter === 'rejection_requested')
+        return (
+          p.technician_status === 'rejection_requested' ||
+          p.status === 'rejection_requested'
         );
       if (stageFilter === 'in_progress')
         return (
@@ -253,6 +284,7 @@ export default function useProjectsManager() {
     handleAddProgress,
     handleCompleteProject,
     handleDeleteProject,
+    handleAdminRespondRejection,
     counts,
     filteredProjects,
   };

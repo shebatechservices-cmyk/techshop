@@ -39,6 +39,7 @@ module.exports = {
     updateProject: projectOrderController.updateProject,
     deleteProject: projectOrderController.deleteProject,
     technicianRespond: projectOrderController.technicianRespond,
+    adminRespondRejection: projectOrderController.adminRespondRejection,
     confirmByIncharge: projectOrderController.confirmByIncharge,
     updateProgress: projectOrderController.updateProgress,
     completeProject: projectOrderController.completeProject

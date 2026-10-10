@@ -27,6 +27,7 @@ router.get('/:id', projectController.getProjectById);
 router.post('/', projectController.createProject);
 router.put('/:id', projectController.updateProject);
 router.put('/:id/technician-respond', projectController.technicianRespond);
+router.put('/:id/admin-respond-rejection', projectController.adminRespondRejection);
 router.put('/:id/incharge-confirm', projectController.confirmByIncharge);
 router.put('/:id/progress', projectController.updateProgress);
 router.put('/:id/complete', projectController.completeProject);

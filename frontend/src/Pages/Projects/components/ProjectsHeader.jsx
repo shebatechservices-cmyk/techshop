@@ -2,6 +2,7 @@ import React from 'react';
 
 export default function ProjectsHeader({
   error,
+  isTechnician = false,
   onOpenTechWallet,
   onOpenManagePresets,
   onOpenManageJobTypes,
@@ -14,54 +15,56 @@ export default function ProjectsHeader({
           <span className="text-2xl">📹</span>
           <div>
             <h2 className="text-xl font-extrabold text-slate-900 tracking-tight leading-tight">
-              Projects & Services (Installation & Maintenance)
+              Projects & Services {isTechnician ? '(My Field Jobs)' : '(Installation & Maintenance)'}
             </h2>
           </div>
         </div>
 
-        <div className="flex gap-2 items-center flex-wrap">
-          {onOpenManageJobTypes && (
+        {!isTechnician && (
+          <div className="flex gap-2 items-center flex-wrap">
+            {onOpenManageJobTypes && (
+              <button
+                type="button"
+                onClick={onOpenManageJobTypes}
+                className="bg-white text-slate-800 border border-slate-300 hover:bg-slate-50 px-3 py-1.5 rounded-lg font-bold text-xs flex items-center gap-1.5 shadow-xs transition-colors cursor-pointer"
+                title="Manage Project / Job Types"
+              >
+                <span>📋</span>
+                <span>Job Types</span>
+              </button>
+            )}
+
+            {onOpenManagePresets && (
+              <button
+                type="button"
+                onClick={onOpenManagePresets}
+                className="bg-white text-slate-800 border border-slate-300 hover:bg-slate-50 px-3 py-1.5 rounded-lg font-bold text-xs flex items-center gap-1.5 shadow-xs transition-colors cursor-pointer"
+                title="Manage Service Task Presets"
+              >
+                <span>⚙️</span>
+                <span>Service Presets</span>
+              </button>
+            )}
+
             <button
               type="button"
-              onClick={onOpenManageJobTypes}
+              onClick={onOpenTechWallet}
               className="bg-white text-slate-800 border border-slate-300 hover:bg-slate-50 px-3 py-1.5 rounded-lg font-bold text-xs flex items-center gap-1.5 shadow-xs transition-colors cursor-pointer"
-              title="Manage Project / Job Types"
             >
-              <span>📋</span>
-              <span>Job Types</span>
+              <span>💼</span>
+              <span>Technician Wallet</span>
             </button>
-          )}
 
-          {onOpenManagePresets && (
             <button
               type="button"
-              onClick={onOpenManagePresets}
-              className="bg-white text-slate-800 border border-slate-300 hover:bg-slate-50 px-3 py-1.5 rounded-lg font-bold text-xs flex items-center gap-1.5 shadow-xs transition-colors cursor-pointer"
-              title="Manage Service Task Presets"
+              onClick={onOpenNewProject}
+              className="bg-sky-600 hover:bg-sky-700 text-white px-3.5 py-1.5 rounded-lg font-bold text-xs flex items-center gap-1.5 shadow-sm transition-colors cursor-pointer"
             >
-              <span>⚙️</span>
-              <span>Service Presets</span>
+              <span className="text-sm font-black">+</span>
+              <span>New Project / Service</span>
             </button>
-          )}
-
-          <button
-            type="button"
-            onClick={onOpenTechWallet}
-            className="bg-white text-slate-800 border border-slate-300 hover:bg-slate-50 px-3 py-1.5 rounded-lg font-bold text-xs flex items-center gap-1.5 shadow-xs transition-colors cursor-pointer"
-          >
-            <span>💼</span>
-            <span>Technician Wallet</span>
-          </button>
-
-          <button
-            type="button"
-            onClick={onOpenNewProject}
-            className="bg-sky-600 hover:bg-sky-700 text-white px-3.5 py-1.5 rounded-lg font-bold text-xs flex items-center gap-1.5 shadow-sm transition-colors cursor-pointer"
-          >
-            <span className="text-sm font-black">+</span>
-            <span>New Project / Service</span>
-          </button>
-        </div>
+          </div>
+        )}
       </div>
 
       {error && (

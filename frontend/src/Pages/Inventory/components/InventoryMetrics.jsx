@@ -9,9 +9,10 @@ export default function InventoryMetrics({
   setCurrentPage,
   activeWarrantyCount,
   taka,
+  isTechnician = false,
 }) {
   return (
-    <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-7 gap-2 mb-3">
+    <div className={`grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 ${isTechnician ? 'lg:grid-cols-6' : 'lg:grid-cols-7'} gap-2 mb-3`}>
       {/* Total SKUs */}
       <div
         className="bg-white py-2 px-2.5 sm:px-3 rounded-lg border border-slate-200 shadow-xs"
@@ -40,11 +41,12 @@ export default function InventoryMetrics({
         </div>
       </div>
 
-      {/* Stock Valuation (Cost Basis) */}
-      <div
-        className="bg-white py-2 px-2.5 sm:px-3 rounded-lg border border-slate-200 shadow-xs"
-        title="Total stock capital valuation based on unit cost"
-      >
+      {/* Stock Valuation (Cost Basis) - Strictly hidden for technicians */}
+      {!isTechnician && (
+        <div
+          className="bg-white py-2 px-2.5 sm:px-3 rounded-lg border border-slate-200 shadow-xs"
+          title="Total stock capital valuation based on unit cost"
+        >
         <div className="flex justify-between items-center">
           <span className="text-[0.68rem] font-bold text-slate-600 uppercase tracking-wider">Cost Valuation</span>
           <button
@@ -69,6 +71,7 @@ export default function InventoryMetrics({
           {showCostValuation ? taka(summary.total_cost_valuation) : '৳ ••••••'}
         </div>
       </div>
+      )}
 
       {/* Retail Valuation */}
       <div

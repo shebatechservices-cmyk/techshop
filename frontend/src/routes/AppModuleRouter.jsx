@@ -66,6 +66,8 @@ export default function AppModuleRouter({
           ) : section === 'inventory' ? (
             <Inventory
               readOnly={isTechnician}
+              isTechnician={isTechnician}
+              currentUser={currentUser}
               onOpenNewSale={
                 isTechnician
                   ? undefined
@@ -81,7 +83,7 @@ export default function AppModuleRouter({
               }
             />
           ) : section === 'projects' ? (
-            <Projects currentUser={currentUser} />
+            <Projects currentUser={currentUser} isTechnician={isTechnician} />
           ) : section === 'dashboard' && !isTechnician ? (
             <Dashboard />
           ) : section === 'products' && !isTechnician ? (

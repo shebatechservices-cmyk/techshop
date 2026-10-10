@@ -3,6 +3,8 @@ import React from 'react';
 export default function ProjectsTable({
   projects = [],
   loading = false,
+  isTechnician = false,
+  currentUser = null,
   onTechPrompt,
   onInchargeConfirm,
   onAddProgress,
@@ -10,6 +12,7 @@ export default function ProjectsTable({
   onEdit,
   onPrint,
   onDelete,
+  onAdminRespondRejection,
 }) {
   if (loading) {
     return (
@@ -61,6 +64,9 @@ export default function ProjectsTable({
               const isAccepted =
                 p.technician_status === 'accepted' ||
                 p.status === 'awaiting_incharge_confirmation';
+              const isRejectionRequested =
+                p.technician_status === 'rejection_requested' ||
+                p.status === 'rejection_requested';
               const isInProgress =
                 p.technician_status === 'in_progress' ||
                 p.status === 'in_progress';
@@ -179,6 +185,10 @@ export default function ProjectsTable({
                       <span className="bg-emerald-100 text-emerald-800 px-2.5 py-1 rounded-md text-[11px] font-extrabold inline-flex items-center gap-1">
                         ✓ Completed & Paid
                       </span>
+                    ) : isRejectionRequested ? (
+                      <span className="bg-rose-100 text-rose-800 border border-rose-300 px-2.5 py-1 rounded-md text-[11px] font-extrabold inline-flex items-center gap-1 animate-pulse">
+                        ⚠️ Rejection Requested
+                      </span>
                     ) : isInProgress ? (
                       <span className="bg-blue-100 text-blue-800 px-2.5 py-1 rounded-md text-[11px] font-extrabold inline-flex items-center gap-1">
                         ⏳ In Progress
@@ -203,8 +213,32 @@ export default function ProjectsTable({
                   {/* Actions */}
                   <td className="py-3.5 px-3.5 align-top text-right">
                     <div className="flex flex-col gap-1.5 items-end">
-                      {/* Edit Work Order (Allowed before completion) */}
-                      {!isCompleted && onEdit && (
+                      {/* For Admin: If Rejection Requested, show Approval & Decline buttons */}
+                      {!isTechnician && isRejectionRequested && onAdminRespondRejection && (
+                        <div className="flex flex-col gap-1 items-end w-full">
+                          <button
+                            type="button"
+                            onClick={() => onAdminRespondRejection(p.id, true)}
+                            className="px-2.5 py-1 bg-rose-600 hover:bg-rose-700 text-white rounded-md text-[11px] font-bold cursor-pointer whitespace-nowrap shadow-xs transition-colors flex items-center justify-center gap-1"
+                            title="Approve Rejection & Release Technician"
+                          >
+                            <span>✓</span>
+                            <span>Approve Rejection</span>
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => onAdminRespondRejection(p.id, false)}
+                            className="px-2.5 py-1 bg-slate-100 hover:bg-slate-200 text-slate-700 border border-slate-300 rounded-md text-[11px] font-semibold cursor-pointer whitespace-nowrap transition-colors flex items-center justify-center gap-1"
+                            title="Decline Rejection & Keep Technician Assigned"
+                          >
+                            <span>✕</span>
+                            <span>Decline Request</span>
+                          </button>
+                        </div>
+                      )}
+
+                      {/* Edit Work Order (Allowed before completion, Admin only) */}
+                      {!isTechnician && !isCompleted && onEdit && (
                         <button
                           type="button"
                           onClick={() => onEdit(p)}
@@ -227,8 +261,8 @@ export default function ProjectsTable({
                         </button>
                       )}
 
-                      {/* 2. If accepted: In-charge Confirm Handover */}
-                      {isAccepted && (
+                      {/* 2. If accepted: In-charge Confirm Handover (Admin only) */}
+                      {!isTechnician && isAccepted && (
                         <button
                           type="button"
                           onClick={() => onInchargeConfirm(p)}
@@ -238,28 +272,41 @@ export default function ProjectsTable({
                         </button>
                       )}
 
-                      {/* 3. If in progress: Add Note & Complete */}
-                      {isInProgress && (
-                        <>
-                          <button
-                            type="button"
-                            onClick={() => onAddProgress(p)}
-                            className="px-2 py-1 bg-slate-100 hover:bg-slate-200 text-slate-700 border border-slate-300 rounded-md text-[11px] font-semibold cursor-pointer transition-colors"
-                          >
-                            📝 Add Note
-                          </button>
-
-                          <button
-                            type="button"
-                            onClick={() => onComplete(p)}
-                            className="px-2.5 py-1 bg-emerald-600 hover:bg-emerald-700 text-white rounded-md text-[11px] font-bold cursor-pointer whitespace-nowrap shadow-xs transition-colors"
-                          >
-                            🏁 Complete & Pay Wallet
-                          </button>
-                        </>
+                      {/* 3. If in progress or accepted: Add Progress Note (Both Tech and Admin) */}
+                      {(isInProgress || isAccepted) && onAddProgress && (
+                        <button
+                          type="button"
+                          onClick={() => onAddProgress(p)}
+                          className="px-2 py-1 bg-slate-100 hover:bg-slate-200 text-slate-700 border border-slate-300 rounded-md text-[11px] font-semibold cursor-pointer transition-colors"
+                        >
+                          📝 Add Note
+                        </button>
                       )}
 
-                      {/* Print Job Card */}
+                      {/* 4. If technician & accepted/in_progress: Request Rejection */}
+                      {isTechnician && (isAccepted || isInProgress) && (
+                        <button
+                          type="button"
+                          onClick={() => onTechPrompt(p)}
+                          className="px-2.5 py-1 bg-rose-50 text-rose-700 hover:bg-rose-100 border border-rose-300 rounded-md text-[11px] font-bold cursor-pointer whitespace-nowrap transition-colors"
+                          title="Submit Rejection Request to Shop Admin"
+                        >
+                          ⚠️ Request Rejection
+                        </button>
+                      )}
+
+                      {/* 5. Complete & Pay Wallet (Admin only) */}
+                      {!isTechnician && isInProgress && onComplete && (
+                        <button
+                          type="button"
+                          onClick={() => onComplete(p)}
+                          className="px-2.5 py-1 bg-emerald-600 hover:bg-emerald-700 text-white rounded-md text-[11px] font-bold cursor-pointer whitespace-nowrap shadow-xs transition-colors"
+                        >
+                          🏁 Complete & Pay Wallet
+                        </button>
+                      )}
+
+                      {/* Print Job Card (Both Tech and Admin) */}
                       <button
                         type="button"
                         onClick={() => onPrint(p)}
@@ -270,15 +317,17 @@ export default function ProjectsTable({
                         <span>Print Job Card</span>
                       </button>
 
-                      {/* Delete */}
-                      <button
-                        type="button"
-                        onClick={() => onDelete(p.id)}
-                        className="text-slate-400 hover:text-rose-600 text-[11px] font-medium cursor-pointer p-0.5 transition-colors"
-                        title="Delete Project"
-                      >
-                        🗑️ Delete
-                      </button>
+                      {/* Delete (Admin only) */}
+                      {!isTechnician && onDelete && (
+                        <button
+                          type="button"
+                          onClick={() => onDelete(p.id)}
+                          className="text-slate-400 hover:text-rose-600 text-[11px] font-medium cursor-pointer p-0.5 transition-colors"
+                          title="Delete Project"
+                        >
+                          🗑️ Delete
+                        </button>
+                      )}
                     </div>
                   </td>
                 </tr>

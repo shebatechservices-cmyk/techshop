@@ -13,7 +13,7 @@ import TechWalletModal from './modals/TechWalletModal';
 import ManageServicePresetsModal from './modals/ManageServicePresetsModal';
 import ManageJobTypesModal from './modals/ManageJobTypesModal';
 
-export default function Projects() {
+export default function Projects({ currentUser, isTechnician = false }) {
   const [isManagePresetsOpen, setIsManagePresetsOpen] = useState(false);
   const [isManageJobTypesOpen, setIsManageJobTypesOpen] = useState(false);
   const {
@@ -47,17 +47,19 @@ export default function Projects() {
     handleAddProgress,
     handleCompleteProject,
     handleDeleteProject,
+    handleAdminRespondRejection,
     counts,
     filteredProjects,
     editingProject,
     setEditingProject,
-  } = useProjectsManager();
+  } = useProjectsManager({ isTechnician, currentUser });
 
   return (
     <div className="w-full space-y-4 animate-fadeIn">
       {/* Header */}
       <ProjectsHeader
         error={error}
+        isTechnician={isTechnician}
         onOpenTechWallet={() => setIsTechWalletOpen(true)}
         onOpenManagePresets={() => setIsManagePresetsOpen(true)}
         onOpenManageJobTypes={() => setIsManageJobTypesOpen(true)}
@@ -86,6 +88,8 @@ export default function Projects() {
       <ProjectsTable
         projects={filteredProjects}
         loading={loading}
+        isTechnician={isTechnician}
+        currentUser={currentUser}
         onTechPrompt={setTechPromptProject}
         onInchargeConfirm={setInchargeConfirmProject}
         onAddProgress={setProgressProject}
@@ -93,6 +97,7 @@ export default function Projects() {
         onEdit={(p) => setEditingProject(p)}
         onPrint={setPrintProject}
         onDelete={handleDeleteProject}
+        onAdminRespondRejection={handleAdminRespondRejection}
       />
 
       {/* New Project / Edit Work Order Modal */}

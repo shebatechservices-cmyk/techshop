@@ -4,11 +4,13 @@ export default function ProductDetailsModal({
   product,
   onClose,
   onOpenNewSale,
+  onOpenNewQuotation,
   handleOpenTransferModal,
   handleOpenLabelModal,
   handleOpenWarrantyModal,
   taka = '৳',
   getWarrantyValidity,
+  isTechnician = false,
 }) {
   const [showCost, setShowCost] = useState(false);
   const [copiedKey, setCopiedKey] = useState(null);
@@ -256,18 +258,20 @@ export default function ProductDetailsModal({
           <div className="rounded-xl border border-slate-200 bg-gradient-to-br from-white to-slate-50 p-4">
             <div className="flex items-center justify-between mb-3 border-b border-slate-200 pb-2">
               <div className="font-extrabold text-sm text-slate-900 flex items-center gap-1.5">
-                <span>💰</span> Pricing &amp; Financial Valuation
+                <span>💰</span> {isTechnician ? 'Product Pricing' : 'Pricing & Financial Valuation'}
               </div>
-              <button
-                type="button"
-                onClick={() => setShowCost(!showCost)}
-                className="text-xs text-sky-600 hover:text-sky-800 font-semibold flex items-center gap-1 bg-sky-50 px-2 py-0.5 rounded border border-sky-200 cursor-pointer"
-              >
-                <span>{showCost ? '🔒 Hide Cost' : '👁️ Reveal Cost'}</span>
-              </button>
+              {!isTechnician && (
+                <button
+                  type="button"
+                  onClick={() => setShowCost(!showCost)}
+                  className="text-xs text-sky-600 hover:text-sky-800 font-semibold flex items-center gap-1 bg-sky-50 px-2 py-0.5 rounded border border-sky-200 cursor-pointer"
+                >
+                  <span>{showCost ? '🔒 Hide Cost' : '👁️ Reveal Cost'}</span>
+                </button>
+              )}
             </div>
 
-            <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+            <div className={isTechnician ? "grid grid-cols-1 sm:grid-cols-2 gap-3" : "grid grid-cols-2 sm:grid-cols-4 gap-3"}>
               <div>
                 <span className="text-[0.72rem] text-slate-500 block font-semibold">Selling Price</span>
                 <span className="text-lg font-black text-emerald-700">
@@ -281,49 +285,53 @@ export default function ProductDetailsModal({
                 )}
               </div>
 
-              <div>
-                <span className="text-[0.72rem] text-slate-500 block font-semibold">Purchase Cost</span>
-                <span className="text-lg font-mono font-bold text-slate-700">
-                  {showCost ? (
-                    <>
-                      {formatMoney(costPrice)}
-                      {convRate > 1 && <span className="text-xs font-normal text-slate-500 font-sans"> /{product.unit_name || 'Box'}</span>}
-                    </>
-                  ) : '••••••'}
-                </span>
-                {showCost && convRate > 1 && (
-                  <span className="text-[0.68rem] text-slate-500 block font-medium font-mono">
-                    {formatMoney(effectiveCost)} /{product.sub_unit_name || 'Unit'}
-                  </span>
-                )}
-              </div>
+              {!isTechnician && (
+                <>
+                  <div>
+                    <span className="text-[0.72rem] text-slate-500 block font-semibold">Purchase Cost</span>
+                    <span className="text-lg font-mono font-bold text-slate-700">
+                      {showCost ? (
+                        <>
+                          {formatMoney(costPrice)}
+                          {convRate > 1 && <span className="text-xs font-normal text-slate-500 font-sans"> /{product.unit_name || 'Box'}</span>}
+                        </>
+                      ) : '••••••'}
+                    </span>
+                    {showCost && convRate > 1 && (
+                      <span className="text-[0.68rem] text-slate-500 block font-medium font-mono">
+                        {formatMoney(effectiveCost)} /{product.sub_unit_name || 'Unit'}
+                      </span>
+                    )}
+                  </div>
 
-              <div>
-                <span className="text-[0.72rem] text-slate-500 block font-semibold">Unit Margin</span>
-                <span className="text-lg font-bold text-sky-700">
-                  {showCost ? (
-                    <>
-                      {formatMoney(margin)}{' '}
-                      <span className="text-xs font-normal text-slate-500">({marginPercent}%)</span>
-                    </>
-                  ) : (
-                    '••••••'
-                  )}
-                </span>
-              </div>
+                  <div>
+                    <span className="text-[0.72rem] text-slate-500 block font-semibold">Unit Margin</span>
+                    <span className="text-lg font-bold text-sky-700">
+                      {showCost ? (
+                        <>
+                          {formatMoney(margin)}{' '}
+                          <span className="text-xs font-normal text-slate-500">({marginPercent}%)</span>
+                        </>
+                      ) : (
+                        '••••••'
+                      )}
+                    </span>
+                  </div>
 
-              <div>
-                <span className="text-[0.72rem] text-slate-500 block font-semibold">In-Stock Valuation</span>
-                <span className="text-lg font-bold text-indigo-700">
-                  {showCost ? formatMoney(totalValuation) : '••••••'}
-                </span>
-              </div>
+                  <div>
+                    <span className="text-[0.72rem] text-slate-500 block font-semibold">In-Stock Valuation</span>
+                    <span className="text-lg font-bold text-indigo-700">
+                      {showCost ? formatMoney(totalValuation) : '••••••'}
+                    </span>
+                  </div>
+                </>
+              )}
             </div>
 
             {mrp > 0 && (
               <div className="mt-2.5 pt-2 border-t border-slate-100 flex items-center justify-between text-xs text-slate-500">
                 <span>Maximum Retail Price (MRP): <strong>{formatMoney(mrp)}</strong></span>
-                {product.latest_purchase_date && (
+                {!isTechnician && product.latest_purchase_date && (
                   <span>Last Inflow Date: <strong>{new Date(product.latest_purchase_date).toLocaleDateString()}</strong></span>
                 )}
               </div>
@@ -331,7 +339,7 @@ export default function ProductDetailsModal({
           </div>
 
           {/* 4.1 Purchase Batches & Fixed Costs Breakdown */}
-          {Array.isArray(product.batches) && product.batches.length > 0 && (
+          {!isTechnician && Array.isArray(product.batches) && product.batches.length > 0 && (
             <div className="rounded-xl border border-sky-200 bg-sky-50/40 p-4">
               <div className="flex items-center justify-between mb-2.5">
                 <div className="flex items-center gap-2">
@@ -461,8 +469,22 @@ export default function ProductDetailsModal({
         {/* 7. Modal Actions Footer */}
         <div className="flex flex-wrap items-center justify-between gap-3 px-6 py-3.5 border-t border-slate-200 bg-slate-50">
           <div className="flex items-center gap-2 flex-wrap">
-            {/* New Sale Button */}
-            {onOpenNewSale && (
+            {/* Create Quotation Button (for technicians and shop users) */}
+            {onOpenNewQuotation && (
+              <button
+                type="button"
+                onClick={() => {
+                  onClose();
+                  onOpenNewQuotation(product);
+                }}
+                className="py-2 px-3.5 rounded-lg text-xs font-bold flex items-center gap-1.5 bg-indigo-600 hover:bg-indigo-700 text-white cursor-pointer transition-colors shadow-sm"
+              >
+                <span>📝</span> Create Quotation
+              </button>
+            )}
+
+            {/* New Sale Button (admin/staff only) */}
+            {!isTechnician && onOpenNewSale && (
               <button
                 type="button"
                 onClick={() => {
@@ -480,8 +502,8 @@ export default function ProductDetailsModal({
               </button>
             )}
 
-            {/* Stock Transfer Button */}
-            {handleOpenTransferModal && (
+            {/* Stock Transfer Button (admin/staff only) */}
+            {!isTechnician && handleOpenTransferModal && (
               <button
                 type="button"
                 onClick={() => {
@@ -494,8 +516,8 @@ export default function ProductDetailsModal({
               </button>
             )}
 
-            {/* Print Barcode Label */}
-            {handleOpenLabelModal && (
+            {/* Print Barcode Label (admin/staff only) */}
+            {!isTechnician && handleOpenLabelModal && (
               <button
                 type="button"
                 onClick={() => {

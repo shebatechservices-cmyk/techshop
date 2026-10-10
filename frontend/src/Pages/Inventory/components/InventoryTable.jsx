@@ -17,6 +17,7 @@ export default function InventoryTable({
   handleOpenWarrantyModal,
   handleToggleEcommerce,
   onOpenNewSale,
+  onOpenNewQuotation,
   handleOpenLabelModal,
   handleOpenTransferModal,
   onViewProductDetails,
@@ -26,6 +27,7 @@ export default function InventoryTable({
   setCurrentPage,
   taka,
   getWarrantyValidity,
+  isTechnician = false,
 }) {
   return (
     <div className="bg-white rounded-xl border border-slate-300 overflow-visible min-h-[280px] shadow-sm">
@@ -50,7 +52,9 @@ export default function InventoryTable({
               {/* 4. Stock & Inflow Record */}
               <th className="py-2 px-2.5 text-center min-w-[105px]">Stock / Inflow</th>
               {/* 5. Pricing (Sale Price & Cost) */}
-              <th className="py-2 px-3 text-right min-w-[115px]">Price (Sale / Cost)</th>
+              <th className="py-2 px-3 text-right min-w-[115px]">
+                {isTechnician ? 'Sale Price' : 'Price (Sale / Cost)'}
+              </th>
               {/* 6. Inventory Aging */}
               <th className="py-2 px-2 text-center min-w-[75px]">Aging</th>
               {/* 7. Supplier Warranty */}
@@ -98,8 +102,10 @@ export default function InventoryTable({
                   handleToggleEcommerce={handleToggleEcommerce}
                   onViewProductDetails={onViewProductDetails}
                   onOpenNewSale={onOpenNewSale}
+                  onOpenNewQuotation={onOpenNewQuotation}
                   handleOpenLabelModal={handleOpenLabelModal}
                   handleOpenTransferModal={handleOpenTransferModal}
+                  isTechnician={isTechnician}
                 />
               ))
             )}

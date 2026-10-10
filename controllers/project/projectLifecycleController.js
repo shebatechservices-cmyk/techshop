@@ -1,10 +1,10 @@
 const pool = require("../../config/db");
 
-// ৪. টেকনিশিয়ান কর্তৃক কাজ গ্রহণ (Accept) বা প্রত্যাখ্যান (Decline)
+// ৪. টেকনিশিয়ান কর্তৃক কাজ গ্রহণ (Accept), প্রত্যাখ্যান (Decline) বা পরবর্তীতে বাতিলের আবেদন (Request Rejection)
 exports.technicianRespond = async (req, res) => {
     try {
         const { id } = req.params;
-        const { action, response_note = '' } = req.body; // action: 'accept' | 'decline'
+        const { action, response_note = '' } = req.body; // action: 'accept' | 'decline' | 'request_rejection'
 
         const projCheck = await pool.query('SELECT * FROM service_projects WHERE id = $1', [id]);
         if (projCheck.rows.length === 0) {
@@ -13,6 +13,7 @@ exports.technicianRespond = async (req, res) => {
 
         const project = projCheck.rows[0];
 
+        // ১. ফার্স্ট টাইম কাজ গ্রহণ (Accept)
         if (action === 'accept') {
             const noteText = `${project.progress_note || ''}\n[${new Date().toLocaleTimeString()}] টেকনিশিয়ান কাজ গ্রহণ করেছেন। ${response_note}`.trim();
             const result = await pool.query(`
@@ -30,12 +31,20 @@ exports.technicianRespond = async (req, res) => {
                 message: 'কাজের অনুরোধ সফলভাবে গ্রহণ করা হয়েছে। এডমিন/ইনচার্জ কনফার্মেশনের পর কাজ শুরু হবে।',
                 data: result.rows[0]
             });
-        } else {
-            const noteText = `${project.progress_note || ''}\n[${new Date().toLocaleTimeString()}] টেকনিশিয়ান অপারগতা প্রকাশ করেছেন: ${response_note}`.trim();
+        } 
+        
+        // ২. যদি কাজ ইতোমধ্যেই অ্যাকসেপ্ট করা হয়ে থাকে, সরাসরি রিজেক্ট করা যাবে না - রিকোয়েস্ট পাঠাতে হবে
+        const isAlreadyAccepted = project.technician_status === 'accepted' || 
+                                  project.technician_status === 'in_progress' ||
+                                  project.status === 'awaiting_incharge_confirmation' ||
+                                  project.status === 'in_progress';
+
+        if (action === 'request_rejection' || (action === 'decline' && isAlreadyAccepted)) {
+            const noteText = `${project.progress_note || ''}\n[${new Date().toLocaleTimeString()}] টেকনিশিয়ান কাজ বাতিলের আবেদন (Rejection Request) পাঠিয়েছেন। কারণ: ${response_note}`.trim();
             const result = await pool.query(`
                 UPDATE service_projects
-                SET technician_status = 'declined',
-                    status = 'tech_declined',
+                SET technician_status = 'rejection_requested',
+                    status = 'rejection_requested',
                     progress_note = $1,
                     updated_at = NOW()
                 WHERE id = $2
@@ -44,13 +53,89 @@ exports.technicianRespond = async (req, res) => {
 
             return res.status(200).json({
                 success: true,
-                message: 'কাজের অনুরোধ প্রত্যাখ্যান করা হয়েছে।',
+                message: 'কাজের অনুরোধ বাতিলের আবেদন সফলভাবে জমা দেওয়া হয়েছে। শপ এডমিন অনুমোদন করলে কাজ রিলিজ হবে।',
                 data: result.rows[0]
             });
         }
 
+        // ৩. প্রথমবার অ্যাসাইন হওয়ার পর তাৎক্ষণিক প্রত্যাখ্যান (Initial Decline)
+        const noteText = `${project.progress_note || ''}\n[${new Date().toLocaleTimeString()}] টেকনিশিয়ান অপারগতা প্রকাশ করেছেন: ${response_note}`.trim();
+        const result = await pool.query(`
+            UPDATE service_projects
+            SET technician_status = 'declined',
+                status = 'tech_declined',
+                progress_note = $1,
+                updated_at = NOW()
+            WHERE id = $2
+            RETURNING *;
+        `, [noteText, id]);
+
+        return res.status(200).json({
+            success: true,
+            message: 'কাজের অনুরোধ প্রত্যাখ্যান করা হয়েছে।',
+            data: result.rows[0]
+        });
+
     } catch (error) {
         console.error('technicianRespond error:', error);
+        return res.status(500).json({ success: false, message: 'সার্ভার এরর: ' + error.message });
+    }
+};
+
+// ৪.১ শপ এডমিন কর্তৃক টেকনিশিয়ানের বাতিলের আবেদন (Rejection Request) নিষ্পত্তি
+exports.adminRespondRejection = async (req, res) => {
+    try {
+        const { id } = req.params;
+        const { approve = true, admin_note = '' } = req.body;
+
+        const projCheck = await pool.query('SELECT * FROM service_projects WHERE id = $1', [id]);
+        if (projCheck.rows.length === 0) {
+            return res.status(404).json({ success: false, message: 'প্রজেক্ট পাওয়া যায়নি।' });
+        }
+
+        const project = projCheck.rows[0];
+
+        if (approve) {
+            // আবেদন অনুমোদন: টেকনিশিয়ান রিলিজ এবং প্রোজেক্ট পুনরায় নতুন টেকনিশিয়ান অ্যাসাইনের জন্য প্রস্তুত
+            const noteText = `${project.progress_note || ''}\n[${new Date().toLocaleTimeString()}] শপ এডমিন টেকনিশিয়ানের বাতিলের আবেদন অনুমোদন করেছেন। টেকনিশিয়ান রিলিজ করা হয়েছে। ${admin_note}`.trim();
+            const result = await pool.query(`
+                UPDATE service_projects
+                SET technician_status = 'declined',
+                    technician_id = NULL,
+                    status = 'assigned',
+                    admin_confirmed = false,
+                    progress_note = $1,
+                    updated_at = NOW()
+                WHERE id = $2
+                RETURNING *;
+            `, [noteText, id]);
+
+            return res.status(200).json({
+                success: true,
+                message: 'টেকনিশিয়ানের বাতিলের আবেদন অনুমোদন করা হয়েছে। কাজ থেকে টেকনিশিয়ান রিলিজ করা হয়েছে।',
+                data: result.rows[0]
+            });
+        } else {
+            // আবেদন নামঞ্জুর: টেকনিশিয়ানকে কাজে বহাল রাখা হলো
+            const noteText = `${project.progress_note || ''}\n[${new Date().toLocaleTimeString()}] শপ এডমিন বাতিলের আবেদন নামঞ্জুর করেছেন (কাজে বহাল রাখা হয়েছে)। ${admin_note}`.trim();
+            const result = await pool.query(`
+                UPDATE service_projects
+                SET technician_status = 'in_progress',
+                    status = 'in_progress',
+                    progress_note = $1,
+                    updated_at = NOW()
+                WHERE id = $2
+                RETURNING *;
+            `, [noteText, id]);
+
+            return res.status(200).json({
+                success: true,
+                message: 'বাতিলের আবেদন নামঞ্জুর করা হয়েছে। টেকনিশিয়ান কাজে বহাল রয়েছে।',
+                data: result.rows[0]
+            });
+        }
+    } catch (error) {
+        console.error('adminRespondRejection error:', error);
         return res.status(500).json({ success: false, message: 'সার্ভার এরর: ' + error.message });
     }
 };

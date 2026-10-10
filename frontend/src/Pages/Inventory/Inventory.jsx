@@ -1,15 +1,28 @@
-import React from 'react';
+import React, { useState } from 'react';
 import WarehouseManageModal from './modals/WarehouseManageModal';
 import WarrantyModal from './modals/WarrantyModal';
 import LabelPrintModal from './modals/LabelPrintModal';
 import StockTransferModal from './modals/StockTransferModal';
 import ProductDetailsModal from './modals/ProductDetailsModal';
+import SaleQuotationModal from '../Sales/modals/SaleQuotationModal';
 import useInventoryManager, { taka, getWarrantyValidity } from './hooks/useInventoryManager';
 import InventoryMetrics from './components/InventoryMetrics';
 import InventoryFilters from './components/InventoryFilters';
 import InventoryTable from './components/InventoryTable';
 
-export default function Inventory({ onOpenNewSale, readOnly = false }) {
+export default function Inventory({
+  onOpenNewSale,
+  readOnly = false,
+  isTechnician = false,
+  currentUser = null,
+}) {
+  const [isQuotationModalOpen, setIsQuotationModalOpen] = useState(false);
+  const [quotationProduct, setQuotationProduct] = useState(null);
+
+  const handleOpenQuotation = (product = null) => {
+    setQuotationProduct(product);
+    setIsQuotationModalOpen(true);
+  };
   const {
     // States
     products,
@@ -110,6 +123,15 @@ export default function Inventory({ onOpenNewSale, readOnly = false }) {
         </div>
 
         <div className="flex items-center gap-2 flex-wrap">
+          {/* Create Quotation Action (accessible to technician and shop staff) */}
+          <button
+            type="button"
+            onClick={() => handleOpenQuotation(null)}
+            className="flex items-center gap-1.5 py-1.5 px-3 rounded-md border-0 bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-xs cursor-pointer shadow-sm transition-colors"
+          >
+            <span>📝</span> + Create Quotation
+          </button>
+
           {/* Stock Transfer Action */}
           {!readOnly && (
             <button
@@ -144,6 +166,7 @@ export default function Inventory({ onOpenNewSale, readOnly = false }) {
         setCurrentPage={setCurrentPage}
         activeWarrantyCount={activeWarrantyCount}
         taka={taka}
+        isTechnician={isTechnician}
       />
 
       {/* 3. Unified Compact Control & Filter Bar */}
@@ -165,6 +188,7 @@ export default function Inventory({ onOpenNewSale, readOnly = false }) {
         products={products}
         filteredProducts={filteredProducts}
         summary={summary}
+        isTechnician={isTechnician}
       />
 
       {/* 4. Main Inventory Table & Pagination */}
@@ -185,6 +209,7 @@ export default function Inventory({ onOpenNewSale, readOnly = false }) {
         openActionId={openActionId}
         setOpenActionId={setOpenActionId}
         onOpenNewSale={onOpenNewSale}
+        onOpenNewQuotation={handleOpenQuotation}
         handleOpenLabelModal={handleOpenLabelModal}
         handleOpenTransferModal={handleOpenTransferModal}
         onViewProductDetails={handleOpenProductDetails}
@@ -194,6 +219,7 @@ export default function Inventory({ onOpenNewSale, readOnly = false }) {
         setCurrentPage={setCurrentPage}
         taka={taka}
         getWarrantyValidity={getWarrantyValidity}
+        isTechnician={isTechnician}
       />
 
       {/* Modal 1: Product Detailed View Modal */}
@@ -201,11 +227,13 @@ export default function Inventory({ onOpenNewSale, readOnly = false }) {
         product={detailModalProduct}
         onClose={handleCloseProductDetails}
         onOpenNewSale={onOpenNewSale}
+        onOpenNewQuotation={handleOpenQuotation}
         handleOpenTransferModal={handleOpenTransferModal}
         handleOpenLabelModal={handleOpenLabelModal}
         handleOpenWarrantyModal={handleOpenWarrantyModal}
         taka={taka}
         getWarrantyValidity={getWarrantyValidity}
+        isTechnician={isTechnician}
       />
 
       {/* Modal 2: Warranty & Serial Numbers */}
@@ -226,28 +254,43 @@ export default function Inventory({ onOpenNewSale, readOnly = false }) {
       />
 
       {/* Modal 4: Stock Transfer */}
-      <StockTransferModal
-        isOpen={isTransferModalOpen}
-        onClose={() => setIsTransferModalOpen(false)}
-        products={products}
-        warehouses={warehouses}
-        transferForm={transferForm}
-        setTransferForm={setTransferForm}
-        onSubmit={handleExecuteTransfer}
-        transferSubmitting={transferSubmitting}
-      />
+      {!isTechnician && (
+        <StockTransferModal
+          isOpen={isTransferModalOpen}
+          onClose={() => setIsTransferModalOpen(false)}
+          products={products}
+          warehouses={warehouses}
+          transferForm={transferForm}
+          setTransferForm={setTransferForm}
+          onSubmit={handleExecuteTransfer}
+          transferSubmitting={transferSubmitting}
+        />
+      )}
 
       {/* Modal 5: Centralized Warehouse Management Modal */}
-      <WarehouseManageModal
-        isOpen={isWarehouseModalOpen}
-        onClose={() => setIsWarehouseModalOpen(false)}
-        onWarehouseUpdated={(updatedList) => {
-          if (updatedList && !updatedList.some((w) => w.id === selectedWarehouseId && w.is_active)) {
-            const def = updatedList.find((w) => w.is_default && w.is_active) || updatedList[0];
-            if (def) setSelectedWarehouseId(def.id);
-          }
-          loadInventory();
+      {!isTechnician && (
+        <WarehouseManageModal
+          isOpen={isWarehouseModalOpen}
+          onClose={() => setIsWarehouseModalOpen(false)}
+          onWarehouseUpdated={(updatedList) => {
+            if (updatedList && !updatedList.some((w) => w.id === selectedWarehouseId && w.is_active)) {
+              const def = updatedList.find((w) => w.is_default && w.is_active) || updatedList[0];
+              if (def) setSelectedWarehouseId(def.id);
+            }
+            loadInventory();
+          }}
+        />
+      )}
+
+      {/* Modal 6: Sales Quotation Creation Modal */}
+      <SaleQuotationModal
+        isOpen={isQuotationModalOpen}
+        onClose={() => {
+          setIsQuotationModalOpen(false);
+          setQuotationProduct(null);
         }}
+        products={products}
+        initialProduct={quotationProduct}
       />
     </div>
   );

@@ -14,6 +14,7 @@ module.exports = {
 
     // Lifecycle & Workflow
     technicianRespond: projectLifecycle.technicianRespond,
+    adminRespondRejection: projectLifecycle.adminRespondRejection,
     confirmByIncharge: projectLifecycle.confirmByIncharge,
     updateProgress: projectLifecycle.updateProgress,
     completeProject: projectLifecycle.completeProject,

@@ -18,6 +18,7 @@ export default function InventoryFilters({
   products,
   filteredProducts,
   summary,
+  isTechnician = false,
 }) {
   return (
     <div className="bg-white rounded-lg border border-slate-200 p-2 sm:px-3 mb-3 flex flex-col gap-2 shadow-sm">
@@ -42,18 +43,20 @@ export default function InventoryFilters({
                 {wh.name} {wh.is_default ? '★ (Default)' : ''}
               </option>
             ))}
-            <option value="__manage__">➕ Manage Warehouses...</option>
+            {!isTechnician && <option value="__manage__">➕ Manage Warehouses...</option>}
           </select>
 
-          <button
-            type="button"
-            onClick={() => setIsWarehouseModalOpen(true)}
-            className="py-1 px-2 rounded-md border border-sky-200 bg-sky-100 hover:bg-sky-200 text-sky-700 font-bold text-xs cursor-pointer inline-flex items-center gap-1 transition-colors"
-            title="Add, edit, or configure warehouses & branches"
-          >
-            <span>⚙️</span>
-            <span>Manage</span>
-          </button>
+          {!isTechnician && (
+            <button
+              type="button"
+              onClick={() => setIsWarehouseModalOpen(true)}
+              className="py-1 px-2 rounded-md border border-sky-200 bg-sky-100 hover:bg-sky-200 text-sky-700 font-bold text-xs cursor-pointer inline-flex items-center gap-1 transition-colors"
+              title="Add, edit, or configure warehouses & branches"
+            >
+              <span>⚙️</span>
+              <span>Manage</span>
+            </button>
+          )}
         </div>
 
         {/* Search Bar */}

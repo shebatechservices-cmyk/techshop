@@ -275,6 +275,37 @@ describe('Technician Workflow, Dynamic Services & Work Order Editing', () => {
 
             // Update Project
             if (queryStr.includes('UPDATE service_projects')) {
+                if (queryStr.includes("technician_status = 'rejection_requested'")) {
+                    const projId = Number(params[1]);
+                    const existing = mockProjects.find(x => x.id === projId);
+                    if (existing) {
+                        existing.technician_status = 'rejection_requested';
+                        existing.status = 'rejection_requested';
+                        existing.progress_note = params[0];
+                        return { rows: [existing], rowCount: 1 };
+                    }
+                }
+                if (queryStr.includes("technician_status = 'accepted'")) {
+                    const projId = Number(params[1]);
+                    const existing = mockProjects.find(x => x.id === projId);
+                    if (existing) {
+                        existing.technician_status = 'accepted';
+                        existing.status = 'awaiting_incharge_confirmation';
+                        existing.progress_note = params[0];
+                        return { rows: [existing], rowCount: 1 };
+                    }
+                }
+                if (queryStr.includes('technician_id = NULL')) {
+                    const projId = Number(params[1]);
+                    const existing = mockProjects.find(x => x.id === projId);
+                    if (existing) {
+                        existing.technician_status = 'declined';
+                        existing.technician_id = null;
+                        existing.status = 'assigned';
+                        existing.progress_note = params[0];
+                        return { rows: [existing], rowCount: 1 };
+                    }
+                }
                 const projId = Number(params[19]);
                 const existing = mockProjects.find(x => x.id === projId);
                 if (existing) {
@@ -734,5 +765,48 @@ describe('Technician Workflow, Dynamic Services & Work Order Editing', () => {
         await projectController.deleteJobType(reqDelete, resDelete);
         expect(resDelete.status).toHaveBeenCalledWith(200);
         expect(resDelete.json.mock.calls[0][0].success).toBe(true);
+    });
+
+    test('RULE: Technician can Accept project first-time, but post-accept rejection requires Request Rejection and Admin Approval', async () => {
+        // 1. Initial State: Project 501 is assigned to tech 10. Tech accepts.
+        const reqAccept = {
+            params: { id: 501 },
+            body: { action: 'accept', response_note: 'Starting work tomorrow' }
+        };
+        const resAccept = mockRes();
+        await projectController.technicianRespond(reqAccept, resAccept);
+
+        expect(resAccept.status).toHaveBeenCalledWith(200);
+        expect(resAccept.json.mock.calls[0][0].data.technician_status).toBe('accepted');
+        expect(resAccept.json.mock.calls[0][0].data.status).toBe('awaiting_incharge_confirmation');
+
+        // 2. Post-acceptance rejection attempt: technician tries to decline/reject.
+        // It must NOT directly reject; it converts to request_rejection!
+        const reqDecline = {
+            params: { id: 501 },
+            body: { action: 'decline', response_note: 'Severe bike accident, cannot visit site' }
+        };
+        const resDecline = mockRes();
+        await projectController.technicianRespond(reqDecline, resDecline);
+
+        expect(resDecline.status).toHaveBeenCalledWith(200);
+        expect(resDecline.json.mock.calls[0][0].data.technician_status).toBe('rejection_requested');
+        expect(resDecline.json.mock.calls[0][0].data.status).toBe('rejection_requested');
+        expect(resDecline.json.mock.calls[0][0].message).toContain('বাতিলের আবেদন সফলভাবে জমা দেওয়া হয়েছে');
+
+        // 3. Shop Admin reviews and Approves Rejection Request
+        const reqAdminApprove = {
+            params: { id: 501 },
+            body: { approve: true, admin_note: 'Approved due to medical emergency' }
+        };
+        const resAdminApprove = mockRes();
+        await projectController.adminRespondRejection(reqAdminApprove, resAdminApprove);
+
+        expect(resAdminApprove.status).toHaveBeenCalledWith(200);
+        const approvedData = resAdminApprove.json.mock.calls[0][0].data;
+        expect(approvedData.technician_id).toBeNull(); // Tech released
+        expect(approvedData.technician_status).toBe('declined');
+        expect(approvedData.status).toBe('assigned'); // Ready for new tech assignment
+        expect(resAdminApprove.json.mock.calls[0][0].message).toContain('বাতিলের আবেদন অনুমোদন করা হয়েছে');
     });
 });

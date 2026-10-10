@@ -18,7 +18,9 @@ export default function SaleQuotationModal({
   onOpenAddCustomer,
   onQuotationCreated,
   editingQuotation = null,
+  initialProduct = null,
 }) {
+  const [localCustomers, setLocalCustomers] = useState([]);
   const [customerId, setCustomerId] = useState('');
   const [customerName, setCustomerName] = useState('');
   const [customerPhone, setCustomerPhone] = useState('');
@@ -41,6 +43,21 @@ export default function SaleQuotationModal({
 
   const searchContainerRef = useRef(null);
 
+  // Auto-fetch customers if none passed
+  useEffect(() => {
+    if (isOpen && (!customers || customers.length === 0)) {
+      fetch(`${API}/sales/customers`)
+        .then((res) => (res.ok ? res.json() : null))
+        .then((json) => {
+          const list = Array.isArray(json) ? json : (json?.data || []);
+          setLocalCustomers(list);
+        })
+        .catch(() => {});
+    }
+  }, [isOpen, customers]);
+
+  const customerList = customers && customers.length > 0 ? customers : localCustomers;
+
   // Auto-select newly created customer
   useEffect(() => {
     if (newlyCreatedCustomer && newlyCreatedCustomer.id) {
@@ -51,48 +68,87 @@ export default function SaleQuotationModal({
     }
   }, [newlyCreatedCustomer]);
 
-  // Hydrate form when editing an existing quotation
+  // Hydrate form when editing an existing quotation or when opening with initialProduct
   useEffect(() => {
-    if (isOpen && editingQuotation && editingQuotation.id) {
-      setCustomerId(editingQuotation.customer_id ? String(editingQuotation.customer_id) : '');
-      setCustomerName(editingQuotation.customer_name || '');
-      setCustomerPhone(editingQuotation.customer_phone || '');
-      setCustomerAddress(editingQuotation.customer_address || '');
-      setValidUntil(editingQuotation.valid_until ? String(editingQuotation.valid_until).slice(0, 10) : '');
-      setNotes(editingQuotation.notes || '');
-      setDiscount(money(editingQuotation.discount));
-      setVat(money(editingQuotation.vat));
-      setItems(
-        Array.isArray(editingQuotation.items)
-          ? editingQuotation.items.map((it, idx) => {
-              const prodInList = (products || []).find((p) => p.id === it.product_id);
-              const fullName = fullCatalogName(prodInList || it);
-              const qty = Number(it.quantity || 1);
-              const uPrice = money(it.unit_price);
-              const uDisc = money(it.unit_discount || it.discount_amount || 0);
-              return {
-                localId: `${Date.now()}-${idx}`,
-                product_id: it.product_id,
-                product_name: fullName,
-                full_name: fullName,
-                brand_name: it.brand_name || (prodInList && prodInList.brand_name) || '',
-                quantity: qty,
-                unit_price: uPrice,
-                unit_discount: uDisc,
-                line_total: money(it.line_total) || Math.max(0, qty * (uPrice - uDisc)),
-                warranty_months: it.warranty_months !== undefined && it.warranty_months !== null ? Number(it.warranty_months) : (prodInList ? Number(prodInList.warranty_months || 0) : 0),
-              };
-            })
-          : []
-      );
-      setError('');
+    if (isOpen) {
+      if (editingQuotation && editingQuotation.id) {
+        setCustomerId(editingQuotation.customer_id ? String(editingQuotation.customer_id) : '');
+        setCustomerName(editingQuotation.customer_name || '');
+        setCustomerPhone(editingQuotation.customer_phone || '');
+        setCustomerAddress(editingQuotation.customer_address || '');
+        setValidUntil(editingQuotation.valid_until ? String(editingQuotation.valid_until).slice(0, 10) : '');
+        setNotes(editingQuotation.notes || '');
+        setDiscount(money(editingQuotation.discount));
+        setVat(money(editingQuotation.vat));
+        setItems(
+          Array.isArray(editingQuotation.items)
+            ? editingQuotation.items.map((it, idx) => {
+                const prodInList = (products || []).find((p) => p.id === it.product_id);
+                const fullName = fullCatalogName(prodInList || it);
+                const qty = Number(it.quantity || 1);
+                const uPrice = money(it.unit_price);
+                const uDisc = money(it.unit_discount || it.discount_amount || 0);
+                return {
+                  localId: `${Date.now()}-${idx}`,
+                  product_id: it.product_id,
+                  product_name: fullName,
+                  full_name: fullName,
+                  brand_name: it.brand_name || (prodInList && prodInList.brand_name) || '',
+                  quantity: qty,
+                  unit_price: uPrice,
+                  unit_discount: uDisc,
+                  line_total: money(it.line_total) || Math.max(0, qty * (uPrice - uDisc)),
+                  warranty_months: it.warranty_months !== undefined && it.warranty_months !== null ? Number(it.warranty_months) : (prodInList ? Number(prodInList.warranty_months || 0) : 0),
+                };
+              })
+            : []
+        );
+        setError('');
+      } else if (initialProduct && initialProduct.id) {
+        const fullName = fullCatalogName(initialProduct);
+        const price = Number(
+          initialProduct.sale_price !== undefined && initialProduct.sale_price !== null && Number(initialProduct.sale_price) > 0
+            ? initialProduct.sale_price
+            : (initialProduct.salePrice || initialProduct.selling_price || initialProduct.final_sale_price || initialProduct.mrp || 0)
+        );
+        setItems([
+          {
+            localId: `${Date.now()}-${initialProduct.id}`,
+            product_id: initialProduct.id,
+            product_name: fullName,
+            full_name: fullName,
+            brand_name: initialProduct.brand_name || '',
+            quantity: 1,
+            unit_price: price,
+            unit_discount: 0,
+            line_total: price,
+            warranty_months: Number(initialProduct.warranty_months || 0),
+          },
+        ]);
+        setCustomerId('');
+        setCustomerName('');
+        setCustomerPhone('');
+        setCustomerAddress('');
+        setDiscount(0);
+        setVat(0);
+        setError('');
+      } else {
+        setItems([]);
+        setCustomerId('');
+        setCustomerName('');
+        setCustomerPhone('');
+        setCustomerAddress('');
+        setDiscount(0);
+        setVat(0);
+        setError('');
+      }
     }
-  }, [isOpen, editingQuotation, products]);
+  }, [isOpen, editingQuotation, initialProduct, products]);
 
   // When customer dropdown changes
   const handleCustomerChange = (idStr) => {
     setCustomerId(idStr);
-    const sel = customers.find((c) => String(c.id) === String(idStr));
+    const sel = customerList.find((c) => String(c.id) === String(idStr));
     if (sel) {
       setCustomerName(sel.name || '');
       setCustomerPhone(sel.phone || '');
@@ -387,7 +443,7 @@ export default function SaleQuotationModal({
           {/* Customer & Quote Meta Card */}
           <QuotationCustomerMeta
             customerId={customerId}
-            customers={customers}
+            customers={customerList}
             customerName={customerName}
             validUntil={validUntil}
             onCustomerChange={handleCustomerChange}
