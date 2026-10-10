@@ -8,6 +8,7 @@ export default function CatalogTab({
   catalogStockFilter,
   setCatalogStockFilter,
   setIsNewOrderModalOpen,
+  onOpenQuotation,
   taka,
 }) {
   return (
@@ -35,6 +36,16 @@ export default function CatalogTab({
             <option value="lowstock">Low Stock (Stock ≤ 5)</option>
             <option value="outofstock">Out of Stock</option>
           </select>
+
+          {onOpenQuotation && (
+            <button
+              type="button"
+              onClick={() => onOpenQuotation(null)}
+              className="px-3.5 py-2 bg-amber-600 hover:bg-amber-700 text-white rounded-md font-bold text-sm cursor-pointer transition-colors shadow-xs flex items-center gap-1"
+            >
+              📄 + Quotation
+            </button>
+          )}
 
           <button
             type="button"
@@ -98,13 +109,25 @@ export default function CatalogTab({
                   </span>
                 </div>
 
-                <button
-                  type="button"
-                  onClick={() => setIsNewOrderModalOpen(true)}
-                  className="px-2.5 py-1.5 bg-teal-50 hover:bg-teal-100 border border-teal-200 text-teal-600 rounded-md text-xs font-bold cursor-pointer transition-colors"
-                >
-                  + Order
-                </button>
+                <div className="flex items-center gap-1.5">
+                  {onOpenQuotation && (
+                    <button
+                      type="button"
+                      onClick={() => onOpenQuotation(p)}
+                      className="px-2 py-1.5 bg-amber-50 hover:bg-amber-100 border border-amber-300 text-amber-700 rounded-md text-xs font-bold cursor-pointer transition-colors"
+                      title="Generate price quotation for this product"
+                    >
+                      📄 Quotation
+                    </button>
+                  )}
+                  <button
+                    type="button"
+                    onClick={() => setIsNewOrderModalOpen(true)}
+                    className="px-2.5 py-1.5 bg-teal-50 hover:bg-teal-100 border border-teal-200 text-teal-600 rounded-md text-xs font-bold cursor-pointer transition-colors"
+                  >
+                    + Order
+                  </button>
+                </div>
               </div>
             </div>
           );

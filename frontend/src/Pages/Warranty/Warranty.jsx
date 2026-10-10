@@ -14,7 +14,7 @@ import DeleteReturnModal from './modals/DeleteReturnModal';
 import SwapSerialModal from './modals/SwapSerialModal';
 import ClaimPrintSlipModal from './modals/ClaimPrintSlipModal';
 
-export default function Warranty() {
+export default function Warranty({ currentUser, isTechnician = false }) {
   const {
     activeTab,
     setActiveTab,
@@ -98,6 +98,7 @@ export default function Warranty() {
         returnsCount={returns.length}
         onOpenAddClaim={() => setIsAddClaimOpen(true)}
         onOpenAddReturn={() => setIsAddReturnOpen(true)}
+        isTechnician={isTechnician}
       />
 
       {/* 2. Instant Barcode & Serial Search Lookup */}
@@ -110,103 +111,108 @@ export default function Warranty() {
         handleCheckWarranty={handleCheckWarranty}
         handleIntakeFromSearch={handleIntakeFromSearch}
         handleReturnFromSearch={handleReturnFromSearch}
+        isTechnician={isTechnician}
       />
 
-      {/* 3. Live Warranty Expiry Radar (+60 day grace) */}
-      <WarrantyExpiringAlerts
-        expireData={expireData}
-        expireLoading={expireLoading}
-        showExpiredList={showExpiredList}
-        setShowExpiredList={setShowExpiredList}
-        refreshExpiry={refreshExpiry}
-      />
+      {!isTechnician && (
+        <>
+          {/* 3. Live Warranty Expiry Radar (+60 day grace) */}
+          <WarrantyExpiringAlerts
+            expireData={expireData}
+            expireLoading={expireLoading}
+            showExpiredList={showExpiredList}
+            setShowExpiredList={setShowExpiredList}
+            refreshExpiry={refreshExpiry}
+          />
 
-      {/* 4. Tab 1: Claims & Service Center */}
-      {activeTab === 'claims' && (
-        <WarrantyClaimsTab
-          filteredClaims={filteredClaims}
-          claimStatusFilter={claimStatusFilter}
-          setClaimStatusFilter={setClaimStatusFilter}
-          claimSearch={claimSearch}
-          setClaimSearch={setClaimSearch}
-          STATUS_CONFIG={STATUS_CONFIG}
-          handleUpdateClaimStatus={handleUpdateClaimStatus}
-          handleOpenEditClaim={handleOpenEditClaim}
-          setClaimToDelete={setClaimToDelete}
-          setSwapClaimModal={setSwapClaimModal}
-          setClaimToPrint={setClaimToPrint}
-        />
+          {/* 4. Tab 1: Claims & Service Center */}
+          {activeTab === 'claims' && (
+            <WarrantyClaimsTab
+              filteredClaims={filteredClaims}
+              claimStatusFilter={claimStatusFilter}
+              setClaimStatusFilter={setClaimStatusFilter}
+              claimSearch={claimSearch}
+              setClaimSearch={setClaimSearch}
+              STATUS_CONFIG={STATUS_CONFIG}
+              handleUpdateClaimStatus={handleUpdateClaimStatus}
+              handleOpenEditClaim={handleOpenEditClaim}
+              setClaimToDelete={setClaimToDelete}
+              setSwapClaimModal={setSwapClaimModal}
+              setClaimToPrint={setClaimToPrint}
+            />
+          )}
+
+          {/* 5. Tab 2: Returns & Exchanges */}
+          {activeTab === 'returns' && (
+            <WarrantyReturnsTab
+              returns={returns}
+              handleOpenEditReturn={handleOpenEditReturn}
+              setReturnToDelete={setReturnToDelete}
+            />
+          )}
+
+          {/* MODAL 1: Receive Warranty Claim Intake */}
+          <AddClaimModal
+            isOpen={isAddClaimOpen}
+            onClose={() => setIsAddClaimOpen(false)}
+            claimForm={claimForm}
+            setClaimForm={setClaimForm}
+            handleSubmitClaim={handleSubmitClaim}
+          />
+
+          {/* MODAL 2: Process Product Return / Exchange */}
+          <AddReturnModal
+            isOpen={isAddReturnOpen}
+            onClose={() => setIsAddReturnOpen(false)}
+            returnForm={returnForm}
+            setReturnForm={setReturnForm}
+            handleSubmitReturn={handleSubmitReturn}
+          />
+
+          {/* MODAL 3: Printable Claim Token Slip */}
+          <ClaimPrintSlipModal
+            claimToPrint={claimToPrint}
+            setClaimToPrint={setClaimToPrint}
+          />
+
+          {/* MODAL 4: Swap Replacement S/N */}
+          <SwapSerialModal
+            swapClaimModal={swapClaimModal}
+            setSwapClaimModal={setSwapClaimModal}
+            newReplacementSerial={newReplacementSerial}
+            setNewReplacementSerial={setNewReplacementSerial}
+            handleSaveSwapSerial={handleSaveSwapSerial}
+          />
+
+          {/* MODAL 5: Edit Warranty Claim */}
+          <EditClaimModal
+            editingClaim={editingClaim}
+            setEditingClaim={setEditingClaim}
+            handleUpdateClaimSubmit={handleUpdateClaimSubmit}
+          />
+
+          {/* MODAL 6: Delete Warranty Claim */}
+          <DeleteClaimModal
+            claimToDelete={claimToDelete}
+            setClaimToDelete={setClaimToDelete}
+            handleConfirmDeleteClaim={handleConfirmDeleteClaim}
+          />
+
+          {/* MODAL 7: Edit Product Return */}
+          <EditReturnModal
+            editingReturn={editingReturn}
+            setEditingReturn={setEditingReturn}
+            handleUpdateReturnSubmit={handleUpdateReturnSubmit}
+          />
+
+          {/* MODAL 8: Delete Product Return */}
+          <DeleteReturnModal
+            returnToDelete={returnToDelete}
+            setReturnToDelete={setReturnToDelete}
+            handleConfirmDeleteReturn={handleConfirmDeleteReturn}
+          />
+        </>
       )}
-
-      {/* 5. Tab 2: Returns & Exchanges */}
-      {activeTab === 'returns' && (
-        <WarrantyReturnsTab
-          returns={returns}
-          handleOpenEditReturn={handleOpenEditReturn}
-          setReturnToDelete={setReturnToDelete}
-        />
-      )}
-
-      {/* MODAL 1: Receive Warranty Claim Intake */}
-      <AddClaimModal
-        isOpen={isAddClaimOpen}
-        onClose={() => setIsAddClaimOpen(false)}
-        claimForm={claimForm}
-        setClaimForm={setClaimForm}
-        handleSubmitClaim={handleSubmitClaim}
-      />
-
-      {/* MODAL 2: Process Product Return / Exchange */}
-      <AddReturnModal
-        isOpen={isAddReturnOpen}
-        onClose={() => setIsAddReturnOpen(false)}
-        returnForm={returnForm}
-        setReturnForm={setReturnForm}
-        handleSubmitReturn={handleSubmitReturn}
-      />
-
-      {/* MODAL 3: Printable Claim Token Slip */}
-      <ClaimPrintSlipModal
-        claimToPrint={claimToPrint}
-        setClaimToPrint={setClaimToPrint}
-      />
-
-      {/* MODAL 4: Swap Replacement S/N */}
-      <SwapSerialModal
-        swapClaimModal={swapClaimModal}
-        setSwapClaimModal={setSwapClaimModal}
-        newReplacementSerial={newReplacementSerial}
-        setNewReplacementSerial={setNewReplacementSerial}
-        handleSaveSwapSerial={handleSaveSwapSerial}
-      />
-
-      {/* MODAL 5: Edit Warranty Claim */}
-      <EditClaimModal
-        editingClaim={editingClaim}
-        setEditingClaim={setEditingClaim}
-        handleUpdateClaimSubmit={handleUpdateClaimSubmit}
-      />
-
-      {/* MODAL 6: Delete Warranty Claim */}
-      <DeleteClaimModal
-        claimToDelete={claimToDelete}
-        setClaimToDelete={setClaimToDelete}
-        handleConfirmDeleteClaim={handleConfirmDeleteClaim}
-      />
-
-      {/* MODAL 7: Edit Product Return */}
-      <EditReturnModal
-        editingReturn={editingReturn}
-        setEditingReturn={setEditingReturn}
-        handleUpdateReturnSubmit={handleUpdateReturnSubmit}
-      />
-
-      {/* MODAL 8: Delete Product Return */}
-      <DeleteReturnModal
-        returnToDelete={returnToDelete}
-        setReturnToDelete={setReturnToDelete}
-        handleConfirmDeleteReturn={handleConfirmDeleteReturn}
-      />
     </div>
   );
 }

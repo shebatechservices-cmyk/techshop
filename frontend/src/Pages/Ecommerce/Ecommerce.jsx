@@ -1,8 +1,9 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import EcommerceOrderDetailsModal from './modals/EcommerceOrderDetailsModal';
 import EcommerceNewOrderModal from './modals/EcommerceNewOrderModal';
 import EcommercePrintModal from './modals/EcommercePrintModal';
 import CustomerStorefrontModal from './modals/CustomerStorefrontModal';
+import SaleQuotationModal from '../Sales/modals/SaleQuotationModal';
 import useEcommerceManager from './hooks/useEcommerceManager';
 import KpiSummaryCards from './views/KpiSummaryCards';
 import OrdersTab from './views/OrdersTab';
@@ -10,7 +11,9 @@ import CatalogTab from './views/CatalogTab';
 import CouriersTab from './views/CouriersTab';
 import AnalyticsTab from './views/AnalyticsTab';
 
-export default function Ecommerce() {
+export default function Ecommerce({ currentUser, isTechnician = false }) {
+  const [isQuotationModalOpen, setIsQuotationModalOpen] = useState(false);
+  const [quotationInitialProduct, setQuotationInitialProduct] = useState(null);
   const {
     orders,
     products,
@@ -47,6 +50,13 @@ export default function Ecommerce() {
     taka,
   } = useEcommerceManager();
 
+  // For technicians, default to catalog to see prices and order directly
+  useEffect(() => {
+    if (isTechnician) {
+      setActiveTab('catalog');
+    }
+  }, [isTechnician, setActiveTab]);
+
   return (
     <div className="min-h-screen p-6 bg-slate-50 font-sans">
       {/* 1. Consolidated Header, Tabs & Action Buttons in a Single Sleek Row */}
@@ -56,32 +66,13 @@ export default function Ecommerce() {
           <span className="text-xl">🌐</span>
           <div>
             <h1 className="text-xl font-extrabold text-slate-900 m-0 tracking-tight leading-tight">
-              E-Commerce &amp; Online Orders
+              E-Commerce &amp; Online Orders {isTechnician ? '(Catalog & Orders)' : ''}
             </h1>
           </div>
         </div>
 
         {/* Center: Inline Tabs */}
         <div className="flex bg-slate-100 p-1 rounded-lg gap-1">
-          <button
-            type="button"
-            onClick={() => setActiveTab('orders')}
-            className={`px-3 py-1.5 rounded-md text-xs cursor-pointer flex items-center gap-1.5 transition-colors ${
-              activeTab === 'orders'
-                ? 'bg-teal-600 text-white font-bold shadow-xs'
-                : 'text-slate-600 hover:text-slate-900 font-semibold'
-            }`}
-          >
-            <span>Orders</span>
-            <span
-              className={`px-1.5 py-0.5 rounded-full text-[11px] font-bold ${
-                activeTab === 'orders' ? 'bg-white/25 text-white' : 'bg-slate-200 text-slate-700'
-              }`}
-            >
-              {orders.length}
-            </span>
-          </button>
-
           <button
             type="button"
             onClick={() => setActiveTab('catalog')}
@@ -103,27 +94,50 @@ export default function Ecommerce() {
 
           <button
             type="button"
-            onClick={() => setActiveTab('couriers')}
+            onClick={() => setActiveTab('orders')}
             className={`px-3 py-1.5 rounded-md text-xs cursor-pointer flex items-center gap-1.5 transition-colors ${
-              activeTab === 'couriers'
+              activeTab === 'orders'
                 ? 'bg-teal-600 text-white font-bold shadow-xs'
                 : 'text-slate-600 hover:text-slate-900 font-semibold'
             }`}
           >
-            <span>Couriers</span>
+            <span>Orders</span>
+            <span
+              className={`px-1.5 py-0.5 rounded-full text-[11px] font-bold ${
+                activeTab === 'orders' ? 'bg-white/25 text-white' : 'bg-slate-200 text-slate-700'
+              }`}
+            >
+              {orders.length}
+            </span>
           </button>
 
-          <button
-            type="button"
-            onClick={() => setActiveTab('analytics')}
-            className={`px-3 py-1.5 rounded-md text-xs cursor-pointer flex items-center gap-1.5 transition-colors ${
-              activeTab === 'analytics'
-                ? 'bg-teal-600 text-white font-bold shadow-xs'
-                : 'text-slate-600 hover:text-slate-900 font-semibold'
-            }`}
-          >
-            <span>Analytics</span>
-          </button>
+          {!isTechnician && (
+            <>
+              <button
+                type="button"
+                onClick={() => setActiveTab('couriers')}
+                className={`px-3 py-1.5 rounded-md text-xs cursor-pointer flex items-center gap-1.5 transition-colors ${
+                  activeTab === 'couriers'
+                    ? 'bg-teal-600 text-white font-bold shadow-xs'
+                    : 'text-slate-600 hover:text-slate-900 font-semibold'
+                }`}
+              >
+                <span>Couriers</span>
+              </button>
+
+              <button
+                type="button"
+                onClick={() => setActiveTab('analytics')}
+                className={`px-3 py-1.5 rounded-md text-xs cursor-pointer flex items-center gap-1.5 transition-colors ${
+                  activeTab === 'analytics'
+                    ? 'bg-teal-600 text-white font-bold shadow-xs'
+                    : 'text-slate-600 hover:text-slate-900 font-semibold'
+                }`}
+              >
+                <span>Analytics</span>
+              </button>
+            </>
+          )}
         </div>
 
         {/* Right: Action Buttons */}
@@ -135,6 +149,18 @@ export default function Ecommerce() {
             className="px-2.5 py-1.5 bg-white hover:bg-slate-100 border border-slate-300 rounded-md text-slate-700 font-semibold text-xs cursor-pointer flex items-center gap-1 transition-colors shadow-xs"
           >
             🔄 Refresh
+          </button>
+
+          <button
+            type="button"
+            onClick={() => {
+              setQuotationInitialProduct(null);
+              setIsQuotationModalOpen(true);
+            }}
+            className="px-3 py-1.5 bg-amber-50 hover:bg-amber-100 border border-amber-500 rounded-md text-amber-800 font-bold text-xs cursor-pointer flex items-center gap-1 transition-colors shadow-xs"
+            title="Create Official Customer Price Quotation"
+          >
+            📄 + Quotation
           </button>
 
           <button
@@ -161,8 +187,8 @@ export default function Ecommerce() {
         </div>
       )}
 
-      {/* 4 Analytics KPI Cards */}
-      <KpiSummaryCards stats={stats} taka={taka} />
+      {/* 4 Analytics KPI Cards (Admin only) */}
+      {!isTechnician && <KpiSummaryCards stats={stats} taka={taka} />}
 
       {/* TAB 1: ORDERS & SHIPMENTS */}
       {activeTab === 'orders' && (
@@ -196,17 +222,32 @@ export default function Ecommerce() {
           catalogStockFilter={catalogStockFilter}
           setCatalogStockFilter={setCatalogStockFilter}
           setIsNewOrderModalOpen={setIsNewOrderModalOpen}
+          onOpenQuotation={(p) => {
+            setQuotationInitialProduct(p);
+            setIsQuotationModalOpen(true);
+          }}
           taka={taka}
         />
       )}
 
-      {/* TAB 3: COURIERS & LOGISTICS */}
-      {activeTab === 'couriers' && <CouriersTab />}
+      {/* TAB 3: COURIERS & LOGISTICS (Admin only) */}
+      {!isTechnician && activeTab === 'couriers' && <CouriersTab />}
 
-      {/* TAB 4: ANALYTICS & INSIGHTS */}
-      {activeTab === 'analytics' && (
+      {/* TAB 4: ANALYTICS & INSIGHTS (Admin only) */}
+      {!isTechnician && activeTab === 'analytics' && (
         <AnalyticsTab stats={stats} products={products} taka={taka} />
       )}
+
+      {/* MODAL: Customer Price Quotation */}
+      <SaleQuotationModal
+        isOpen={isQuotationModalOpen}
+        onClose={() => {
+          setIsQuotationModalOpen(false);
+          setQuotationInitialProduct(null);
+        }}
+        products={products}
+        initialProduct={quotationInitialProduct}
+      />
 
       {/* MODAL: New Online Order */}
       <EcommerceNewOrderModal

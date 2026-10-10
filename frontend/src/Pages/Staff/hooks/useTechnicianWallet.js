@@ -4,8 +4,11 @@ import API from '../../../services/api';
 export default function useTechnicianWallet(currentUser) {
   const [walletData, setWalletData] = useState(null);
   const [loading, setLoading] = useState(true);
-  const [activeTab, setActiveTab] = useState('projects'); // 'projects' | 'ledger'
+  const [activeTab, setActiveTab] = useState('projects'); // 'projects' | 'ledger' | 'requests'
   const [toast, setToast] = useState({ show: false, message: '', type: 'success' });
+  const [requests, setRequests] = useState([]);
+  const [loadingRequests, setLoadingRequests] = useState(false);
+  const [isRequestModalOpen, setIsRequestModalOpen] = useState(false);
 
   const userId = currentUser?.id || 1;
 
@@ -34,9 +37,51 @@ export default function useTechnicianWallet(currentUser) {
     }
   }, [userId, showToast]);
 
+  const fetchRequests = useCallback(async () => {
+    try {
+      setLoadingRequests(true);
+      const res = await fetch(`${API}/staff/wallet/${userId}/requests`);
+      if (res.ok) {
+        const json = await res.json();
+        if (json.success) {
+          setRequests(json.data || []);
+        }
+      }
+    } catch (err) {
+      console.error('Error fetching wallet requests:', err);
+    } finally {
+      setLoadingRequests(false);
+    }
+  }, [userId]);
+
   useEffect(() => {
     fetchWallet();
-  }, [fetchWallet]);
+    fetchRequests();
+  }, [fetchWallet, fetchRequests]);
+
+  const submitWalletRequest = async ({ type, amount, channel, reference_id, notes }) => {
+    try {
+      const res = await fetch(`${API}/staff/wallet/${userId}/request`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ type, amount, channel, reference_id, notes }),
+      });
+      const json = await res.json();
+      if (res.ok && json.success) {
+        showToast(json.message || 'রিকোয়েস্ট সফলভাবে জমা হয়েছে!', 'success');
+        await fetchRequests();
+        setIsRequestModalOpen(false);
+        return { success: true };
+      } else {
+        showToast(json.message || 'রিকোয়েস্ট জমা দিতে ব্যর্থ হয়েছে', 'error');
+        return { success: false, message: json.message };
+      }
+    } catch (err) {
+      console.error('Error submitting wallet request:', err);
+      showToast('সার্ভার এরর হয়েছে', 'error');
+      return { success: false, message: 'Server error' };
+    }
+  };
 
   const summary = walletData?.summary || {
     walletBalance: currentUser?.wallet_balance || 0,
@@ -60,6 +105,12 @@ export default function useTechnicianWallet(currentUser) {
     userId,
     summary,
     projects,
-    transactions
+    transactions,
+    requests,
+    loadingRequests,
+    fetchRequests,
+    submitWalletRequest,
+    isRequestModalOpen,
+    setIsRequestModalOpen,
   };
 }

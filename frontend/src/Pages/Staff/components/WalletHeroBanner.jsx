@@ -4,7 +4,8 @@ export default function WalletHeroBanner({
   currentUser,
   userId,
   loading = false,
-  fetchWallet = () => {}
+  fetchWallet = () => {},
+  onOpenRequestModal = () => {},
 }) {
   return (
     <div className="bg-gradient-to-r from-slate-900 via-indigo-950 to-slate-900 rounded-3xl p-6 sm:p-8 text-white shadow-xl border border-slate-800 relative overflow-hidden">
@@ -29,7 +30,15 @@ export default function WalletHeroBanner({
           </div>
         </div>
 
-        <div className="flex items-center gap-3">
+        <div className="flex items-center gap-3 flex-wrap">
+          <button
+            type="button"
+            onClick={onOpenRequestModal}
+            className="px-4 py-2 bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-400 hover:to-amber-500 text-slate-950 font-black rounded-xl text-xs shadow-lg transition-all flex items-center gap-1.5 cursor-pointer"
+          >
+            <span>💸</span>
+            <span>উইথড্র / ডিপোজিট রিকোয়েস্ট</span>
+          </button>
           <button
             type="button"
             onClick={fetchWallet}

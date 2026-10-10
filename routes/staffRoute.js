@@ -5,6 +5,10 @@ const staffController = require('../controllers/staffController');
 // 1. Get available roles
 router.get('/roles', staffController.getRoles);
 
+// Wallet Requests (must be before /:id)
+router.get('/wallet-requests/pending', staffController.getPendingWalletRequests);
+router.post('/wallet-requests/:requestId/respond', staffController.respondWalletRequest);
+
 // 2. Get staff list with stats & filters
 router.get('/', staffController.getStaff);
 
@@ -22,6 +26,8 @@ router.patch('/:id/status', staffController.toggleStaffStatus);
 
 // 7. Get technician/staff personal wallet and earnings
 router.get('/wallet/:id', staffController.getStaffWallet);
+router.post('/wallet/:id/request', staffController.submitWalletRequest);
+router.get('/wallet/:id/requests', staffController.getStaffWalletRequests);
 
 // 8. Admin wallet adjustment
 router.post('/wallet/:id/adjust', staffController.adjustStaffWallet);

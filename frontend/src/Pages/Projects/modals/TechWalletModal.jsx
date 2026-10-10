@@ -3,11 +3,13 @@ import API from '../../../services/api';
 import TechWalletOverviewTab from './techWallet/TechWalletOverviewTab';
 import TechPayoutForm from './techWallet/TechPayoutForm';
 import TechWalletStatementTab from './techWallet/TechWalletStatementTab';
+import TechWalletRequestsTab from './techWallet/TechWalletRequestsTab';
 
 export default function TechWalletModal({ isOpen, onClose, onRefreshProjects }) {
-  const [activeTab, setActiveTab] = useState('overview'); // 'overview' | 'payout' | 'statement'
+  const [activeTab, setActiveTab] = useState('overview'); // 'overview' | 'payout' | 'statement' | 'requests'
   const [wallets, setWallets] = useState([]);
   const [sourceAccounts, setSourceAccounts] = useState([]);
+  const [pendingRequests, setPendingRequests] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
 
@@ -50,9 +52,24 @@ export default function TechWalletModal({ isOpen, onClose, onRefreshProjects }) 
     }
   };
 
+  const loadPendingRequests = async () => {
+    try {
+      const res = await fetch(`${API}/staff/wallet-requests/pending`);
+      if (res.ok) {
+        const data = await res.json();
+        if (data.success) {
+          setPendingRequests(data.data || []);
+        }
+      }
+    } catch (err) {
+      console.error('Error fetching pending wallet requests:', err);
+    }
+  };
+
   useEffect(() => {
     if (isOpen) {
       loadWalletData();
+      loadPendingRequests();
     }
   }, [isOpen]);
 
@@ -311,6 +328,39 @@ export default function TechWalletModal({ isOpen, onClose, onRefreshProjects }) 
             >
               📜 Transaction History & Voucher
             </button>
+            <button
+              type="button"
+              onClick={() => setActiveTab('requests')}
+              style={{
+                padding: '6px 14px',
+                borderRadius: '6px',
+                border: 'none',
+                background: activeTab === 'requests' ? '#2563eb' : '#ffffff',
+                color: activeTab === 'requests' ? '#ffffff' : '#475569',
+                fontWeight: 600,
+                fontSize: '0.82rem',
+                cursor: 'pointer',
+                display: 'flex',
+                alignItems: 'center',
+                gap: '6px',
+              }}
+            >
+              <span>📨 Requests</span>
+              {pendingRequests.length > 0 && (
+                <span
+                  style={{
+                    background: activeTab === 'requests' ? '#ffffff' : '#ef4444',
+                    color: activeTab === 'requests' ? '#2563eb' : '#ffffff',
+                    padding: '1px 6px',
+                    borderRadius: '999px',
+                    fontSize: '0.72rem',
+                    fontWeight: 800,
+                  }}
+                >
+                  {pendingRequests.length}
+                </span>
+              )}
+            </button>
           </div>
 
           <div style={{ fontSize: '0.82rem', color: '#475569' }}>
@@ -385,6 +435,16 @@ export default function TechWalletModal({ isOpen, onClose, onRefreshProjects }) 
                   historyList={historyList}
                   loadingHistory={loadingHistory}
                   loadHistory={loadHistory}
+                />
+              )}
+
+              {activeTab === 'requests' && (
+                <TechWalletRequestsTab
+                  pendingRequests={pendingRequests}
+                  sourceAccounts={sourceAccounts}
+                  loadPendingRequests={loadPendingRequests}
+                  loadWalletData={loadWalletData}
+                  onRefreshProjects={onRefreshProjects}
                 />
               )}
             </>

@@ -107,11 +107,11 @@ export default function AppModuleRouter({
               }}
             />
           ) : section === 'ecommerce' ? (
-            <Ecommerce />
+            <Ecommerce currentUser={currentUser} isTechnician={isTechnician} />
           ) : section === 'soc' && !isTechnician ? (
             <Security />
           ) : section === 'warranty' ? (
-            <Warranty />
+            <Warranty currentUser={currentUser} isTechnician={isTechnician} />
           ) : section === 'staff' && !isTechnician ? (
             <Staff currentUser={currentUser} />
           ) : section === 'trash' && !isTechnician ? (

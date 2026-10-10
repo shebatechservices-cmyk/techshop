@@ -1,5 +1,3 @@
-import React from 'react';
-
 export default function WarrantyHeader({
   activeTab,
   setActiveTab,
@@ -7,6 +5,7 @@ export default function WarrantyHeader({
   returnsCount = 0,
   onOpenAddClaim,
   onOpenAddReturn,
+  isTechnician = false,
 }) {
   return (
     <div className="flex justify-between items-center flex-wrap gap-3 mb-3 pb-2.5 border-b border-slate-200">
@@ -14,12 +13,14 @@ export default function WarrantyHeader({
       <div className="flex items-center gap-2">
         <span className="text-2xl">🛡️</span>
         <h1 className="text-xl font-extrabold text-slate-900 tracking-tight">
-          Warranty & Returns
+          {isTechnician ? 'Warranty Verification & Serial Check (ওয়ারেন্টি চেক)' : 'Warranty & Returns'}
         </h1>
       </div>
 
-      {/* Center: Tabs */}
-      <div className="flex bg-slate-200/70 p-1 rounded-xl gap-1">
+      {!isTechnician && (
+        <>
+          {/* Center: Tabs */}
+          <div className="flex bg-slate-200/70 p-1 rounded-xl gap-1">
         <button
           type="button"
           onClick={() => setActiveTab('claims')}
@@ -63,25 +64,27 @@ export default function WarrantyHeader({
         </button>
       </div>
 
-      {/* Right: Actions */}
-      <div className="flex gap-2 items-center flex-wrap">
-        <button
-          type="button"
-          onClick={onOpenAddClaim}
-          className="bg-sky-600 hover:bg-sky-500 text-white px-3.5 py-1.5 rounded-lg text-xs font-bold flex items-center gap-1 shadow-sm transition cursor-pointer"
-        >
-          <span className="text-sm font-bold">+</span>
-          <span>Receive Item</span>
-        </button>
-        <button
-          type="button"
-          onClick={onOpenAddReturn}
-          className="bg-white hover:bg-slate-50 text-slate-800 border border-slate-300 px-3.5 py-1.5 rounded-lg text-xs font-bold flex items-center gap-1 shadow-2xs transition cursor-pointer"
-        >
-          <span>🔄</span>
-          <span>Return / Exchange</span>
-        </button>
-      </div>
+          {/* Right: Actions */}
+          <div className="flex gap-2 items-center flex-wrap">
+            <button
+              type="button"
+              onClick={onOpenAddClaim}
+              className="bg-sky-600 hover:bg-sky-500 text-white px-3.5 py-1.5 rounded-lg text-xs font-bold flex items-center gap-1 shadow-sm transition cursor-pointer"
+            >
+              <span className="text-sm font-bold">+</span>
+              <span>Receive Item</span>
+            </button>
+            <button
+              type="button"
+              onClick={onOpenAddReturn}
+              className="bg-white hover:bg-slate-50 text-slate-800 border border-slate-300 px-3.5 py-1.5 rounded-lg text-xs font-bold flex items-center gap-1 shadow-2xs transition cursor-pointer"
+            >
+              <span>🔄</span>
+              <span>Return / Exchange</span>
+            </button>
+          </div>
+        </>
+      )}
     </div>
   );
 }

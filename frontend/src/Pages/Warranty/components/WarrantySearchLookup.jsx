@@ -9,6 +9,7 @@ export default function WarrantySearchLookup({
   handleCheckWarranty,
   handleIntakeFromSearch,
   handleReturnFromSearch,
+  isTechnician = false,
 }) {
   const resultData = searchResult?.data;
 
@@ -107,22 +108,24 @@ export default function WarrantySearchLookup({
           </div>
 
           {/* Action Triggers */}
-          <div className="flex justify-end gap-2 pt-1">
-            <button
-              type="button"
-              onClick={handleIntakeFromSearch}
-              className="px-3.5 py-1.5 bg-sky-600 hover:bg-sky-500 text-white rounded-lg text-xs font-bold shadow-xs transition cursor-pointer"
-            >
-              + Create Service Claim
-            </button>
-            <button
-              type="button"
-              onClick={handleReturnFromSearch}
-              className="px-3.5 py-1.5 bg-purple-600 hover:bg-purple-500 text-white rounded-lg text-xs font-bold shadow-xs transition cursor-pointer"
-            >
-              🔄 Process Return / Refund
-            </button>
-          </div>
+          {!isTechnician && (
+            <div className="flex justify-end gap-2 pt-1">
+              <button
+                type="button"
+                onClick={handleIntakeFromSearch}
+                className="px-3.5 py-1.5 bg-sky-600 hover:bg-sky-500 text-white rounded-lg text-xs font-bold shadow-xs transition cursor-pointer"
+              >
+                + Create Service Claim
+              </button>
+              <button
+                type="button"
+                onClick={handleReturnFromSearch}
+                className="px-3.5 py-1.5 bg-purple-600 hover:bg-purple-500 text-white rounded-lg text-xs font-bold shadow-xs transition cursor-pointer"
+              >
+                🔄 Process Return / Refund
+              </button>
+            </div>
+          )}
         </div>
       )}
     </div>

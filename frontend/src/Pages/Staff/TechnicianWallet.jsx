@@ -5,6 +5,8 @@ import WalletStatsCards from './components/WalletStatsCards';
 import WalletTabSelector from './components/WalletTabSelector';
 import WalletProjectsTab from './components/WalletProjectsTab';
 import WalletLedgerTab from './components/WalletLedgerTab';
+import WalletRequestsTab from './components/WalletRequestsTab';
+import WalletRequestModal from './components/WalletRequestModal';
 
 export default function TechnicianWallet({ currentUser }) {
   const {
@@ -16,7 +18,13 @@ export default function TechnicianWallet({ currentUser }) {
     userId,
     summary,
     projects,
-    transactions
+    transactions,
+    requests,
+    loadingRequests,
+    fetchRequests,
+    submitWalletRequest,
+    isRequestModalOpen,
+    setIsRequestModalOpen,
   } = useTechnicianWallet(currentUser);
 
   return (
@@ -41,6 +49,7 @@ export default function TechnicianWallet({ currentUser }) {
         userId={userId}
         loading={loading}
         fetchWallet={fetchWallet}
+        onOpenRequestModal={() => setIsRequestModalOpen(true)}
       />
 
       {/* KPI Stats Cards */}
@@ -52,14 +61,32 @@ export default function TechnicianWallet({ currentUser }) {
         setActiveTab={setActiveTab}
         projectCount={projects.length}
         transactionCount={transactions.length}
+        requestCount={requests.length}
       />
 
       {/* Tab Contents */}
-      {activeTab === 'projects' ? (
+      {activeTab === 'projects' && (
         <WalletProjectsTab projects={projects} />
-      ) : (
+      )}
+      {activeTab === 'ledger' && (
         <WalletLedgerTab transactions={transactions} />
       )}
+      {activeTab === 'requests' && (
+        <WalletRequestsTab
+          requests={requests}
+          loading={loadingRequests}
+          onOpenRequestModal={() => setIsRequestModalOpen(true)}
+          fetchRequests={fetchRequests}
+        />
+      )}
+
+      {/* Modal: New Withdraw / Deposit Request */}
+      <WalletRequestModal
+        isOpen={isRequestModalOpen}
+        onClose={() => setIsRequestModalOpen(false)}
+        walletBalance={summary.walletBalance || 0}
+        onSubmit={submitWalletRequest}
+      />
     </div>
   );
 }

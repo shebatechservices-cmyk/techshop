@@ -4,11 +4,12 @@ export default function WalletTabSelector({
   activeTab = 'projects',
   setActiveTab = () => {},
   projectCount = 0,
-  transactionCount = 0
+  transactionCount = 0,
+  requestCount = 0,
 }) {
   return (
     <div className="flex items-center justify-between border-b border-slate-200 bg-white p-2 rounded-2xl shadow-sm">
-      <div className="flex items-center gap-2">
+      <div className="flex items-center gap-2 flex-wrap">
         <button
           type="button"
           onClick={() => setActiveTab('projects')}
@@ -32,6 +33,18 @@ export default function WalletTabSelector({
         >
           <span>📜</span>
           <span>Wallet History & Payouts ({transactionCount})</span>
+        </button>
+        <button
+          type="button"
+          onClick={() => setActiveTab('requests')}
+          className={`px-4 py-2 rounded-xl text-xs font-extrabold transition-all flex items-center gap-2 cursor-pointer ${
+            activeTab === 'requests'
+              ? 'bg-slate-900 text-white shadow-sm'
+              : 'text-slate-600 hover:bg-slate-100'
+          }`}
+        >
+          <span>📨</span>
+          <span>উইথড্র / ডিপোজিট রিকোয়েস্ট ({requestCount})</span>
         </button>
       </div>
     </div>
