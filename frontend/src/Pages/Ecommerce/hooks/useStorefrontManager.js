@@ -1,6 +1,7 @@
 import { useState, useEffect, useMemo } from 'react';
 import API from '../../../services/api';
 import { isValidBDPhone } from '../../../utils/phoneUtils';
+import { fullCatalogName } from '../../../utils/productUtils';
 
 export const money = (val) => Number.parseFloat(val || 0) || 0;
 export const taka = (val) =>
@@ -80,7 +81,7 @@ export default function useStorefrontManager({ products = [], onOrderPlaced } = 
         ...prev,
         {
           product_id: prod.id,
-          name: prod.name,
+          name: fullCatalogName(prod) || prod.name,
           sku: prod.sku,
           image_url: prod.image_url,
           brand_name: prod.brand_name || prod.brand,
@@ -278,10 +279,12 @@ export default function useStorefrontManager({ products = [], onOrderPlaced } = 
       }
       if (storeSearch.trim()) {
         const q = storeSearch.toLowerCase();
-        const matchName = String(p.name || '').toLowerCase().includes(q);
+        const catalogName = fullCatalogName(p).toLowerCase();
+        const matchName = String(p.name || '').toLowerCase().includes(q) || catalogName.includes(q);
         const matchSku = String(p.sku || '').toLowerCase().includes(q);
         const matchBrand = String(p.brand_name || p.brand || '').toLowerCase().includes(q);
-        if (!matchName && !matchSku && !matchBrand) return false;
+        const matchModel = String(p.model_name || p.model || '').toLowerCase().includes(q);
+        if (!matchName && !matchSku && !matchBrand && !matchModel) return false;
       }
       return true;
     });

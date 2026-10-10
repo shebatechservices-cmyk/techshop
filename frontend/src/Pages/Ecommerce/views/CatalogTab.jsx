@@ -1,4 +1,5 @@
 import React from 'react';
+import { fullCatalogName } from '../../../utils/productUtils';
 
 export default function CatalogTab({
   filteredCatalog,
@@ -77,8 +78,8 @@ export default function CatalogTab({
                 </div>
 
                 {/* Product Name */}
-                <div className="font-bold text-sm text-slate-900 leading-snug mb-1.5">
-                  {p.name}
+                <div className="font-bold text-sm text-slate-900 leading-snug mb-1.5 break-words">
+                  {fullCatalogName(p) || p.name}
                 </div>
 
                 {p.brand_name && (

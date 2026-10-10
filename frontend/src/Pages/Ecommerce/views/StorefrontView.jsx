@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { fullCatalogName } from '../../../utils/productUtils';
 
 // Tech gadget SVG icon placeholder for products without images
 function GadgetIconPlaceholder({ name = '', category = '' }) {
@@ -288,7 +289,9 @@ export default function StorefrontView({
             const isOutOfStock = stock <= 0;
             const hasImage = p.image_url && !imageErrors[p.id];
             const brand = p.brand_name || p.brand;
+            const model = p.model_name || p.model;
             const category = p.category_name || p.category;
+            const displayName = fullCatalogName(p) || p.name || 'Product';
 
             return (
               <div
@@ -301,13 +304,13 @@ export default function StorefrontView({
                     {hasImage ? (
                       <img
                         src={p.image_url}
-                        alt={p.name}
+                        alt={displayName}
                         onError={() => handleImageError(p.id)}
                         className="w-full h-full object-contain group-hover:scale-105 transition-transform duration-300"
                         loading="lazy"
                       />
                     ) : (
-                      <GadgetIconPlaceholder name={p.name} category={category} />
+                      <GadgetIconPlaceholder name={displayName} category={category} />
                     )}
 
                     {/* Stock Pill Badge */}
@@ -352,13 +355,23 @@ export default function StorefrontView({
                     </span>
                   </div>
 
-                  {/* Product Title */}
+                  {/* Product Title: Complete Full Catalog Name */}
                   <h3
-                    className="text-xs sm:text-sm font-extrabold text-slate-900 dark:text-white line-clamp-2 leading-snug mb-2 group-hover:text-brand transition-colors"
-                    title={p.name}
+                    className="text-xs sm:text-sm font-extrabold text-slate-900 dark:text-white leading-snug mb-1 group-hover:text-brand transition-colors break-words min-h-[2.5rem]"
+                    title={displayName}
                   >
-                    {p.name}
+                    {displayName}
                   </h3>
+
+                  {/* Model badge if not already in title */}
+                  {model && !displayName.toLowerCase().includes(model.toLowerCase()) && (
+                    <div className="text-[10px] font-semibold text-slate-500 dark:text-slate-400 mb-1.5 flex items-center gap-1">
+                      <span>Model:</span>
+                      <span className="font-mono text-slate-700 dark:text-slate-300 bg-slate-100 dark:bg-slate-800 px-1.5 py-0.2 rounded font-bold">
+                        {model}
+                      </span>
+                    </div>
+                  )}
                 </div>
 
                 {/* Pricing & Checkout Controls */}
@@ -414,7 +427,7 @@ export default function StorefrontView({
                       <button
                         type="button"
                         disabled={isOutOfStock}
-                        onClick={() => addToCart(p, false)}
+                        onClick={() => addToCart({ ...p, name: displayName }, false)}
                         className={`py-2 px-2 rounded-xl text-xs font-bold border transition-all flex items-center justify-center gap-1 cursor-pointer ${
                           isOutOfStock
                             ? 'bg-slate-100 text-slate-400 border-slate-200 cursor-not-allowed'
@@ -429,7 +442,7 @@ export default function StorefrontView({
                       <button
                         type="button"
                         disabled={isOutOfStock}
-                        onClick={() => buyNow ? buyNow(p) : addToCart(p, true)}
+                        onClick={() => buyNow ? buyNow({ ...p, name: displayName }) : addToCart({ ...p, name: displayName }, true)}
                         className={`py-2 px-2 rounded-xl text-xs font-extrabold text-white transition-all flex items-center justify-center gap-1 shadow-md cursor-pointer ${
                           isOutOfStock
                             ? 'bg-slate-400 cursor-not-allowed'
