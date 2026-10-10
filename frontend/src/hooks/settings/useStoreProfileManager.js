@@ -139,6 +139,7 @@ export function useStoreProfileManager({
       if (res.ok && data?.success) {
         showToast('All settings saved successfully!');
         if (data.data) setSettings(prev => ({ ...prev, ...data.data }));
+        window.dispatchEvent(new CustomEvent('shop-info-updated'));
       } else {
         showToast(data?.message || 'Failed to save settings', res.ok ? 'success' : 'error');
       }
@@ -207,6 +208,7 @@ export function useStoreProfileManager({
       if (url) {
         setSettings(prev => ({ ...prev, [field]: url }));
         showToast('Image uploaded successfully!');
+        window.dispatchEvent(new CustomEvent('shop-info-updated'));
       }
     } catch (err) {
       console.error(err);

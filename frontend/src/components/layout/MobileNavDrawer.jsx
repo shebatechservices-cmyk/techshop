@@ -56,6 +56,7 @@ export default function MobileNavDrawer({
   activeSlug,
   onSelect,
   shopName = 'Sheba Technology',
+  shopLogo,
   userName = 'Super Admin',
   currentUser,
   onLogout,
@@ -93,8 +94,14 @@ export default function MobileNavDrawer({
         {/* Drawer Header */}
         <div className="p-4 bg-slate-950 border-b border-slate-800 flex items-center justify-between">
           <div className="flex items-center gap-3">
-            <div className="w-9 h-9 rounded-lg bg-sky-500/20 border border-sky-400/30 flex items-center justify-center text-sky-400 font-extrabold text-base">
-              ⚡
+            <div className={`w-9 h-9 rounded-lg border flex items-center justify-center overflow-hidden flex-shrink-0 ${
+              shopLogo ? 'bg-white border-slate-700/80 p-0.5' : 'bg-sky-500/20 border-sky-400/30 text-sky-400 font-extrabold text-base'
+            }`}>
+              {shopLogo ? (
+                <img src={shopLogo} alt={shopName} className="w-full h-full object-contain" />
+              ) : (
+                <span>⚡</span>
+              )}
             </div>
             <div>
               <h4 className="text-sm font-bold text-white truncate max-w-[170px]">{shopName}</h4>

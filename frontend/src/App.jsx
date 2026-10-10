@@ -120,6 +120,7 @@ export default function App() {
         activeSlug={section}
         currentUser={currentUser}
         shopName={shopInfo.shop_name || 'Sheba Technology'}
+        shopLogo={shopInfo.logo_url}
         isPinned={isSidebarPinned}
         onTogglePin={() => {
           const next = !isSidebarPinned;
@@ -240,6 +241,7 @@ export default function App() {
           }
         }}
         shopName={shopInfo.shop_name || 'Sheba Technology'}
+        shopLogo={shopInfo.logo_url}
         userName={currentUser?.name || 'Super Admin'}
         currentUser={currentUser}
         onLogout={handleLogout}

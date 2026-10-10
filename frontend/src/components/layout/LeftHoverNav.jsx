@@ -59,6 +59,7 @@ export default function LeftHoverNav({
   activeSlug,
   onSelect,
   shopName = 'Sheba Technology',
+  shopLogo,
   currentUser,
   isPinned: propIsPinned,
   onTogglePin,
@@ -128,6 +129,12 @@ export default function LeftHoverNav({
   const [isHovered, setIsHovered] = useState(false);
   const effectiveCollapsed = isPinned ? false : !isHovered;
 
+  // Shop brand logo state
+  const [logoLoadError, setLogoLoadError] = useState(false);
+  useEffect(() => {
+    setLogoLoadError(false);
+  }, [shopLogo]);
+
   const handleToggleGroup = (groupName) => {
     if (autoAccordion) {
       setExpandedGroups((prev) => {
@@ -175,10 +182,23 @@ export default function LeftHoverNav({
       >
         <div className="flex items-center gap-2.5 overflow-hidden">
           <div
-            className="w-9 h-9 rounded-xl bg-gradient-to-tr from-sky-600 to-cyan-500 border border-sky-400/40 flex items-center justify-center text-white font-extrabold text-base flex-shrink-0 shadow-sm"
+            className={`w-9 h-9 rounded-xl border flex items-center justify-center overflow-hidden flex-shrink-0 shadow-sm transition-all ${
+              shopLogo && !logoLoadError
+                ? 'bg-white border-slate-700/80 p-0.5'
+                : 'bg-gradient-to-tr from-sky-600 to-cyan-500 border-sky-400/40 text-white font-extrabold text-base'
+            }`}
             title={shopName}
           >
-            ⚡
+            {shopLogo && !logoLoadError ? (
+              <img
+                src={shopLogo}
+                alt={shopName}
+                className="w-full h-full object-contain"
+                onError={() => setLogoLoadError(true)}
+              />
+            ) : (
+              <span>⚡</span>
+            )}
           </div>
           {!effectiveCollapsed && (
             <div className="flex flex-col overflow-hidden">

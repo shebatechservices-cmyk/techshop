@@ -26,8 +26,7 @@ export function useAppConfigState(currentUser) {
   }, [currentUser]);
 
   // 2. Fetch Shop Info Settings
-  useEffect(() => {
-    if (!currentUser) return;
+  const fetchShopSettings = () => {
     fetch(`${API_BASE}/settings`)
       .then((r) => (r.ok ? r.json() : { data: {} }))
       .then((json) => {
@@ -36,6 +35,12 @@ export function useAppConfigState(currentUser) {
         }
       })
       .catch(() => {});
+  };
+
+  useEffect(() => {
+    fetchShopSettings();
+    window.addEventListener('shop-info-updated', fetchShopSettings);
+    return () => window.removeEventListener('shop-info-updated', fetchShopSettings);
   }, [currentUser]);
 
   return {
