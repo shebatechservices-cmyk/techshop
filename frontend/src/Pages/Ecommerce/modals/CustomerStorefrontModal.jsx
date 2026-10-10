@@ -16,6 +16,7 @@ export default function CustomerStorefrontModal({ isOpen, onClose, products = []
     isCartOpen,
     setIsCartOpen,
     addToCart,
+    buyNow,
     updateCartQty,
     cartSubtotal,
     cartGrandTotal,
@@ -63,6 +64,11 @@ export default function CustomerStorefrontModal({ isOpen, onClose, products = []
     // Catalog & Search
     storeSearch,
     setStoreSearch,
+    selectedCategory,
+    setSelectedCategory,
+    categories,
+    sortBy,
+    setSortBy,
     filteredProducts,
 
     // Utilities & Constants
@@ -95,8 +101,8 @@ export default function CustomerStorefrontModal({ isOpen, onClose, products = []
           background: '#f8fafc',
           borderRadius: '16px',
           width: '100%',
-          maxWidth: '1100px',
-          height: '92vh',
+          maxWidth: '1200px',
+          height: '94vh',
           display: 'flex',
           flexDirection: 'column',
           boxShadow: '0 25px 60px -15px rgba(0, 0, 0, 0.35)',
@@ -250,8 +256,14 @@ export default function CustomerStorefrontModal({ isOpen, onClose, products = []
                 filteredProducts={filteredProducts}
                 storeSearch={storeSearch}
                 setStoreSearch={setStoreSearch}
+                selectedCategory={selectedCategory}
+                setSelectedCategory={setSelectedCategory}
+                categories={categories}
+                sortBy={sortBy}
+                setSortBy={setSortBy}
                 cart={cart}
                 addToCart={addToCart}
+                buyNow={buyNow}
                 updateCartQty={updateCartQty}
                 setActiveView={setActiveView}
                 taka={taka}

@@ -56,6 +56,7 @@ export default function useStorefrontManager({ products = [], onOrderPlaced } = 
   // Store Catalog filters
   const [storeSearch, setStoreSearch] = useState('');
   const [selectedCategory, setSelectedCategory] = useState('all');
+  const [sortBy, setSortBy] = useState('featured'); // 'featured' | 'price-asc' | 'price-desc' | 'stock'
 
   // Pre-fill checkout when customer exists
   useEffect(() => {
@@ -67,7 +68,7 @@ export default function useStorefrontManager({ products = [], onOrderPlaced } = 
   }, [customer]);
 
   // Cart operations
-  const addToCart = (prod) => {
+  const addToCart = (prod, openDrawer = true) => {
     setCart((prev) => {
       const existing = prev.find((item) => item.product_id === prod.id);
       if (existing) {
@@ -81,12 +82,22 @@ export default function useStorefrontManager({ products = [], onOrderPlaced } = 
           product_id: prod.id,
           name: prod.name,
           sku: prod.sku,
+          image_url: prod.image_url,
+          brand_name: prod.brand_name || prod.brand,
+          warranty_period: prod.warranty_period,
           price: Number(prod.selling_price || prod.purchase_price || 0),
           quantity: 1,
           stock: Number(prod.stock || 0),
         },
       ];
     });
+    if (openDrawer) {
+      setIsCartOpen(true);
+    }
+  };
+
+  const buyNow = (prod) => {
+    addToCart(prod, false);
     setIsCartOpen(true);
   };
 
@@ -246,18 +257,45 @@ export default function useStorefrontManager({ products = [], onOrderPlaced } = 
     }
   };
 
-  // Filtered store catalog
+  // Extract unique categories from products
+  const categories = useMemo(() => {
+    const set = new Set();
+    products.forEach((p) => {
+      const cat = p.category_name || p.category;
+      if (cat && typeof cat === 'string') {
+        set.add(cat.trim());
+      }
+    });
+    return Array.from(set);
+  }, [products]);
+
+  // Filtered and sorted store catalog
   const filteredProducts = useMemo(() => {
-    return products.filter((p) => {
+    const list = products.filter((p) => {
+      if (selectedCategory && selectedCategory !== 'all') {
+        const cat = String(p.category_name || p.category || '').toLowerCase();
+        if (!cat.includes(selectedCategory.toLowerCase())) return false;
+      }
       if (storeSearch.trim()) {
         const q = storeSearch.toLowerCase();
         const matchName = String(p.name || '').toLowerCase().includes(q);
         const matchSku = String(p.sku || '').toLowerCase().includes(q);
-        if (!matchName && !matchSku) return false;
+        const matchBrand = String(p.brand_name || p.brand || '').toLowerCase().includes(q);
+        if (!matchName && !matchSku && !matchBrand) return false;
       }
       return true;
     });
-  }, [products, storeSearch]);
+
+    if (sortBy === 'price-asc') {
+      list.sort((a, b) => Number(a.selling_price || a.purchase_price || 0) - Number(b.selling_price || b.purchase_price || 0));
+    } else if (sortBy === 'price-desc') {
+      list.sort((a, b) => Number(b.selling_price || b.purchase_price || 0) - Number(a.selling_price || a.purchase_price || 0));
+    } else if (sortBy === 'stock') {
+      list.sort((a, b) => Number(b.stock || 0) - Number(a.stock || 0));
+    }
+
+    return list;
+  }, [products, storeSearch, selectedCategory, sortBy]);
 
   return {
     // Navigation & Views
@@ -270,6 +308,7 @@ export default function useStorefrontManager({ products = [], onOrderPlaced } = 
     isCartOpen,
     setIsCartOpen,
     addToCart,
+    buyNow,
     updateCartQty,
     cartSubtotal,
     cartGrandTotal,
@@ -324,11 +363,14 @@ export default function useStorefrontManager({ products = [], onOrderPlaced } = 
     setTrackingError,
     handleTrackSearch,
 
-    // Catalog & Search
+    // Catalog, Search & Sorting
     storeSearch,
     setStoreSearch,
     selectedCategory,
     setSelectedCategory,
+    categories,
+    sortBy,
+    setSortBy,
     filteredProducts,
 
     // Utilities & Constants

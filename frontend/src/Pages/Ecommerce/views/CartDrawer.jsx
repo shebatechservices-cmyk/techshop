@@ -53,36 +53,53 @@ export default function CartDrawer({
           </div>
         ) : (
           <>
-            <div className="space-y-1 mb-4">
+            <div className="space-y-2 mb-4 divide-y divide-slate-100">
               {cart.map((it) => (
                 <div
                   key={it.product_id}
-                  className="flex justify-between items-center py-2 border-b border-slate-100"
+                  className="flex items-center gap-2.5 pt-2 first:pt-0"
                 >
-                  <div className="flex-1 pr-2">
-                    <div className="font-semibold text-xs text-slate-900">
+                  {/* Thumbnail */}
+                  <div className="w-10 h-10 rounded-lg bg-slate-100 border border-slate-200 overflow-hidden flex items-center justify-center shrink-0">
+                    {it.image_url ? (
+                      <img
+                        src={it.image_url}
+                        alt={it.name}
+                        className="w-full h-full object-contain"
+                      />
+                    ) : (
+                      <span className="text-sm">📦</span>
+                    )}
+                  </div>
+
+                  {/* Info */}
+                  <div className="flex-1 min-w-0 pr-1">
+                    <div className="font-bold text-xs text-slate-900 truncate" title={it.name}>
                       {it.name}
                     </div>
-                    <div className="text-xs text-slate-500">
-                      {taka(it.price)} × {it.quantity}
+                    <div className="text-[11px] text-emerald-600 font-bold">
+                      {taka(it.price)} <span className="text-slate-400 font-normal">× {it.quantity}</span>
                     </div>
                   </div>
 
-                  <div className="flex items-center gap-1.5">
+                  {/* Stepper */}
+                  <div className="flex items-center gap-1 shrink-0">
                     <button
                       type="button"
                       onClick={() => updateCartQty(it.product_id, -1)}
-                      className="w-6 h-6 rounded border border-slate-300 bg-slate-50 hover:bg-slate-100 cursor-pointer font-extrabold text-xs flex items-center justify-center transition-colors"
+                      className="w-6 h-6 rounded-md border border-slate-300 bg-white hover:bg-slate-100 cursor-pointer font-bold text-xs flex items-center justify-center transition-colors text-slate-700"
+                      title="Decrease"
                     >
-                      -
+                      −
                     </button>
-                    <span className="font-bold text-xs min-w-[16px] text-center">
+                    <span className="font-extrabold text-xs min-w-[18px] text-center text-slate-900">
                       {it.quantity}
                     </span>
                     <button
                       type="button"
                       onClick={() => updateCartQty(it.product_id, 1)}
-                      className="w-6 h-6 rounded border border-slate-300 bg-slate-50 hover:bg-slate-100 cursor-pointer font-extrabold text-xs flex items-center justify-center transition-colors"
+                      className="w-6 h-6 rounded-md border border-slate-300 bg-white hover:bg-slate-100 cursor-pointer font-bold text-xs flex items-center justify-center transition-colors text-slate-700"
+                      title="Increase"
                     >
                       +
                     </button>
