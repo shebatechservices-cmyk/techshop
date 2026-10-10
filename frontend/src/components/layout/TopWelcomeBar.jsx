@@ -48,14 +48,14 @@ export default function TopWelcomeBar({
   }, []);
 
   return (
-    <header className="sticky top-0 z-30 w-full h-16 bg-white border-b border-gray-200 px-4 sm:px-6 flex items-center justify-between shadow-sm select-none mb-4">
+    <header className="sticky top-0 z-30 w-full h-14 sm:h-16 bg-white border-b border-gray-200 px-2.5 sm:px-6 flex items-center justify-between shadow-xs select-none mb-2 sm:mb-4">
       {/* Left Section: Sidebar Toggle & Quick Global Search */}
-      <div className="flex items-center gap-4 flex-1 max-w-xl">
+      <div className="flex items-center gap-2 sm:gap-4 flex-1 max-w-xl">
         {/* Mobile Hamburger Drawer Trigger */}
         <button
           type="button"
           onClick={onOpenMenu}
-          className="md:hidden p-2 rounded-lg text-gray-600 hover:text-gray-900 hover:bg-gray-100 transition-colors focus:outline-none"
+          className="md:hidden p-1.5 rounded-lg text-gray-600 hover:text-gray-900 hover:bg-gray-100 transition-colors focus:outline-none flex-shrink-0"
           aria-label="Open Navigation Menu"
         >
           <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="2">
@@ -82,13 +82,13 @@ export default function TopWelcomeBar({
       </div>
 
       {/* Right Section: Quick POS Button, Live Clock, Utilities & User Profile */}
-      <div className="flex items-center gap-4 sm:gap-5">
+      <div className="flex items-center gap-2 sm:gap-4">
         {/* Quick New Sale (POS) Primary Button */}
         {!isTechnician && onQuickSale && (
           <button
             type="button"
             onClick={onQuickSale}
-            className="flex items-center gap-2 px-3.5 py-2 bg-green-600 hover:bg-green-700 active:bg-green-800 text-white rounded-lg text-xs font-bold shadow-sm hover:shadow transition-all"
+            className="flex items-center gap-1.5 px-2.5 sm:px-3.5 py-1.5 sm:py-2 bg-green-600 hover:bg-green-700 active:bg-green-800 text-white rounded-lg text-xs font-bold shadow-sm hover:shadow transition-all"
             title="Open POS Terminal / New Sale"
           >
             <svg className="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="2.5">
@@ -102,7 +102,7 @@ export default function TopWelcomeBar({
         <LiveClockPill />
 
         {/* Quick Calculator Popover */}
-        <div className="relative" ref={calcRef}>
+        <div className="relative hidden sm:block" ref={calcRef}>
           <button
             type="button"
             onClick={() => setShowCalc(!showCalc)}
@@ -133,7 +133,7 @@ export default function TopWelcomeBar({
         <a
           href="/uploads/apk/sheba-pos.apk"
           download="sheba-pos.apk"
-          className="flex items-center gap-1.5 px-2.5 py-1.5 bg-emerald-50 border border-emerald-200 text-emerald-700 hover:bg-emerald-100 rounded-lg text-xs font-bold transition-colors shadow-xs"
+          className="hidden md:flex items-center gap-1.5 px-2.5 py-1.5 bg-emerald-50 border border-emerald-200 text-emerald-700 hover:bg-emerald-100 rounded-lg text-xs font-bold transition-colors shadow-xs"
           title="Download Android APK (Direct Install)"
         >
           <span className="text-sm leading-none">🤖</span>
@@ -145,7 +145,7 @@ export default function TopWelcomeBar({
           <button
             type="button"
             onClick={installApp}
-            className="flex items-center gap-1.5 px-2.5 py-1.5 bg-sky-50 border border-sky-200 text-sky-700 hover:bg-sky-100 rounded-lg text-xs font-bold transition-colors shadow-xs"
+            className="hidden md:flex items-center gap-1.5 px-2.5 py-1.5 bg-sky-50 border border-sky-200 text-sky-700 hover:bg-sky-100 rounded-lg text-xs font-bold transition-colors shadow-xs"
             title="Install Sheba App on Device"
           >
             <svg className="w-3.5 h-3.5 text-sky-600" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="2.5">
@@ -163,7 +163,7 @@ export default function TopWelcomeBar({
               if (onOpenDevConsole) onOpenDevConsole();
               else setShowDevConsole(true);
             }}
-            className="flex items-center gap-1.5 px-2.5 py-1.5 bg-rose-50 border border-rose-200 text-rose-700 hover:bg-rose-100 rounded-lg text-xs font-bold transition-colors"
+            className="hidden sm:flex items-center gap-1.5 px-2.5 py-1.5 bg-rose-50 border border-rose-200 text-rose-700 hover:bg-rose-100 rounded-lg text-xs font-bold transition-colors"
             title="Developer Console (Ctrl + Shift + D)"
           >
             <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="2">

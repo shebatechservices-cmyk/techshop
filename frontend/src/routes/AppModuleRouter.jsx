@@ -58,8 +58,8 @@ export default function AppModuleRouter({
   handleLogout,
 }) {
   return (
-    <main className="flex-1 mt-4">
-      <div className="erp-global-frame bg-gray-50/50 p-4 md:p-6 border border-gray-200 rounded-2xl shadow-xs min-h-[calc(100vh-140px)]">
+    <main className="flex-1 mt-2 md:mt-4 pb-24 md:pb-6">
+      <div className="erp-global-frame bg-gray-50/50 p-2 sm:p-4 md:p-6 border border-gray-200 rounded-xl md:rounded-2xl shadow-xs min-h-[calc(100vh-140px)]">
         <Suspense fallback={<PageFallback />}>
           {section === 'wallet' ? (
             <TechnicianWallet currentUser={currentUser} />

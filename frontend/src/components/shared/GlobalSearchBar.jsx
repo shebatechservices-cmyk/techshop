@@ -246,7 +246,7 @@ export default function GlobalSearchBar({ onNavigate, compact = false, className
             }
           }}
           onChange={(e) => handleQueryChange(e.target.value)}
-          placeholder={compact ? "Scan barcode/serial or search..." : "Global Search: Scan Barcode/Serial (S/N), Invoices, Products, Customers..."}
+          placeholder={compact ? "Scan barcode or search..." : "Global Search: Scan Barcode/Serial (S/N), Invoices, Products, Customers..."}
           className={`flex-1 min-w-0 border-none outline-none bg-transparent font-medium text-gray-800 placeholder-gray-400 focus:outline-none focus:ring-0 ${compact ? 'text-xs' : 'text-sm'}`}
         />
 
@@ -273,7 +273,7 @@ export default function GlobalSearchBar({ onNavigate, compact = false, className
 
         {/* Shortcut Badge */}
         <span
-          className={`bg-gray-200/80 text-gray-500 font-semibold rounded tracking-wide select-none whitespace-nowrap flex-shrink-0 ${
+          className={`hidden sm:inline-block bg-gray-200/80 text-gray-500 font-semibold rounded tracking-wide select-none whitespace-nowrap flex-shrink-0 ${
             compact ? 'text-[10px] px-1.5 py-0.5' : 'text-xs px-2 py-0.5'
           }`}
           title="Press Ctrl+K to search anytime"

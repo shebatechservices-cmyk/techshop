@@ -80,7 +80,7 @@ export default function Inventory({ onOpenNewSale, readOnly = false }) {
   } = useInventoryManager({ onOpenNewSale });
 
   return (
-    <div className="p-6 bg-slate-50 min-h-screen font-sans">
+    <div className="p-2 sm:p-4 md:p-6 bg-slate-50 min-h-screen font-sans">
       {/* Toast notification */}
       {toast.show && (
         <div
