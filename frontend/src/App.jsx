@@ -46,6 +46,9 @@ export default function App() {
   } = useAppGlobalState();
 
   const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
+  const [isAutoHide, setIsAutoHide] = useState(() => {
+    return localStorage.getItem('sheba_sidebar_autohide') === 'true';
+  });
 
   const {
     isValid: isLicenseValid,
@@ -120,6 +123,12 @@ export default function App() {
         shopName={shopInfo.shop_name || 'Sheba Technology'}
         isCollapsed={isSidebarCollapsed}
         onToggleCollapse={() => setIsSidebarCollapsed(!isSidebarCollapsed)}
+        isAutoHide={isAutoHide}
+        onToggleAutoHide={() => {
+          const next = !isAutoHide;
+          setIsAutoHide(next);
+          localStorage.setItem('sheba_sidebar_autohide', String(next));
+        }}
         onLogout={handleLogout}
         onSelect={(slug) => {
           setSection(slug);
@@ -134,7 +143,7 @@ export default function App() {
       {/* Main Content Workspace Shell */}
       <div
         className={`flex-1 flex flex-col min-w-0 transition-all duration-200 ease-in-out ${
-          isSidebarCollapsed ? 'md:pl-16' : 'md:pl-60'
+          isAutoHide || isSidebarCollapsed ? 'md:pl-16' : 'md:pl-60'
         }`}
       >
         <div className="page-shell w-full max-w-[1600px] mx-auto p-4 sm:p-6 lg:p-7 pb-20 md:pb-8 flex-1 flex flex-col">
