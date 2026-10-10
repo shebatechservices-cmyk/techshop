@@ -1,4 +1,6 @@
-import React from 'react';
+import React, { useState } from 'react';
+import ThemeSwitcherModal from './ThemeSwitcherModal';
+import { useTheme } from '../../context/ThemeContext';
 
 // Grouped ERP Mobile Navigation Structure
 const ERP_DRAWER_GROUPS = [
@@ -61,6 +63,9 @@ export default function MobileNavDrawer({
   currentUser,
   onLogout,
 }) {
+  const { currentThemeMeta } = useTheme();
+  const [isThemeModalOpen, setIsThemeModalOpen] = useState(false);
+
   if (!isOpen) return null;
 
   const role = (currentUser?.role || 'STAFF').toUpperCase();
@@ -139,7 +144,7 @@ export default function MobileNavDrawer({
                     type="button"
                     className={`w-full flex items-center gap-3 p-2.5 rounded-xl text-left transition-all ${
                       isActive
-                        ? 'bg-sky-600 text-white font-bold shadow'
+                        ? 'bg-brand text-white font-bold shadow'
                         : 'text-slate-300 hover:bg-slate-800 hover:text-white'
                     }`}
                     onClick={() => {
@@ -170,7 +175,7 @@ export default function MobileNavDrawer({
                       type="button"
                       className={`w-full flex items-center gap-3 p-2.5 rounded-xl text-left transition-all ${
                         isActive
-                          ? 'bg-sky-600 text-white font-bold shadow'
+                          ? 'bg-brand text-white font-bold shadow'
                           : 'text-slate-300 hover:bg-slate-800 hover:text-white'
                       }`}
                       onClick={() => {
@@ -192,8 +197,23 @@ export default function MobileNavDrawer({
         </div>
 
         {/* Drawer Footer */}
-        {onLogout && (
-          <div className="p-3 border-t border-slate-800 bg-slate-950">
+        <div className="p-3 border-t border-slate-800 bg-slate-950 space-y-2">
+          <button
+            type="button"
+            className="w-full py-2 px-3 rounded-lg bg-slate-900 hover:bg-slate-800 text-slate-200 border border-slate-700 text-xs font-bold flex items-center justify-between transition-colors"
+            onClick={() => setIsThemeModalOpen(true)}
+          >
+            <div className="flex items-center gap-2">
+              <span>🎨</span>
+              <span>Theme: {currentThemeMeta?.name || 'Indigo'}</span>
+            </div>
+            <span
+              className="w-3.5 h-3.5 rounded-full border border-white/60 shadow-sm"
+              style={{ backgroundColor: currentThemeMeta?.primary || '#4f46e5' }}
+            />
+          </button>
+
+          {onLogout && (
             <button
               type="button"
               className="w-full py-2.5 px-3 rounded-lg bg-rose-500/10 hover:bg-rose-500/20 text-rose-400 border border-rose-500/30 text-xs font-bold flex items-center justify-center gap-2 transition-colors"
@@ -205,9 +225,14 @@ export default function MobileNavDrawer({
               <span>🚪</span>
               <span>Log Out</span>
             </button>
-          </div>
-        )}
+          )}
+        </div>
       </div>
+
+      <ThemeSwitcherModal
+        isOpen={isThemeModalOpen}
+        onClose={() => setIsThemeModalOpen(false)}
+      />
     </div>
   );
 }

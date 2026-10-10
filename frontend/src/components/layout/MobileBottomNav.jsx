@@ -9,12 +9,12 @@ export default function MobileBottomNav({
   const navItemClass = (isActive) =>
     `mobile-bottom-nav-item flex-1 flex flex-col items-center justify-center py-1.5 px-1 rounded-xl transition-all duration-150 active:scale-90 select-none ${
       isActive
-        ? 'active text-sky-600 font-bold bg-sky-50/80'
-        : 'text-slate-500 hover:text-slate-800 font-medium'
+        ? 'active text-brand font-bold bg-brand-light'
+        : 'text-slate-500 hover:text-slate-800 dark:text-slate-400 dark:hover:text-slate-200 font-medium'
     }`;
 
   return (
-    <nav className="mobile-bottom-nav fixed bottom-0 left-0 right-0 z-40 bg-white/95 backdrop-blur-md border-t border-slate-200 shadow-[0_-4px_16px_rgba(0,0,0,0.05)] flex items-center justify-around px-2 py-1 pb-[max(0.35rem,env(safe-area-inset-bottom))] md:hidden">
+    <nav className="mobile-bottom-nav fixed bottom-0 left-0 right-0 z-40 bg-white/95 dark:bg-slate-900/95 backdrop-blur-md border-t border-slate-200 dark:border-slate-800 shadow-[0_-4px_16px_rgba(0,0,0,0.05)] flex items-center justify-around px-2 py-1 pb-[max(0.35rem,env(safe-area-inset-bottom))] md:hidden">
       {isTechnician ? (
         <>
           <button

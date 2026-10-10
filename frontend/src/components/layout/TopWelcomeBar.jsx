@@ -6,6 +6,8 @@ import Calculator from '../shared/Calculator';
 import usePwaInstall from '../../hooks/usePwaInstall';
 import LiveClockPill from './topbar/LiveClockPill';
 import TopBarUserMenu from './topbar/TopBarUserMenu';
+import ThemeSwitcherModal from './ThemeSwitcherModal';
+import { useTheme } from '../../context/ThemeContext';
 
 export default function TopWelcomeBar({
   shopName = 'Sheba Technology',
@@ -25,6 +27,8 @@ export default function TopWelcomeBar({
   onSwitchToUserMode,
   onDeveloperLogin,
 }) {
+  const { currentThemeMeta } = useTheme();
+  const [isThemeModalOpen, setIsThemeModalOpen] = useState(false);
   const [internalDevMode] = useState(() => localStorage.getItem('sheba_dev_mode') !== 'false');
   const isDevMode = propDevMode !== undefined ? propDevMode : internalDevMode;
   const [showDevConsole, setShowDevConsole] = useState(false);
@@ -100,6 +104,20 @@ export default function TopWelcomeBar({
 
         {/* Live Clock Pill Component */}
         <LiveClockPill />
+
+        {/* Global Theme Switcher Button */}
+        <button
+          type="button"
+          onClick={() => setIsThemeModalOpen(true)}
+          className="flex items-center gap-1.5 px-2.5 py-1.5 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-700 rounded-lg text-xs font-bold transition-colors shadow-xs"
+          title={`Theme: ${currentThemeMeta?.name || 'Indigo'} (Click to change)`}
+        >
+          <span
+            className="w-2.5 h-2.5 rounded-full inline-block shadow-xs border border-white"
+            style={{ backgroundColor: currentThemeMeta?.primary || '#4f46e5' }}
+          />
+          <span className="hidden sm:inline">Theme</span>
+        </button>
 
         {/* Quick Calculator Popover */}
         <div className="relative hidden sm:block" ref={calcRef}>
@@ -188,6 +206,12 @@ export default function TopWelcomeBar({
           installApp={installApp}
         />
       </div>
+
+      {/* Global Theme Switcher Modal */}
+      <ThemeSwitcherModal
+        isOpen={isThemeModalOpen}
+        onClose={() => setIsThemeModalOpen(false)}
+      />
 
       {/* Developer Console Modal Fallback */}
       {!onOpenDevConsole && (
