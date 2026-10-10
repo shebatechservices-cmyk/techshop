@@ -1,0 +1,9 @@
+{
+  "appId": "com.shebatechnology.pos",
+  "appName": "Sheba Technology",
+  "webDir": "dist",
+  "server": {
+    "cleartext": true,
+    "androidScheme": "http"
+  }
+}

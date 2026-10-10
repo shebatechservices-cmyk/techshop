@@ -129,6 +129,17 @@ export default function TopWelcomeBar({
         {/* Realtime Notification Center */}
         <RealtimeNotificationCenter onNavigate={onNavigate} compact={true} />
 
+        {/* Android APK Download Button */}
+        <a
+          href="/uploads/apk/sheba-pos.apk"
+          download="sheba-pos.apk"
+          className="flex items-center gap-1.5 px-2.5 py-1.5 bg-emerald-50 border border-emerald-200 text-emerald-700 hover:bg-emerald-100 rounded-lg text-xs font-bold transition-colors shadow-xs"
+          title="Download Android APK (Direct Install)"
+        >
+          <span className="text-sm leading-none">🤖</span>
+          <span className="hidden xl:inline">Download APK</span>
+        </a>
+
         {/* PWA Mobile/Desktop Install Button */}
         {canInstall && (
           <button

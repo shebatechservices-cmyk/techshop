@@ -1,10 +1,29 @@
 const getApiBase = () => {
   let base = '';
 
-  // 1. Explicit VITE_API_URL from Vercel / environment (Highest Priority)
-  if (import.meta.env && import.meta.env.VITE_API_URL) {
+  // 0. Custom Server URL from localStorage (allows Android app to connect to LAN IP or live domain)
+  if (typeof window !== 'undefined' && window.localStorage) {
+    const savedServer = window.localStorage.getItem('sheba_pos_server_url');
+    if (savedServer) {
+      base = String(savedServer).trim();
+    }
+  }
+
+  // 1. Explicit VITE_API_URL from environment
+  if (!base && import.meta.env && import.meta.env.VITE_API_URL) {
     base = String(import.meta.env.VITE_API_URL).trim();
-  } else if (typeof window !== 'undefined' && window.location) {
+  }
+
+  // 2. Native Capacitor / Android Detection
+  if (!base && typeof window !== 'undefined') {
+    const isCapacitor = window.Capacitor !== undefined || window.location.protocol === 'capacitor:';
+    if (isCapacitor) {
+      base = 'http://192.168.1.23:3000/api';
+      return base;
+    }
+  }
+
+  if (!base && typeof window !== 'undefined' && window.location) {
     const { protocol, hostname, port } = window.location;
     // Local Vite dev server ports -> connect directly to local backend port 3000
     if (['5173', '5174', '5175', '5176'].includes(port) || (port && port !== '3000' && (hostname === 'localhost' || hostname === '127.0.0.1'))) {
@@ -12,7 +31,7 @@ const getApiBase = () => {
     }
     // Production web hosts (Vercel, Render, or custom domains) fallback to relative /api
     return '/api';
-  } else {
+  } else if (!base) {
     base = '/api';
   }
 

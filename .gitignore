@@ -9,3 +9,7 @@ scratch_*.js
 .vercel
 .env*
 .vscode/
+*.apk
+frontend/android/.gradle/
+frontend/android/build/
+frontend/android/app/build/
