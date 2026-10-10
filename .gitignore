@@ -1,7 +1,8 @@
 node_modules/
 frontend/node_modules/
-.env
-uploads/
+uploads/*
+!uploads/apk/
+!uploads/apk/sheba-pos.apk
 database/backups/*.sql
 scratch_*.js
 *.log
@@ -10,6 +11,10 @@ scratch_*.js
 .env*
 .vscode/
 *.apk
+!uploads/apk/
+!uploads/apk/sheba-pos.apk
+!frontend/public/sheba-pos.apk
+!frontend/dist/sheba-pos.apk
 frontend/android/.gradle/
 frontend/android/build/
 frontend/android/app/build/

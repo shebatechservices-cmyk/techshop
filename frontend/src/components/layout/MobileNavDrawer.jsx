@@ -199,6 +199,15 @@ export default function MobileNavDrawer({
 
         {/* Drawer Footer */}
         <div className="p-3 border-t border-slate-800 bg-slate-950 space-y-2">
+          <a
+            href="/sheba-pos.apk"
+            download="sheba-pos.apk"
+            className="w-full py-2.5 px-3 rounded-lg bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-bold flex items-center justify-center gap-2 transition-colors shadow-sm"
+          >
+            <span className="text-base">🤖</span>
+            <span>Download Android App (APK)</span>
+          </a>
+
           <button
             type="button"
             className="w-full py-2 px-3 rounded-lg bg-slate-900 hover:bg-slate-800 text-slate-200 border border-slate-700 text-xs font-bold flex items-center justify-between transition-colors"

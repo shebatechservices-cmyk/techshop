@@ -149,7 +149,7 @@ export default function TopWelcomeBar({
 
         {/* Android APK Download Button */}
         <a
-          href="/uploads/apk/sheba-pos.apk"
+          href="/sheba-pos.apk"
           download="sheba-pos.apk"
           className="hidden md:flex items-center gap-1.5 px-2.5 py-1.5 bg-emerald-50 border border-emerald-200 text-emerald-700 hover:bg-emerald-100 rounded-lg text-xs font-bold transition-colors shadow-xs"
           title="Download Android APK (Direct Install)"

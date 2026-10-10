@@ -234,6 +234,24 @@ if (fs.existsSync(distPath)) {
     app.use(express.static(distPath));
 }
 
+// Dedicated Android APK download route
+app.get(['/sheba-pos.apk', '/download-apk', '/api/download-apk', '/uploads/apk/sheba-pos.apk'], (req, res) => {
+    const candidates = [
+        path.join(__dirname, 'uploads', 'apk', 'sheba-pos.apk'),
+        path.join(__dirname, 'frontend', 'dist', 'sheba-pos.apk'),
+        path.join(__dirname, 'frontend', 'public', 'sheba-pos.apk'),
+        path.join(__dirname, 'sheba-pos.apk'),
+    ];
+    for (const p of candidates) {
+        if (fs.existsSync(p)) {
+            res.setHeader('Content-Disposition', 'attachment; filename="sheba-pos.apk"');
+            res.setHeader('Content-Type', 'application/vnd.android.package-archive');
+            return res.sendFile(p);
+        }
+    }
+    return res.status(404).json({ success: false, message: 'APK file not found on server' });
+});
+
 // 404 handler for unmatched /api or /uploads requests (returns JSON, never HTML)
 app.use(['/api', '/uploads'], (req, res) => {
     res.status(404).json({
