@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect } from 'react';
 
 // Grouped ERP Navigation Architecture
 const ERP_MENU_GROUPS = [
@@ -64,7 +64,7 @@ export default function LeftHoverNav({
   currentUser,
   isPinned: propIsPinned,
   onTogglePin,
-  isCollapsed,
+  isCollapsed: propIsCollapsed,
   onToggleCollapse,
   isAutoHide,
   onToggleAutoHide,
@@ -81,15 +81,15 @@ export default function LeftHoverNav({
 
   const currentRoleTag = isSuperAdmin ? 'ADMIN' : isTechnician ? 'TECHNICIAN' : 'STAFF';
 
-  // If explicitly pinned via prop, otherwise default is false (unpinned = icon rail that expands on hover)
+  // Determine if sidebar is pinned (expanded) or collapsed
   const isPinned =
     propIsPinned !== undefined
       ? Boolean(propIsPinned)
+      : propIsCollapsed !== undefined
+      ? !propIsCollapsed
       : isAutoHide !== undefined
       ? !isAutoHide
-      : isCollapsed !== undefined
-      ? !isCollapsed
-      : false;
+      : true;
 
   const handleTogglePin = onTogglePin || onToggleAutoHide || onToggleCollapse;
 
@@ -128,40 +128,7 @@ export default function LeftHoverNav({
     }
   }, [activeSlug, activeGroup]);
 
-  // Robust hover expansion with leave grace debounce
-  const [isHovered, setIsHovered] = useState(false);
-  const leaveTimerRef = useRef(null);
-
-  const effectiveCollapsed = isPinned ? false : !isHovered;
-
-  const handleMouseEnter = () => {
-    if (leaveTimerRef.current) {
-      clearTimeout(leaveTimerRef.current);
-      leaveTimerRef.current = null;
-    }
-    if (!isPinned) {
-      setIsHovered(true);
-    }
-  };
-
-  const handleMouseLeave = () => {
-    if (isPinned) return;
-    if (leaveTimerRef.current) {
-      clearTimeout(leaveTimerRef.current);
-    }
-    // 350ms grace period ensures swift mouse movements or hovering gaps never flickers
-    leaveTimerRef.current = setTimeout(() => {
-      setIsHovered(false);
-    }, 350);
-  };
-
-  useEffect(() => {
-    return () => {
-      if (leaveTimerRef.current) {
-        clearTimeout(leaveTimerRef.current);
-      }
-    };
-  }, []);
+  const isCollapsed = !isPinned;
 
   // Shop brand logo state
   const [logoLoadError, setLogoLoadError] = useState(false);
@@ -199,93 +166,73 @@ export default function LeftHoverNav({
   };
 
   return (
-    <>
-      {/* Layout Spacer in flex flow: keeps main page width completely stable without jumping */}
+    <aside
+      className={`sticky top-0 h-screen z-30 bg-slate-900 border-r border-slate-800 text-slate-300 transition-all duration-200 ease-in-out flex flex-col select-none hidden md:flex flex-shrink-0 ${
+        isCollapsed ? 'w-16' : 'w-64'
+      }`}
+      aria-label="Sidebar Navigation"
+    >
+      {/* Brand Header */}
       <div
-        className={`hidden md:block flex-shrink-0 transition-all duration-200 ease-out ${
-          isPinned ? 'w-64' : 'w-16'
+        className={`h-14 flex items-center border-b border-slate-800 bg-slate-950/40 px-2.5 transition-all ${
+          isCollapsed ? 'justify-center' : 'justify-between'
         }`}
-        aria-hidden="true"
-      />
-
-      {/* Main Sidebar: Fixed in desktop viewport so hovering overlays smoothly */}
-      <aside
-        onMouseEnter={handleMouseEnter}
-        onMouseLeave={handleMouseLeave}
-        className={`fixed top-0 left-0 h-screen z-40 bg-slate-900 border-r border-slate-800 text-slate-300 transition-all duration-200 ease-out flex flex-col select-none hidden md:flex ${
-          effectiveCollapsed ? 'w-16' : 'w-64'
-        } ${
-          !isPinned && isHovered
-            ? 'shadow-2xl ring-1 ring-slate-700/60'
-            : ''
-        }`}
-        aria-label="Sidebar Navigation"
       >
-        {/* Brand Header */}
-        <div
-          className={`h-14 flex items-center border-b border-slate-800 bg-slate-950/40 px-2.5 transition-all ${
-            effectiveCollapsed ? 'justify-center' : 'justify-between'
-          }`}
-        >
-          <div className="flex items-center gap-2.5 overflow-hidden">
-            <div
-              className={`w-9 h-9 rounded-xl border flex items-center justify-center overflow-hidden flex-shrink-0 shadow-sm ml-0.5 transition-all ${
-                shopLogo && !logoLoadError
-                  ? 'bg-white border-slate-700/80 p-0.5'
-                  : 'bg-brand text-white font-extrabold text-base border-brand/40 shadow-sm'
-              }`}
-              title={shopName}
-            >
-              {shopLogo && !logoLoadError ? (
-                <img
-                  src={shopLogo}
-                  alt={shopName}
-                  className="w-full h-full object-contain"
-                  onError={() => setLogoLoadError(true)}
-                />
-              ) : (
-                <span>⚡</span>
-              )}
-            </div>
-            {!effectiveCollapsed && (
-              <div className="flex flex-col overflow-hidden animate-fadeIn">
-                <span className="text-xs font-bold text-white tracking-wide truncate max-w-[125px]">
-                  {shopName}
-                </span>
-                <span className="text-[10px] text-sky-400 font-semibold tracking-wider uppercase">
-                  ERP & POS
-                </span>
-              </div>
+        <div className="flex items-center gap-2.5 overflow-hidden">
+          <button
+            type="button"
+            onClick={isCollapsed ? handleTogglePin : undefined}
+            className={`w-9 h-9 rounded-xl border flex items-center justify-center overflow-hidden flex-shrink-0 shadow-sm ml-0.5 transition-all ${
+              isCollapsed ? 'cursor-pointer hover:border-brand/60 hover:scale-105' : ''
+            } ${
+              shopLogo && !logoLoadError
+                ? 'bg-white border-slate-700/80 p-0.5'
+                : 'bg-brand text-white font-extrabold text-base border-brand/40 shadow-sm'
+            }`}
+            title={isCollapsed ? 'Expand Sidebar' : shopName}
+          >
+            {shopLogo && !logoLoadError ? (
+              <img
+                src={shopLogo}
+                alt={shopName}
+                className="w-full h-full object-contain"
+                onError={() => setLogoLoadError(true)}
+              />
+            ) : (
+              <span>⚡</span>
             )}
-          </div>
-
-          {!effectiveCollapsed && handleTogglePin && (
-            <div className="flex items-center">
-              <button
-                type="button"
-                onClick={handleTogglePin}
-                className={`p-1.5 rounded-lg text-xs transition-colors ${
-                  isPinned
-                    ? 'bg-brand/20 text-brand border border-brand/30'
-                    : 'text-slate-400 hover:text-white hover:bg-slate-800'
-                }`}
-                title={
-                  isPinned
-                    ? 'Sidebar is Pinned (Click to collapse to icon rail)'
-                    : 'Hover Mode (Click to pin open permanently)'
-                }
-              >
-                <span className="text-xs">{isPinned ? '📌' : '⚡'}</span>
-              </button>
+          </button>
+          {!isCollapsed && (
+            <div className="flex flex-col overflow-hidden animate-fadeIn">
+              <span className="text-xs font-bold text-white tracking-wide truncate max-w-[125px]">
+                {shopName}
+              </span>
+              <span className="text-[10px] text-sky-400 font-semibold tracking-wider uppercase">
+                ERP & POS
+              </span>
             </div>
           )}
         </div>
+
+        {!isCollapsed && handleTogglePin && (
+          <div className="flex items-center">
+            <button
+              type="button"
+              onClick={handleTogglePin}
+              className="p-1.5 rounded-lg text-xs transition-colors bg-brand/20 text-brand border border-brand/30 hover:bg-brand/30"
+              title="Collapse Sidebar"
+            >
+              <span className="text-xs">◀</span>
+            </button>
+          </div>
+        )}
+      </div>
 
         {/* Navigation List */}
         <div className="flex-1 overflow-y-auto py-3 px-2 space-y-2.5 custom-scrollbar">
           {isTechnician ? (
             <div className="space-y-1">
-              {!effectiveCollapsed && (
+              {!isCollapsed && (
                 <div className="px-2 pb-1 text-[10px] font-bold text-slate-400 uppercase tracking-wider animate-fadeIn">
                   Technician Portal
                 </div>
@@ -297,13 +244,13 @@ export default function LeftHoverNav({
                     key={item.slug}
                     type="button"
                     onClick={() => handleItemClick(item.slug)}
-                    title={effectiveCollapsed ? item.label : undefined}
+                    title={isCollapsed ? item.label : undefined}
                     className={`w-full flex items-center h-10 rounded-xl transition-colors duration-150 ${
                       isActive
                         ? 'bg-brand text-white font-bold shadow-sm shadow-brand/30'
                         : 'text-slate-300 hover:bg-slate-800/80 hover:text-white'
                     } ${
-                      effectiveCollapsed
+                      isCollapsed
                         ? 'justify-center px-0'
                         : 'px-2 gap-2.5'
                     }`}
@@ -311,7 +258,7 @@ export default function LeftHoverNav({
                     <span className="w-8 h-8 flex items-center justify-center text-lg flex-shrink-0">
                       {item.icon}
                     </span>
-                    {!effectiveCollapsed && (
+                    {!isCollapsed && (
                       <span className="truncate flex-1 text-left text-xs font-semibold animate-fadeIn">
                         {item.label}
                       </span>
@@ -328,7 +275,7 @@ export default function LeftHoverNav({
               return (
                 <div key={grp.group} className="space-y-1">
                   {/* Collapsible Group Header or Divider */}
-                  {!effectiveCollapsed ? (
+                  {!isCollapsed ? (
                     <div className="px-1 pt-1.5 pb-0.5">
                       <button
                         type="button"
@@ -366,7 +313,7 @@ export default function LeftHoverNav({
                   )}
 
                   {/* Group Items (Collapsed / Expanded) */}
-                  {(!effectiveCollapsed ? isGroupOpen : true) && (
+                  {(!isCollapsed ? isGroupOpen : true) && (
                     <div className="space-y-1">
                       {grp.items.map((item) => {
                         const isActive = activeSlug === item.slug;
@@ -375,13 +322,13 @@ export default function LeftHoverNav({
                             key={item.slug}
                             type="button"
                             onClick={() => handleItemClick(item.slug)}
-                            title={effectiveCollapsed ? item.label : undefined}
+                            title={isCollapsed ? item.label : undefined}
                             className={`w-full flex items-center h-10 rounded-xl transition-colors duration-150 ${
                               isActive
                                 ? 'bg-brand text-white font-bold shadow-sm shadow-brand/30'
                                 : 'text-slate-300 hover:bg-slate-800/80 hover:text-white'
                             } ${
-                              effectiveCollapsed
+                              isCollapsed
                                 ? 'justify-center px-0'
                                 : 'px-2 gap-2.5'
                             }`}
@@ -389,7 +336,7 @@ export default function LeftHoverNav({
                             <span className="w-8 h-8 flex items-center justify-center text-lg flex-shrink-0">
                               {item.icon}
                             </span>
-                            {!effectiveCollapsed && (
+                            {!isCollapsed && (
                               <span className="truncate flex-1 text-left text-xs font-semibold animate-fadeIn">
                                 {item.label}
                               </span>
@@ -408,11 +355,11 @@ export default function LeftHoverNav({
         {/* Footer Controls & User Summary */}
         <div
           className={`p-2 border-t border-slate-800 bg-slate-950/40 transition-all ${
-            effectiveCollapsed ? 'flex justify-center' : 'space-y-1.5'
+            isCollapsed ? 'flex justify-center' : 'space-y-1.5'
           }`}
         >
           {/* Quick Mode Indicator / Toggle when expanded */}
-          {!effectiveCollapsed && (
+          {!isCollapsed && (
             <div className="flex items-center justify-between px-2 py-1 text-[10px] text-slate-400 border-b border-slate-800/60 pb-1.5">
               <span className="truncate">Auto-Accordion Groups</span>
               <button
@@ -432,14 +379,14 @@ export default function LeftHoverNav({
 
           <div
             className={`flex items-center gap-2.5 p-1.5 rounded-lg hover:bg-slate-800/60 transition-colors ${
-              effectiveCollapsed ? 'justify-center' : ''
+              isCollapsed ? 'justify-center' : ''
             }`}
-            title={effectiveCollapsed ? `${currentUser?.name || 'Logged User'} (${currentRoleTag})` : undefined}
+            title={isCollapsed ? `${currentUser?.name || 'Logged User'} (${currentRoleTag})` : undefined}
           >
             <div className="w-8 h-8 rounded-full bg-slate-700 text-slate-200 flex items-center justify-center text-xs font-bold flex-shrink-0 shadow-inner">
               {(currentUser?.name || 'U').charAt(0).toUpperCase()}
             </div>
-            {!effectiveCollapsed && (
+            {!isCollapsed && (
               <div className="flex-1 overflow-hidden animate-fadeIn">
                 <div className="text-xs font-semibold text-white truncate">
                   {currentUser?.name || 'Logged User'}
@@ -453,6 +400,5 @@ export default function LeftHoverNav({
           </div>
         </div>
       </aside>
-    </>
   );
 }
