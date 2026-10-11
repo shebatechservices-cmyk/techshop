@@ -313,6 +313,47 @@ exports.restoreData = async (req, res) => {
             }
         }
 
+        // Live Inventory sync: if sale invoice is restored, restore items & serials and deduct stock
+        if (config.table === 'sales') {
+            const trashRes = await pool.query(
+                'SELECT record_data FROM trash_records WHERE table_name = $1 AND record_id = $2',
+                [config.table, id]
+            ).catch(() => ({ rows: [] }));
+            const recordData = trashRes.rows[0]?.record_data;
+            if (recordData && Array.isArray(recordData.items) && recordData.items.length > 0) {
+                const currentItemsCount = await pool.query('SELECT COUNT(*) FROM sales_items WHERE sale_id = $1', [id]);
+                if (Number(currentItemsCount.rows[0]?.count || 0) === 0) {
+                    for (const it of recordData.items) {
+                        const insRes = await pool.query(`
+                            INSERT INTO sales_items (
+                                sale_id, product_id, quantity, unit_price, cost_price, line_total,
+                                warranty_months, warranty_expire_date, unit_type, conversion_rate, unit_name, discount
+                            ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12)
+                            RETURNING id
+                        `, [
+                            id, it.product_id, it.quantity, it.unit_price, it.cost_price, it.line_total,
+                            it.warranty_months || 0, it.warranty_expire_date || null,
+                            it.unit_type || 'base_unit', it.conversion_rate || 1, it.unit_name || null, it.discount || 0
+                        ]);
+                        const newId = insRes.rows[0]?.id;
+                        if (newId && Array.isArray(it.serials) && it.serials.length > 0) {
+                            for (const s of it.serials) {
+                                await pool.query(
+                                    'INSERT INTO sales_item_serials (sales_item_id, serial_code) VALUES ($1, $2)',
+                                    [newId, s]
+                                );
+                            }
+                        }
+                        // Deduct stock for restored item
+                        await pool.query(
+                            'UPDATE products SET stock = GREATEST(0, COALESCE(stock, 0) - $1), updated_at = NOW() WHERE id = $2',
+                            [Number(it.quantity || 1), it.product_id]
+                        );
+                    }
+                }
+            }
+        }
+
         // Also clean up from trash_records archive if present
         await pool.query(`DELETE FROM trash_records WHERE table_name = $1 AND record_id = $2`, [config.table, id]).catch(() => {});
 

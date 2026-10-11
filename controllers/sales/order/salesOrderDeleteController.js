@@ -40,13 +40,28 @@ const deleteSale = async (req, res) => {
             return res.status(400).json({ success: false, message: blocked });
         }
 
+        const itemsRes = await client.query(`
+            SELECT si.*,
+                   COALESCE((
+                       SELECT array_agg(sis.serial_code)
+                       FROM sales_item_serials sis
+                       WHERE sis.sales_item_id = si.id
+                   ), ARRAY[]::varchar[]) AS serials
+            FROM sales_items si
+            WHERE si.sale_id = $1
+        `, [id]).catch(() => ({ rows: [] }));
+        const fullSaleRecord = {
+            ...sale,
+            items: itemsRes.rows || [],
+        };
+
         await reverseSaleFinancials(sale, id, client);
 
         await client.query('UPDATE sales SET deleted_at = NOW() WHERE id = $1', [id]);
         await client.query(`
             INSERT INTO trash_records (table_name, record_id, record_title, record_data, deleted_at)
             VALUES ('sales', $1, $2, $3, NOW())
-        `, [id, `Invoice #${sale.invoice_no || id}`, JSON.stringify(sale)]).catch(() => null);
+        `, [id, `Invoice #${sale.invoice_no || id}`, JSON.stringify(fullSaleRecord)]).catch(() => null);
 
         await client.query('COMMIT');
         return res.status(200).json({ success: true, message: `Sale Invoice #${sale.invoice_no || id} moved to Trash successfully!` });

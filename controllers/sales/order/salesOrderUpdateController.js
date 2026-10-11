@@ -121,7 +121,16 @@ const updateSale = async (req, res) => {
         }
         const itemsList = Array.isArray(items) && items.length > 0
             ? items
-            : (await client.query('SELECT * FROM sales_items WHERE sale_id = $1', [id])).rows.map((si) => ({ ...si, serials: [] }));
+            : (await client.query(`
+                SELECT si.*, 
+                       COALESCE((
+                           SELECT array_agg(sis.serial_code) 
+                           FROM sales_item_serials sis 
+                           WHERE sis.sales_item_id = si.id
+                       ), ARRAY[]::varchar[]) AS serials
+                FROM sales_items si 
+                WHERE si.sale_id = $1
+            `, [id])).rows;
 
         await ensureSalesColumns(client);
         await ensureWalletSchema(client);
@@ -152,6 +161,15 @@ const updateSale = async (req, res) => {
             return res.status(400).json({
                 success: false,
                 message: `"${missing.name || 'Product'}" is serial/barcode-tracked — attach at least one barcode/serial before saving.`,
+            });
+        }
+
+        if (normalizedItems.length === 0 && money(rawSubtotal) > 0) {
+            await client.query('ROLLBACK');
+            client.release();
+            return res.status(400).json({
+                success: false,
+                message: 'Cannot update sale: An invoice with a positive subtotal must contain at least one product item.',
             });
         }
 
