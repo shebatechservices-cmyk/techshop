@@ -42,13 +42,16 @@ export default function TechWalletModal({ isOpen, onClose, onRefreshProjects }) 
           if (data.source_accounts?.length > 0 && !sourceAccountId) {
             setSourceAccountId(data.source_accounts[0].id);
           }
+        } else {
+          setError(data.message || 'Failed to load wallet data.');
         }
       } else {
-        setError('Failed to load wallet data.');
+        const errJson = await res.json().catch(() => ({}));
+        setError(errJson.message || 'Failed to load wallet data.');
       }
     } catch (err) {
       console.error(err);
-      setError('Server error');
+      setError('Server error connecting to wallet');
     } finally {
       setLoading(false);
     }
