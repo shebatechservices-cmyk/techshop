@@ -128,7 +128,7 @@ export default function TopBarUserMenu({
               </>
             )}
 
-            {isDevMode && (
+            {!isTechnician && isDevMode && (
               <button
                 type="button"
                 onClick={() => {

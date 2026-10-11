@@ -41,9 +41,9 @@ export default function ProjectsTable({
             <tr className="bg-slate-50 border-b border-slate-200 text-slate-600 font-semibold uppercase tracking-wider text-[11px]">
               <th className="py-3 px-3.5">Project & Source</th>
               <th className="py-3 px-3.5">Customer & Site</th>
-              <th className="py-3 px-3.5">Assigned Technician</th>
+              {!isTechnician && <th className="py-3 px-3.5">Assigned Technician</th>}
               <th className="py-3 px-3.5">Payout Breakdown</th>
-              <th className="py-3 px-3.5">Customer Bill</th>
+              <th className="py-3 px-3.5">{isTechnician ? 'Bill to Collect' : 'Customer Bill'}</th>
               <th className="py-3 px-3.5">Status Pipeline</th>
               <th className="py-3 px-3.5 text-right">Actions</th>
             </tr>
@@ -141,23 +141,25 @@ export default function ProjectsTable({
                     )}
                   </td>
 
-                  {/* Technician */}
-                  <td className="py-3.5 px-3.5 align-top">
-                    <div className="flex items-center gap-1.5">
-                      <span>👷</span>
-                      <strong className="text-slate-800 font-bold">{p.technician_name}</strong>
-                    </div>
-                    {p.technician_contact && (
-                      <small className="text-slate-500 text-[11px] block mt-0.5">
-                        {p.technician_contact}
-                      </small>
-                    )}
-                    {p.admin_confirmed && (
-                      <div className="text-[11px] text-emerald-600 mt-1 font-bold">
-                        ✓ In-Charge Confirmed
+                  {/* Technician (Hidden for Technician viewing their own jobs) */}
+                  {!isTechnician && (
+                    <td className="py-3.5 px-3.5 align-top">
+                      <div className="flex items-center gap-1.5">
+                        <span>👷</span>
+                        <strong className="text-slate-800 font-bold">{p.technician_name}</strong>
                       </div>
-                    )}
-                  </td>
+                      {p.technician_contact && (
+                        <small className="text-slate-500 text-[11px] block mt-0.5">
+                          {p.technician_contact}
+                        </small>
+                      )}
+                      {p.admin_confirmed && (
+                        <div className="text-[11px] text-emerald-600 mt-1 font-bold">
+                          ✓ In-Charge Confirmed
+                        </div>
+                      )}
+                    </td>
+                  )}
 
                   {/* Remuneration Breakdown */}
                   <td className="py-3.5 px-3.5 align-top">
@@ -171,12 +173,14 @@ export default function ProjectsTable({
                     </div>
                   </td>
 
-                  {/* Customer Bill */}
+                  {/* Customer Bill / Cash to Collect */}
                   <td className="py-3.5 px-3.5 align-top">
                     <strong className="text-emerald-700 font-extrabold text-sm block">
                       ৳ {customerBill.toLocaleString('en-IN')}
                     </strong>
-                    <div className="text-[11px] text-slate-400">Service Charges</div>
+                    <div className="text-[11px] text-slate-400">
+                      {isTechnician ? 'Collect on Site' : 'Service Charges'}
+                    </div>
                   </td>
 
                   {/* Pipeline Status */}

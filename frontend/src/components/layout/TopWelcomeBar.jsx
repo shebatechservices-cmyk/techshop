@@ -175,8 +175,8 @@ export default function TopWelcomeBar({
           </button>
         )}
 
-        {/* Developer Console Shortcut (If Active) */}
-        {isDevMode && (
+        {/* Developer Console Shortcut (Admin/Dev only, never for Technicians) */}
+        {!isTechnician && isDevMode && (
           <button
             type="button"
             onClick={() => {

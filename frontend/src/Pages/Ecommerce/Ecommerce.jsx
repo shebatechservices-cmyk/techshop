@@ -209,6 +209,7 @@ export default function Ecommerce({ currentUser, isTechnician = false }) {
           setSelectedOrderDetails={setSelectedOrderDetails}
           setPrintOrder={setPrintOrder}
           setIsNewOrderModalOpen={setIsNewOrderModalOpen}
+          isTechnician={isTechnician}
           taka={taka}
         />
       )}

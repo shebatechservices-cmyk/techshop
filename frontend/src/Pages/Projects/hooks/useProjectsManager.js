@@ -1,7 +1,7 @@
 import { useState, useEffect, useMemo } from 'react';
 import API from '../../../services/api';
 
-export default function useProjectsManager() {
+export default function useProjectsManager({ isTechnician = false, currentUser = null } = {}) {
   const [projects, setProjects] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
@@ -188,33 +188,54 @@ export default function useProjectsManager() {
     }
   };
 
+  // Base projects scoped to the logged-in technician if isTechnician is true
+  const scopedProjects = useMemo(() => {
+    if (!isTechnician || !currentUser) return projects;
+    const currentUserId = Number(currentUser.id || 0);
+    const currentName = String(currentUser.name || '').toLowerCase().trim();
+    const currentPhone = String(currentUser.phone || '').trim();
+
+    return projects.filter((p) => {
+      if (p.technician_id && currentUserId && Number(p.technician_id) === currentUserId) {
+        return true;
+      }
+      if (currentName && p.technician_name && p.technician_name.toLowerCase().trim() === currentName) {
+        return true;
+      }
+      if (currentPhone && p.technician_contact && p.technician_contact.includes(currentPhone)) {
+        return true;
+      }
+      return false;
+    });
+  }, [projects, isTechnician, currentUser]);
+
   // Pipeline Counts
   const counts = useMemo(() => {
     return {
-      all: projects.length,
-      assigned: projects.filter(
+      all: scopedProjects.length,
+      assigned: scopedProjects.filter(
         (p) => p.technician_status === 'assigned' || p.status === 'assigned'
       ).length,
-      accepted: projects.filter(
+      accepted: scopedProjects.filter(
         (p) =>
           p.technician_status === 'accepted' ||
           p.status === 'awaiting_incharge_confirmation'
       ).length,
-      rejection_requested: projects.filter(
+      rejection_requested: scopedProjects.filter(
         (p) =>
           p.technician_status === 'rejection_requested' ||
           p.status === 'rejection_requested'
       ).length,
-      in_progress: projects.filter(
+      in_progress: scopedProjects.filter(
         (p) => p.technician_status === 'in_progress' || p.status === 'in_progress'
       ).length,
-      completed: projects.filter((p) => p.status === 'completed').length,
+      completed: scopedProjects.filter((p) => p.status === 'completed').length,
     };
-  }, [projects]);
+  }, [scopedProjects]);
 
   // Filtered list
   const filteredProjects = useMemo(() => {
-    return projects.filter((p) => {
+    return scopedProjects.filter((p) => {
       const matchSearch =
         (p.title || '').toLowerCase().includes(searchQuery.toLowerCase()) ||
         (p.project_code || '').toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -245,7 +266,7 @@ export default function useProjectsManager() {
 
       return true;
     });
-  }, [projects, searchQuery, stageFilter]);
+  }, [scopedProjects, searchQuery, stageFilter]);
 
   // Edit Project Modal State
   const [editingProject, setEditingProject] = useState(null);

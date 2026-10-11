@@ -50,6 +50,7 @@ export default function OrdersTab({
   setSelectedOrderDetails,
   setPrintOrder,
   setIsNewOrderModalOpen,
+  isTechnician = false,
   taka,
 }) {
   return (
@@ -285,19 +286,27 @@ export default function OrdersTab({
                         {taka(o.total_amount)}
                       </td>
 
-                      {/* STATUS DROPDOWN */}
+                      {/* STATUS DISPLAY / DROPDOWN */}
                       <td className="px-3.5 py-3 text-center">
-                        <select
-                          value={status}
-                          onChange={(e) => handleQuickStatusChange(o.id, e.target.value)}
-                          className={`px-2 py-1 rounded-md text-xs font-extrabold border cursor-pointer outline-none transition-colors ${statusStyle.select}`}
-                        >
-                          <option value="pending">Pending</option>
-                          <option value="processing">Processing</option>
-                          <option value="shipped">Shipped</option>
-                          <option value="delivered">Delivered</option>
-                          <option value="cancelled">Cancelled</option>
-                        </select>
+                        {isTechnician ? (
+                          <span
+                            className={`inline-block px-2.5 py-1 rounded-md text-xs font-extrabold uppercase border ${statusStyle.badge}`}
+                          >
+                            {status}
+                          </span>
+                        ) : (
+                          <select
+                            value={status}
+                            onChange={(e) => handleQuickStatusChange(o.id, e.target.value)}
+                            className={`px-2 py-1 rounded-md text-xs font-extrabold border cursor-pointer outline-none transition-colors ${statusStyle.select}`}
+                          >
+                            <option value="pending">Pending</option>
+                            <option value="processing">Processing</option>
+                            <option value="shipped">Shipped</option>
+                            <option value="delivered">Delivered</option>
+                            <option value="cancelled">Cancelled</option>
+                          </select>
+                        )}
                       </td>
 
                       {/* ACTIONS */}
