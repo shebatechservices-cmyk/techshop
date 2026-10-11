@@ -79,10 +79,12 @@ export default function TopWelcomeBar({
           </svg>
         </button>
 
-        {/* Global Search Component */}
-        <div className="flex-1 max-w-md">
-          <GlobalSearchBar onNavigate={onNavigate} compact={true} />
-        </div>
+        {/* Global Search Component (Hidden for Technicians) */}
+        {!isTechnician && (
+          <div className="flex-1 max-w-md">
+            <GlobalSearchBar onNavigate={onNavigate} compact={true} />
+          </div>
+        )}
       </div>
 
       {/* Right Section: Quick POS Button, Live Clock, Utilities & User Profile */}
