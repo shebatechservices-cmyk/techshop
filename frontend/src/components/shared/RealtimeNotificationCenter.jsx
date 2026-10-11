@@ -121,10 +121,13 @@ export default function RealtimeNotificationCenter({ onNavigate, compact = false
 
   const CATEGORIES = [
     'All',
+    'Offers & Campaigns',
     'Stock & Inventory',
     'Customer Due & Credit',
-    'Warranty & Claims',
     'POS Sales',
+    'Purchases',
+    'New Products',
+    'Warranty & Claims',
     'SOC Security',
     'SMS Gateway'
   ];

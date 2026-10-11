@@ -22,6 +22,7 @@ module.exports = {
     // General Shop & Print Settings
     getSettings: generalSettingsController.getSettings,
     updateSettings: generalSettingsController.updateSettings,
+    updateLiveOffers: generalSettingsController.updateLiveOffers,
     updatePrintTemplate: generalSettingsController.updatePrintTemplate,
 
     // SMS Gateway & Notifications

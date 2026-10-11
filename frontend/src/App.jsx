@@ -4,6 +4,7 @@ import useAppGlobalState from './hooks/useAppGlobalState';
 import useLicenseCheck from './hooks/useLicenseCheck';
 import ClassicSidebar from './components/layout/LeftHoverNav';
 import TopWelcomeBar from './components/layout/TopWelcomeBar';
+import TopLiveTickerBar from './components/layout/topbar/TopLiveTickerBar';
 import MobileQuickActionFab from './components/layout/MobileQuickActionFab';
 import MobileNavDrawer from './components/layout/MobileNavDrawer';
 import LicenseLockScreen from './components/layout/LicenseLockScreen';
@@ -141,6 +142,12 @@ export default function App() {
 
       {/* Main Content Workspace Shell */}
       <div className="flex-1 flex flex-col min-w-0 transition-all duration-200 ease-in-out">
+        {/* Top Live Announcement & Core Offers Ticker Bar */}
+        <TopLiveTickerBar
+          onNavigate={handleGlobalNavigate}
+          currentUser={currentUser}
+        />
+
         <div className="page-shell w-full max-w-[1600px] mx-auto p-4 sm:p-6 lg:p-7 pb-20 md:pb-8 flex-1 flex flex-col">
           {/* Classic Top Navigation Bar */}
           <TopWelcomeBar

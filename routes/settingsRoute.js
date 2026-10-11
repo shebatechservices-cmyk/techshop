@@ -6,6 +6,7 @@ const { requireRole } = require('../middlewares/authMiddleware');
 // Settings & Overview
 router.get('/', settingsController.getSettings);
 router.put('/update', settingsController.updateSettings);
+router.put('/live-offers', requireRole(1, 2), settingsController.updateLiveOffers);
 router.put('/print-template', settingsController.updatePrintTemplate);
 
 // System Health & Updates

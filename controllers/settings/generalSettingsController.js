@@ -86,6 +86,10 @@ async function ensureSettingsTables() {
             ALTER TABLE shop_settings ADD COLUMN IF NOT EXISTS security_pin VARCHAR(20) DEFAULT '1234';
             ALTER TABLE shop_settings ADD COLUMN IF NOT EXISTS allow_invoice_modification BOOLEAN DEFAULT true;
             ALTER TABLE shop_settings ADD COLUMN IF NOT EXISTS invoice_edit_time_limit_hours INT DEFAULT 360;
+            ALTER TABLE shop_settings ADD COLUMN IF NOT EXISTS customer_offer_headline TEXT DEFAULT '🔥 মেগা অফার: ৪টি সিসিটিভি ক্যামেরা প্যাকেজে ফ্রি রাউটার ও ইনস্টলেশন চার্জে ২০% ছাড়!';
+            ALTER TABLE shop_settings ADD COLUMN IF NOT EXISTS customer_offer_enabled BOOLEAN DEFAULT true;
+            ALTER TABLE shop_settings ADD COLUMN IF NOT EXISTS technician_offer_headline TEXT DEFAULT '⚡ টেকনিশিয়ান বোনাস: চলতি সপ্তাহে ৫টি প্রজেক্ট সম্পন্ন করলে ১,০০০ টাকা বিশেষ ইনসেনটিভ!';
+            ALTER TABLE shop_settings ADD COLUMN IF NOT EXISTS technician_offer_enabled BOOLEAN DEFAULT true;
 
             CREATE TABLE IF NOT EXISTS system_backup_logs (
                 id SERIAL PRIMARY KEY,
@@ -410,6 +414,43 @@ exports.updatePrintTemplate = async (req, res) => {
         return res.status(200).json({ success: true, data: current.rows[0] });
     } catch (error) {
         return res.status(500).json({ success: false, message: error.message });
+    }
+};
+
+exports.updateLiveOffers = async (req, res) => {
+    try {
+        await ensureSettingsTables();
+        const {
+            customer_offer_headline,
+            customer_offer_enabled,
+            technician_offer_headline,
+            technician_offer_enabled,
+        } = req.body;
+
+        const updateRes = await pool.query(`
+            UPDATE shop_settings
+            SET customer_offer_headline = COALESCE($1, customer_offer_headline),
+                customer_offer_enabled = COALESCE($2, customer_offer_enabled),
+                technician_offer_headline = COALESCE($3, technician_offer_headline),
+                technician_offer_enabled = COALESCE($4, technician_offer_enabled),
+                updated_at = NOW()
+            WHERE id = 1
+            RETURNING customer_offer_headline, customer_offer_enabled, technician_offer_headline, technician_offer_enabled;
+        `, [
+            customer_offer_headline !== undefined ? customer_offer_headline : null,
+            customer_offer_enabled !== undefined ? customer_offer_enabled : null,
+            technician_offer_headline !== undefined ? technician_offer_headline : null,
+            technician_offer_enabled !== undefined ? technician_offer_enabled : null
+        ]);
+
+        return res.status(200).json({
+            success: true,
+            message: 'কোর অফারসমূহ সফলভাবে আপডেট করা হয়েছে।',
+            data: updateRes.rows[0]
+        });
+    } catch (err) {
+        console.error('updateLiveOffers error:', err);
+        return res.status(500).json({ success: false, message: 'সার্ভার এরর: ' + err.message });
     }
 };
 
