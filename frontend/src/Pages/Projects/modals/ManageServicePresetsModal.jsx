@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import API from '../../../services/api';
+import API, { getAuthHeaders } from '../../../services/api';
 
 export default function ManageServicePresetsModal({ isOpen, onClose, onPresetsUpdated }) {
   const [presets, setPresets] = useState([]);
@@ -25,7 +25,9 @@ export default function ManageServicePresetsModal({ isOpen, onClose, onPresetsUp
     try {
       setLoading(true);
       setErrorMsg('');
-      const res = await fetch(`${API}/projects/service-presets`);
+      const res = await fetch(`${API}/projects/service-presets`, {
+        headers: getAuthHeaders(),
+      });
       if (res.ok) {
         const json = await res.json();
         if (json.success && Array.isArray(json.data)) {
@@ -69,7 +71,10 @@ export default function ManageServicePresetsModal({ isOpen, onClose, onPresetsUp
 
       const res = await fetch(`${API}/projects/service-presets`, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: {
+          'Content-Type': 'application/json',
+          ...getAuthHeaders(),
+        },
         body: JSON.stringify({
           name: newName.trim(),
           default_rate: parseFloat(newRate) || 0,
@@ -125,7 +130,10 @@ export default function ManageServicePresetsModal({ isOpen, onClose, onPresetsUp
 
       const res = await fetch(`${API}/projects/service-presets/${id}`, {
         method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
+        headers: {
+          'Content-Type': 'application/json',
+          ...getAuthHeaders(),
+        },
         body: JSON.stringify({
           name: editName.trim(),
           default_rate: parseFloat(editRate) || 0,
@@ -155,7 +163,8 @@ export default function ManageServicePresetsModal({ isOpen, onClose, onPresetsUp
 
     try {
       const res = await fetch(`${API}/projects/service-presets/${id}`, {
-        method: 'DELETE'
+        method: 'DELETE',
+        headers: getAuthHeaders(),
       });
       const data = await res.json();
       if (res.ok && data.success) {

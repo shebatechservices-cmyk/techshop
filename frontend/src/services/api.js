@@ -112,13 +112,38 @@ export const pingServer = async () => {
   }
 };
 
-// Resilient fetch helper that handles mobile data, local fallback & proxy fallbacks
+export const getAuthHeaders = () => {
+  const headers = {};
+  if (typeof window !== 'undefined') {
+    const token =
+      window.localStorage?.getItem('sheba_auth_token') ||
+      window.sessionStorage?.getItem('sheba_auth_token') ||
+      window.localStorage?.getItem('token') ||
+      '';
+    if (token) {
+      headers['Authorization'] = `Bearer ${token}`;
+      headers['x-session-token'] = token;
+    }
+  }
+  return headers;
+};
+
+// Resilient fetch helper that handles mobile data, local fallback & proxy fallbacks with automatic auth headers
 export const smartFetch = async (path, options = {}) => {
   const cleanPath = path.startsWith('/') ? path : `/${path}`;
   const primaryUrl = `${API_BASE}${cleanPath}`;
   
+  const authHeaders = getAuthHeaders();
+  const mergedOptions = {
+    ...options,
+    headers: {
+      ...authHeaders,
+      ...(options.headers || {}),
+    },
+  };
+  
   try {
-    const res = await fetch(primaryUrl, options);
+    const res = await fetch(primaryUrl, mergedOptions);
     return res;
   } catch (err) {
     // If the primary URL was NOT the cloud server (e.g. was local LAN 192.168.1.23 or unreachable)
@@ -127,7 +152,7 @@ export const smartFetch = async (path, options = {}) => {
       try {
         console.warn(`[smartFetch] Primary endpoint (${primaryUrl}) failed. Auto fallback to Cloud Server (${CLOUD_SERVER_URL})...`);
         const cloudUrl = `${CLOUD_SERVER_URL}${cleanPath}`;
-        const res2 = await fetch(cloudUrl, options);
+        const res2 = await fetch(cloudUrl, mergedOptions);
         if (res2) {
           // If we successfully reached Cloud server, update saved endpoint
           if (typeof window !== 'undefined' && window.localStorage) {
@@ -144,7 +169,7 @@ export const smartFetch = async (path, options = {}) => {
     if (typeof window !== 'undefined' && window.location?.hostname?.endsWith('.vercel.app')) {
       try {
         const fallbackUrl = `/api${cleanPath}`;
-        const res2 = await fetch(fallbackUrl, options);
+        const res2 = await fetch(fallbackUrl, mergedOptions);
         return res2;
       } catch {
         throw err;

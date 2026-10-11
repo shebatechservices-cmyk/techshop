@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback } from 'react';
-import API from '../../../services/api';
+import API, { getAuthHeaders } from '../../../services/api';
 import { isValidBDPhone } from '../../../utils/phoneUtils';
 
 const INITIAL_FORM = {
@@ -63,7 +63,9 @@ export default function useStaffManager() {
   // Fetch roles
   const fetchRoles = useCallback(async () => {
     try {
-      const res = await fetch(`${API}/staff/roles`);
+      const res = await fetch(`${API}/staff/roles`, {
+        headers: getAuthHeaders(),
+      });
       if (res.ok) {
         const json = await res.json();
         if (json.success && Array.isArray(json.data)) {
@@ -85,7 +87,9 @@ export default function useStaffManager() {
       if (selectedStatus && selectedStatus !== 'all') params.append('status', selectedStatus);
 
       const url = `${API}/staff?${params.toString()}`;
-      const res = await fetch(url);
+      const res = await fetch(url, {
+        headers: getAuthHeaders(),
+      });
       if (res.ok) {
         const json = await res.json();
         if (json.success) {
@@ -193,7 +197,10 @@ export default function useStaffManager() {
 
       const res = await fetch(url, {
         method,
-        headers: { 'Content-Type': 'application/json' },
+        headers: {
+          'Content-Type': 'application/json',
+          ...getAuthHeaders(),
+        },
         body: JSON.stringify(formData)
       });
 
@@ -227,7 +234,10 @@ export default function useStaffManager() {
     try {
       const res = await fetch(`${API}/staff/${staff.id}/status`, {
         method: 'PATCH',
-        headers: { 'Content-Type': 'application/json' },
+        headers: {
+          'Content-Type': 'application/json',
+          ...getAuthHeaders(),
+        },
         body: JSON.stringify({ is_active: newStatus })
       });
       const json = await res.json();
@@ -249,7 +259,8 @@ export default function useStaffManager() {
     try {
       setDeleting(true);
       const res = await fetch(`${API}/staff/${deletingStaff.id}`, {
-        method: 'DELETE'
+        method: 'DELETE',
+        headers: getAuthHeaders(),
       });
       const json = await res.json();
       if (res.ok && json.success) {

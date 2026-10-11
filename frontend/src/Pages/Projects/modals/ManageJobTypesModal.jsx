@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import API from '../../../services/api';
+import API, { getAuthHeaders } from '../../../services/api';
 
 export default function ManageJobTypesModal({ isOpen, onClose, onJobTypesUpdated }) {
   const [jobTypes, setJobTypes] = useState([]);
@@ -25,7 +25,9 @@ export default function ManageJobTypesModal({ isOpen, onClose, onJobTypesUpdated
     try {
       setLoading(true);
       setErrorMsg('');
-      const res = await fetch(`${API}/projects/job-types`);
+      const res = await fetch(`${API}/projects/job-types`, {
+        headers: getAuthHeaders(),
+      });
       if (res.ok) {
         const json = await res.json();
         if (json.success && Array.isArray(json.data)) {
@@ -69,7 +71,10 @@ export default function ManageJobTypesModal({ isOpen, onClose, onJobTypesUpdated
 
       const res = await fetch(`${API}/projects/job-types`, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: {
+          'Content-Type': 'application/json',
+          ...getAuthHeaders(),
+        },
         body: JSON.stringify({
           name: newName.trim(),
           description: newDescription.trim() || null,
@@ -125,7 +130,10 @@ export default function ManageJobTypesModal({ isOpen, onClose, onJobTypesUpdated
 
       const res = await fetch(`${API}/projects/job-types/${id}`, {
         method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
+        headers: {
+          'Content-Type': 'application/json',
+          ...getAuthHeaders(),
+        },
         body: JSON.stringify({
           name: editName.trim(),
           description: editDescription.trim() || null,
@@ -155,7 +163,8 @@ export default function ManageJobTypesModal({ isOpen, onClose, onJobTypesUpdated
 
     try {
       const res = await fetch(`${API}/projects/job-types/${id}`, {
-        method: 'DELETE'
+        method: 'DELETE',
+        headers: getAuthHeaders(),
       });
       const data = await res.json();
       if (res.ok && data.success) {

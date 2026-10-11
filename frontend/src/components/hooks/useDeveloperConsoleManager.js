@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import API from '../../services/api';
+import API, { getAuthHeaders } from '../../services/api';
 
 export function useDeveloperConsoleManager({ isOpen, onClose, onDeveloperLogin }) {
   const [activeTab, setActiveTab] = useState('about');
@@ -51,7 +51,9 @@ export function useDeveloperConsoleManager({ isOpen, onClose, onDeveloperLogin }
 
   const fetchUsersList = async () => {
     try {
-      const res = await fetch(`${API}/dev/users`).catch(() => null);
+      const res = await fetch(`${API}/dev/users`, {
+        headers: getAuthHeaders(),
+      }).catch(() => null);
       if (res && res.ok) {
         const d = await res.json();
         if (d.success) setUsersList(d.data || []);
@@ -71,7 +73,10 @@ export function useDeveloperConsoleManager({ isOpen, onClose, onDeveloperLogin }
       setUserActionLoading(true);
       const res = await fetch(`${API}/dev/users`, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: {
+          'Content-Type': 'application/json',
+          ...getAuthHeaders(),
+        },
         body: JSON.stringify(newUserForm),
       });
       const d = await res.json();
@@ -97,7 +102,10 @@ export function useDeveloperConsoleManager({ isOpen, onClose, onDeveloperLogin }
       setUserActionLoading(true);
       const res = await fetch(`${API}/dev/users/${editingUser.id}`, {
         method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
+        headers: {
+          'Content-Type': 'application/json',
+          ...getAuthHeaders(),
+        },
         body: JSON.stringify(editingUser),
       });
       const d = await res.json();
@@ -119,7 +127,10 @@ export function useDeveloperConsoleManager({ isOpen, onClose, onDeveloperLogin }
     if (!window.confirm(`⚠️ Permanently delete user #${uId} ("${uName}") from database? This action cannot be undone.`)) return;
     try {
       setUserActionLoading(true);
-      const res = await fetch(`${API}/dev/users/${uId}`, { method: 'DELETE' });
+      const res = await fetch(`${API}/dev/users/${uId}`, {
+        method: 'DELETE',
+        headers: getAuthHeaders(),
+      });
       const d = await res.json();
       if (res.ok && d.success) {
         showMsg(`✓ User #${uId} ("${uName}") deleted successfully!`);
@@ -139,7 +150,10 @@ export function useDeveloperConsoleManager({ isOpen, onClose, onDeveloperLogin }
       setLoading(true);
       const res = await fetch(`${API}/dev/bypass-token`, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: {
+          'Content-Type': 'application/json',
+          ...getAuthHeaders(),
+        },
         body: JSON.stringify({ targetUserId: targetUser?.id || 1 }),
       });
       const d = await res.json();
@@ -171,9 +185,10 @@ export function useDeveloperConsoleManager({ isOpen, onClose, onDeveloperLogin }
 
   const fetchAdminData = async () => {
     try {
+      const authHeaders = getAuthHeaders();
       const [adminRes, reqRes] = await Promise.all([
-        fetch(`${API}/dev/admin-credentials`).catch(() => null),
-        fetch(`${API}/dev/admin-recovery-requests`).catch(() => null),
+        fetch(`${API}/dev/admin-credentials`, { headers: authHeaders }).catch(() => null),
+        fetch(`${API}/dev/admin-recovery-requests`, { headers: authHeaders }).catch(() => null),
       ]);
       if (adminRes && adminRes.ok) {
         const d = await adminRes.json();
@@ -206,7 +221,10 @@ export function useDeveloperConsoleManager({ isOpen, onClose, onDeveloperLogin }
       setAdminActionLoading(true);
       const res = await fetch(`${API}/dev/admin-credentials`, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: {
+          'Content-Type': 'application/json',
+          ...getAuthHeaders(),
+        },
         body: JSON.stringify(adminCreds),
       });
       const d = await res.json();
@@ -232,7 +250,10 @@ export function useDeveloperConsoleManager({ isOpen, onClose, onDeveloperLogin }
       setAdminActionLoading(true);
       const res = await fetch(`${API}/dev/admin-recovery-resolve`, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: {
+          'Content-Type': 'application/json',
+          ...getAuthHeaders(),
+        },
         body: JSON.stringify({
           requestId,
           newPassword: newAdminPassword,
@@ -258,9 +279,10 @@ export function useDeveloperConsoleManager({ isOpen, onClose, onDeveloperLogin }
   const fetchDevInfo = async () => {
     try {
       setLoading(true);
+      const authHeaders = getAuthHeaders();
       const [infoRes, devRes] = await Promise.all([
-        fetch(`${API}/dev/info`).catch(() => null),
-        fetch(`${API}/devices`).catch(() => null),
+        fetch(`${API}/dev/info`, { headers: authHeaders }).catch(() => null),
+        fetch(`${API}/devices`, { headers: authHeaders }).catch(() => null),
       ]);
 
       if (infoRes && infoRes.ok) {
@@ -288,7 +310,10 @@ export function useDeveloperConsoleManager({ isOpen, onClose, onDeveloperLogin }
   const handleKickDevice = async (deviceId, name) => {
     if (!window.confirm(`Kick device "${name}" and free up its slot?`)) return;
     try {
-      const res = await fetch(`${API}/devices/${deviceId}`, { method: 'DELETE' });
+      const res = await fetch(`${API}/devices/${deviceId}`, {
+        method: 'DELETE',
+        headers: getAuthHeaders(),
+      });
       const data = await res.json();
       if (res.ok && data.success) {
         showMsg(`Device "${name}" logged out! Slot is now free.`);
@@ -312,7 +337,10 @@ export function useDeveloperConsoleManager({ isOpen, onClose, onDeveloperLogin }
       setForceActionLoading(true);
       const res = await fetch(`${API}/dev/force-delete`, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: {
+          'Content-Type': 'application/json',
+          ...getAuthHeaders(),
+        },
         body: JSON.stringify({
           table_name: forceTable,
           record_id: Number(forceId),
@@ -353,7 +381,10 @@ export function useDeveloperConsoleManager({ isOpen, onClose, onDeveloperLogin }
       setForceActionLoading(true);
       const res = await fetch(`${API}/dev/force-update`, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: {
+          'Content-Type': 'application/json',
+          ...getAuthHeaders(),
+        },
         body: JSON.stringify({
           table_name: forceTable,
           record_id: Number(forceId),
@@ -378,7 +409,10 @@ export function useDeveloperConsoleManager({ isOpen, onClose, onDeveloperLogin }
   const handleMaintenance = async () => {
     try {
       setLoading(true);
-      const res = await fetch(`${API}/dev/maintenance`, { method: 'POST' });
+      const res = await fetch(`${API}/dev/maintenance`, {
+        method: 'POST',
+        headers: getAuthHeaders(),
+      });
       const data = await res.json();
       if (res.ok && data.success) {
         showMsg(data.message, 'success');
@@ -400,7 +434,10 @@ export function useDeveloperConsoleManager({ isOpen, onClose, onDeveloperLogin }
       setLoading(true);
       const res = await fetch(`${API}/dev/clean-inventory-stock`, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: {
+          'Content-Type': 'application/json',
+          ...getAuthHeaders(),
+        },
         body: JSON.stringify({ mode, reason: 'Developer Console Force Clean' }),
       });
       const data = await res.json();

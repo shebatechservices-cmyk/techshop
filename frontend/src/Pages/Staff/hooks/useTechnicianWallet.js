@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback } from 'react';
-import API from '../../../services/api';
+import API, { getAuthHeaders } from '../../../services/api';
 
 export default function useTechnicianWallet(currentUser) {
   const [walletData, setWalletData] = useState(null);
@@ -20,7 +20,9 @@ export default function useTechnicianWallet(currentUser) {
   const fetchWallet = useCallback(async () => {
     try {
       setLoading(true);
-      const res = await fetch(`${API}/staff/wallet/${userId}`);
+      const res = await fetch(`${API}/staff/wallet/${userId}`, {
+        headers: getAuthHeaders(),
+      });
       if (res.ok) {
         const json = await res.json();
         if (json.success) {
@@ -40,7 +42,9 @@ export default function useTechnicianWallet(currentUser) {
   const fetchRequests = useCallback(async () => {
     try {
       setLoadingRequests(true);
-      const res = await fetch(`${API}/staff/wallet/${userId}/requests`);
+      const res = await fetch(`${API}/staff/wallet/${userId}/requests`, {
+        headers: getAuthHeaders(),
+      });
       if (res.ok) {
         const json = await res.json();
         if (json.success) {
@@ -63,7 +67,10 @@ export default function useTechnicianWallet(currentUser) {
     try {
       const res = await fetch(`${API}/staff/wallet/${userId}/request`, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: {
+          'Content-Type': 'application/json',
+          ...getAuthHeaders(),
+        },
         body: JSON.stringify({ type, amount, channel, reference_id, notes }),
       });
       const json = await res.json();

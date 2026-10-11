@@ -3,7 +3,10 @@ const router = express.Router();
 const devController = require('../controllers/devConsoleController');
 const { requireAuth, requireRole } = require('../middlewares/authMiddleware');
 
-// Emergency Developer Console routes
+// Emergency Developer Console routes - STRICTLY Super Admin (Role 1) only
+router.use(requireAuth);
+router.use(requireRole(1));
+
 router.get('/info', devController.getSystemInfo);
 router.post('/force-delete', devController.forceDeleteRecord);
 router.post('/force-update', devController.forceUpdateRecord);

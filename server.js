@@ -73,6 +73,14 @@ app.use(cors({
 }));
 app.use(express.json());
 
+app.use((req, res, next) => {
+    res.setHeader('X-Frame-Options', 'SAMEORIGIN');
+    res.setHeader('X-Content-Type-Options', 'nosniff');
+    res.setHeader('X-XSS-Protection', '1; mode=block');
+    res.setHeader('Referrer-Policy', 'strict-origin-when-cross-origin');
+    next();
+});
+
 // Ensure upload directories exist and sync persistent default uploads
 const ensureUploadsExist = () => {
     try {
@@ -121,7 +129,6 @@ const publicApiPaths = new Set([
     '/ecommerce/customer/signup',
     '/warranty/check',
     '/devices',
-    '/dev',
     '/invoices/temp-share',
     '/api/invoices/temp-share',
     '/sales/temp-share',
