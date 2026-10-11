@@ -18,27 +18,38 @@ export default function TopLiveTickerBar({ onNavigate, currentUser }) {
 
   const loadFeed = async () => {
     try {
-      const res = await fetch(`${API}/settings/notifications`, {
+      const params = new URLSearchParams();
+      if (currentUser?.id) params.append('user_id', currentUser.id);
+      if (currentUser?.role || currentUser?.role_name) {
+        params.append('role', currentUser.role || currentUser.role_name);
+      }
+      const qs = params.toString() ? `?${params.toString()}` : '';
+      const res = await fetch(`${API}/settings/notifications${qs}`, {
         headers: getAuthHeaders(),
       });
       if (res.ok) {
         const json = await res.json();
         if (json && Array.isArray(json.data) && json.data.length > 0) {
-          // Sort items so Core Offers & Urgent Stock are at the front
+          // Sort items so Technician Offer, Core Offers & Urgent items are at the front
           const sorted = [...json.data].sort((a, b) => {
             const getRank = (item) => {
-              if (item.type === 'offer_customer') return 1;
-              if (item.type === 'offer_technician') return 2;
+              if (item.type === 'offer_technician') return 1;
+              if (item.type === 'offer_customer') return 2;
               if (item.priority === 'urgent') return 3;
-              if (item.type === 'stock') return 4;
-              if (item.type === 'due') return 5;
-              if (item.type === 'sales') return 6;
-              if (item.type === 'purchase') return 7;
-              return 8;
+              if (item.type === 'project') return 4;
+              if (item.type === 'wallet') return 5;
+              if (item.type === 'payout') return 6;
+              if (item.type === 'stock') return 7;
+              if (item.type === 'due') return 8;
+              if (item.type === 'sales') return 9;
+              if (item.type === 'purchase') return 10;
+              return 11;
             };
             return getRank(a) - getRank(b);
           });
           setItems(sorted);
+        } else {
+          setItems([]);
         }
       }
     } catch (e) {

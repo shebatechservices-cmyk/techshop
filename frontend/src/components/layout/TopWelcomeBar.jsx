@@ -147,7 +147,7 @@ export default function TopWelcomeBar({
         </div>
 
         {/* Realtime Notification Center */}
-        <RealtimeNotificationCenter onNavigate={onNavigate} compact={true} />
+        <RealtimeNotificationCenter onNavigate={onNavigate} compact={true} currentUser={currentUser} />
 
         {/* Android APK Download Button */}
         <a

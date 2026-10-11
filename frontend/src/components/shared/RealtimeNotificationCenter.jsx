@@ -29,7 +29,7 @@ function playChime() {
   }
 }
 
-export default function RealtimeNotificationCenter({ onNavigate, compact = false }) {
+export default function RealtimeNotificationCenter({ onNavigate, compact = false, currentUser }) {
   const [isOpen, setIsOpen] = useState(false);
   const [notifications, setNotifications] = useState(DEFAULT_NOTIFICATIONS);
   const [activeCategory, setActiveCategory] = useState('All');
@@ -37,6 +37,14 @@ export default function RealtimeNotificationCenter({ onNavigate, compact = false
   const [floatingToast, setFloatingToast] = useState(null);
   const panelRef = useRef(null);
   const buttonRef = useRef(null);
+
+  const role = (currentUser?.role || '').toUpperCase();
+  const roleName = (currentUser?.role_name || '').toLowerCase();
+  const isTechnician =
+    role === 'TECHNICIAN' ||
+    roleName.includes('technician') ||
+    roleName.includes('tech') ||
+    currentUser?.role_id === 4;
 
   // Close panel on click outside
   useEffect(() => {
@@ -54,12 +62,18 @@ export default function RealtimeNotificationCenter({ onNavigate, compact = false
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, []);
 
-  // Fetch live notifications from backend
+  // Fetch live notifications from backend (scoped for technician)
   const fetchLiveNotifications = async () => {
     try {
       const token = localStorage.getItem('sheba_auth_token') || sessionStorage.getItem('sheba_auth_token');
       const headers = token ? { Authorization: `Bearer ${token}` } : {};
-      const res = await fetch(`${API}/settings/notifications`, { headers }).catch(() => null);
+      const params = new URLSearchParams();
+      if (currentUser?.id) params.append('user_id', currentUser.id);
+      if (currentUser?.role || currentUser?.role_name) {
+        params.append('role', currentUser.role || currentUser.role_name);
+      }
+      const qs = params.toString() ? `?${params.toString()}` : '';
+      const res = await fetch(`${API}/settings/notifications${qs}`, { headers }).catch(() => null);
       if (res && res.ok) {
         const json = await res.json();
         if (json && Array.isArray(json.data)) {
@@ -84,7 +98,14 @@ export default function RealtimeNotificationCenter({ onNavigate, compact = false
     fetchLiveNotifications();
     const interval = setInterval(fetchLiveNotifications, 30000); // 30s auto-poll
     return () => clearInterval(interval);
-  }, []);
+  }, [currentUser?.id, currentUser?.role]);
+
+  // Reset category if switching roles
+  useEffect(() => {
+    if (isTechnician && !['All', 'Assigned Projects', 'My Wallet', 'Offers & Campaigns'].includes(activeCategory)) {
+      setActiveCategory('All');
+    }
+  }, [isTechnician]);
 
   // Mark all notifications as read
   const handleMarkAllAsRead = () => {
@@ -119,18 +140,20 @@ export default function RealtimeNotificationCenter({ onNavigate, compact = false
 
   const unreadCount = notifications.filter(n => !n.isRead).length;
 
-  const CATEGORIES = [
-    'All',
-    'Offers & Campaigns',
-    'Stock & Inventory',
-    'Customer Due & Credit',
-    'POS Sales',
-    'Purchases',
-    'New Products',
-    'Warranty & Claims',
-    'SOC Security',
-    'SMS Gateway'
-  ];
+  const CATEGORIES = isTechnician
+    ? ['All', 'Assigned Projects', 'My Wallet', 'Offers & Campaigns']
+    : [
+        'All',
+        'Offers & Campaigns',
+        'Stock & Inventory',
+        'Customer Due & Credit',
+        'POS Sales',
+        'Purchases',
+        'New Products',
+        'Warranty & Claims',
+        'SOC Security',
+        'SMS Gateway'
+      ];
 
   const filteredNotifications = activeCategory === 'All'
     ? notifications
