@@ -36,24 +36,6 @@ export default function CatalogTab({
             <option value="lowstock">Low Stock (Stock ≤ 5)</option>
             <option value="outofstock">Out of Stock</option>
           </select>
-
-          {onOpenQuotation && (
-            <button
-              type="button"
-              onClick={() => onOpenQuotation(null)}
-              className="px-3.5 py-2 bg-amber-600 hover:bg-amber-700 text-white rounded-md font-bold text-sm cursor-pointer transition-colors shadow-xs flex items-center gap-1"
-            >
-              📄 + Quotation
-            </button>
-          )}
-
-          <button
-            type="button"
-            onClick={() => setIsNewOrderModalOpen(true)}
-            className="px-4 py-2 bg-teal-600 hover:bg-teal-700 text-white rounded-md font-bold text-sm cursor-pointer transition-colors shadow-xs"
-          >
-            + Create Order with Product
-          </button>
         </div>
       </div>
 
