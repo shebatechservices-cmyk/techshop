@@ -18,4 +18,5 @@ module.exports = {
     confirmByIncharge: projectLifecycle.confirmByIncharge,
     updateProgress: projectLifecycle.updateProgress,
     completeProject: projectLifecycle.completeProject,
+    reopenProject: projectLifecycle.reopenProject,
 };

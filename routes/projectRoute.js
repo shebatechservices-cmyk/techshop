@@ -32,6 +32,7 @@ router.put('/:id/admin-respond-rejection', requireRole(1, 2), projectController.
 router.put('/:id/incharge-confirm', requireRole(1, 2), projectController.confirmByIncharge);
 router.put('/:id/progress', projectController.updateProgress);
 router.put('/:id/complete', requireRole(1, 2), projectController.completeProject);
+router.put('/:id/reopen', requireRole(1, 2), projectController.reopenProject);
 router.delete('/:id', requireRole(1, 2), projectController.deleteProject);
 
 module.exports = router;

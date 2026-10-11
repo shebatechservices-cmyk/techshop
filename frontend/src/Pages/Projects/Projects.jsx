@@ -46,6 +46,7 @@ export default function Projects({ currentUser, isTechnician = false }) {
     handleInchargeConfirm,
     handleAddProgress,
     handleCompleteProject,
+    handleReopenProject,
     handleDeleteProject,
     handleAdminRespondRejection,
     counts,
@@ -94,6 +95,7 @@ export default function Projects({ currentUser, isTechnician = false }) {
         onInchargeConfirm={setInchargeConfirmProject}
         onAddProgress={setProgressProject}
         onComplete={handleCompleteProject}
+        onReopen={handleReopenProject}
         onEdit={(p) => setEditingProject(p)}
         onPrint={setPrintProject}
         onDelete={handleDeleteProject}

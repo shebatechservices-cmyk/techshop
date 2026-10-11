@@ -9,6 +9,7 @@ export default function ProjectsTable({
   onInchargeConfirm,
   onAddProgress,
   onComplete,
+  onReopen,
   onEdit,
   onPrint,
   onDelete,
@@ -307,6 +308,19 @@ export default function ProjectsTable({
                           className="px-2.5 py-1 bg-emerald-600 hover:bg-emerald-700 text-white rounded-md text-[11px] font-bold cursor-pointer whitespace-nowrap shadow-xs transition-colors"
                         >
                           🏁 Complete & Pay Wallet
+                        </button>
+                      )}
+
+                      {/* 5.5 Reopen & Rollback (Admin only, when completed) */}
+                      {!isTechnician && isCompleted && onReopen && (
+                        <button
+                          type="button"
+                          onClick={() => onReopen(p)}
+                          className="px-2.5 py-1 bg-amber-50 hover:bg-amber-100 text-amber-900 border border-amber-300 rounded-md text-[11px] font-bold cursor-pointer whitespace-nowrap transition-colors flex items-center gap-1 shadow-xs"
+                          title="ভুলবশত সম্পন্ন হওয়া প্রজেক্ট রিভার্স/রিয়োপেন করুন (ওয়ালেট ও ড্রয়ার ব্যালেন্স সমন্বয় হবে)"
+                        >
+                          <span>↩️</span>
+                          <span>Reopen & Rollback</span>
                         </button>
                       )}
 

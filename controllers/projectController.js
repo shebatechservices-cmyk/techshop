@@ -42,5 +42,6 @@ module.exports = {
     adminRespondRejection: projectOrderController.adminRespondRejection,
     confirmByIncharge: projectOrderController.confirmByIncharge,
     updateProgress: projectOrderController.updateProgress,
-    completeProject: projectOrderController.completeProject
+    completeProject: projectOrderController.completeProject,
+    reopenProject: projectOrderController.reopenProject
 };

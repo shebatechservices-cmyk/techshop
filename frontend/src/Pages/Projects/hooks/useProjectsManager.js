@@ -154,6 +154,40 @@ export default function useProjectsManager({ isTechnician = false, currentUser =
     }
   };
 
+  // 4.5 Reopen / Rollback Completed Project
+  const handleReopenProject = async (project) => {
+    const totalPayout =
+      Number(project.setup_charge || 0) +
+      Number(project.conveyance_cost || 0) +
+      Number(project.meal_allowance || 0) ||
+      Number(project.charges || 0);
+
+    const reason = window.prompt(
+      `ভুলবশত সম্পন্ন হওয়া প্রজেক্ট #${project.project_code} পুনরায় চালু (Reopen) করতে চান?\n\n- টেকনিশিয়ান (${project.technician_name || 'Technician'}) ওয়ালেট থেকে ৳ ${totalPayout.toLocaleString('en-BD')} কর্তন হবে।\n- ক্যাশ ড্রয়ারে উক্ত টাকা ফেরত আসবে।\n- প্রজেক্ট স্ট্যাটাস আবার 'In Progress'-এ ফিরে যাবে।\n\nকারণ লিখুন (বা OK চাপুন):`,
+      'ভুলবশত সম্পন্ন করা হয়েছিল, পুনরায় চালু করা হলো'
+    );
+
+    if (reason === null) return;
+
+    try {
+      const res = await fetch(`${API}/projects/${project.id}/reopen`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json', ...getAuthHeaders() },
+        body: JSON.stringify({ reason }),
+      });
+      const data = await res.json();
+      if (res.ok && data.success) {
+        alert(data.message || 'Project reopened successfully');
+        loadData();
+      } else {
+        alert(data.message || 'Failed to reopen project');
+      }
+    } catch (err) {
+      console.error(err);
+      alert('Server error');
+    }
+  };
+
   // 5. Delete Project
   const handleDeleteProject = async (id) => {
     if (!window.confirm('Are you sure you want to delete this project?')) return;
@@ -310,6 +344,7 @@ export default function useProjectsManager({ isTechnician = false, currentUser =
     handleInchargeConfirm,
     handleAddProgress,
     handleCompleteProject,
+    handleReopenProject,
     handleDeleteProject,
     handleAdminRespondRejection,
     counts,
