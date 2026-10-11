@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import API from '../../../../services/api';
+import API, { getAuthHeaders } from '../../../../services/api';
 
 export default function TechWalletRequestsTab({
   pendingRequests = [],
@@ -31,7 +31,7 @@ export default function TechWalletRequestsTab({
       setProcessingId(requestId);
       const res = await fetch(`${API}/staff/wallet-requests/${requestId}/respond`, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 'Content-Type': 'application/json', ...getAuthHeaders() },
         body: JSON.stringify({
           action,
           source_account_id: selectedAccountId ? Number(selectedAccountId) : null,

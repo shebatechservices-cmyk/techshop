@@ -1,5 +1,5 @@
 import { useState, useEffect, useMemo } from 'react';
-import API from '../../../services/api';
+import API, { getAuthHeaders } from '../../../services/api';
 
 export default function useProjectsManager({ isTechnician = false, currentUser = null } = {}) {
   const [projects, setProjects] = useState([]);
@@ -29,7 +29,9 @@ export default function useProjectsManager({ isTechnician = false, currentUser =
     try {
       setLoading(true);
       setError('');
-      const res = await fetch(`${API}/projects`);
+      const res = await fetch(`${API}/projects`, {
+        headers: getAuthHeaders(),
+      });
       if (res.ok) {
         const pData = await res.json();
         setProjects(pData.data || []);
@@ -54,7 +56,7 @@ export default function useProjectsManager({ isTechnician = false, currentUser =
     try {
       const res = await fetch(`${API}/projects/${techPromptProject.id}/technician-respond`, {
         method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 'Content-Type': 'application/json', ...getAuthHeaders() },
         body: JSON.stringify({ action, response_note: techResponseNote }),
       });
       const data = await res.json();
@@ -78,7 +80,7 @@ export default function useProjectsManager({ isTechnician = false, currentUser =
     try {
       const res = await fetch(`${API}/projects/${inchargeConfirmProject.id}/incharge-confirm`, {
         method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 'Content-Type': 'application/json', ...getAuthHeaders() },
         body: JSON.stringify({ confirmed_by: 2, incharge_note: inchargeNote }),
       });
       const data = await res.json();
@@ -102,7 +104,7 @@ export default function useProjectsManager({ isTechnician = false, currentUser =
     try {
       const res = await fetch(`${API}/projects/${progressProject.id}/progress`, {
         method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 'Content-Type': 'application/json', ...getAuthHeaders() },
         body: JSON.stringify({ progress_note: newProgressNote, status: 'in_progress' }),
       });
       const data = await res.json();
@@ -137,6 +139,7 @@ export default function useProjectsManager({ isTechnician = false, currentUser =
     try {
       const res = await fetch(`${API}/projects/${project.id}/complete`, {
         method: 'PUT',
+        headers: getAuthHeaders(),
       });
       const data = await res.json();
       if (res.ok && data.success) {
@@ -155,7 +158,10 @@ export default function useProjectsManager({ isTechnician = false, currentUser =
   const handleDeleteProject = async (id) => {
     if (!window.confirm('Are you sure you want to delete this project?')) return;
     try {
-      const res = await fetch(`${API}/projects/${id}`, { method: 'DELETE' });
+      const res = await fetch(`${API}/projects/${id}`, {
+        method: 'DELETE',
+        headers: getAuthHeaders(),
+      });
       if (res.ok) {
         setProjects((prev) => prev.filter((p) => p.id !== id));
       } else {
@@ -172,7 +178,7 @@ export default function useProjectsManager({ isTechnician = false, currentUser =
     try {
       const res = await fetch(`${API}/projects/${projectId}/admin-respond-rejection`, {
         method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 'Content-Type': 'application/json', ...getAuthHeaders() },
         body: JSON.stringify({ approve, admin_note: adminNote }),
       });
       const data = await res.json();

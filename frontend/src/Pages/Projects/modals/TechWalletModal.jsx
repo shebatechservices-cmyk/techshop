@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import API from '../../../services/api';
+import API, { getAuthHeaders } from '../../../services/api';
 import TechWalletOverviewTab from './techWallet/TechWalletOverviewTab';
 import TechPayoutForm from './techWallet/TechPayoutForm';
 import TechWalletStatementTab from './techWallet/TechWalletStatementTab';
@@ -31,7 +31,9 @@ export default function TechWalletModal({ isOpen, onClose, onRefreshProjects }) 
     try {
       setLoading(true);
       setError('');
-      const res = await fetch(`${API}/projects/tech-wallets`);
+      const res = await fetch(`${API}/projects/tech-wallets`, {
+        headers: getAuthHeaders(),
+      });
       if (res.ok) {
         const data = await res.json();
         if (data.success) {
@@ -54,7 +56,9 @@ export default function TechWalletModal({ isOpen, onClose, onRefreshProjects }) 
 
   const loadPendingRequests = async () => {
     try {
-      const res = await fetch(`${API}/staff/wallet-requests/pending`);
+      const res = await fetch(`${API}/staff/wallet-requests/pending`, {
+        headers: getAuthHeaders(),
+      });
       if (res.ok) {
         const data = await res.json();
         if (data.success) {
@@ -85,7 +89,9 @@ export default function TechWalletModal({ isOpen, onClose, onRefreshProjects }) 
       setLoadingHistory(true);
       setStatementWalletId(walletId);
       setStatementTechName(techName);
-      const res = await fetch(`${API}/projects/tech-wallet-history/${walletId}`);
+      const res = await fetch(`${API}/projects/tech-wallet-history/${walletId}`, {
+        headers: getAuthHeaders(),
+      });
       if (res.ok) {
         const data = await res.json();
         if (data.success) setHistoryList(data.data || []);
@@ -124,7 +130,7 @@ export default function TechWalletModal({ isOpen, onClose, onRefreshProjects }) 
       setSubmittingPayout(true);
       const res = await fetch(`${API}/projects/tech-payout`, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 'Content-Type': 'application/json', ...getAuthHeaders() },
         body: JSON.stringify({
           tech_name: selectedTechName,
           source_account_id: Number(sourceAccountId),

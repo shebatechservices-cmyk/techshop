@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback, useMemo } from 'react';
-import API from '../../../services/api';
+import API, { getAuthHeaders } from '../../../services/api';
 import {
   cleanSitePhone,
   isValidBangladeshiPhone,
@@ -49,7 +49,9 @@ export default function useNewProjectForm({ isOpen, onClose, onSuccess, projectT
   // Fetch service presets from backend (RULE 2)
   const fetchServicePresets = useCallback(async () => {
     try {
-      const res = await fetch(`${API}/projects/service-presets?active_only=true`);
+      const res = await fetch(`${API}/projects/service-presets?active_only=true`, {
+        headers: getAuthHeaders(),
+      });
       if (res.ok) {
         const json = await res.json();
         if (json.success && Array.isArray(json.data)) {
@@ -66,7 +68,9 @@ export default function useNewProjectForm({ isOpen, onClose, onSuccess, projectT
   // Fetch job types from backend (RULE 2)
   const fetchJobTypes = useCallback(async () => {
     try {
-      const res = await fetch(`${API}/projects/job-types?active_only=true`);
+      const res = await fetch(`${API}/projects/job-types?active_only=true`, {
+        headers: getAuthHeaders(),
+      });
       if (res.ok) {
         const json = await res.json();
         if (json.success && Array.isArray(json.data)) {
@@ -83,7 +87,9 @@ export default function useNewProjectForm({ isOpen, onClose, onSuccess, projectT
   // Fetch technicians lookup from backend
   const fetchTechnicians = useCallback(async () => {
     try {
-      const techRes = await fetch(`${API}/projects/technicians-lookup`);
+      const techRes = await fetch(`${API}/projects/technicians-lookup`, {
+        headers: getAuthHeaders(),
+      });
       if (techRes.ok) {
         const tData = await techRes.json();
         if (tData.success && Array.isArray(tData.data)) {
@@ -102,7 +108,7 @@ export default function useNewProjectForm({ isOpen, onClose, onSuccess, projectT
     if (isOpen) {
       setLoadingLookups(true);
       Promise.all([
-        fetch(`${API}/projects/invoices-lookup`).catch(() => null),
+        fetch(`${API}/projects/invoices-lookup`, { headers: getAuthHeaders() }).catch(() => null),
         fetchTechnicians(),
         fetchServicePresets(),
         fetchJobTypes()
@@ -360,7 +366,7 @@ export default function useNewProjectForm({ isOpen, onClose, onSuccess, projectT
 
       const res = await fetch(url, {
         method,
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 'Content-Type': 'application/json', ...getAuthHeaders() },
         body: JSON.stringify(payload)
       });
 
