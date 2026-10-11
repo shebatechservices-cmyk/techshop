@@ -1,3 +1,32 @@
+import { Capacitor } from '@capacitor/core';
+
+export const CLOUD_SERVER_URL = 'https://sdb.shebatechnologybd.com/api';
+export const LOCAL_LAN_SERVER_URL = 'http://192.168.1.23:3000/api';
+
+export const isNativeApp = () => {
+  if (typeof window === 'undefined') return false;
+  try {
+    if (Capacitor && typeof Capacitor.isNativePlatform === 'function' && Capacitor.isNativePlatform()) {
+      return true;
+    }
+  } catch {
+    // ignore
+  }
+  if (Boolean(window.androidBridge) || Boolean(window.Capacitor)) {
+    return true;
+  }
+  if (window.location) {
+    if (window.location.protocol === 'capacitor:' || window.location.protocol === 'ionic:') {
+      return true;
+    }
+    // Inside Capacitor Android/iOS WebView, hostname is localhost and port is empty
+    if (window.location.hostname === 'localhost' && !window.location.port) {
+      return true;
+    }
+  }
+  return false;
+};
+
 const getApiBase = () => {
   let base = '';
 
@@ -14,16 +43,12 @@ const getApiBase = () => {
     base = String(import.meta.env.VITE_API_URL).trim();
   }
 
-  // 2. Native Capacitor / Android Detection
-  if (!base && typeof window !== 'undefined') {
-    const isCapacitor = window.Capacitor !== undefined || window.location.protocol === 'capacitor:';
-    if (isCapacitor) {
-      // Default to live cloud production server so the mobile app works from ANY network (Mobile Data, outside Wi-Fi, anywhere)
-      base = 'https://sdb.shebatechnologybd.com/api';
-      return base;
-    }
+  // 2. Native Capacitor / Android Detection: Always default to live cloud production server
+  if (!base && isNativeApp()) {
+    return CLOUD_SERVER_URL;
   }
 
+  // 3. Web browser environment
   if (!base && typeof window !== 'undefined' && window.location) {
     const { protocol, hostname, port } = window.location;
     // Local Vite dev server ports -> connect directly to local backend port 3000
@@ -87,7 +112,7 @@ export const pingServer = async () => {
   }
 };
 
-// Resilient fetch helper that handles Vercel -> Render cross-origin & proxy fallbacks
+// Resilient fetch helper that handles mobile data, local fallback & proxy fallbacks
 export const smartFetch = async (path, options = {}) => {
   const cleanPath = path.startsWith('/') ? path : `/${path}`;
   const primaryUrl = `${API_BASE}${cleanPath}`;
@@ -96,6 +121,25 @@ export const smartFetch = async (path, options = {}) => {
     const res = await fetch(primaryUrl, options);
     return res;
   } catch (err) {
+    // If the primary URL was NOT the cloud server (e.g. was local LAN 192.168.1.23 or unreachable)
+    // and failed because user is on Mobile Data / outside Wi-Fi:
+    if (!primaryUrl.includes('shebatechnologybd.com')) {
+      try {
+        console.warn(`[smartFetch] Primary endpoint (${primaryUrl}) failed. Auto fallback to Cloud Server (${CLOUD_SERVER_URL})...`);
+        const cloudUrl = `${CLOUD_SERVER_URL}${cleanPath}`;
+        const res2 = await fetch(cloudUrl, options);
+        if (res2) {
+          // If we successfully reached Cloud server, update saved endpoint
+          if (typeof window !== 'undefined' && window.localStorage) {
+            window.localStorage.setItem('sheba_pos_server_url', CLOUD_SERVER_URL);
+          }
+          return res2;
+        }
+      } catch {
+        // Cloud fallback also failed, continue
+      }
+    }
+
     // If running on Vercel and direct Render call failed, attempt fallback via relative proxy
     if (typeof window !== 'undefined' && window.location?.hostname?.endsWith('.vercel.app')) {
       try {
@@ -109,9 +153,6 @@ export const smartFetch = async (path, options = {}) => {
     throw err;
   }
 };
-
-export const CLOUD_SERVER_URL = 'https://sdb.shebatechnologybd.com/api';
-export const LOCAL_LAN_SERVER_URL = 'http://192.168.1.23:3000/api';
 
 export const getCurrentServerUrl = () => API_BASE;
 

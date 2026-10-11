@@ -84,7 +84,7 @@ const browserFetch = window.fetch.bind(window);
 window.fetch = async (input, init = {}) => {
   const urlStr = typeof input === 'string' ? input : (input?.url || '');
   const token = localStorage.getItem('sheba_auth_token') || sessionStorage.getItem('sheba_auth_token');
-  const isApiCall = urlStr.startsWith('/api') || urlStr.includes('/api') || urlStr.includes(window.location.host + '/api') || urlStr.includes('localhost:3000/api') || urlStr.includes('sheba-technology.onrender.com/api');
+  const isApiCall = urlStr.startsWith('/api') || urlStr.includes('/api') || urlStr.includes(window.location.host + '/api') || urlStr.includes('localhost:3000/api') || urlStr.includes('sheba-technology.onrender.com/api') || urlStr.includes('shebatechnologybd.com/api');
   if (!token || !isApiCall || /\/security\/(login|signup|recovery-request)(?:$|[/?])/.test(urlStr)) {
     return browserFetch(input, init);
   }
@@ -103,8 +103,9 @@ window.fetch = async (input, init = {}) => {
 
 import { BrowserRouter } from 'react-router-dom';
 
-// Register Service Worker for PWA (Android / WebAPK / Offline shell) support
-if ('serviceWorker' in navigator) {
+// Register Service Worker for PWA (Web browser only, skip inside native Android container)
+const isNative = typeof window !== 'undefined' && (Boolean(window.androidBridge) || Boolean(window.Capacitor) || window.location.protocol === 'capacitor:' || (window.location.hostname === 'localhost' && !window.location.port));
+if ('serviceWorker' in navigator && !isNative) {
   window.addEventListener('load', () => {
     navigator.serviceWorker
       .register('/sw.js')
