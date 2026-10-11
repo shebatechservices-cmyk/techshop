@@ -471,11 +471,18 @@ const validateSaleDeletable = async (sale, id, client, options = {}) => {
     }
 
     const projectRes = await client.query(
-        'SELECT 1 FROM service_projects WHERE (invoice_id = $1::int OR invoice_no = $2) AND deleted_at IS NULL LIMIT 1',
+        'SELECT id, status, project_code FROM service_projects WHERE (invoice_id = $1::int OR invoice_no = $2) AND deleted_at IS NULL LIMIT 1',
         [Number(id) || 0, sale.invoice_no || '']
     ).catch(() => ({ rows: [] }));
     if (projectRes.rows.length > 0) {
-        return 'Cannot delete this sale invoice because a service project is linked to it.';
+        const p = projectRes.rows[0];
+        if (p.status === 'completed') {
+            return `Cannot delete this sale invoice because project #${p.project_code} is already completed.`;
+        }
+        await client.query(
+            'UPDATE service_projects SET invoice_id = NULL, invoice_no = NULL, updated_at = NOW() WHERE id = $1',
+            [p.id]
+        );
     }
 
     return null;

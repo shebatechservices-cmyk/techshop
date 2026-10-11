@@ -81,12 +81,17 @@ const updateSale = async (req, res) => {
         }
 
         const projectRes = await client.query(
-            'SELECT 1 FROM service_projects WHERE (invoice_id = $1::int OR invoice_no = $2) AND deleted_at IS NULL LIMIT 1',
+            'SELECT id, status, project_code FROM service_projects WHERE (invoice_id = $1::int OR invoice_no = $2) AND deleted_at IS NULL',
             [Number(id) || 0, sale.invoice_no || '']
         ).catch(() => ({ rows: [] }));
-        if (projectRes.rows.length > 0) {
+        const completedProjects = projectRes.rows.filter(p => p.status === 'completed');
+        const userRoleId = Number(req.user?.role_id || 0);
+        if (completedProjects.length > 0 && userRoleId !== 1 && userRoleId !== 2) {
             client.release();
-            return res.status(400).json({ success: false, message: 'Cannot edit this sale invoice because service projects are attached to it.' });
+            return res.status(400).json({
+                success: false,
+                message: `Cannot edit this sale invoice because project #${completedProjects[0].project_code} is already completed. Contact an admin if an adjustment is required.`
+            });
         }
 
         const {
@@ -417,6 +422,29 @@ const updateSale = async (req, res) => {
                 id,
             ]
         );
+
+        // 7. Synchronize updated equipment list and customer with active linked projects
+        if (projectRes.rows.length > 0) {
+            const activeProjects = projectRes.rows.filter(p => p.status !== 'completed');
+            if (activeProjects.length > 0) {
+                const updatedEquipment = (itemsList || []).map(it => ({
+                    product_id: it.product_id,
+                    product_name: it.product_name || it.name || 'Product',
+                    quantity: Number(it.quantity || 1),
+                    unit_price: Number(it.unit_price || it.price || 0),
+                    warranty_months: it.warranty_months || 0
+                }));
+                for (const p of activeProjects) {
+                    await client.query(`
+                        UPDATE service_projects 
+                        SET equipment_details = $1,
+                            customer_id = COALESCE($2, customer_id),
+                            updated_at = NOW()
+                        WHERE id = $3
+                    `, [JSON.stringify(updatedEquipment), Number(customer_id) || null, p.id]);
+                }
+            }
+        }
 
         await client.query('COMMIT');
         client.release();
