@@ -141,6 +141,41 @@ describe('salesPaymentController', () => {
       expect(json.success).toBe(false);
       expect(json.message).toContain('already has zero due');
     });
+
+    it('rejects collection if payment amount exceeds invoice due', async () => {
+      const client = {
+        query: jest.fn((text, params) => {
+          if (/SELECT\s+id,\s*name.*FROM\s+payment_accounts/i.test(text)) {
+            return Promise.resolve({
+              rows: [{ id: 1, name: 'Cash Drawer', account_type: 'Cash' }],
+              rowCount: 1,
+            });
+          }
+          if (/SELECT\s+\*\s+FROM\s+sales/i.test(text)) {
+            return Promise.resolve({
+              rows: [{ id: 10, invoice_no: 'INV-DUE-01', due_amount: 500, paid_amount: 500 }],
+              rowCount: 1,
+            });
+          }
+          return Promise.resolve({ rows: [], rowCount: 0 });
+        }),
+        release: jest.fn(),
+      };
+      pool.connect.mockResolvedValue(client);
+
+      const req = {
+        params: { id: '10' },
+        body: { amount: 1000, account_id: 1 },
+      };
+      const res = mockRes();
+
+      await salesPaymentController.collectSaleInvoicePayment(req, res);
+
+      expect(res.status).toHaveBeenCalledWith(400);
+      const json = res.json.mock.calls[0][0];
+      expect(json.success).toBe(false);
+      expect(json.message).toContain('বেশি হতে পারবে না');
+    });
   });
 
   describe('collectCustomerBulkDuePayment', () => {
@@ -214,6 +249,85 @@ describe('salesPaymentController', () => {
       expect(json.data.settled_invoices[1].invoice_no).toBe('INV-OLD-2');
       expect(json.data.settled_invoices[1].amount_settled).toBe(500);
       expect(json.data.settled_invoices[1].status).toBe('partial');
+    });
+
+    it('rejects bulk collection if customer has zero due', async () => {
+      const client = {
+        query: jest.fn((text, params) => {
+          if (/SELECT\s+id,\s*name.*FROM\s+payment_accounts/i.test(text)) {
+            return Promise.resolve({
+              rows: [{ id: 1, name: 'Cash Drawer', account_type: 'Cash' }],
+              rowCount: 1,
+            });
+          }
+          if (/SELECT.*FROM\s+customers\s+WHERE\s+id\s*=\s*\$1\s+FOR\s+UPDATE/i.test(text)) {
+            return Promise.resolve({
+              rows: [{ id: 5, name: 'Zero Due Customer', receivable_balance: 0 }],
+              rowCount: 1,
+            });
+          }
+          if (/SELECT[\s\S]*FROM\s+sales\s+WHERE\s+customer_id/i.test(text)) {
+            return Promise.resolve({ rows: [], rowCount: 0 });
+          }
+          return Promise.resolve({ rows: [], rowCount: 0 });
+        }),
+        release: jest.fn(),
+      };
+      pool.connect.mockResolvedValue(client);
+
+      const req = {
+        params: { id: '5' },
+        body: { amount: 500, account_id: 1 },
+      };
+      const res = mockRes();
+
+      await salesPaymentController.collectCustomerBulkDuePayment(req, res);
+
+      expect(res.status).toHaveBeenCalledWith(400);
+      const json = res.json.mock.calls[0][0];
+      expect(json.success).toBe(false);
+      expect(json.message).toContain('কোনো বকেয়া নেই');
+    });
+
+    it('rejects bulk collection if payment exceeds total outstanding due', async () => {
+      const client = {
+        query: jest.fn((text, params) => {
+          if (/SELECT\s+id,\s*name.*FROM\s+payment_accounts/i.test(text)) {
+            return Promise.resolve({
+              rows: [{ id: 1, name: 'Cash Drawer', account_type: 'Cash' }],
+              rowCount: 1,
+            });
+          }
+          if (/SELECT.*FROM\s+customers\s+WHERE\s+id\s*=\s*\$1\s+FOR\s+UPDATE/i.test(text)) {
+            return Promise.resolve({
+              rows: [{ id: 5, name: 'Small Due Customer', receivable_balance: 300 }],
+              rowCount: 1,
+            });
+          }
+          if (/SELECT[\s\S]*FROM\s+sales\s+WHERE\s+customer_id/i.test(text)) {
+            return Promise.resolve({
+              rows: [{ id: 99, invoice_no: 'INV-1', due_amount: 300, paid_amount: 0, payment_details: [] }],
+              rowCount: 1,
+            });
+          }
+          return Promise.resolve({ rows: [], rowCount: 0 });
+        }),
+        release: jest.fn(),
+      };
+      pool.connect.mockResolvedValue(client);
+
+      const req = {
+        params: { id: '5' },
+        body: { amount: 800, account_id: 1 },
+      };
+      const res = mockRes();
+
+      await salesPaymentController.collectCustomerBulkDuePayment(req, res);
+
+      expect(res.status).toHaveBeenCalledWith(400);
+      const json = res.json.mock.calls[0][0];
+      expect(json.success).toBe(false);
+      expect(json.message).toContain('বেশি হতে পারবে না');
     });
   });
 });

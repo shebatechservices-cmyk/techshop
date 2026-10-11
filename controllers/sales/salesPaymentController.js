@@ -72,8 +72,16 @@ exports.collectSaleInvoicePayment = async (req, res) => {
       });
     }
 
+    if (numAmount > currentDue) {
+      await client.query('ROLLBACK');
+      return res.status(400).json({
+        success: false,
+        message: `পেমেন্টের পরিমাণ (৳ ${numAmount}) ইনভয়েসের বকেয়া (৳ ${currentDue}) এর চেয়ে বেশি হতে পারবে না।`,
+      });
+    }
+
     // Allow paying up to the invoice due
-    const paymentAmount = Math.min(numAmount, currentDue);
+    const paymentAmount = numAmount;
     const newPaidAmount = money(sale.paid_amount) + paymentAmount;
     const newDueAmount = Math.max(0, currentDue - paymentAmount);
     const newStatus = newDueAmount <= 0 ? 'paid' : 'partial';
@@ -261,6 +269,25 @@ exports.collectCustomerBulkDuePayment = async (req, res) => {
        FOR UPDATE`,
       [id]
     );
+
+    if (prevCustomerBalance <= 0 && pendingSalesRes.rows.length === 0) {
+      await client.query('ROLLBACK');
+      return res.status(400).json({
+        success: false,
+        message: `কাস্টমার ${customer.name}-এর কোনো বকেয়া নেই (Zero outstanding due)।`,
+      });
+    }
+
+    const totalInvoicesDue = pendingSalesRes.rows.reduce((sum, s) => sum + money(s.due_amount), 0);
+    const maxPayable = Math.max(prevCustomerBalance, totalInvoicesDue);
+
+    if (numAmount > maxPayable && maxPayable > 0) {
+      await client.query('ROLLBACK');
+      return res.status(400).json({
+        success: false,
+        message: `পেমেন্টের পরিমাণ (৳ ${numAmount}) কাস্টমারের মোট বকেয়া (৳ ${maxPayable}) এর চেয়ে বেশি হতে পারবে না।`,
+      });
+    }
 
     let remainingToAllocate = numAmount;
     const settledInvoices = [];

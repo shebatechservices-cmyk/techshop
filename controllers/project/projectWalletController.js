@@ -107,6 +107,40 @@ exports.payoutTechWallet = async (req, res) => {
             currentWalletBalance = parseFloat(walletRes.rows[0].balance || 0);
         }
 
+        // ২.১. চেক করা: টেকনিশিয়ানের অধীনে কোনো সম্পন্ন প্রজেক্ট আছে কি না
+        const completedRes = await client.query(`
+            SELECT COUNT(*) FROM service_projects 
+            WHERE status = 'completed' AND (
+                technician_id IN (SELECT id FROM users WHERE name = $1)
+                OR assigned_technician = $1
+            )
+        `, [tech_name]);
+        const completedCount = parseInt(completedRes.rows[0]?.count || 0, 10);
+        if (completedCount === 0) {
+            await client.query('ROLLBACK');
+            return res.status(400).json({
+                success: false,
+                message: `টেকনিশিয়ান ${tech_name}-এর অধীনে কোনো সম্পন্ন প্রজেক্ট নেই। সম্পন্ন প্রজেক্ট ছাড়া ওয়ালেট পে-আউট সম্ভব নয়।`
+            });
+        }
+
+        // ২.২. চেক করা: টেকনিশিয়ানের ওয়ালেটে পর্যাপ্ত ব্যালেন্স আছে কি না
+        if (currentWalletBalance <= 0) {
+            await client.query('ROLLBACK');
+            return res.status(400).json({
+                success: false,
+                message: `টেকনিশিয়ান ${tech_name}-এর ওয়ালেটে কোনো প্রদেয় ব্যালেন্স নেই (বর্তমান ব্যালেন্স: ৳0)।`
+            });
+        }
+
+        if (payoutAmount > currentWalletBalance) {
+            await client.query('ROLLBACK');
+            return res.status(400).json({
+                success: false,
+                message: `পে-আউট এমাউন্ট (৳${payoutAmount}) ওয়ালেট ব্যালেন্স (৳${currentWalletBalance})-এর চেয়ে বেশি হতে পারবে না।`
+            });
+        }
+
         // ৩. সোর্স অ্যাকাউন্ট থেকে টাকা মাইনাস করা
         await client.query(`
             UPDATE payment_accounts 

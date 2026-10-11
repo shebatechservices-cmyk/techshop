@@ -81,9 +81,24 @@ export default function DuePaymentModal({
       return;
     }
 
-    if (paymentMode === 'single' && numAmount > saleDue) {
-      setError(`Amount cannot exceed invoice due (৳ ${saleDue.toLocaleString()}).`);
-      return;
+    if (paymentMode === 'single') {
+      if (saleDue <= 0) {
+        setError('This invoice is already fully paid (Zero due).');
+        return;
+      }
+      if (numAmount > saleDue) {
+        setError(`Amount cannot exceed invoice due (৳ ${saleDue.toLocaleString()}).`);
+        return;
+      }
+    } else {
+      if (customerTotalDue <= 0) {
+        setError('This customer has no outstanding due.');
+        return;
+      }
+      if (numAmount > customerTotalDue) {
+        setError(`Amount cannot exceed customer's total due (৳ ${customerTotalDue.toLocaleString()}).`);
+        return;
+      }
     }
 
     if (!accountId) {

@@ -129,28 +129,41 @@ export default function TechWalletOverviewTab({
               </div>
 
               {/* Actions */}
-              <div style={{ display: 'flex', gap: '8px', marginTop: '10px' }}>
-                <button
-                  type="button"
-                  onClick={() => initiatePayout(w)}
-                  style={{
-                    flex: 1,
-                    padding: '8px 10px',
-                    background: '#16a34a',
-                    color: '#ffffff',
-                    border: 'none',
-                    borderRadius: '6px',
-                    fontSize: '0.78rem',
-                    fontWeight: 700,
-                    cursor: 'pointer',
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    gap: '4px',
-                  }}
-                >
-                  💵 Pay Now
-                </button>
+              {(() => {
+                const completedProjects = parseInt(w.completed_projects_count || 0, 10);
+                const canPayout = balance > 0 && completedProjects > 0;
+                const payoutDisabledReason = completedProjects === 0
+                  ? 'কোনো সম্পন্ন প্রজেক্ট নেই (No completed projects)'
+                  : balance <= 0
+                  ? 'কোনো প্রদেয় ব্যালেন্স নেই (No payable balance)'
+                  : '';
+
+                return (
+                  <div style={{ display: 'flex', gap: '8px', marginTop: '10px' }}>
+                    <button
+                      type="button"
+                      disabled={!canPayout}
+                      onClick={() => initiatePayout(w)}
+                      title={payoutDisabledReason || 'Pay technician from drawer/account'}
+                      style={{
+                        flex: 1,
+                        padding: '8px 10px',
+                        background: canPayout ? '#16a34a' : '#cbd5e1',
+                        color: canPayout ? '#ffffff' : '#64748b',
+                        border: 'none',
+                        borderRadius: '6px',
+                        fontSize: '0.78rem',
+                        fontWeight: 700,
+                        cursor: canPayout ? 'pointer' : 'not-allowed',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        gap: '4px',
+                        opacity: canPayout ? 1 : 0.7,
+                      }}
+                    >
+                      💵 Pay Now
+                    </button>
                 <button
                   type="button"
                   onClick={() => {
@@ -172,6 +185,8 @@ export default function TechWalletOverviewTab({
                   📜 Statement
                 </button>
               </div>
+            );
+          })()}
             </div>
           );
         })}

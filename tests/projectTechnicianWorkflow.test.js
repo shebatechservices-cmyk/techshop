@@ -809,4 +809,72 @@ describe('Technician Workflow, Dynamic Services & Work Order Editing', () => {
         expect(approvedData.status).toBe('assigned'); // Ready for new tech assignment
         expect(resAdminApprove.json.mock.calls[0][0].message).toContain('বাতিলের আবেদন অনুমোদন করা হয়েছে');
     });
+
+    it('RULE: payoutTechWallet strictly rejects payout if technician has no completed projects', async () => {
+        const client = {
+            query: jest.fn((text, params) => {
+                if (/SELECT\s+\*\s+FROM\s+payment_accounts\s+WHERE\s+id/i.test(text)) {
+                    return Promise.resolve({ rows: [{ id: 1, name: 'Cash Drawer', balance: 5000 }], rowCount: 1 });
+                }
+                if (/SELECT\s+\*\s+FROM\s+payment_accounts\s+WHERE\s+name/i.test(text)) {
+                    return Promise.resolve({ rows: [{ id: 99, name: 'Tech Wallet: NoProject Tech', balance: 1000 }], rowCount: 1 });
+                }
+                if (/SELECT\s+COUNT\(\*\)\s+FROM\s+service_projects/i.test(text)) {
+                    return Promise.resolve({ rows: [{ count: 0 }], rowCount: 1 });
+                }
+                return Promise.resolve({ rows: [], rowCount: 0 });
+            }),
+            release: jest.fn(),
+        };
+        pool.connect.mockResolvedValue(client);
+
+        const req = {
+            body: {
+                tech_name: 'NoProject Tech',
+                source_account_id: 1,
+                amount: 500,
+            }
+        };
+        const res = mockRes();
+
+        await projectController.payoutTechWallet(req, res);
+
+        expect(res.status).toHaveBeenCalledWith(400);
+        expect(res.json.mock.calls[0][0].success).toBe(false);
+        expect(res.json.mock.calls[0][0].message).toContain('কোনো সম্পন্ন প্রজেক্ট নেই');
+    });
+
+    it('RULE: payoutTechWallet strictly rejects payout if wallet balance is insufficient', async () => {
+        const client = {
+            query: jest.fn((text, params) => {
+                if (/SELECT\s+\*\s+FROM\s+payment_accounts\s+WHERE\s+id/i.test(text)) {
+                    return Promise.resolve({ rows: [{ id: 1, name: 'Cash Drawer', balance: 5000 }], rowCount: 1 });
+                }
+                if (/SELECT\s+\*\s+FROM\s+payment_accounts\s+WHERE\s+name/i.test(text)) {
+                    return Promise.resolve({ rows: [{ id: 99, name: 'Tech Wallet: Good Tech', balance: 200 }], rowCount: 1 });
+                }
+                if (/SELECT\s+COUNT\(\*\)\s+FROM\s+service_projects/i.test(text)) {
+                    return Promise.resolve({ rows: [{ count: 3 }], rowCount: 1 });
+                }
+                return Promise.resolve({ rows: [], rowCount: 0 });
+            }),
+            release: jest.fn(),
+        };
+        pool.connect.mockResolvedValue(client);
+
+        const req = {
+            body: {
+                tech_name: 'Good Tech',
+                source_account_id: 1,
+                amount: 500, // Exceeds balance of 200
+            }
+        };
+        const res = mockRes();
+
+        await projectController.payoutTechWallet(req, res);
+
+        expect(res.status).toHaveBeenCalledWith(400);
+        expect(res.json.mock.calls[0][0].success).toBe(false);
+        expect(res.json.mock.calls[0][0].message).toContain('চেয়ে বেশি হতে পারবে না');
+    });
 });
