@@ -1,4 +1,5 @@
-import React from 'react';
+import React, { useState } from 'react';
+import { getCurrentServerUrl, setCustomServerUrl, CLOUD_SERVER_URL, LOCAL_LAN_SERVER_URL } from '../../../services/api';
 
 export default function LoginForm({
   identifier,
@@ -19,6 +20,12 @@ export default function LoginForm({
   setMode,
   onOpenDevConsole,
 }) {
+  const [showServerModal, setShowServerModal] = useState(false);
+  const currentServer = getCurrentServerUrl();
+  const [customInputUrl, setCustomInputUrl] = useState(currentServer || CLOUD_SERVER_URL);
+
+  const isCloud = currentServer.includes('shebatechnologybd.com');
+  const isLocal = currentServer.includes('192.168.1.23') || currentServer.includes('localhost');
   return (
     <form onSubmit={(e) => { e.preventDefault(); executeLogin(); }}>
 
@@ -129,11 +136,22 @@ export default function LoginForm({
       </div>
 
       {errorMsg && (
-        <div className="p-3 rounded-md bg-rose-50 border border-rose-200 text-rose-700 text-xs font-medium mb-4 flex items-center gap-2">
-          <svg className="w-4 h-4 flex-shrink-0 text-rose-500" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="2">
-            <path strokeLinecap="round" strokeLinejoin="round" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
-          </svg>
-          <span>{errorMsg}</span>
+        <div className="p-3 rounded-md bg-rose-50 border border-rose-200 text-rose-700 text-xs font-medium mb-4">
+          <div className="flex items-center gap-2">
+            <svg className="w-4 h-4 flex-shrink-0 text-rose-500" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="2">
+              <path strokeLinecap="round" strokeLinejoin="round" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+            </svg>
+            <span>{errorMsg}</span>
+          </div>
+          {errorMsg.includes('Unable to connect') && !isCloud && (
+            <button
+              type="button"
+              onClick={() => setCustomServerUrl(CLOUD_SERVER_URL)}
+              className="w-full mt-2 py-1.5 px-3 rounded bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs flex items-center justify-center gap-1.5 transition-colors"
+            >
+              <span>🌐 Switch to Live Cloud Server (sdb.shebatechnologybd.com)</span>
+            </button>
+          )}
         </div>
       )}
 
@@ -170,6 +188,112 @@ export default function LoginForm({
         </svg>
         <span>Authorized access only • Managed by system administrator</span>
       </div>
+
+      {/* Server Endpoint Status & Switcher */}
+      <div className="mt-3 flex items-center justify-center">
+        <button
+          type="button"
+          onClick={() => setShowServerModal(true)}
+          className="inline-flex items-center gap-1.5 text-[11px] font-semibold text-slate-500 hover:text-slate-800 bg-slate-100 hover:bg-slate-200 px-3 py-1 rounded-full border border-slate-200 transition-colors cursor-pointer"
+        >
+          <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
+          <span>Server: {isCloud ? 'Live Cloud (Online)' : isLocal ? 'Local LAN (Shop)' : 'Custom URL'}</span>
+          <span className="text-[10px]">⚙️</span>
+        </button>
+      </div>
+
+      {/* Server Config Modal */}
+      {showServerModal && (
+        <div className="fixed inset-0 z-[100000] bg-slate-950/70 backdrop-blur-xs flex items-center justify-center p-4">
+          <div className="bg-white rounded-xl shadow-2xl w-full max-w-sm p-5 border border-slate-200">
+            <div className="flex justify-between items-center mb-3 pb-2 border-b border-slate-100">
+              <h3 className="text-sm font-bold text-slate-800 flex items-center gap-2">
+                <span>⚙️</span> Server Endpoint Settings
+              </h3>
+              <button
+                type="button"
+                onClick={() => setShowServerModal(false)}
+                className="text-slate-400 hover:text-slate-700 text-sm font-bold cursor-pointer"
+              >
+                ✕
+              </button>
+            </div>
+
+            <p className="text-xs text-slate-500 mb-4 leading-relaxed">
+              Select or enter your server API endpoint. Use <strong>Live Cloud</strong> to access from any network/mobile data, or <strong>Local LAN</strong> for in-shop Wi-Fi.
+            </p>
+
+            <div className="space-y-2 mb-4">
+              <button
+                type="button"
+                onClick={() => { setCustomServerUrl(CLOUD_SERVER_URL); }}
+                className={`w-full text-left p-2.5 rounded-lg border text-xs font-semibold flex items-center justify-between transition-colors cursor-pointer ${
+                  isCloud
+                    ? 'border-emerald-500 bg-emerald-50 text-emerald-800 ring-1 ring-emerald-400'
+                    : 'border-slate-200 hover:border-slate-300 bg-white text-slate-700'
+                }`}
+              >
+                <div>
+                  <div className="font-bold flex items-center gap-1.5">
+                    <span>🌐 Live Cloud Server</span>
+                    {isCloud && <span className="text-[10px] bg-emerald-200 text-emerald-800 px-1.5 py-0.2 rounded font-bold">Active</span>}
+                  </div>
+                  <div className="text-[10px] text-slate-400 font-normal mt-0.5">https://sdb.shebatechnologybd.com/api (Any network)</div>
+                </div>
+              </button>
+
+              <button
+                type="button"
+                onClick={() => { setCustomServerUrl(LOCAL_LAN_SERVER_URL); }}
+                className={`w-full text-left p-2.5 rounded-lg border text-xs font-semibold flex items-center justify-between transition-colors cursor-pointer ${
+                  isLocal
+                    ? 'border-emerald-500 bg-emerald-50 text-emerald-800 ring-1 ring-emerald-400'
+                    : 'border-slate-200 hover:border-slate-300 bg-white text-slate-700'
+                }`}
+              >
+                <div>
+                  <div className="font-bold flex items-center gap-1.5">
+                    <span>🏠 Local LAN (Shop Wi-Fi)</span>
+                    {isLocal && <span className="text-[10px] bg-emerald-200 text-emerald-800 px-1.5 py-0.2 rounded font-bold">Active</span>}
+                  </div>
+                  <div className="text-[10px] text-slate-400 font-normal mt-0.5">http://192.168.1.23:3000/api (Same Wi-Fi only)</div>
+                </div>
+              </button>
+            </div>
+
+            <div className="mb-4">
+              <label className="block text-[11px] font-bold text-slate-600 mb-1">
+                Custom API URL
+              </label>
+              <input
+                type="text"
+                value={customInputUrl}
+                onChange={(e) => setCustomInputUrl(e.target.value)}
+                placeholder="https://your-domain.com/api"
+                className="w-full px-3 py-1.5 border border-slate-300 rounded-lg text-xs outline-none focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500"
+              />
+            </div>
+
+            <div className="flex gap-2">
+              <button
+                type="button"
+                onClick={() => { setCustomServerUrl(customInputUrl); }}
+                className="flex-1 py-2 px-3 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg text-xs font-bold transition-colors cursor-pointer"
+              >
+                Save & Connect
+              </button>
+              <button
+                type="button"
+                onClick={() => { setCustomServerUrl(null); }}
+                className="py-2 px-3 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-lg text-xs font-semibold transition-colors cursor-pointer"
+                title="Reset to default"
+              >
+                Reset Default
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </form>
   );
 }

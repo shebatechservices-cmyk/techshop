@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { createPortal } from 'react-dom';
 import SalePrintModal from './SalePrintModal';
 import AddCustomerModal from './AddCustomerModal';
@@ -152,14 +152,44 @@ export default function NewSaleModal({
     onSaleUpdated,
   });
 
-  // POS Cashier Keyboard Shortcuts & Auto-Focus
+  // Auto-Focus toggle state with localStorage persistence
+  const [autoFocusEnabled, setAutoFocusEnabled] = useState(() => {
+    try {
+      const saved = localStorage.getItem('pos_sale_autofocus');
+      return saved !== null ? saved === 'true' : true;
+    } catch {
+      return true;
+    }
+  });
+
+  const toggleAutoFocus = () => {
+    setAutoFocusEnabled((prev) => {
+      const next = !prev;
+      try {
+        localStorage.setItem('pos_sale_autofocus', String(next));
+      } catch (e) {}
+      return next;
+    });
+  };
+
+  // Keep latest mutable references for keyboard shortcuts without re-triggering effects
+  const shortcutsStateRef = useRef({});
+  shortcutsStateRef.current = {
+    saving,
+    items,
+    handleSaveSale,
+    isSearchOpen,
+    isCustomerOpen,
+    setIsSearchOpen,
+    setIsCustomerOpen,
+  };
+
+  // POS Cashier Keyboard Shortcuts (stable listener)
   useEffect(() => {
     if (!isOpen) return;
-    const timer = setTimeout(() => {
-      searchInputRef.current?.focus();
-    }, 120);
 
     const handleKeyDown = (e) => {
+      const state = shortcutsStateRef.current;
       if (e.key === 'F2') {
         e.preventDefault();
         searchInputRef.current?.focus();
@@ -169,26 +199,25 @@ export default function NewSaleModal({
         customerSelectRef.current?.querySelector('input')?.focus();
       } else if ((e.ctrlKey && e.key === 'Enter') || e.key === 'F9') {
         e.preventDefault();
-        if (!saving && items.length > 0) {
-          handleSaveSale();
+        if (!state.saving && state.items?.length > 0) {
+          state.handleSaveSale?.();
         }
       } else if (e.key === 'Escape') {
-        if (isSearchOpen) {
+        if (state.isSearchOpen) {
           e.preventDefault();
-          setIsSearchOpen(false);
-        } else if (isCustomerOpen) {
+          state.setIsSearchOpen?.(false);
+        } else if (state.isCustomerOpen) {
           e.preventDefault();
-          setIsCustomerOpen(false);
+          state.setIsCustomerOpen?.(false);
         }
       }
     };
 
     window.addEventListener('keydown', handleKeyDown);
     return () => {
-      clearTimeout(timer);
       window.removeEventListener('keydown', handleKeyDown);
     };
-  }, [isOpen, isSearchOpen, isCustomerOpen, items, saving, handleSaveSale, searchInputRef, customerSelectRef, setIsSearchOpen, setIsCustomerOpen]);
+  }, [isOpen, searchInputRef, customerSelectRef]);
 
   if (!isOpen) return null;
 
@@ -210,7 +239,22 @@ export default function NewSaleModal({
               </p>
             </div>
           </div>
-          <div className="flex items-center gap-3">
+          <div className="flex items-center gap-2.5">
+            {/* Auto-Focus Toggle */}
+            <button
+              type="button"
+              onClick={toggleAutoFocus}
+              title={autoFocusEnabled ? 'Auto-focus is ON: Click to disable' : 'Auto-focus is OFF: Click to enable'}
+              className={`flex items-center gap-1.5 text-[11px] font-semibold py-1 px-2.5 rounded-lg border transition-all cursor-pointer ${
+                autoFocusEnabled
+                  ? 'bg-emerald-50 text-emerald-700 border-emerald-300 hover:bg-emerald-100 shadow-sm'
+                  : 'bg-slate-100 text-slate-500 border-slate-300 hover:bg-slate-200'
+              }`}
+            >
+              <span className={`w-2 h-2 rounded-full ${autoFocusEnabled ? 'bg-emerald-500 animate-pulse' : 'bg-slate-400'}`} />
+              <span>Auto-Focus: {autoFocusEnabled ? 'ON' : 'OFF'}</span>
+            </button>
+
             <div className="hidden lg:flex items-center gap-1.5 text-[11px] font-semibold text-slate-500 bg-slate-100 border border-slate-200 py-1 px-2.5 rounded-lg">
               <span>⚡ Shortcuts:</span>
               <kbd className="bg-white px-1.5 py-0.5 rounded border border-slate-300 font-mono text-[10px] text-slate-800">F2</kbd> <span>Scan</span>
@@ -369,7 +413,22 @@ export default function NewSaleModal({
                     return (
                       <div
                         key={prod.id}
-                        onClick={() => addProduct(prod)}
+                        onClick={() => {
+                          addProduct(prod);
+                          if (autoFocusEnabled) {
+                            setTimeout(() => {
+                              const active = document.activeElement;
+                              const isOtherInputFocused =
+                                active &&
+                                active !== document.body &&
+                                active !== searchInputRef.current &&
+                                (active.tagName === 'INPUT' || active.tagName === 'TEXTAREA' || active.tagName === 'SELECT');
+                              if (!isOtherInputFocused) {
+                                searchInputRef.current?.focus();
+                              }
+                            }, 50);
+                          }
+                        }}
                         className={`flex justify-between items-center py-2 px-3 rounded-md cursor-pointer text-sm transition-colors ${
                           isAdded ? 'bg-emerald-50' : 'hover:bg-slate-100 bg-transparent'
                         }`}

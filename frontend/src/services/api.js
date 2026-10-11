@@ -18,7 +18,8 @@ const getApiBase = () => {
   if (!base && typeof window !== 'undefined') {
     const isCapacitor = window.Capacitor !== undefined || window.location.protocol === 'capacitor:';
     if (isCapacitor) {
-      base = 'http://192.168.1.23:3000/api';
+      // Default to live cloud production server so the mobile app works from ANY network (Mobile Data, outside Wi-Fi, anywhere)
+      base = 'https://sdb.shebatechnologybd.com/api';
       return base;
     }
   }
@@ -106,6 +107,24 @@ export const smartFetch = async (path, options = {}) => {
       }
     }
     throw err;
+  }
+};
+
+export const CLOUD_SERVER_URL = 'https://sdb.shebatechnologybd.com/api';
+export const LOCAL_LAN_SERVER_URL = 'http://192.168.1.23:3000/api';
+
+export const getCurrentServerUrl = () => API_BASE;
+
+export const setCustomServerUrl = (url) => {
+  if (typeof window !== 'undefined' && window.localStorage) {
+    if (!url) {
+      window.localStorage.removeItem('sheba_pos_server_url');
+    } else {
+      let clean = String(url).trim().replace(/\/+$/, '');
+      if (!clean.endsWith('/api')) clean = `${clean}/api`;
+      window.localStorage.setItem('sheba_pos_server_url', clean);
+    }
+    window.location.reload();
   }
 };
 

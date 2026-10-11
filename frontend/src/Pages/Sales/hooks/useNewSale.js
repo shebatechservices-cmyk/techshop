@@ -357,13 +357,28 @@ export function useNewSale({
     },
   });
 
-  // Autofocus product search input on modal open
+  // Autofocus product search input on modal open (if auto-focus is enabled and no other input is active)
   useEffect(() => {
     if (isOpen) {
-      const timer = setTimeout(() => {
-        searchInputRef.current?.focus();
-      }, 100);
-      return () => clearTimeout(timer);
+      let isAutoFocus = true;
+      try {
+        isAutoFocus = localStorage.getItem('pos_sale_autofocus') !== 'false';
+      } catch (err) {}
+
+      if (isAutoFocus) {
+        const timer = setTimeout(() => {
+          const active = document.activeElement;
+          const isOtherInputFocused =
+            active &&
+            active !== document.body &&
+            active !== searchInputRef.current &&
+            (active.tagName === 'INPUT' || active.tagName === 'TEXTAREA' || active.tagName === 'SELECT');
+          if (!isOtherInputFocused) {
+            searchInputRef.current?.focus();
+          }
+        }, 100);
+        return () => clearTimeout(timer);
+      }
     }
   }, [isOpen, searchInputRef]);
 

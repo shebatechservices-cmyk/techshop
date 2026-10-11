@@ -31,6 +31,9 @@ const otpLimiter = rateLimit({
 const defaultOrigins = [
     'http://localhost:5173',
     'http://localhost:3000',
+    'http://localhost',
+    'https://localhost',
+    'capacitor://localhost',
     'https://sheba-technology.vercel.app',
     'https://sheba-technology.onrender.com',
     'https://sdb.shebatechnologybd.com',
@@ -45,11 +48,12 @@ const TRUSTED_ORIGIN_PATTERNS = [
     /^https:\/\/([a-z0-9-]+\.)?vercel\.app$/,
     /^https:\/\/([a-z0-9-]+\.)?onrender\.com$/,
     /^https:\/\/([a-z0-9-]+\.)?shebatechnologybd\.com$/,
+    /^capacitor:\/\/localhost$/,
 ];
 const isLocalhostOrigin = (origin) => {
     try {
         const { hostname, protocol } = new URL(origin);
-        return ['http:', 'https:'].includes(protocol)
+        return ['http:', 'https:', 'capacitor:', 'ionic:'].includes(protocol)
             && (hostname === 'localhost' || hostname === '127.0.0.1' || hostname === '[::1]' || hostname.endsWith('.localhost'));
     } catch {
         return false;
