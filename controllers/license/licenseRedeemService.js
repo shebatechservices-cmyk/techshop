@@ -78,11 +78,16 @@ const redeemLicenseCode = async (req, res) => {
                     vendorResponse = remoteData.data || remoteData;
                     isVendorContacted = true;
                 } else if (!remoteRes.ok && remoteData && (remoteData.error || remoteData.message)) {
-                    const errMsg = remoteData.error || remoteData.message;
+                    let errMsg = remoteData.error || remoteData.message;
                     console.warn('[License Controller] Vendor Server rejected redeem:', errMsg);
-                    return res.status(remoteRes.status || 400).json({
+                    let statusCode = remoteRes.status || 400;
+                    if (statusCode === 404 || errMsg === 'Key not found in database') {
+                        statusCode = 400;
+                        errMsg = 'Invalid Code';
+                    }
+                    return res.status(statusCode).json({
                         success: false,
-                        message: errMsg,
+                        message: errMsg === 'Invalid Code' ? 'Invalid redemption code.' : errMsg,
                         error: errMsg,
                     });
                 } else {

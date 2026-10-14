@@ -16,6 +16,7 @@ const EXEMPT_PATHS = [
 ];
 
 const checkLicenseKillSwitch = async (req, res, next) => {
+    if (req.method === 'OPTIONS') return next();
     try {
         const path = req.path || '';
 

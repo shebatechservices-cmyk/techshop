@@ -14,7 +14,26 @@ describe('License & Vendor Integration Module', () => {
     const licenseController = require('../controllers/licenseController');
     const { checkLicenseKillSwitch, resetLicenseCache } = require('../middlewares/licenseMiddleware');
 
-    beforeAll(() => {
+    const { fork } = require('child_process');
+    let vendorProcess;
+
+    beforeAll(async () => {
+        try {
+            vendorProcess = fork('/home/sheba/Vendor/server.js', [], {
+                env: { ...process.env, PORT: '3001', DATABASE_URL: vendorDbUrl },
+                stdio: 'ignore'
+            });
+            // Wait for vendor server to become ready
+            for (let i = 0; i < 30; i++) {
+                try {
+                    const r = await fetch('http://localhost:3001/api/health');
+                    if (r.ok) break;
+                } catch (_) {
+                    await new Promise(res => setTimeout(res, 200));
+                }
+            }
+        } catch (_) {}
+
         app = express();
         app.use(express.json());
 
@@ -31,6 +50,9 @@ describe('License & Vendor Integration Module', () => {
     });
 
     afterAll(async () => {
+        if (vendorProcess) {
+            try { vendorProcess.kill('SIGTERM'); } catch (_) {}
+        }
         const pool = require('../config/db');
         const prisma = require('../config/prisma');
         await prisma.$disconnect().catch(() => null);

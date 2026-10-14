@@ -7,7 +7,7 @@
     "dev:backend": "node server.js",
     "dev:frontend": "cd frontend && npm run dev",
     "dev": "concurrently \"npm run dev:backend\" \"npm run dev:frontend\"",
-    "test": "jest --runInBand",
+    "test": "jest --runInBand --forceExit",
     "seed": "node scripts/seedExpenseCategories.js && node scripts/seedAdmin.js",
     "seed:admin": "node scripts/seedAdmin.js",
     "seed:expense-categories": "node scripts/seedExpenseCategories.js"

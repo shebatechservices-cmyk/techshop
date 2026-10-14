@@ -1,7 +1,9 @@
 import React from 'react';
 import MultiTenderPaymentTable from '../../../components/shared/MultiTenderPaymentTable';
-import { EXTRA_COST_CATEGORIES } from '../../Purchases/hooks/usePurchaseCart';
-import { taka, money } from '../hooks/useNewSale';
+import { taka } from '../hooks/useNewSale';
+import SalePaymentAdditionalDetails from './payment/SalePaymentAdditionalDetails';
+import SalePaymentSummaryGrid from './payment/SalePaymentSummaryGrid';
+import SalePaymentAddonsToolbar from './payment/SalePaymentAddonsToolbar';
 
 export default function SalePaymentSection({
   // Additional Details props
@@ -69,73 +71,17 @@ export default function SalePaymentSection({
   return (
     <div className="grid grid-cols-[minmax(260px,34%)_1fr] gap-2.5 items-start mb-2.5">
       {/* LEFT COLUMN: ADDITIONAL DETAILS */}
-      <div className="bg-white border border-slate-200 rounded-md p-2 sm:px-3 sm:py-2">
-        <div className="text-[0.72rem] font-extrabold text-slate-700 uppercase tracking-wide mb-2">
-          ADDITIONAL DETAILS
-        </div>
-
-        <div className="grid grid-cols-2 gap-2">
-          {/* SALES PERSON */}
-          <div>
-            <label className="block text-[0.66rem] font-bold text-slate-500 uppercase mb-0.5">
-              SALES PERSON
-            </label>
-            <select
-              value={salesPerson}
-              onChange={(e) => setSalesPerson(e.target.value)}
-              className="w-full h-7 py-0.5 px-1.5 rounded border border-slate-300 text-xs text-slate-800 bg-white outline-none box-border"
-            >
-              <option value="">-- Select --</option>
-              {staffList.map((st) => (
-                <option key={st} value={st}>
-                  {st}
-                </option>
-              ))}
-            </select>
-          </div>
-
-          {/* INVOICE DATE */}
-          <div>
-            <label className="block text-[0.66rem] font-bold text-slate-500 uppercase mb-0.5">
-              INVOICE DATE
-            </label>
-            <input
-              type="date"
-              value={invoiceDate}
-              onChange={(e) => setInvoiceDate(e.target.value)}
-              className="w-full h-7 py-0.5 px-1.5 rounded border border-slate-300 text-xs text-slate-800 bg-white outline-none box-border"
-            />
-          </div>
-
-          {/* DESTINATION */}
-          <div>
-            <label className="block text-[0.66rem] font-bold text-slate-500 uppercase mb-0.5">
-              DESTINATION
-            </label>
-            <input
-              type="text"
-              value={destination}
-              onChange={(e) => setDestination(e.target.value)}
-              placeholder="Destination..."
-              className="w-full h-7 py-0.5 px-1.5 rounded border border-slate-300 text-xs text-slate-800 bg-white outline-none box-border"
-            />
-          </div>
-
-          {/* ATTENTION */}
-          <div>
-            <label className="block text-[0.66rem] font-bold text-slate-500 uppercase mb-0.5">
-              ATTENTION
-            </label>
-            <input
-              type="text"
-              value={attention}
-              onChange={(e) => setAttention(e.target.value)}
-              placeholder="Attention..."
-              className="w-full h-7 py-0.5 px-1.5 rounded border border-slate-300 text-xs text-slate-800 bg-white outline-none box-border"
-            />
-          </div>
-        </div>
-      </div>
+      <SalePaymentAdditionalDetails
+        salesPerson={salesPerson}
+        setSalesPerson={setSalesPerson}
+        staffList={staffList}
+        invoiceDate={invoiceDate}
+        setInvoiceDate={setInvoiceDate}
+        destination={destination}
+        setDestination={setDestination}
+        attention={attention}
+        setAttention={setAttention}
+      />
 
       {/* RIGHT COLUMN: PAYMENT & INVOICE CALCULATION */}
       <div className="bg-white border border-slate-200 rounded-md p-2 sm:px-3 sm:py-2">
@@ -149,7 +95,10 @@ export default function SalePaymentSection({
               Paid: <strong className="text-slate-900">{taka(paid)}</strong>
             </span>
             {paid > totalPayable ? (
-              <span className="text-amber-800 bg-amber-100 border border-amber-300 font-extrabold text-[0.72rem] py-0.5 px-2 rounded inline-flex items-center gap-1" title="Paid amount exceeds total payable">
+              <span
+                className="text-amber-800 bg-amber-100 border border-amber-300 font-extrabold text-[0.72rem] py-0.5 px-2 rounded inline-flex items-center gap-1"
+                title="Paid amount exceeds total payable"
+              >
                 ⚠️ Overpaid: +{taka(paid - totalPayable)}
               </span>
             ) : due === 0 && paid > 0 ? (
@@ -169,211 +118,43 @@ export default function SalePaymentSection({
         </div>
 
         {/* 1. TWO-COLUMN ULTRA-COMPACT SUMMARY GRID */}
-        <div className="grid grid-cols-2 gap-2 mb-1.5 bg-slate-50 p-1.5 sm:p-2 rounded-md border border-slate-200">
-          {/* Left Column: Invoice Calculation */}
-          <div className="flex flex-col gap-1">
-            <div className="text-[0.66rem] font-extrabold text-slate-600 uppercase tracking-wide">
-              Invoice Calculation
-            </div>
+        <SalePaymentSummaryGrid
+          netAmount={netAmount}
+          loyaltyPointsToUse={loyaltyPointsToUse}
+          discount={discount}
+          totalDiscount={totalDiscount}
+          payableAmount={payableAmount}
+          previousDue={previousDue}
+          totalPayable={totalPayable}
+          currentDue={currentDue}
+        />
 
-            {/* Net Amount (Subtotal) */}
-            <div className="flex justify-between items-center py-1 px-2 bg-white border border-slate-200 rounded min-h-[26px]">
-              <label className="text-[0.68rem] font-bold text-slate-500">
-                Net Amount
-              </label>
-              <span className="font-extrabold text-xs text-slate-800">
-                {taka(netAmount)}
-              </span>
-            </div>
-
-            {/* Less Discount (Strictly auto-calculated from Item Discounts + Loyalty) */}
-            <div className="flex justify-between items-center py-1 px-2 bg-white border border-slate-200 rounded min-h-[26px]">
-              <div className="flex items-center gap-1">
-                <label className="text-[0.68rem] font-bold text-rose-600 m-0">
-                  Less Disc.
-                </label>
-                {money(loyaltyPointsToUse) > 0 && (
-                  <span className="text-[0.60rem] text-slate-500">
-                    ({taka(loyaltyPointsToUse)})
-                  </span>
-                )}
-              </div>
-              <div className="flex items-center justify-end gap-1">
-                <span className="text-xs text-rose-600 font-bold">-৳</span>
-                <span className="font-extrabold text-xs text-rose-600">
-                  {taka(totalDiscount !== undefined ? totalDiscount : (money(discount) + money(loyaltyPointsToUse)))}
-                </span>
-              </div>
-            </div>
-
-            {/* Payable Amount (Net Amount - Discount) */}
-            <div className="flex justify-between items-center py-1 px-2 bg-blue-50 border border-blue-200 rounded min-h-[26px]">
-              <label className="text-[0.70rem] font-extrabold text-blue-800 uppercase">
-                Payable
-              </label>
-              <span className="font-black text-xs text-blue-700">
-                {taka(payableAmount)}
-              </span>
-            </div>
-          </div>
-
-          {/* Right Column: Balance Settlement */}
-          <div className="flex flex-col gap-1">
-            <div className="text-[0.66rem] font-extrabold text-slate-600 uppercase tracking-wide">
-              Balance Settlement
-            </div>
-
-            {/* Previous Due */}
-            <div className="flex justify-between items-center py-1 px-2 bg-amber-50 border border-amber-200 rounded min-h-[26px]">
-              <label className="text-[0.68rem] font-bold text-amber-800">
-                Prev. Due
-              </label>
-              <span className={`font-extrabold text-xs ${previousDue > 0 ? 'text-amber-700' : previousDue < 0 ? 'text-emerald-600' : 'text-slate-600'}`}>
-                {previousDue < 0 ? `Adv: ${taka(Math.abs(previousDue))}` : taka(previousDue)}
-              </span>
-            </div>
-
-            {/* Total Payable (Payable Amount + Previous Due) */}
-            <div className="flex justify-between items-center py-1 px-2 bg-emerald-50 border border-emerald-200 rounded min-h-[26px]">
-              <label className="text-[0.70rem] font-extrabold text-emerald-800 uppercase">
-                Total Payable
-              </label>
-              <span className="font-black text-xs text-emerald-700">
-                {taka(totalPayable)}
-              </span>
-            </div>
-
-            {/* Current Due (Total Payable - Sum of all accepted payment amounts) */}
-            <div
-              className={`flex justify-between items-center py-1 px-2 rounded min-h-[26px] border ${
-                currentDue > 0 ? 'bg-rose-50 border-rose-200' : 'bg-emerald-50 border-emerald-200'
-              }`}
-            >
-              <label className={`text-[0.70rem] font-extrabold uppercase ${currentDue > 0 ? 'text-rose-800' : 'text-emerald-800'}`}>
-                Current Due
-              </label>
-              <span className={`font-black text-xs ${currentDue > 0 ? 'text-rose-600' : 'text-emerald-600'}`}>
-                {taka(currentDue)}
-              </span>
-            </div>
-          </div>
-        </div>
-
-        {/* Optional charges / Add-ons toolbar (VAT, Setup, Logistics, Privilege discount) */}
-        <div className="flex items-center gap-2 flex-wrap py-1 px-2 bg-white border border-slate-200 rounded-md mb-1.5 text-xs">
-          <label className="inline-flex items-center gap-1 cursor-pointer font-semibold text-slate-600">
-            <span>VAT (৳):</span>
-            <input
-              type="number"
-              min="0"
-              step="1"
-              placeholder="0.00"
-              value={vat || ''}
-              onChange={(e) => setVat(Math.max(0, parseFloat(e.target.value) || 0))}
-              className="w-16 h-6 py-0.5 px-1.5 rounded border border-slate-300 text-xs box-border"
-            />
-          </label>
-
-          <label className={`inline-flex items-center gap-1 cursor-pointer font-semibold ${hasSetupCharge ? 'text-emerald-700' : 'text-slate-600'}`}>
-            <input
-              type="checkbox"
-              checked={hasSetupCharge}
-              onChange={(e) => handleToggleSetupCharge(e.target.checked)}
-              className="accent-emerald-600"
-            />
-            <span>🛠️ Setup ({taka(totalSetupCharge)})</span>
-          </label>
-
-          <label className={`inline-flex items-center gap-1 cursor-pointer font-semibold ${hasExtraCost ? 'text-orange-700' : 'text-slate-600'}`}>
-            <input
-              type="checkbox"
-              checked={hasExtraCost}
-              onChange={(e) => setHasExtraCost(e.target.checked)}
-              className="accent-orange-600"
-            />
-            <span>🚚 Logistics ({taka(totalExtraCost)})</span>
-          </label>
-
-          {(isTechnician || isReseller) && (
-            <button
-              type="button"
-              onClick={handleToggleGroupDiscount}
-              className={`ml-auto py-0.5 px-2 rounded border-0 text-white font-bold text-[0.70rem] cursor-pointer transition-colors ${
-                isGroupDiscountActive ? 'bg-indigo-700' : 'bg-indigo-600 hover:bg-indigo-700'
-              }`}
-            >
-              {isGroupDiscountActive ? '✓ 5% Privilege Applied' : `⚡ Apply 5% Privilege (${taka(groupDiscountAmount)})`}
-            </button>
-          )}
-        </div>
-
-        {/* Collapsible Setup charge details if enabled */}
-        {hasSetupCharge && (
-          <div className="mb-1.5 bg-emerald-50 border border-emerald-300 rounded p-1.5 grid grid-cols-3 gap-1.5">
-            <div>
-              <label className="block text-[0.62rem] font-bold text-emerald-800 mb-0.5">Camera Qty</label>
-              <input
-                type="number"
-                min="1"
-                value={cameraCount}
-                onChange={(e) => handleCameraCountChange(e.target.value)}
-                className="w-full h-6 py-0.5 px-1 rounded border border-emerald-300 bg-white text-xs box-border"
-              />
-            </div>
-            <div>
-              <label className="block text-[0.62rem] font-bold text-emerald-800 mb-0.5">Rate / Cam (৳)</label>
-              <input
-                type="number"
-                min="0"
-                step="any"
-                value={setupRatePerCamera}
-                onChange={(e) => handleRateChange(e.target.value)}
-                className="w-full h-6 py-0.5 px-1 rounded border border-emerald-300 bg-white text-xs box-border"
-              />
-            </div>
-            <div>
-              <label className="block text-[0.62rem] font-bold text-emerald-800 mb-0.5">Setup Charge (৳)</label>
-              <input
-                type="number"
-                min="0"
-                step="any"
-                value={setupCharge}
-                onChange={(e) => handleDirectSetupChargeChange(e.target.value)}
-                className="w-full h-6 py-0.5 px-1 rounded border-[1.5px] border-emerald-600 bg-white text-xs font-extrabold text-emerald-700 box-border"
-              />
-            </div>
-          </div>
-        )}
-
-        {/* Collapsible Extra Cost details if enabled */}
-        {hasExtraCost && (
-          <div className="mb-1.5 bg-orange-50 border border-orange-300 rounded p-1.5 grid grid-cols-[1fr_1.4fr] gap-1.5">
-            <div>
-              <label className="block text-[0.62rem] font-bold text-orange-900 mb-0.5">Extra Cost (৳)</label>
-              <input
-                type="number"
-                min="0"
-                step="any"
-                placeholder="0.00"
-                value={extraCost || ''}
-                onChange={(e) => setExtraCost(Math.max(0, parseFloat(e.target.value) || 0))}
-                className="w-full h-6 py-0.5 px-1 rounded border border-orange-300 bg-white text-xs font-bold text-orange-900 box-border"
-              />
-            </div>
-            <div>
-              <label className="block text-[0.62rem] font-bold text-orange-900 mb-0.5">Category</label>
-              <select
-                value={extraCostCategory}
-                onChange={(e) => setExtraCostCategory(e.target.value)}
-                className="w-full h-6 py-0.5 px-1 rounded border border-orange-300 bg-white text-xs box-border"
-              >
-                {EXTRA_COST_CATEGORIES.map((c) => (
-                  <option key={c} value={c}>{c}</option>
-                ))}
-              </select>
-            </div>
-          </div>
-        )}
+        {/* Optional charges / Add-ons toolbar */}
+        <SalePaymentAddonsToolbar
+          vat={vat}
+          setVat={setVat}
+          hasSetupCharge={hasSetupCharge}
+          handleToggleSetupCharge={handleToggleSetupCharge}
+          totalSetupCharge={totalSetupCharge}
+          cameraCount={cameraCount}
+          handleCameraCountChange={handleCameraCountChange}
+          setupRatePerCamera={setupRatePerCamera}
+          handleRateChange={handleRateChange}
+          setupCharge={setupCharge}
+          handleDirectSetupChargeChange={handleDirectSetupChargeChange}
+          hasExtraCost={hasExtraCost}
+          setHasExtraCost={setHasExtraCost}
+          extraCost={extraCost}
+          setExtraCost={setExtraCost}
+          extraCostCategory={extraCostCategory}
+          setExtraCostCategory={setExtraCostCategory}
+          totalExtraCost={totalExtraCost}
+          isTechnician={isTechnician}
+          isReseller={isReseller}
+          isGroupDiscountActive={isGroupDiscountActive}
+          handleToggleGroupDiscount={handleToggleGroupDiscount}
+          groupDiscountAmount={groupDiscountAmount}
+        />
 
         {/* Quick Pay Buttons */}
         <div className="flex justify-between items-center mb-1">

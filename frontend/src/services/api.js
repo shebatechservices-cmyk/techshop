@@ -141,20 +141,35 @@ export const smartFetch = async (path, options = {}) => {
       ...(options.headers || {}),
     },
   };
+
+  const executeFetchWithTimeout = async (url, opts, timeoutMs = 12000) => {
+    if (opts.signal) {
+      return fetch(url, opts);
+    }
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), timeoutMs);
+    try {
+      const response = await fetch(url, { ...opts, signal: controller.signal });
+      clearTimeout(timeoutId);
+      return response;
+    } catch (err) {
+      clearTimeout(timeoutId);
+      throw err;
+    }
+  };
   
   try {
-    const res = await fetch(primaryUrl, mergedOptions);
+    const res = await executeFetchWithTimeout(primaryUrl, mergedOptions, 12000);
     return res;
   } catch (err) {
-    // If the primary URL was NOT the cloud server (e.g. was local LAN 192.168.1.23 or unreachable)
-    // and failed because user is on Mobile Data / outside Wi-Fi:
+    // If primary was LAN / local and failed (e.g. mobile disconnected from Wi-Fi or outside shop):
+    // Fall back to Cloud Server
     if (!primaryUrl.includes('shebatechnologybd.com')) {
       try {
         console.warn(`[smartFetch] Primary endpoint (${primaryUrl}) failed. Auto fallback to Cloud Server (${CLOUD_SERVER_URL})...`);
         const cloudUrl = `${CLOUD_SERVER_URL}${cleanPath}`;
-        const res2 = await fetch(cloudUrl, mergedOptions);
+        const res2 = await executeFetchWithTimeout(cloudUrl, mergedOptions, 15000);
         if (res2) {
-          // If we successfully reached Cloud server, update saved endpoint
           if (typeof window !== 'undefined' && window.localStorage) {
             window.localStorage.setItem('sheba_pos_server_url', CLOUD_SERVER_URL);
           }
@@ -163,13 +178,26 @@ export const smartFetch = async (path, options = {}) => {
       } catch {
         // Cloud fallback also failed, continue
       }
+    } else {
+      // Primary was Cloud and failed (e.g. Render sleeping, no external internet, shop Wi-Fi local mode):
+      // Fall back to Local LAN Server
+      try {
+        console.warn(`[smartFetch] Cloud endpoint (${primaryUrl}) failed. Auto fallback to Local LAN Server (${LOCAL_LAN_SERVER_URL})...`);
+        const lanUrl = `${LOCAL_LAN_SERVER_URL}${cleanPath}`;
+        const res2 = await executeFetchWithTimeout(lanUrl, mergedOptions, 8000);
+        if (res2) {
+          return res2;
+        }
+      } catch {
+        // Local LAN fallback failed
+      }
     }
 
     // If running on Vercel and direct Render call failed, attempt fallback via relative proxy
     if (typeof window !== 'undefined' && window.location?.hostname?.endsWith('.vercel.app')) {
       try {
         const fallbackUrl = `/api${cleanPath}`;
-        const res2 = await fetch(fallbackUrl, mergedOptions);
+        const res2 = await executeFetchWithTimeout(fallbackUrl, mergedOptions, 10000);
         return res2;
       } catch {
         throw err;

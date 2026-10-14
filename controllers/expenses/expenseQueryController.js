@@ -45,7 +45,7 @@ async function ensureExpenseTables() {
 
         // Seed default categories if empty
         const catRes = await pool.query('SELECT COUNT(*) FROM expense_categories');
-        if (parseInt(catRes.rows[0].count, 10) === 0) {
+        if (parseInt(catRes.rows?.[0]?.count || '0', 10) === 0) {
             await pool.query(`
                 INSERT INTO expense_categories (name, description) VALUES
                 ('Tea & Entertainment (চা ও আপ্যায়ন)', 'Daily tea, snacks, and customer entertainment'),

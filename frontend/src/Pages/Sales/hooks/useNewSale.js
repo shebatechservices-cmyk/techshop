@@ -6,6 +6,7 @@ import useSaleCustomerSummary from './cart/useSaleCustomerSummary';
 import useSaleDraft from './cart/useSaleDraft';
 import useSaleEditHydration from './cart/useSaleEditHydration';
 import useSaleSaveAndPrint, { taka } from './cart/useSaleSaveAndPrint';
+import useSaleInvoiceMeta from './cart/useSaleInvoiceMeta';
 
 export { money };
 export { newTender };
@@ -13,14 +14,6 @@ export { taka };
 
 /**
  * Top-level Orchestrator Hook for POS & Sale Invoicing
- * Composed from focused single-responsibility sub-hooks:
- * - useSaleItemCart: Item catalog, scan, barcodes, UOM conversions
- * - useSalePricingAndCharges: Math, tax, setup, extra costs, tier pricing
- * - useSaleTendersState: Multi-tender ledger, balance tracking
- * - useSaleCustomerSummary: Customer search, ledgers, staff directory
- * - useSaleDraft: Local draft preservation & recovery
- * - useSaleEditHydration: Loading existing sales in edit mode
- * - useSaleSaveAndPrint: Validation, submission, print preview, reset
  */
 export function useNewSale({
   isOpen,
@@ -49,19 +42,7 @@ export function useNewSale({
     customerSelectRef,
   } = customerSub;
 
-  // 2. Invoice Meta Fields
-  const [salesPerson, setSalesPerson] = useState('');
-  const [invoiceDate, setInvoiceDate] = useState(() => {
-    const d = new Date();
-    const yyyy = d.getFullYear();
-    const mm = String(d.getMonth() + 1).padStart(2, '0');
-    const dd = String(d.getDate()).padStart(2, '0');
-    return `${yyyy}-${mm}-${dd}`;
-  });
-  const [destination, setDestination] = useState('');
-  const [attention, setAttention] = useState('');
-
-  // 3. Cart Management Sub-hook
+  // 2. Cart Management Sub-hook
   const [errorBridge, setErrorBridge] = useState('');
   const cart = useSaleItemCart({
     products,
@@ -98,6 +79,18 @@ export function useNewSale({
     handleAddBarcode,
     handleRemoveBarcode,
   } = cart;
+
+  // 3. Invoice Meta Fields & Auto-focus
+  const {
+    salesPerson,
+    setSalesPerson,
+    invoiceDate,
+    setInvoiceDate,
+    destination,
+    setDestination,
+    attention,
+    setAttention,
+  } = useSaleInvoiceMeta(isOpen, searchInputRef);
 
   // 4. Pricing & Financial Computations Sub-hook
   const pricing = useSalePricingAndCharges({
@@ -357,87 +350,13 @@ export function useNewSale({
     },
   });
 
-  // Autofocus product search input on modal open (if auto-focus is enabled and no other input is active)
-  useEffect(() => {
-    if (isOpen) {
-      let isAutoFocus = true;
-      try {
-        isAutoFocus = localStorage.getItem('pos_sale_autofocus') !== 'false';
-      } catch (err) {}
-
-      if (isAutoFocus) {
-        const timer = setTimeout(() => {
-          const active = document.activeElement;
-          const isOtherInputFocused =
-            active &&
-            active !== document.body &&
-            active !== searchInputRef.current &&
-            (active.tagName === 'INPUT' || active.tagName === 'TEXTAREA' || active.tagName === 'SELECT');
-          if (!isOtherInputFocused) {
-            searchInputRef.current?.focus();
-          }
-        }, 100);
-        return () => clearTimeout(timer);
-      }
-    }
-  }, [isOpen, searchInputRef]);
-
   return {
-    // States
-    customerId,
-    setCustomerId,
-    customerSummary,
-    items,
-    setItems,
-    expandedId,
-    setExpandedId,
-    searchQuery,
-    setSearchQuery,
-    isSearchOpen,
-    setIsSearchOpen,
-    searchError,
-    setSearchError,
-    barcodeInput,
-    setBarcodeInput,
-    barcodeError,
-    setBarcodeError,
-    discount,
-    setDiscount,
-    discountTouched,
-    setDiscountTouched,
-    vat,
-    setVat,
-    hasSetupCharge,
-    setHasSetupCharge,
-    cameraCount,
-    setCameraCount,
-    setupRatePerCamera,
-    setSetupRatePerCamera,
-    setupCharge,
-    setSetupCharge,
-    hasExtraCost,
-    setHasExtraCost,
-    extraCost,
-    setExtraCost,
-    extraCostCategory,
-    setExtraCostCategory,
-    extraCostNotes,
-    setExtraCostNotes,
-    loyaltyPointsToUse,
-    setLoyaltyPointsToUse,
-    tenders,
-    setTenders,
-    hasUserEditedPaid,
-    setHasUserEditedPaid,
-    paymentConfirmed,
-    setPaymentConfirmed,
-    walletAccounts,
-    customerSearch,
-    setCustomerSearch,
-    isCustomerOpen,
-    setIsCustomerOpen,
-    popupMsg,
-    setPopupMsg,
+    ...customerSub,
+    ...cart,
+    ...pricing,
+    ...tendersState,
+    ...draftSub,
+    ...saveAndPrintSub,
     salesPerson,
     setSalesPerson,
     invoiceDate,
@@ -446,83 +365,6 @@ export function useNewSale({
     setDestination,
     attention,
     setAttention,
-    staffList,
-    saving,
-    error,
-    setError,
-    printSale,
-    setPrintSale,
-    isPrintOpen,
-    setIsPrintOpen,
-    isPrintPreviewOnly,
-    setIsPrintPreviewOnly,
-    loadingSummary,
-    recoveredDraft,
-    activeCostCardId,
-    setActiveCostCardId,
-
-    // Refs
-    searchContainerRef,
-    searchInputRef,
-    barcodeInputRef,
-    customerSelectRef,
-
-    // Computed / Memos
-    cashAccounts,
-    bankAccounts,
-    mfsAccounts,
-    filteredProducts,
-    detectedCameraCount,
-    subtotal,
-    perItemDiscount,
-    totalDiscount,
-    totalVat,
-    totalSetupCharge,
-    totalExtraCost,
-    netAmount,
-    currentSaleTotal,
-    payableAmount,
-    selectedCustomer,
-    previousDue,
-    totalPayable,
-    customerWalletBalance,
-    customerWalletLabel,
-    paid,
-    currentDue,
-    due,
-    customerTypeRaw,
-    isTechnician,
-    isReseller,
-    isGroupCustomer,
-    groupDiscountAmount,
-    isGroupDiscountActive,
-
-    // Handlers
-    toggleCostCard,
-    handleRestoreDraft,
-    handleDiscardDraft,
-    addProduct,
-    switchItemUnit,
-    updateItem,
-    removeItem,
-    handleScanEnter,
-    handleAddBarcode,
-    handleRemoveBarcode,
-    handleToggleSetupCharge,
-    handleCameraCountChange,
-    handleRateChange,
-    handleDirectSetupChargeChange,
-    handleToggleGroupDiscount,
-    updateTender,
-    removeTender,
-    addTenderRow,
-    acceptTender,
-    cancelTender,
-    setQuickPaid,
-    handleClearForm,
-    handleOpenPrintPreview,
-    handlePreviewRecentSale,
-    handleSaveSale,
   };
 }
 

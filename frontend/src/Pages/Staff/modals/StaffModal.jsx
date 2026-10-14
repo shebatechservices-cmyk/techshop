@@ -1,6 +1,9 @@
-import React, { useState } from 'react';
-import BangladeshiPhoneInput from '../../../components/ui/BangladeshiPhoneInput';
-import API from '../../../services/api';
+import React from 'react';
+import StaffCustomerImport from './staff/StaffCustomerImport';
+import StaffPersonalFields from './staff/StaffPersonalFields';
+import StaffRoleSecurityFields from './staff/StaffRoleSecurityFields';
+import StaffCompensationFields from './staff/StaffCompensationFields';
+import StaffAddressFields from './staff/StaffAddressFields';
 
 export default function StaffModal({
   isOpen,
@@ -9,73 +12,13 @@ export default function StaffModal({
   formData,
   setFormData,
   formErrors,
-  roles,
+  roles = [],
   saving,
-  onSubmit
+  onSubmit,
 }) {
-  const [showPassword, setShowPassword] = useState(false);
-  const [searchPhone, setSearchPhone] = useState('');
-  const [searchingCustomer, setSearchingCustomer] = useState(false);
-  const [customerResults, setCustomerResults] = useState([]);
-  const [searched, setSearched] = useState(false);
-  const [importedCustomer, setImportedCustomer] = useState(null);
-
   if (!isOpen) return null;
 
   const isEdit = mode === 'edit';
-
-  const handleSearchCustomer = async (e) => {
-    if (e) e.preventDefault();
-    const query = searchPhone.trim();
-    if (!query) return;
-
-    try {
-      setSearchingCustomer(true);
-      const res = await fetch(`${API}/sales/customers?phone=${encodeURIComponent(query)}`);
-      if (res.ok) {
-        const json = await res.json();
-        if (json.success) {
-          setCustomerResults(json.data || []);
-        } else {
-          setCustomerResults([]);
-        }
-      }
-    } catch (err) {
-      console.error('Error searching customer:', err);
-    } finally {
-      setSearchingCustomer(false);
-      setSearched(true);
-    }
-  };
-
-  const handleAutoFillCustomer = (cust) => {
-    if (!cust) return;
-    let p = cust.phone || '';
-    if (p.startsWith('+880')) p = p.slice(4);
-    else if (p.startsWith('880')) p = p.slice(3);
-    else if (p.startsWith('0')) p = p.slice(1);
-
-    setFormData(prev => ({
-      ...prev,
-      name: cust.name || prev.name,
-      phone: p || prev.phone,
-      email: cust.email || prev.email,
-      address: cust.address || prev.address
-    }));
-    setImportedCustomer(cust);
-    setCustomerResults([]);
-    setSearched(false);
-  };
-
-  const generateRandomPassword = () => {
-    const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz23456789!@#$%';
-    let pass = '';
-    for (let i = 0; i < 8; i++) {
-      pass += chars.charAt(Math.floor(Math.random() * chars.length));
-    }
-    setFormData({ ...formData, password: pass });
-    setShowPassword(true);
-  };
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-6 bg-slate-900/60 backdrop-blur-sm overflow-y-auto animate-in fade-in duration-200">
@@ -91,7 +34,9 @@ export default function StaffModal({
                 {isEdit ? `Edit Staff: ${formData.name || 'Member'}` : 'Add New Staff Member'}
               </h3>
               <p className="text-xs text-slate-500 mt-0.5">
-                {isEdit ? 'Update staff profile, role credentials, and salary details.' : 'Create login credentials and assign system access permissions.'}
+                {isEdit
+                  ? 'Update staff profile, role credentials, and salary details.'
+                  : 'Create login credentials and assign system access permissions.'}
               </p>
             </div>
           </div>
@@ -114,370 +59,38 @@ export default function StaffModal({
           )}
 
           {/* Quick Import from Customer (Only on Create mode) */}
-          {!isEdit && (
-            <div className="p-4 bg-slate-50 border border-slate-200 rounded-2xl space-y-2.5">
-              <div className="flex items-center justify-between">
-                <label className="text-xs font-bold text-slate-700 uppercase tracking-wider flex items-center gap-1.5">
-                  <span>🔍</span> Import from Existing Customer
-                </label>
-                <span className="text-[11px] text-slate-400">Search by phone to auto-fill details</span>
-              </div>
-              <div className="flex gap-2">
-                <input
-                  type="text"
-                  placeholder="Enter customer phone number..."
-                  value={searchPhone}
-                  onChange={(e) => setSearchPhone(e.target.value)}
-                  onKeyDown={(e) => {
-                    if (e.key === 'Enter') {
-                      e.preventDefault();
-                      handleSearchCustomer();
-                    }
-                  }}
-                  className="flex-1 px-3.5 py-2 border border-slate-300 rounded-xl text-xs bg-white focus:outline-none focus:ring-2 focus:border-blue-500 focus:ring-blue-100 text-slate-800"
-                />
-                <button
-                  type="button"
-                  onClick={handleSearchCustomer}
-                  disabled={searchingCustomer || !searchPhone.trim()}
-                  className="px-4 py-2 bg-blue-600 hover:bg-blue-700 disabled:bg-blue-300 text-white rounded-xl text-xs font-bold transition-colors cursor-pointer"
-                >
-                  {searchingCustomer ? 'Searching...' : 'Search Customer'}
-                </button>
-              </div>
+          <StaffCustomerImport
+            isEdit={isEdit}
+            setFormData={setFormData}
+          />
 
-              {searched && customerResults.length > 0 && (
-                <div className="space-y-1.5 pt-1 border-t border-slate-200/80">
-                  <p className="text-[11px] font-semibold text-slate-500">Matching Customers:</p>
-                  {customerResults.map((cust) => (
-                    <div
-                      key={cust.id}
-                      className="flex items-center justify-between p-2.5 bg-white border border-blue-200 rounded-xl"
-                    >
-                      <div>
-                        <p className="text-xs font-bold text-slate-900">{cust.name}</p>
-                        <p className="text-[11px] text-slate-500">
-                          📞 {cust.phone} {cust.address ? `• 📍 ${cust.address}` : ''}
-                        </p>
-                      </div>
-                      <button
-                        type="button"
-                        onClick={() => handleAutoFillCustomer(cust)}
-                        className="px-3 py-1 bg-blue-50 hover:bg-blue-100 text-blue-700 border border-blue-200 rounded-lg text-xs font-bold transition-colors cursor-pointer"
-                      >
-                        ⚡ Auto-fill
-                      </button>
-                    </div>
-                  ))}
-                </div>
-              )}
-
-              {searched && customerResults.length === 0 && (
-                <p className="text-[11px] text-slate-400 text-center py-1">
-                  No customer found with &quot;{searchPhone}&quot;. You can manually fill the form below.
-                </p>
-              )}
-
-              {importedCustomer && (
-                <div className="flex items-center justify-between p-2 bg-emerald-50 border border-emerald-200 rounded-xl text-xs text-emerald-800 font-medium">
-                  <span>
-                    ✓ Details auto-filled from customer: <strong>{importedCustomer.name}</strong> ({importedCustomer.phone})
-                  </span>
-                  <button
-                    type="button"
-                    onClick={() => setImportedCustomer(null)}
-                    className="text-xs text-emerald-700 hover:text-emerald-900 font-bold underline cursor-pointer"
-                  >
-                    Clear
-                  </button>
-                </div>
-              )}
-            </div>
-          )}
-
-          {/* Basic Info Section */}
-          <div>
-            <h4 className="text-xs font-bold text-slate-500 uppercase tracking-wider mb-3 flex items-center gap-1.5">
-              <span>🪪</span> Personal & Account Information
-            </h4>
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-              {/* Full Name */}
-              <div className="sm:col-span-2">
-                <label className="block text-sm font-bold text-slate-700 mb-1.5">
-                  Full Name <span className="text-rose-500">*</span>
-                </label>
-                <input
-                  type="text"
-                  required
-                  placeholder="e.g. Tanvir Ahmed"
-                  value={formData.name || ''}
-                  onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                  className={`w-full px-3.5 py-2.5 border rounded-xl text-sm focus:outline-none focus:ring-2 ${
-                    formErrors.name ? 'border-rose-400 focus:ring-rose-200' : 'border-slate-300 focus:border-blue-500 focus:ring-blue-100 text-slate-800'
-                  }`}
-                />
-                {formErrors.name && <p className="text-rose-500 text-xs mt-1 font-medium">{formErrors.name}</p>}
-              </div>
-
-              {/* Phone Number */}
-              <div>
-                <BangladeshiPhoneInput
-                  label="Phone Number"
-                  helperText="(Primary Login & SMS)"
-                  placeholder="1X-XXXXXXXX"
-                  value={formData.phone || ''}
-                  onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
-                />
-              </div>
-
-              {/* Email Address */}
-              <div>
-                <label className="block text-sm font-bold text-slate-700 mb-1.5">
-                  Email Address
-                </label>
-                <input
-                  type="email"
-                  placeholder="staff@sheba.technology"
-                  value={formData.email || ''}
-                  onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-                  className="w-full px-3.5 py-2.5 border border-slate-300 rounded-xl text-sm focus:outline-none focus:ring-2 focus:border-blue-500 focus:ring-blue-100 text-slate-800"
-                />
-              </div>
-
-              {formErrors.contact && (
-                <div className="sm:col-span-2">
-                  <p className="text-rose-500 text-xs font-medium">{formErrors.contact}</p>
-                </div>
-              )}
-            </div>
-          </div>
+          {/* Personal & Account Information */}
+          <StaffPersonalFields
+            formData={formData}
+            setFormData={setFormData}
+            formErrors={formErrors}
+          />
 
           {/* Role & Access Security */}
-          <div className="pt-3 border-t border-slate-100">
-            <h4 className="text-xs font-bold text-slate-500 uppercase tracking-wider mb-3 flex items-center gap-1.5">
-              <span>🛡️</span> Role & Security Credentials
-            </h4>
-
-            {/* Role Enum Buttons */}
-            <div className="mb-4">
-              <label className="block text-sm font-bold text-slate-700 mb-2">
-                System Access Role <span className="text-rose-500">*</span>
-              </label>
-              <div className="grid grid-cols-3 gap-3">
-                {[
-                  { role: 'ADMIN', label: 'Admin', icon: '👑', desc: 'Full System Control' },
-                  { role: 'STAFF', label: 'Staff', icon: '💼', desc: 'POS & Store Operations' },
-                  { role: 'TECHNICIAN', label: 'Technician', icon: '🔧', desc: 'Projects, Stock & Wallet' }
-                ].map((item) => {
-                  const isSelected = (formData.role || 'STAFF') === item.role;
-                  return (
-                    <button
-                      key={item.role}
-                      type="button"
-                      onClick={() => {
-                        let matchingRoleId = 3;
-                        if (item.role === 'ADMIN') matchingRoleId = roles.find(r => r.name.toLowerCase().includes('admin'))?.id || 1;
-                        else if (item.role === 'TECHNICIAN') matchingRoleId = roles.find(r => r.name.toLowerCase().includes('tech'))?.id || 4;
-                        else matchingRoleId = roles.find(r => !r.name.toLowerCase().includes('admin') && !r.name.toLowerCase().includes('tech'))?.id || 3;
-                        setFormData({
-                          ...formData,
-                          role: item.role,
-                          role_id: matchingRoleId,
-                          designation: formData.designation || (item.role === 'TECHNICIAN' ? 'Field Technician' : item.role === 'ADMIN' ? 'Shop Admin' : 'Sales Executive')
-                        });
-                      }}
-                      className={`p-3.5 rounded-xl border text-left transition-all cursor-pointer ${
-                        isSelected
-                          ? 'border-blue-600 bg-blue-50/70 shadow-sm ring-1 ring-blue-600'
-                          : 'border-slate-200 hover:border-slate-300 hover:bg-slate-50'
-                      }`}
-                    >
-                      <div className="flex items-center gap-1.5 text-sm font-bold text-slate-800">
-                        <span>{item.icon}</span>
-                        <span>{item.label}</span>
-                      </div>
-                      <p className="text-xs text-slate-500 mt-1 leading-tight">{item.desc}</p>
-                    </button>
-                  );
-                })}
-              </div>
-            </div>
-
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-              {/* Detailed Role Title */}
-              <div>
-                <label className="block text-sm font-bold text-slate-700 mb-1.5">
-                  Role Title / Permission Group
-                </label>
-                <select
-                  value={formData.role_id || 3}
-                  onChange={(e) => setFormData({ ...formData, role_id: parseInt(e.target.value, 10) })}
-                  className="w-full px-3.5 py-2.5 border border-slate-300 rounded-xl text-sm bg-white focus:outline-none focus:ring-2 focus:border-blue-500 focus:ring-blue-100 text-slate-800"
-                >
-                  {roles.map((r) => (
-                    <option key={r.id} value={r.id}>
-                      {r.name}
-                    </option>
-                  ))}
-                </select>
-              </div>
-
-              {/* Password */}
-              <div>
-                <div className="flex items-center justify-between mb-1.5">
-                  <label className="block text-sm font-bold text-slate-700">
-                    {isEdit ? 'New Password (Optional)' : 'Login Password *'}
-                  </label>
-                  <button
-                    type="button"
-                    onClick={generateRandomPassword}
-                    className="text-xs text-blue-600 hover:text-blue-800 font-semibold hover:underline cursor-pointer"
-                  >
-                    ⚡ Auto-Generate
-                  </button>
-                </div>
-                <div className="relative">
-                  <input
-                    type={showPassword ? 'text' : 'password'}
-                    placeholder={isEdit ? 'Leave blank to keep current' : 'Min. 4 characters'}
-                    value={formData.password || ''}
-                    onChange={(e) => setFormData({ ...formData, password: e.target.value })}
-                    className={`w-full px-3.5 py-2.5 border rounded-xl text-sm pr-12 focus:outline-none focus:ring-2 ${
-                      formErrors.password ? 'border-rose-400 focus:ring-rose-200' : 'border-slate-300 focus:border-blue-500 focus:ring-blue-100 text-slate-800'
-                    }`}
-                  />
-                  <button
-                    type="button"
-                    onClick={() => setShowPassword(!showPassword)}
-                    className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 text-xs px-1.5 py-0.5"
-                  >
-                    {showPassword ? 'Hide' : 'Show'}
-                  </button>
-                </div>
-                {formErrors.password && <p className="text-rose-500 text-xs mt-1 font-medium">{formErrors.password}</p>}
-              </div>
-            </div>
-          </div>
+          <StaffRoleSecurityFields
+            formData={formData}
+            setFormData={setFormData}
+            formErrors={formErrors}
+            roles={roles}
+            isEdit={isEdit}
+          />
 
           {/* Employment & Compensation */}
-          <div className="pt-3 border-t border-slate-100">
-            <h4 className="text-xs font-bold text-slate-500 uppercase tracking-wider mb-3 flex items-center gap-1.5">
-              <span>💼</span> Job Role, Payroll & Wallet
-            </h4>
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-              {/* Designation */}
-              <div>
-                <label className="block text-sm font-bold text-slate-700 mb-1.5">
-                  Designation / Job Title
-                </label>
-                <input
-                  type="text"
-                  placeholder="e.g. Field Technician"
-                  value={formData.designation || ''}
-                  onChange={(e) => setFormData({ ...formData, designation: e.target.value })}
-                  className="w-full px-3.5 py-2.5 border border-slate-300 rounded-xl text-sm focus:outline-none focus:ring-2 focus:border-blue-500 focus:ring-blue-100 text-slate-800"
-                />
-              </div>
-
-              {/* Monthly Salary */}
-              <div>
-                <label className="block text-sm font-bold text-slate-700 mb-1.5">
-                  Monthly Salary (৳)
-                </label>
-                <input
-                  type="number"
-                  placeholder="0.00"
-                  value={formData.salary || ''}
-                  onChange={(e) => setFormData({ ...formData, salary: e.target.value })}
-                  className="w-full px-3.5 py-2.5 border border-slate-300 rounded-xl text-sm focus:outline-none focus:ring-2 focus:border-blue-500 focus:ring-blue-100 text-slate-800"
-                />
-              </div>
-
-              {/* Wallet Balance */}
-              <div>
-                <label className="block text-sm font-bold text-slate-700 mb-1.5">
-                  Personal Wallet (৳)
-                </label>
-                <input
-                  type="number"
-                  placeholder="0.00"
-                  value={formData.wallet_balance !== undefined ? formData.wallet_balance : ''}
-                  onChange={(e) => setFormData({ ...formData, wallet_balance: e.target.value })}
-                  className="w-full px-3.5 py-2.5 border border-emerald-300 rounded-xl text-sm focus:outline-none focus:ring-2 focus:border-emerald-500 focus:ring-emerald-100 bg-emerald-50/30 font-semibold text-emerald-900"
-                />
-              </div>
-
-              {/* Joining Date */}
-              <div>
-                <label className="block text-sm font-bold text-slate-700 mb-1.5">
-                  Joining Date
-                </label>
-                <input
-                  type="date"
-                  value={formData.joining_date || ''}
-                  onChange={(e) => setFormData({ ...formData, joining_date: e.target.value })}
-                  className="w-full px-3.5 py-2.5 border border-slate-300 rounded-xl text-sm focus:outline-none focus:ring-2 focus:border-blue-500 focus:ring-blue-100 text-slate-800"
-                />
-              </div>
-            </div>
-          </div>
+          <StaffCompensationFields
+            formData={formData}
+            setFormData={setFormData}
+          />
 
           {/* Additional Details */}
-          <div className="pt-3 border-t border-slate-100">
-            <h4 className="text-xs font-bold text-slate-500 uppercase tracking-wider mb-3 flex items-center gap-1.5">
-              <span>📍</span> Contact & Address
-            </h4>
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-              {/* Emergency Contact */}
-              <div>
-                <label className="block text-sm font-bold text-slate-700 mb-1.5">
-                  Emergency Contact Number
-                </label>
-                <input
-                  type="text"
-                  placeholder="01XXXXXXXXX (Family / Guardian)"
-                  value={formData.emergency_contact || ''}
-                  onChange={(e) => setFormData({ ...formData, emergency_contact: e.target.value })}
-                  className="w-full px-3.5 py-2.5 border border-slate-300 rounded-xl text-sm focus:outline-none focus:ring-2 focus:border-blue-500 focus:ring-blue-100 text-slate-800"
-                />
-              </div>
-
-              {/* Active Status */}
-              <div className="flex items-center gap-3 pt-6">
-                <label className="relative inline-flex items-center cursor-pointer">
-                  <input
-                    type="checkbox"
-                    checked={Boolean(formData.is_active)}
-                    onChange={(e) => setFormData({ ...formData, is_active: e.target.checked })}
-                    className="sr-only peer"
-                  />
-                  <div className="w-11 h-6 bg-slate-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-emerald-600"></div>
-                </label>
-                <div>
-                  <span className="text-sm font-bold text-slate-800">
-                    {formData.is_active ? 'Account Active' : 'Account Deactivated'}
-                  </span>
-                  <p className="text-xs text-slate-400">
-                    {formData.is_active ? 'Staff can log in and perform actions.' : 'Staff is locked out from signing in.'}
-                  </p>
-                </div>
-              </div>
-
-              {/* Present Address */}
-              <div className="sm:col-span-2">
-                <label className="block text-sm font-bold text-slate-700 mb-1.5">
-                  Present Address & Notes
-                </label>
-                <textarea
-                  rows="2"
-                  placeholder="Home address, NID info, or internal notes..."
-                  value={formData.address || ''}
-                  onChange={(e) => setFormData({ ...formData, address: e.target.value })}
-                  className="w-full px-3.5 py-2.5 border border-slate-300 rounded-xl text-sm focus:outline-none focus:ring-2 focus:border-blue-500 focus:ring-blue-100 text-slate-800"
-                />
-              </div>
-            </div>
-          </div>
+          <StaffAddressFields
+            formData={formData}
+            setFormData={setFormData}
+          />
         </form>
 
         {/* Modal Footer */}

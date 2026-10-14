@@ -22,57 +22,22 @@ export default function PurchaseCalculationGrid({
           Purchase Order Calculation
         </div>
 
-        {/* Goods Subtotal */}
-        <div className="flex justify-between items-center py-2 px-3 bg-white border border-slate-200 rounded-md">
-          <div>
-            <label className="block text-xs font-bold text-slate-600">
-              Goods Subtotal (পণ্যের মূল্য)
-            </label>
-            <div className="text-[0.66rem] text-slate-400">
-              Total item purchase cost from supplier
-            </div>
-          </div>
-          <span className="font-extrabold text-sm text-slate-800">
-            {taka(itemsSubtotal || totals.cost || netAmount)}
-          </span>
-        </div>
-
-        {/* Less Discount */}
-        <div className="flex justify-between items-center py-1.5 px-3 bg-white border border-slate-200 rounded-md gap-2">
-          <label className="text-xs font-bold text-rose-600 whitespace-nowrap">
-            Less Discount (ডিসকাউন্ট)
-          </label>
-          <div className="flex items-center gap-1 max-w-[140px]">
-            <span className="text-sm text-rose-600 font-bold">-৳</span>
-            <input
-              type="number"
-              min="0"
-              step="any"
-              placeholder="0.00"
-              value={discount === '' ? '' : discount}
-              onChange={(e) => {
-                const val = e.target.value;
-                setDiscount(val === '' ? '' : Math.max(0, parseFloat(val) || 0));
-              }}
-              className="w-full py-1 px-2 rounded border border-slate-300 text-sm font-bold text-rose-600 text-right outline-none focus:border-rose-400"
-            />
-          </div>
-        </div>
-
-        {/* Supplier Payable (Goods Subtotal - Discount) */}
+        {/* Supplier Payable (Goods Total) */}
         <div className="flex justify-between items-center py-2 px-3 bg-blue-50 border border-blue-200 rounded-md">
           <div>
             <label className="text-xs font-extrabold text-blue-900 uppercase">
-              Supplier Payable (প্রদেয় বিল)
+              Supplier Payable (পণ্যের বিল)
             </label>
             <div className="text-[0.66rem] text-blue-700">
-              Amount owed to supplier for goods
+              Total bill owed to supplier for goods
             </div>
           </div>
           <span className="font-black text-base text-blue-700">
-            {taka(payableAmount)}
+            {taka(payableAmount || itemsSubtotal || totals.cost || netAmount)}
           </span>
         </div>
+
+
 
         {/* If Extra Cost exists: Display Logistics Expense and Total Landed Cost */}
         {extra > 0 && (

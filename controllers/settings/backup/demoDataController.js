@@ -14,25 +14,25 @@ exports.cleanDummyData = async (req, res) => {
         });
     }
 
+    const { confirmationText, backupFirst = true, scope = 'transactions', resetShopToDummy = false } = req.body;
+
+    if (Number(req.user?.role_id) !== 1) {
+        return res.status(403).json({
+            success: false,
+            message: 'শুধুমাত্র সুপার অ্যাডমিনের এই অ্যাকশনটি চালানোর অনুমতি রয়েছে!'
+        });
+    }
+
+    const validPhrases = ['CLEAR-DUMMY-DATA', 'RESET', 'CONFIRM'];
+    if (!confirmationText || !validPhrases.includes(confirmationText.trim().toUpperCase())) {
+        return res.status(400).json({
+            success: false,
+            message: 'কনফার্মেশন শব্দ ভুল হয়েছে! নিশ্চিত করতে সঠিকভাবে "CLEAR-DUMMY-DATA" লিখুন।'
+        });
+    }
+
     const client = await pool.connect();
     try {
-        const { confirmationText, backupFirst = true, scope = 'transactions', resetShopToDummy = false } = req.body;
-
-        if (Number(req.user?.role_id) !== 1) {
-            return res.status(403).json({
-                success: false,
-                message: 'শুধুমাত্র সুপার অ্যাডমিনের এই অ্যাকশনটি চালানোর অনুমতি রয়েছে!'
-            });
-        }
-
-        const validPhrases = ['CLEAR-DUMMY-DATA', 'RESET', 'CONFIRM'];
-        if (!confirmationText || !validPhrases.includes(confirmationText.trim().toUpperCase())) {
-            return res.status(400).json({
-                success: false,
-                message: 'কনফার্মেশন শব্দ ভুল হয়েছে! নিশ্চিত করতে সঠিকভাবে "CLEAR-DUMMY-DATA" লিখুন।'
-            });
-        }
-
         let backupName = null;
         if (backupFirst) {
             try {

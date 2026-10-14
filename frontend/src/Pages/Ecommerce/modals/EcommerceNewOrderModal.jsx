@@ -1,19 +1,11 @@
 import React, { useState } from 'react';
-import API from '../../../services/api';
-import BangladeshiPhoneInput from '../../../components/ui/BangladeshiPhoneInput';
+import { smartFetch } from '../../../services/api';
 import { isValidBDPhone } from '../../../utils/phoneUtils';
-
-const money = (val) => Number.parseFloat(val || 0) || 0;
-const taka = (val) => `৳${money(val).toLocaleString('en-BD', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
-
-const COURIER_PRESETS = [
-  { label: 'Steadfast Courier (Inside Dhaka - ৳80)', name: 'Steadfast Courier', charge: 80 },
-  { label: 'Steadfast Courier (Outside Dhaka - ৳150)', name: 'Steadfast Courier', charge: 150 },
-  { label: 'Pathao Courier (Express - ৳120)', name: 'Pathao Courier', charge: 120 },
-  { label: 'Sundarban Courier (৳150)', name: 'Sundarban Courier', charge: 150 },
-  { label: 'RedX Delivery (৳130)', name: 'RedX Delivery', charge: 130 },
-  { label: 'Free Delivery (৳0)', name: 'In-house Delivery', charge: 0 },
-];
+import { money } from './new-order/newOrderConstants';
+import EcommerceCustomerSection from './new-order/EcommerceCustomerSection';
+import EcommerceOrderItemsSection from './new-order/EcommerceOrderItemsSection';
+import EcommerceCourierPaymentSection from './new-order/EcommerceCourierPaymentSection';
+import EcommerceOrderTotalSummary from './new-order/EcommerceOrderTotalSummary';
 
 export default function EcommerceNewOrderModal({ isOpen, onClose, products = [], onOrderCreated }) {
   const [customerName, setCustomerName] = useState('');
@@ -54,7 +46,10 @@ export default function EcommerceNewOrderModal({ isOpen, onClose, products = [],
     });
   };
 
-  const itemsSubtotal = items.reduce((sum, it) => sum + money(it.quantity) * money(it.unit_price), 0);
+  const itemsSubtotal = items.reduce(
+    (sum, it) => sum + money(it.quantity) * money(it.unit_price),
+    0
+  );
   const finalTotal = itemsSubtotal + money(deliveryCharge);
 
   const handleSubmit = async (e) => {
@@ -93,7 +88,7 @@ export default function EcommerceNewOrderModal({ isOpen, onClose, products = [],
         })),
       };
 
-      const res = await fetch(`${API}/ecommerce/orders`, {
+      const res = await smartFetch('/ecommerce/orders', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(payload),
@@ -155,7 +150,9 @@ export default function EcommerceNewOrderModal({ isOpen, onClose, products = [],
           }}
         >
           <div>
-            <h3 style={{ margin: 0, fontSize: '1.2rem', fontWeight: 800 }}>+ Create New Online Order</h3>
+            <h3 style={{ margin: 0, fontSize: '1.2rem', fontWeight: 800 }}>
+              + Create New Online Order
+            </h3>
             <p style={{ margin: '3px 0 0 0', fontSize: '0.8rem', opacity: 0.9 }}>
               Manual entry for Facebook, phone, WhatsApp or web store orders
             </p>
@@ -182,275 +179,65 @@ export default function EcommerceNewOrderModal({ isOpen, onClose, products = [],
         </div>
 
         {/* Scrollable Form Body */}
-        <form onSubmit={handleSubmit} style={{ overflowY: 'auto', padding: '20px 24px', flex: 1, background: '#f8fafc' }}>
+        <form
+          onSubmit={handleSubmit}
+          style={{
+            overflowY: 'auto',
+            padding: '20px 24px',
+            flex: 1,
+            background: '#f8fafc',
+          }}
+        >
           {error && (
-            <div style={{ padding: '10px 14px', background: '#fee2e2', color: '#b91c1c', borderRadius: '8px', fontSize: '0.85rem', marginBottom: '14px' }}>
+            <div
+              style={{
+                padding: '10px 14px',
+                background: '#fee2e2',
+                color: '#b91c1c',
+                borderRadius: '8px',
+                fontSize: '0.85rem',
+                marginBottom: '14px',
+              }}
+            >
               ⚠️ {error}
             </div>
           )}
 
-          {/* Section 1: Customer Details */}
-          <div style={{ background: '#ffffff', padding: '16px', borderRadius: '10px', border: '1px solid #e2e8f0', marginBottom: '16px' }}>
-            <div style={{ fontSize: '0.8rem', fontWeight: 800, color: '#0d9488', textTransform: 'uppercase', marginBottom: '12px' }}>
-              1. Customer Information
-            </div>
+          <EcommerceCustomerSection
+            customerName={customerName}
+            setCustomerName={setCustomerName}
+            customerPhone={customerPhone}
+            setCustomerPhone={setCustomerPhone}
+            shippingAddress={shippingAddress}
+            setShippingAddress={setShippingAddress}
+            customerNotes={customerNotes}
+            setCustomerNotes={setCustomerNotes}
+          />
 
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px', marginBottom: '12px' }}>
-              <div>
-                <label style={{ display: 'block', fontSize: '0.8rem', fontWeight: 700, color: '#334155', marginBottom: '4px' }}>
-                  Customer Name *
-                </label>
-                <input
-                  type="text"
-                  required
-                  placeholder="e.g. Shakil Ahmed"
-                  value={customerName}
-                  onChange={(e) => setCustomerName(e.target.value)}
-                  style={{ width: '100%', padding: '8px 12px', borderRadius: '6px', border: '1px solid #cbd5e1', fontSize: '0.88rem', boxSizing: 'border-box' }}
-                />
-              </div>
+          <EcommerceOrderItemsSection
+            items={items}
+            products={products}
+            onAddItem={handleAddItem}
+            onRemoveItem={handleRemoveItem}
+            onItemChange={handleItemChange}
+          />
 
-              <div>
-                <BangladeshiPhoneInput
-                  label="Phone Number"
-                  required
-                  placeholder="1X-XXXXXXXX"
-                  value={customerPhone}
-                  onChange={(e) => setCustomerPhone(e.target.value)}
-                />
-              </div>
-            </div>
+          <EcommerceCourierPaymentSection
+            courierName={courierName}
+            setCourierName={setCourierName}
+            deliveryCharge={deliveryCharge}
+            setDeliveryCharge={setDeliveryCharge}
+            paymentMethod={paymentMethod}
+            setPaymentMethod={setPaymentMethod}
+            paymentStatus={paymentStatus}
+            setPaymentStatus={setPaymentStatus}
+          />
 
-            <div style={{ marginBottom: '12px' }}>
-              <label style={{ display: 'block', fontSize: '0.8rem', fontWeight: 700, color: '#334155', marginBottom: '4px' }}>
-                Delivery Address *
-              </label>
-              <textarea
-                required
-                rows={2}
-                placeholder="House, Road, Area, District/Thana..."
-                value={shippingAddress}
-                onChange={(e) => setShippingAddress(e.target.value)}
-                style={{ width: '100%', padding: '8px 12px', borderRadius: '6px', border: '1px solid #cbd5e1', fontSize: '0.88rem', boxSizing: 'border-box' }}
-              />
-            </div>
-
-            <div>
-              <label style={{ display: 'block', fontSize: '0.8rem', fontWeight: 700, color: '#64748b', marginBottom: '4px' }}>
-                Customer Special Notes (Optional)
-              </label>
-              <input
-                type="text"
-                placeholder="e.g. Call before delivery, urgent parcel..."
-                value={customerNotes}
-                onChange={(e) => setCustomerNotes(e.target.value)}
-                style={{ width: '100%', padding: '7px 12px', borderRadius: '6px', border: '1px solid #cbd5e1', fontSize: '0.84rem', boxSizing: 'border-box' }}
-              />
-            </div>
-          </div>
-
-          {/* Section 2: Products */}
-          <div style={{ background: '#ffffff', padding: '16px', borderRadius: '10px', border: '1px solid #e2e8f0', marginBottom: '16px' }}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '12px' }}>
-              <div style={{ fontSize: '0.8rem', fontWeight: 800, color: '#0d9488', textTransform: 'uppercase' }}>
-                2. Order Products ({items.length})
-              </div>
-              <button
-                type="button"
-                onClick={handleAddItem}
-                style={{
-                  padding: '4px 10px',
-                  background: '#f0fdfa',
-                  border: '1px solid #99f6e4',
-                  color: '#0d9488',
-                  borderRadius: '6px',
-                  fontSize: '0.78rem',
-                  fontWeight: 700,
-                  cursor: 'pointer',
-                }}
-              >
-                + Add Item
-              </button>
-            </div>
-
-            {items.map((it, idx) => (
-              <div
-                key={idx}
-                style={{
-                  display: 'grid',
-                  gridTemplateColumns: 'minmax(200px, 2fr) 70px 100px 90px 30px',
-                  gap: '8px',
-                  alignItems: 'center',
-                  marginBottom: '8px',
-                  background: '#f8fafc',
-                  padding: '8px',
-                  borderRadius: '6px',
-                }}
-              >
-                <div>
-                  <select
-                    value={it.product_id}
-                    onChange={(e) => handleItemChange(idx, 'product_id', e.target.value)}
-                    required
-                    style={{ width: '100%', padding: '7px 8px', borderRadius: '6px', border: '1px solid #cbd5e1', fontSize: '0.84rem' }}
-                  >
-                    <option value="">-- Choose Product --</option>
-                    {products.map((p) => (
-                      <option key={p.id} value={p.id}>
-                        {p.name} (Stock: {p.stock || 0}) - ৳{Number(p.selling_price || 0).toLocaleString()}
-                      </option>
-                    ))}
-                  </select>
-                </div>
-
-                <div>
-                  <input
-                    type="number"
-                    min="1"
-                    placeholder="Qty"
-                    value={it.quantity}
-                    onChange={(e) => handleItemChange(idx, 'quantity', e.target.value)}
-                    style={{ width: '100%', padding: '7px 6px', borderRadius: '6px', border: '1px solid #cbd5e1', fontSize: '0.84rem', textAlign: 'center', boxSizing: 'border-box' }}
-                  />
-                </div>
-
-                <div>
-                  <input
-                    type="number"
-                    placeholder="Price"
-                    value={it.unit_price}
-                    onChange={(e) => handleItemChange(idx, 'unit_price', e.target.value)}
-                    style={{ width: '100%', padding: '7px 6px', borderRadius: '6px', border: '1px solid #cbd5e1', fontSize: '0.84rem', textAlign: 'right', boxSizing: 'border-box' }}
-                  />
-                </div>
-
-                <div style={{ textAlign: 'right', fontWeight: 700, fontSize: '0.88rem', color: '#0f172a' }}>
-                  {taka(money(it.quantity) * money(it.unit_price))}
-                </div>
-
-                <div style={{ textAlign: 'center' }}>
-                  <button
-                    type="button"
-                    onClick={() => handleRemoveItem(idx)}
-                    disabled={items.length === 1}
-                    style={{
-                      background: 'none',
-                      border: 'none',
-                      color: items.length === 1 ? '#cbd5e1' : '#ef4444',
-                      cursor: items.length === 1 ? 'not-allowed' : 'pointer',
-                      fontSize: '0.9rem',
-                    }}
-                  >
-                    ✕
-                  </button>
-                </div>
-              </div>
-            ))}
-          </div>
-
-          {/* Section 3: Courier & Payment */}
-          <div style={{ background: '#ffffff', padding: '16px', borderRadius: '10px', border: '1px solid #e2e8f0', marginBottom: '16px' }}>
-            <div style={{ fontSize: '0.8rem', fontWeight: 800, color: '#0d9488', textTransform: 'uppercase', marginBottom: '12px' }}>
-              3. Courier &amp; Payment Options
-            </div>
-
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px', marginBottom: '12px' }}>
-              <div>
-                <label style={{ display: 'block', fontSize: '0.8rem', fontWeight: 700, color: '#334155', marginBottom: '4px' }}>
-                  Courier Service Preset
-                </label>
-                <select
-                  onChange={(e) => {
-                    const preset = COURIER_PRESETS.find((p) => p.label === e.target.value);
-                    if (preset) {
-                      setCourierName(preset.name);
-                      setDeliveryCharge(preset.charge);
-                    }
-                  }}
-                  style={{ width: '100%', padding: '7px 10px', borderRadius: '6px', border: '1px solid #cbd5e1', fontSize: '0.84rem' }}
-                >
-                  {COURIER_PRESETS.map((p) => (
-                    <option key={p.label} value={p.label}>
-                      {p.label}
-                    </option>
-                  ))}
-                </select>
-              </div>
-
-              <div>
-                <label style={{ display: 'block', fontSize: '0.8rem', fontWeight: 700, color: '#334155', marginBottom: '4px' }}>
-                  Delivery Fee (৳)
-                </label>
-                <input
-                  type="number"
-                  min="0"
-                  value={deliveryCharge}
-                  onChange={(e) => setDeliveryCharge(e.target.value)}
-                  style={{ width: '100%', padding: '7px 10px', borderRadius: '6px', border: '1px solid #cbd5e1', fontSize: '0.84rem', boxSizing: 'border-box' }}
-                />
-              </div>
-            </div>
-
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
-              <div>
-                <label style={{ display: 'block', fontSize: '0.8rem', fontWeight: 700, color: '#334155', marginBottom: '4px' }}>
-                  Payment Method
-                </label>
-                <select
-                  value={paymentMethod}
-                  onChange={(e) => setPaymentMethod(e.target.value)}
-                  style={{ width: '100%', padding: '7px 10px', borderRadius: '6px', border: '1px solid #cbd5e1', fontSize: '0.84rem' }}
-                >
-                  <option value="cod">Cash on Delivery (COD)</option>
-                  <option value="bkash">bKash</option>
-                  <option value="nagad">Nagad</option>
-                  <option value="bank">Bank Transfer</option>
-                  <option value="prepaid">Pre-paid / Card</option>
-                </select>
-              </div>
-
-              <div>
-                <label style={{ display: 'block', fontSize: '0.8rem', fontWeight: 700, color: '#334155', marginBottom: '4px' }}>
-                  Payment Status
-                </label>
-                <select
-                  value={paymentStatus}
-                  onChange={(e) => setPaymentStatus(e.target.value)}
-                  style={{ width: '100%', padding: '7px 10px', borderRadius: '6px', border: '1px solid #cbd5e1', fontSize: '0.84rem' }}
-                >
-                  <option value="unpaid">Unpaid (Collect on Delivery)</option>
-                  <option value="paid">Paid</option>
-                </select>
-              </div>
-            </div>
-          </div>
-
-          {/* Total Summary Footer Box */}
-          <div
-            style={{
-              background: '#f0fdfa',
-              border: '1px solid #99f6e4',
-              borderRadius: '10px',
-              padding: '14px 18px',
-              display: 'flex',
-              justifyContent: 'space-between',
-              alignItems: 'center',
-              marginBottom: '16px',
-            }}
-          >
-            <div>
-              <span style={{ fontSize: '0.8rem', color: '#0f766e' }}>Products Subtotal: {taka(itemsSubtotal)}</span>
-              <span style={{ fontSize: '0.8rem', color: '#0f766e', marginLeft: '12px' }}>+ Delivery: {taka(deliveryCharge)}</span>
-            </div>
-            <div style={{ textAlign: 'right' }}>
-              <span style={{ fontSize: '0.78rem', color: '#64748b', textTransform: 'uppercase', display: 'block' }}>
-                Total Payable Amount
-              </span>
-              <span style={{ fontSize: '1.25rem', fontWeight: 900, color: '#0f766e' }}>
-                {taka(finalTotal)}
-              </span>
-            </div>
-          </div>
+          <EcommerceOrderTotalSummary
+            itemsSubtotal={itemsSubtotal}
+            deliveryCharge={deliveryCharge}
+            finalTotal={finalTotal}
+          />
 
           {/* Action Buttons */}
           <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '10px' }}>

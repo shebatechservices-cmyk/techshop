@@ -1,16 +1,11 @@
 import React from 'react';
-import { Link, Routes, Route, Navigate } from 'react-router-dom';
-import PurchaseOrderModal from './modals/PurchaseOrderModal';
-import PurchaseQuotationModal from './modals/PurchaseQuotationModal';
-import AddSupplierModal from './modals/AddSupplierModal';
-import PurchasePrintModal from './modals/PurchasePrintModal';
-import PartyProfileModal from '../../components/modals/PartyProfileModal';
+import { Routes, Route, Navigate } from 'react-router-dom';
 import usePurchaseManager from './hooks/usePurchaseManager';
 import PurchaseHistoryTab from './components/PurchaseHistoryTab';
 import PurchaseQuotationsTab from './components/PurchaseQuotationsTab';
 import PurchaseSuppliersTab from './components/PurchaseSuppliersTab';
-import PurchaseDeleteBlockedModal from './components/PurchaseDeleteBlockedModal';
-import PurchaseDetailDrawer from './components/PurchaseDetailDrawer';
+import PurchasesHeaderNav from './components/PurchasesHeaderNav';
+import PurchasesModals from './components/PurchasesModals';
 import { loadDraft, PURCHASE_DRAFT_KEY } from '../../utils/draftRecovery';
 
 export default function Purchases({ onOpenAddProduct, initialTab = 'history', initialSearch = '', navKey = 0 }) {
@@ -91,161 +86,42 @@ export default function Purchases({ onOpenAddProduct, initialTab = 'history', in
     <div style={{ padding: '24px', background: '#f8fafc', minHeight: '100vh', fontFamily: 'inherit' }}>
       {/* Toast Notification */}
       {notification.message && (
-        <div style={{
-          position: 'fixed',
-          top: '24px',
-          right: '24px',
-          zIndex: 99999,
-          padding: '12px 20px',
-          borderRadius: '10px',
-          fontWeight: 600,
-          fontSize: '0.9rem',
-          boxShadow: '0 10px 25px -5px rgba(0,0,0,0.2)',
-          background: notification.type === 'error' ? '#ef4444' : '#10b981',
-          color: '#ffffff',
-          display: 'flex',
-          alignItems: 'center',
-          gap: '8px',
-        }}>
+        <div
+          style={{
+            position: 'fixed',
+            top: '24px',
+            right: '24px',
+            zIndex: 99999,
+            padding: '12px 20px',
+            borderRadius: '10px',
+            fontWeight: 600,
+            fontSize: '0.9rem',
+            boxShadow: '0 10px 25px -5px rgba(0,0,0,0.2)',
+            background: notification.type === 'error' ? '#ef4444' : '#10b981',
+            color: '#ffffff',
+            display: 'flex',
+            alignItems: 'center',
+            gap: '8px',
+          }}
+        >
           <span>{notification.type === 'error' ? '⚠️' : '✓'}</span>
           <span>{notification.message}</span>
         </div>
       )}
 
-      {/* 1. Consolidated Header, Tabs & Action Buttons in a Single Sleek Row */}
-      <div
-        style={{
-          display: 'flex',
-          justifyContent: 'space-between',
-          alignItems: 'center',
-          flexWrap: 'wrap',
-          gap: '10px',
-          marginBottom: '12px',
-          paddingBottom: '8px',
-          borderBottom: '1.5px solid #e2e8f0',
-        }}
-      >
-        {/* Left: Compact Title & Icon */}
-        <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-          <span style={{ fontSize: '1.3rem' }}>🚚</span>
-          <div>
-            <h1 style={{ fontSize: '1.25rem', fontWeight: 800, color: '#0f172a', margin: 0, letterSpacing: '-0.02em', lineHeight: 1.2 }}>
-              Purchases &amp; Procurement
-            </h1>
-          </div>
-        </div>
-
-        {/* Center: Inline Tab Navigation */}
-        <div className="flex bg-slate-100 p-1 rounded-lg gap-1">
-          <Link
-            to="/history"
-            onClick={() => setSearchQuery('')}
-            className={`no-underline px-3 py-1.5 rounded-md font-semibold text-xs sm:text-sm cursor-pointer flex items-center gap-1.5 transition-colors ${
-              activeTab === 'history'
-                ? 'bg-sky-600 text-white font-bold'
-                : 'bg-transparent text-slate-500 hover:text-slate-700'
-            }`}
-          >
-            <span>Orders</span>
-            <span
-              className={`px-1.5 py-0.25 rounded-full text-[0.72rem] font-bold ${
-                activeTab === 'history'
-                  ? 'bg-white/25 text-white'
-                  : 'bg-slate-200 text-slate-600'
-              }`}
-            >
-              {orders.length}
-            </span>
-          </Link>
-
-          <Link
-            to="/quotations"
-            onClick={() => setSearchQuery('')}
-            className={`no-underline px-3 py-1.5 rounded-md font-semibold text-xs sm:text-sm cursor-pointer flex items-center gap-1.5 transition-colors ${
-              activeTab === 'quotations'
-                ? 'bg-indigo-600 text-white font-bold'
-                : 'bg-transparent text-slate-500 hover:text-slate-700'
-            }`}
-          >
-            <span>Quotations</span>
-            <span
-              className={`px-1.5 py-0.25 rounded-full text-[0.72rem] font-bold ${
-                activeTab === 'quotations'
-                  ? 'bg-white/25 text-white'
-                  : 'bg-slate-200 text-slate-600'
-              }`}
-            >
-              {quotations.length}
-            </span>
-          </Link>
-
-          <Link
-            to="/suppliers"
-            onClick={() => setSearchQuery('')}
-            className={`no-underline px-3 py-1.5 rounded-md font-semibold text-xs sm:text-sm cursor-pointer flex items-center gap-1.5 transition-colors ${
-              activeTab === 'suppliers'
-                ? 'bg-emerald-600 text-white font-bold'
-                : 'bg-transparent text-slate-500 hover:text-slate-700'
-            }`}
-          >
-            <span>Suppliers</span>
-            <span
-              className={`px-1.5 py-0.25 rounded-full text-[0.72rem] font-bold ${
-                activeTab === 'suppliers'
-                  ? 'bg-white/25 text-white'
-                  : 'bg-slate-200 text-slate-600'
-              }`}
-            >
-              {suppliers.length}
-            </span>
-          </Link>
-        </div>
-
-        {/* Right: 3 Action Buttons */}
-        <div className="flex gap-2 items-center flex-wrap">
-          <button
-            type="button"
-            onClick={() => {
-              navigate('/history');
-              setIsOrderModalOpen(true);
-            }}
-            className="bg-sky-600 hover:bg-sky-700 text-white border-0 px-3.5 py-1.5 rounded-md font-bold text-xs sm:text-sm cursor-pointer flex items-center gap-1.5 shadow-sm transition-colors"
-          >
-            <span>+</span>
-            <span>Order</span>
-            {purchaseDraftInfo && (
-              <span
-                className="bg-amber-400 text-amber-950 text-[10px] px-1.5 py-0.5 rounded-full font-black animate-pulse"
-                title={`Unsaved draft found with ${purchaseDraftInfo.itemCount || 0} items`}
-              >
-                ⚡ Draft ({purchaseDraftInfo.itemCount || 0})
-              </span>
-            )}
-          </button>
-
-          <button
-            type="button"
-            onClick={() => {
-              navigate('/quotations');
-              setIsQuotationModalOpen(true);
-            }}
-            className="bg-indigo-600 hover:bg-indigo-700 text-white border-0 px-3.5 py-1.5 rounded-md font-bold text-xs sm:text-sm cursor-pointer flex items-center gap-1 shadow-sm transition-colors"
-          >
-            <span>+</span> Quotation
-          </button>
-
-          <button
-            type="button"
-            onClick={() => {
-              navigate('/suppliers');
-              setIsSupplierModalOpen(true);
-            }}
-            className="bg-white text-emerald-600 border border-emerald-500 hover:bg-emerald-50 px-3 py-1.5 rounded-md font-bold text-xs sm:text-sm cursor-pointer flex items-center gap-1 transition-colors"
-          >
-            <span>+</span> Supplier
-          </button>
-        </div>
-      </div>
+      {/* 1. Consolidated Header, Tabs & Action Buttons */}
+      <PurchasesHeaderNav
+        activeTab={activeTab}
+        ordersCount={orders.length}
+        quotationsCount={quotations.length}
+        suppliersCount={suppliers.length}
+        setSearchQuery={setSearchQuery}
+        navigate={navigate}
+        setIsOrderModalOpen={setIsOrderModalOpen}
+        setIsQuotationModalOpen={setIsQuotationModalOpen}
+        setIsSupplierModalOpen={setIsSupplierModalOpen}
+        purchaseDraftInfo={purchaseDraftInfo}
+      />
 
       <Routes>
         <Route
@@ -314,105 +190,40 @@ export default function Purchases({ onOpenAddProduct, initialTab = 'history', in
         <Route path="*" element={<Navigate to="/history" replace />} />
       </Routes>
 
-      {/* POPUP MODAL 1: New / Edit Purchase Order */}
-      {isOrderModalOpen && (
-        <PurchaseOrderModal
-          products={products}
-          suppliers={suppliers}
-          orderToEdit={orderToEdit}
-          newlyCreatedSupplier={newlyCreatedSupplier}
-          onOpenAddSupplier={handleOpenAddSupplier}
-          onOpenAddProduct={onOpenAddProduct}
-          onClose={() => {
-            setIsOrderModalOpen(false);
-            setOrderToEdit(null);
-          }}
-          onSaved={() => {
-            setIsOrderModalOpen(false);
-            setOrderToEdit(null);
-            loadAllData();
-            window.dispatchEvent(new CustomEvent('inventory_stock_changed'));
-            window.dispatchEvent(new CustomEvent('data_changed'));
-            window.dispatchEvent(new CustomEvent('account_balance_changed'));
-            window.dispatchEvent(new CustomEvent('cash_drawer_changed'));
-            window.dispatchEvent(new CustomEvent('wallet_balance_changed'));
-            showToast(orderToEdit ? 'Purchase order updated successfully' : 'Purchase order saved successfully');
-          }}
-        />
-      )}
-
-      {/* POPUP MODAL 2: New Purchase Quotation */}
-      {isQuotationModalOpen && (
-        <PurchaseQuotationModal
-          isOpen={isQuotationModalOpen}
-          products={products}
-          suppliers={suppliers}
-          newlyCreatedSupplier={newlyCreatedSupplier}
-          onOpenAddSupplier={handleOpenAddSupplier}
-          onOpenAddProduct={onOpenAddProduct}
-          editingQuotation={editingQuotation}
-          onClose={() => {
-            setIsQuotationModalOpen(false);
-            setEditingQuotation(null);
-          }}
-          onQuotationCreated={() => {
-            setIsQuotationModalOpen(false);
-            setEditingQuotation(null);
-            loadAllData();
-            showToast(editingQuotation ? 'Purchase quotation updated successfully' : 'Purchase quotation created successfully');
-          }}
-        />
-      )}
-
-      {/* POPUP MODAL 3: Add Supplier */}
-      {isSupplierModalOpen && (
-        <AddSupplierModal
-          isOpen={isSupplierModalOpen}
-          onClose={() => setIsSupplierModalOpen(false)}
-          onSupplierCreated={handleSupplierCreated}
-        />
-      )}
-
-      {/* POPUP MODAL 4: Print & Share Invoice */}
-      <PurchasePrintModal
-        isOpen={isPrintOpen}
-        onClose={() => setIsPrintOpen(false)}
-        order={printOrder}
-      />
-
-      {/* POPUP MODAL 5: Supplier Profile Modal */}
-      {profileModalPartyId && (
-        <PartyProfileModal
-          isOpen={Boolean(profileModalPartyId)}
-          partyType="supplier"
-          partyId={profileModalPartyId}
-          initialTab={profileModalTab}
-          onClose={() => setProfileModalPartyId(null)}
-          onPartyUpdated={() => {
-            loadAllData();
-          }}
-        />
-      )}
-
-      {/* REFERENTIAL INTEGRITY BLOCKED DELETE GUIDANCE MODAL */}
-      <PurchaseDeleteBlockedModal
+      {/* All Popups, Guidance Modals & Drawers */}
+      <PurchasesModals
+        products={products}
+        suppliers={suppliers}
+        onOpenAddProduct={onOpenAddProduct}
+        loadAllData={loadAllData}
+        showToast={showToast}
+        isOrderModalOpen={isOrderModalOpen}
+        setIsOrderModalOpen={setIsOrderModalOpen}
+        orderToEdit={orderToEdit}
+        setOrderToEdit={setOrderToEdit}
+        newlyCreatedSupplier={newlyCreatedSupplier}
+        handleOpenAddSupplier={handleOpenAddSupplier}
+        isQuotationModalOpen={isQuotationModalOpen}
+        setIsQuotationModalOpen={setIsQuotationModalOpen}
+        editingQuotation={editingQuotation}
+        setEditingQuotation={setEditingQuotation}
+        isSupplierModalOpen={isSupplierModalOpen}
+        setIsSupplierModalOpen={setIsSupplierModalOpen}
+        handleSupplierCreated={handleSupplierCreated}
+        isPrintOpen={isPrintOpen}
+        setIsPrintOpen={setIsPrintOpen}
+        printOrder={printOrder}
+        profileModalPartyId={profileModalPartyId}
+        setProfileModalPartyId={setProfileModalPartyId}
+        profileModalTab={profileModalTab}
         deleteBlockedDialog={deleteBlockedDialog}
-        onClose={() => setDeleteBlockedDialog({ isOpen: false, poNumber: '', message: '', linkedInvoices: [] })}
-      />
-
-      {/* QUICK-VIEW PURCHASE ORDER DRAWER */}
-      <PurchaseDetailDrawer
-        isOpen={isOrderDrawerOpen}
-        onClose={handleCloseOrderDrawer}
-        order={selectedOrderForDrawer}
-        loading={isOrderDrawerLoading}
-        onPrint={(ord) => {
-          handleOpenPrintOrder(ord.id);
-        }}
-        onEdit={(ord) => {
-          handleCloseOrderDrawer();
-          handleEditOrder(ord);
-        }}
+        setDeleteBlockedDialog={setDeleteBlockedDialog}
+        isOrderDrawerOpen={isOrderDrawerOpen}
+        handleCloseOrderDrawer={handleCloseOrderDrawer}
+        selectedOrderForDrawer={selectedOrderForDrawer}
+        isOrderDrawerLoading={isOrderDrawerLoading}
+        handleOpenPrintOrder={handleOpenPrintOrder}
+        handleEditOrder={handleEditOrder}
       />
     </div>
   );

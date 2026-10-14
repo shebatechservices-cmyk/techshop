@@ -7,14 +7,15 @@ const hashSessionToken = (token) =>
     crypto.createHash('sha256').update(String(token)).digest('hex');
 
 const getToken = (req) => {
-    const authorization = req.headers.authorization || '';
+    const authorization = req?.headers?.authorization || '';
     if (authorization.startsWith('Bearer ')) return authorization.slice(7);
-    if (req.headers['x-session-token']) return req.headers['x-session-token'];
-    if (req.query && req.query.token) return req.query.token;
+    if (req?.headers?.['x-session-token']) return req.headers['x-session-token'];
+    if (req?.query?.token) return req.query.token;
     return null;
 };
 
 const requireAuth = async (req, res, next) => {
+    if (req.method === 'OPTIONS') return next();
     try {
         const token = getToken(req);
         if (!token) return res.status(401).json({ success: false, message: 'Authentication is required.' });
@@ -45,6 +46,7 @@ const requireAuth = async (req, res, next) => {
 };
 
 const requireRole = (...roleIds) => async (req, res, next) => {
+    if (req.method === 'OPTIONS') return next();
     try {
         if (!req.user) {
             const token = getToken(req);

@@ -1,9 +1,10 @@
-const CACHE_NAME = 'sheba-pos-cache-v1';
+const CACHE_NAME = 'sheba-pos-cache-v4';
 const STATIC_ASSETS = [
   '/',
   '/index.html',
   '/manifest.json',
   '/favicon.svg',
+  '/favicon.ico',
   '/pwa-192x192.png',
   '/pwa-512x512.png',
   '/pwa-maskable-512x512.png',
@@ -38,14 +39,25 @@ self.addEventListener('activate', (event) => {
 
 // Fetch: Strategy
 self.addEventListener('fetch', (event) => {
-  const url = new URL(event.request.url);
-
-  // 1. API calls, authentication, or uploads: ALWAYS Network-Only (never stale!)
-  if (url.pathname.startsWith('/api') || url.pathname.startsWith('/uploads')) {
+  // Only handle GET requests - mutating requests (POST, PUT, DELETE) must never be intercepted
+  if (event.request.method !== 'GET') {
     return;
   }
 
-  // 2. Navigation (HTML pages): Network first, fallback to cached /index.html
+  const url = new URL(event.request.url);
+
+  // 1. Exclude API calls, file uploads, APK downloads, or requests to external domains
+  if (
+    url.pathname.startsWith('/api') ||
+    url.pathname.startsWith('/uploads') ||
+    url.pathname.endsWith('.apk') ||
+    url.hostname !== self.location.hostname
+  ) {
+    return;
+  }
+
+  // 2. Navigation (HTML page navigations like /projects, /pos, /inventory, /login):
+  // Network first, falling back to cached /index.html (SPA shell) or offline page
   if (event.request.mode === 'navigate') {
     event.respondWith(
       fetch(event.request)
@@ -56,17 +68,27 @@ self.addEventListener('fetch', (event) => {
           }
           return response;
         })
-        .catch(() => {
-          return caches.match('/index.html') || caches.match('/');
+        .catch(async () => {
+          const cached = (await caches.match('/index.html')) || (await caches.match('/'));
+          if (cached) return cached;
+          return new Response(
+            '<!DOCTYPE html><html><head><meta charset="utf-8"><title>Offline - Sheba POS</title><meta name="viewport" content="width=device-width, initial-scale=1"></head><body style="font-family:sans-serif;text-align:center;padding:50px 20px;"><h2>ইন্টারনেট সংযোগ নেই (Offline)</h2><p>অনুগ্রহ করে আপনার ইন্টারনেট সংযোগ চেক করে পুনরায় চেষ্টা করুন।</p><button onclick="window.location.reload()" style="padding:10px 20px;font-size:16px;cursor:pointer;border-radius:6px;border:none;background:#2563eb;color:#fff;">রিলোড করুন</button></body></html>',
+            {
+              status: 503,
+              statusText: 'Service Unavailable',
+              headers: { 'Content-Type': 'text/html; charset=utf-8' }
+            }
+          );
         })
     );
     return;
   }
 
   // 3. Static assets (JS, CSS, images, fonts): Stale-While-Revalidate
+  // CRITICAL: Must NEVER resolve to undefined inside event.respondWith!
   event.respondWith(
     caches.match(event.request).then((cachedResponse) => {
-      const fetchPromise = fetch(event.request)
+      const networkFetch = fetch(event.request)
         .then((networkResponse) => {
           if (networkResponse && networkResponse.status === 200) {
             const clone = networkResponse.clone();
@@ -74,9 +96,13 @@ self.addEventListener('fetch', (event) => {
           }
           return networkResponse;
         })
-        .catch(() => cachedResponse);
+        .catch(() => {
+          // If network fetch fails, fallback to cachedResponse if available,
+          // otherwise return a valid Response so event.respondWith never rejects with TypeError: Failed to convert value to 'Response'
+          return cachedResponse || new Response('', { status: 504, statusText: 'Gateway Timeout' });
+        });
 
-      return cachedResponse || fetchPromise;
+      return cachedResponse || networkFetch;
     })
   );
 });

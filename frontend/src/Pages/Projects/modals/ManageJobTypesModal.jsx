@@ -1,5 +1,7 @@
 import React, { useState, useEffect } from 'react';
-import API, { getAuthHeaders } from '../../../services/api';
+import { smartFetch } from '../../../services/api';
+import JobTypeAddForm from './jobTypes/JobTypeAddForm';
+import JobTypeRow from './jobTypes/JobTypeRow';
 
 export default function ManageJobTypesModal({ isOpen, onClose, onJobTypesUpdated }) {
   const [jobTypes, setJobTypes] = useState([]);
@@ -25,9 +27,7 @@ export default function ManageJobTypesModal({ isOpen, onClose, onJobTypesUpdated
     try {
       setLoading(true);
       setErrorMsg('');
-      const res = await fetch(`${API}/projects/job-types`, {
-        headers: getAuthHeaders(),
-      });
+      const res = await smartFetch('/projects/job-types');
       if (res.ok) {
         const json = await res.json();
         if (json.success && Array.isArray(json.data)) {
@@ -69,17 +69,14 @@ export default function ManageJobTypesModal({ isOpen, onClose, onJobTypesUpdated
       setErrorMsg('');
       setSuccessMsg('');
 
-      const res = await fetch(`${API}/projects/job-types`, {
+      const res = await smartFetch('/projects/job-types', {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          ...getAuthHeaders(),
-        },
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           name: newName.trim(),
           description: newDescription.trim() || null,
-          is_active: Boolean(newActive)
-        })
+          is_active: Boolean(newActive),
+        }),
       });
 
       const data = await res.json();
@@ -100,7 +97,6 @@ export default function ManageJobTypesModal({ isOpen, onClose, onJobTypesUpdated
     }
   };
 
-  // Start Editing a row
   const startEdit = (jt) => {
     setEditingId(jt.id);
     setEditName(jt.name);
@@ -116,7 +112,6 @@ export default function ManageJobTypesModal({ isOpen, onClose, onJobTypesUpdated
     setEditDescription('');
   };
 
-  // Handle Save Edit
   const handleSaveEdit = async (id) => {
     if (!editName.trim()) {
       setErrorMsg('Job type name cannot be empty.');
@@ -128,17 +123,14 @@ export default function ManageJobTypesModal({ isOpen, onClose, onJobTypesUpdated
       setErrorMsg('');
       setSuccessMsg('');
 
-      const res = await fetch(`${API}/projects/job-types/${id}`, {
+      const res = await smartFetch(`/projects/job-types/${id}`, {
         method: 'PUT',
-        headers: {
-          'Content-Type': 'application/json',
-          ...getAuthHeaders(),
-        },
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           name: editName.trim(),
           description: editDescription.trim() || null,
-          is_active: Boolean(editActive)
-        })
+          is_active: Boolean(editActive),
+        }),
       });
 
       const data = await res.json();
@@ -157,14 +149,12 @@ export default function ManageJobTypesModal({ isOpen, onClose, onJobTypesUpdated
     }
   };
 
-  // Handle Delete Job Type
   const handleDeleteJobType = async (id, name) => {
     if (!window.confirm(`Are you sure you want to delete job type "${name}"?`)) return;
 
     try {
-      const res = await fetch(`${API}/projects/job-types/${id}`, {
+      const res = await smartFetch(`/projects/job-types/${id}`, {
         method: 'DELETE',
-        headers: getAuthHeaders(),
       });
       const data = await res.json();
       if (res.ok && data.success) {
@@ -190,7 +180,7 @@ export default function ManageJobTypesModal({ isOpen, onClose, onJobTypesUpdated
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'center',
-        padding: '16px'
+        padding: '16px',
       }}
       onClick={onClose}
     >
@@ -205,7 +195,7 @@ export default function ManageJobTypesModal({ isOpen, onClose, onJobTypesUpdated
           flexDirection: 'column',
           boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.3)',
           overflow: 'hidden',
-          border: '1px solid #e2e8f0'
+          border: '1px solid #e2e8f0',
         }}
         onClick={(e) => e.stopPropagation()}
       >
@@ -217,7 +207,7 @@ export default function ManageJobTypesModal({ isOpen, onClose, onJobTypesUpdated
             color: '#ffffff',
             display: 'flex',
             justifyContent: 'space-between',
-            alignItems: 'center'
+            alignItems: 'center',
           }}
         >
           <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
@@ -234,7 +224,13 @@ export default function ManageJobTypesModal({ isOpen, onClose, onJobTypesUpdated
           <button
             type="button"
             onClick={onClose}
-            style={{ background: 'none', border: 'none', color: '#ffffff', fontSize: '1.3rem', cursor: 'pointer' }}
+            style={{
+              background: 'none',
+              border: 'none',
+              color: '#ffffff',
+              fontSize: '1.3rem',
+              cursor: 'pointer',
+            }}
           >
             ✕
           </button>
@@ -242,187 +238,113 @@ export default function ManageJobTypesModal({ isOpen, onClose, onJobTypesUpdated
 
         {/* MODAL BODY */}
         <div style={{ padding: '18px 20px', overflowY: 'auto', flex: 1 }}>
-          {/* Feedback Messages */}
           {errorMsg && (
-            <div style={{ padding: '8px 12px', background: '#fef2f2', border: '1px solid #fecaca', color: '#b91c1c', borderRadius: '8px', fontSize: '0.8rem', marginBottom: '12px' }}>
+            <div
+              style={{
+                padding: '8px 12px',
+                background: '#fef2f2',
+                border: '1px solid #fecaca',
+                color: '#b91c1c',
+                borderRadius: '8px',
+                fontSize: '0.8rem',
+                marginBottom: '12px',
+              }}
+            >
               ⚠️ {errorMsg}
             </div>
           )}
           {successMsg && (
-            <div style={{ padding: '8px 12px', background: '#f0fdf4', border: '1px solid #bbf7d0', color: '#15803d', borderRadius: '8px', fontSize: '0.8rem', marginBottom: '12px' }}>
+            <div
+              style={{
+                padding: '8px 12px',
+                background: '#f0fdf4',
+                border: '1px solid #bbf7d0',
+                color: '#15803d',
+                borderRadius: '8px',
+                fontSize: '0.8rem',
+                marginBottom: '12px',
+              }}
+            >
               ✓ {successMsg}
             </div>
           )}
 
-          {/* ADD NEW JOB TYPE FORM */}
-          <div style={{ background: '#f8fafc', border: '1px solid #e2e8f0', borderRadius: '10px', padding: '14px', marginBottom: '16px' }}>
-            <span style={{ display: 'block', fontSize: '0.82rem', fontWeight: 700, color: '#0f172a', marginBottom: '8px' }}>
-              + Add New Job Type
-            </span>
-            <form onSubmit={handleAddJobType} style={{ display: 'flex', gap: '8px', flexWrap: 'wrap', alignItems: 'center' }}>
-              <input
-                type="text"
-                placeholder="Job Type Name (e.g. Solar System Setup)"
-                value={newName}
-                onChange={(e) => setNewName(e.target.value)}
-                required
-                style={{ flex: '2 1 180px', padding: '7px 10px', borderRadius: '6px', border: '1px solid #cbd5e1', fontSize: '0.82rem', boxSizing: 'border-box' }}
-              />
-              <input
-                type="text"
-                placeholder="Short Description (Optional)"
-                value={newDescription}
-                onChange={(e) => setNewDescription(e.target.value)}
-                style={{ flex: '3 1 200px', padding: '7px 10px', borderRadius: '6px', border: '1px solid #cbd5e1', fontSize: '0.82rem', boxSizing: 'border-box' }}
-              />
-              <label style={{ display: 'flex', alignItems: 'center', gap: '4px', fontSize: '0.78rem', color: '#475569', cursor: 'pointer' }}>
-                <input
-                  type="checkbox"
-                  checked={newActive}
-                  onChange={(e) => setNewActive(e.target.checked)}
-                />
-                Active
-              </label>
-              <button
-                type="submit"
-                disabled={adding}
-                style={{
-                  padding: '7px 14px',
-                  borderRadius: '6px',
-                  border: 'none',
-                  background: '#0284c7',
-                  color: '#fff',
-                  fontWeight: 700,
-                  fontSize: '0.82rem',
-                  cursor: adding ? 'not-allowed' : 'pointer'
-                }}
-              >
-                {adding ? 'Adding...' : '+ Add'}
-              </button>
-            </form>
-          </div>
+          <JobTypeAddForm
+            newName={newName}
+            setNewName={setNewName}
+            newDescription={newDescription}
+            setNewDescription={setNewDescription}
+            newActive={newActive}
+            setNewActive={setNewActive}
+            adding={adding}
+            onAddJobType={handleAddJobType}
+          />
 
           {/* JOB TYPES TABLE */}
-          <div style={{ background: '#fff', borderRadius: '8px', border: '1px solid #cbd5e1', overflow: 'hidden' }}>
+          <div
+            style={{
+              background: '#fff',
+              borderRadius: '8px',
+              border: '1px solid #cbd5e1',
+              overflow: 'hidden',
+            }}
+          >
             <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '0.8rem' }}>
               <thead>
-                <tr style={{ background: '#f1f5f9', borderBottom: '1px solid #cbd5e1', color: '#475569', textAlign: 'left' }}>
+                <tr
+                  style={{
+                    background: '#f1f5f9',
+                    borderBottom: '1px solid #cbd5e1',
+                    color: '#475569',
+                    textAlign: 'left',
+                  }}
+                >
                   <th style={{ padding: '8px 12px', width: '35%' }}>Job Type Name</th>
                   <th style={{ padding: '8px 12px', width: '35%' }}>Description</th>
                   <th style={{ padding: '8px 12px', width: '15%' }}>Status</th>
-                  <th style={{ padding: '8px 12px', width: '15%', textAlign: 'right' }}>Actions</th>
+                  <th style={{ padding: '8px 12px', width: '15%', textAlign: 'right' }}>
+                    Actions
+                  </th>
                 </tr>
               </thead>
               <tbody>
                 {loading && jobTypes.length === 0 ? (
                   <tr>
-                    <td colSpan={4} style={{ padding: '20px', textAlign: 'center', color: '#64748b' }}>
+                    <td
+                      colSpan={4}
+                      style={{ padding: '20px', textAlign: 'center', color: '#64748b' }}
+                    >
                       Loading job types...
                     </td>
                   </tr>
                 ) : jobTypes.length === 0 ? (
                   <tr>
-                    <td colSpan={4} style={{ padding: '20px', textAlign: 'center', color: '#64748b' }}>
+                    <td
+                      colSpan={4}
+                      style={{ padding: '20px', textAlign: 'center', color: '#64748b' }}
+                    >
                       No job types found. Add your first job type above.
                     </td>
                   </tr>
                 ) : (
-                  jobTypes.map((jt) => {
-                    const isEditing = editingId === jt.id;
-                    return (
-                      <tr key={jt.id} style={{ borderBottom: '1px solid #f1f5f9' }}>
-                        <td style={{ padding: '8px 12px' }}>
-                          {isEditing ? (
-                            <input
-                              type="text"
-                              value={editName}
-                              onChange={(e) => setEditName(e.target.value)}
-                              style={{ width: '100%', padding: '4px 6px', borderRadius: '4px', border: '1px solid #cbd5e1', fontSize: '0.8rem' }}
-                            />
-                          ) : (
-                            <span style={{ fontWeight: 600, color: '#1e293b' }}>{jt.name}</span>
-                          )}
-                        </td>
-                        <td style={{ padding: '8px 12px' }}>
-                          {isEditing ? (
-                            <input
-                              type="text"
-                              value={editDescription}
-                              onChange={(e) => setEditDescription(e.target.value)}
-                              placeholder="Description"
-                              style={{ width: '100%', padding: '4px 6px', borderRadius: '4px', border: '1px solid #cbd5e1', fontSize: '0.8rem' }}
-                            />
-                          ) : (
-                            <span style={{ color: '#64748b', fontSize: '0.78rem' }}>
-                              {jt.description || '—'}
-                            </span>
-                          )}
-                        </td>
-                        <td style={{ padding: '8px 12px' }}>
-                          {isEditing ? (
-                            <label style={{ display: 'flex', alignItems: 'center', gap: '4px', fontSize: '0.74rem' }}>
-                              <input
-                                type="checkbox"
-                                checked={editActive}
-                                onChange={(e) => setEditActive(e.target.checked)}
-                              />
-                              Active
-                            </label>
-                          ) : jt.is_active ? (
-                            <span style={{ background: '#dcfce7', color: '#15803d', padding: '2px 6px', borderRadius: '4px', fontSize: '0.72rem', fontWeight: 700 }}>
-                              Active
-                            </span>
-                          ) : (
-                            <span style={{ background: '#f1f5f9', color: '#64748b', padding: '2px 6px', borderRadius: '4px', fontSize: '0.72rem', fontWeight: 600 }}>
-                              Inactive
-                            </span>
-                          )}
-                        </td>
-                        <td style={{ padding: '8px 12px', textAlign: 'right' }}>
-                          {isEditing ? (
-                            <div style={{ display: 'flex', gap: '4px', justifyContent: 'flex-end' }}>
-                              <button
-                                type="button"
-                                onClick={() => handleSaveEdit(jt.id)}
-                                disabled={savingEdit}
-                                style={{ padding: '3px 8px', borderRadius: '4px', background: '#16a34a', color: '#fff', border: 'none', fontSize: '0.74rem', fontWeight: 700, cursor: 'pointer' }}
-                              >
-                                Save
-                              </button>
-                              <button
-                                type="button"
-                                onClick={cancelEdit}
-                                style={{ padding: '3px 8px', borderRadius: '4px', background: '#e2e8f0', color: '#475569', border: 'none', fontSize: '0.74rem', cursor: 'pointer' }}
-                              >
-                                ✕
-                              </button>
-                            </div>
-                          ) : (
-                            <div style={{ display: 'flex', gap: '6px', justifyContent: 'flex-end' }}>
-                              <button
-                                type="button"
-                                onClick={() => startEdit(jt)}
-                                title="Edit Job Type"
-                                style={{ background: 'none', border: 'none', color: '#0284c7', cursor: 'pointer', fontSize: '0.85rem' }}
-                              >
-                                ✏️
-                              </button>
-                              <button
-                                type="button"
-                                onClick={() => handleDeleteJobType(jt.id, jt.name)}
-                                title="Delete Job Type"
-                                style={{ background: 'none', border: 'none', color: '#94a3b8', cursor: 'pointer', fontSize: '0.85rem' }}
-                                onMouseEnter={(e) => { e.currentTarget.style.color = '#ef4444'; }}
-                                onMouseLeave={(e) => { e.currentTarget.style.color = '#94a3b8'; }}
-                              >
-                                🗑️
-                              </button>
-                            </div>
-                          )}
-                        </td>
-                      </tr>
-                    );
-                  })
+                  jobTypes.map((jt) => (
+                    <JobTypeRow
+                      key={jt.id}
+                      jt={jt}
+                      isEditing={editingId === jt.id}
+                      editName={editName}
+                      setEditName={setEditName}
+                      editDescription={editDescription}
+                      setEditDescription={setEditDescription}
+                      editActive={editActive}
+                      setEditActive={setEditActive}
+                      savingEdit={savingEdit}
+                      onStartEdit={startEdit}
+                      onCancelEdit={cancelEdit}
+                      onSaveEdit={handleSaveEdit}
+                      onDeleteJobType={handleDeleteJobType}
+                    />
+                  ))
                 )}
               </tbody>
             </table>
@@ -430,7 +352,15 @@ export default function ManageJobTypesModal({ isOpen, onClose, onJobTypesUpdated
         </div>
 
         {/* MODAL FOOTER */}
-        <div style={{ padding: '12px 20px', background: '#f8fafc', borderTop: '1px solid #e2e8f0', display: 'flex', justifyContent: 'flex-end' }}>
+        <div
+          style={{
+            padding: '12px 20px',
+            background: '#f8fafc',
+            borderTop: '1px solid #e2e8f0',
+            display: 'flex',
+            justifyContent: 'flex-end',
+          }}
+        >
           <button
             type="button"
             onClick={onClose}
@@ -442,7 +372,7 @@ export default function ManageJobTypesModal({ isOpen, onClose, onJobTypesUpdated
               color: '#475569',
               fontWeight: 600,
               fontSize: '0.82rem',
-              cursor: 'pointer'
+              cursor: 'pointer',
             }}
           >
             Close

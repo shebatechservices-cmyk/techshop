@@ -1,4 +1,8 @@
 import React, { useEffect } from 'react';
+import PurchaseInfoCard from './cards/PurchaseInfoCard';
+import InventoryStockCard from './cards/InventoryStockCard';
+import SalesInvoiceCard from './cards/SalesInvoiceCard';
+import WarrantyReturnsCard from './cards/WarrantyReturnsCard';
 
 const money = (val) => Number.parseFloat(val || 0) || 0;
 const taka = (val) => `৳${money(val).toLocaleString('en-BD', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
@@ -112,303 +116,39 @@ export default function SerialBarcodeQuickViewModal({
         {/* Modal Body - 4 Operational Dimensions Grid */}
         <div className="p-6 overflow-y-auto flex-1 space-y-4">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            
-            {/* Dimension 1: Purchase Order Information */}
-            <div className="bg-white rounded-xl border border-sky-100 shadow-xs p-4 flex flex-col justify-between hover:border-sky-300 transition">
-              <div>
-                <div className="flex items-center justify-between pb-2 mb-3 border-b border-sky-50">
-                  <div className="flex items-center gap-2">
-                    <span className="p-1.5 bg-sky-50 text-sky-600 rounded-lg text-sm">🚚</span>
-                    <h4 className="text-xs font-black uppercase tracking-wider text-slate-700">
-                      1. Purchase Information
-                    </h4>
-                  </div>
-                  {purchase.po_number && (
-                    <span className="font-mono text-xs font-bold text-sky-700 bg-sky-50 px-2 py-0.5 rounded">
-                      {purchase.po_number}
-                    </span>
-                  )}
-                </div>
+            <PurchaseInfoCard
+              purchase={purchase}
+              product={product}
+              taka={taka}
+              onClose={onClose}
+              onNavigate={onNavigate}
+            />
 
-                <div className="space-y-2 text-xs">
-                  <div className="flex justify-between">
-                    <span className="text-slate-500">Supplier:</span>
-                    <span className="font-bold text-slate-800 text-right">
-                      {purchase.supplier_name || 'Authorized Supplier'}
-                    </span>
-                  </div>
-                  {purchase.supplier_phone && purchase.supplier_phone !== 'N/A' && (
-                    <div className="flex justify-between">
-                      <span className="text-slate-500">Contact:</span>
-                      <span className="font-mono text-slate-700">{purchase.supplier_phone}</span>
-                    </div>
-                  )}
-                  <div className="flex justify-between">
-                    <span className="text-slate-500">Purchase Date:</span>
-                    <span className="font-semibold text-slate-700">
-                      {purchase.purchase_date
-                        ? new Date(purchase.purchase_date).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' })
-                        : 'Stock Inflow'}
-                    </span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span className="text-slate-500">Unit Cost Price:</span>
-                    <span className="font-bold text-slate-900">{taka(purchase.cost_price || product.cost_price)}</span>
-                  </div>
-                  <div className="flex justify-between items-center pt-1 border-t border-slate-100">
-                    <span className="text-slate-500">Supplier Warranty:</span>
-                    <span className="font-semibold text-sky-800 bg-sky-50 px-2 py-0.5 rounded text-[11px]">
-                      {purchase.supplier_warranty_expire_date
-                        ? `Expires: ${new Date(purchase.supplier_warranty_expire_date).toLocaleDateString('en-GB')}`
-                        : 'Standard Vendor Coverage'}
-                    </span>
-                  </div>
-                </div>
-              </div>
+            <InventoryStockCard
+              inventory={inventory}
+              product={product}
+              isSold={isSold}
+              taka={taka}
+              onClose={onClose}
+              onNavigate={onNavigate}
+            />
 
-              {purchase.po_number && onNavigate && (
-                <button
-                  type="button"
-                  onClick={() => {
-                    onClose();
-                    onNavigate({ section: 'purchases', tab: 'history', search: purchase.po_number });
-                  }}
-                  className="mt-3 w-full py-1.5 text-center text-xs font-bold text-sky-600 bg-sky-50 hover:bg-sky-100 rounded-lg transition"
-                >
-                  View Purchase Order →
-                </button>
-              )}
-            </div>
+            <SalesInvoiceCard
+              sale={sale}
+              taka={taka}
+              onClose={onClose}
+              onNavigate={onNavigate}
+            />
 
-            {/* Dimension 2: Inventory & Stock */}
-            <div className="bg-white rounded-xl border border-emerald-100 shadow-xs p-4 flex flex-col justify-between hover:border-emerald-300 transition">
-              <div>
-                <div className="flex items-center justify-between pb-2 mb-3 border-b border-emerald-50">
-                  <div className="flex items-center gap-2">
-                    <span className="p-1.5 bg-emerald-50 text-emerald-600 rounded-lg text-sm">📦</span>
-                    <h4 className="text-xs font-black uppercase tracking-wider text-slate-700">
-                      2. Inventory & Stock Status
-                    </h4>
-                  </div>
-                  <span
-                    className={`text-xs font-bold px-2 py-0.5 rounded ${
-                      Number(inventory.stock || product.stock) > 0
-                        ? 'bg-emerald-100 text-emerald-800'
-                        : 'bg-rose-100 text-rose-800'
-                    }`}
-                  >
-                    Stock: {inventory.stock ?? product.stock ?? 0} pcs
-                  </span>
-                </div>
-
-                <div className="space-y-2 text-xs">
-                  <div className="flex justify-between">
-                    <span className="text-slate-500">Current Unit State:</span>
-                    <span className="font-bold text-slate-800">
-                      {inventory.unit_status || (isSold ? 'Sold to Customer' : 'Available in Inventory')}
-                    </span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span className="text-slate-500">Selling Price:</span>
-                    <span className="font-bold text-emerald-700">{taka(inventory.sale_price || product.sale_price)}</span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span className="text-slate-500">Cost Valuation:</span>
-                    <span className="font-semibold text-slate-700">{taka(inventory.cost_price || product.cost_price)}</span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span className="text-slate-500">Serial Tracking:</span>
-                    <span className="font-semibold text-emerald-800 bg-emerald-50 px-2 py-0.5 rounded text-[11px]">
-                      Individual Serial Tracked
-                    </span>
-                  </div>
-                </div>
-              </div>
-
-              {onNavigate && (
-                <button
-                  type="button"
-                  onClick={() => {
-                    onClose();
-                    onNavigate({ section: 'inventory', search: product.name || product.sku });
-                  }}
-                  className="mt-3 w-full py-1.5 text-center text-xs font-bold text-emerald-600 bg-emerald-50 hover:bg-emerald-100 rounded-lg transition"
-                >
-                  Inspect in Inventory →
-                </button>
-              )}
-            </div>
-
-            {/* Dimension 3: Sales Invoice */}
-            <div className="bg-white rounded-xl border border-indigo-100 shadow-xs p-4 flex flex-col justify-between hover:border-indigo-300 transition">
-              <div>
-                <div className="flex items-center justify-between pb-2 mb-3 border-b border-indigo-50">
-                  <div className="flex items-center gap-2">
-                    <span className="p-1.5 bg-indigo-50 text-indigo-600 rounded-lg text-sm">🛒</span>
-                    <h4 className="text-xs font-black uppercase tracking-wider text-slate-700">
-                      3. Sales Invoice
-                    </h4>
-                  </div>
-                  {sale?.invoice_no ? (
-                    <span className="font-mono text-xs font-bold text-indigo-700 bg-indigo-50 px-2 py-0.5 rounded">
-                      {sale.invoice_no}
-                    </span>
-                  ) : (
-                    <span className="text-[11px] font-bold text-slate-400 bg-slate-100 px-2 py-0.5 rounded">
-                      Not Sold Yet
-                    </span>
-                  )}
-                </div>
-
-                {sale?.invoice_no ? (
-                  <div className="space-y-2 text-xs">
-                    <div className="flex justify-between">
-                      <span className="text-slate-500">Customer:</span>
-                      <span className="font-bold text-slate-800">{sale.customer_name || 'Customer'}</span>
-                    </div>
-                    {sale.customer_phone && sale.customer_phone !== 'N/A' && (
-                      <div className="flex justify-between">
-                        <span className="text-slate-500">Phone:</span>
-                        <span className="font-mono text-slate-700">{sale.customer_phone}</span>
-                      </div>
-                    )}
-                    <div className="flex justify-between">
-                      <span className="text-slate-500">Sale Date:</span>
-                      <span className="font-semibold text-slate-700">
-                        {sale.sale_date
-                          ? new Date(sale.sale_date).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' })
-                          : 'Invoice Date'}
-                      </span>
-                    </div>
-                    <div className="flex justify-between">
-                      <span className="text-slate-500">Invoiced Amount:</span>
-                      <span className="font-bold text-indigo-700">{taka(sale.unit_price)}</span>
-                    </div>
-                    <div className="flex justify-between items-center pt-1 border-t border-slate-100">
-                      <span className="text-slate-500">Payment Status:</span>
-                      <span className="font-bold uppercase text-[10px] px-2 py-0.5 rounded bg-emerald-50 text-emerald-700">
-                        {sale.payment_status || 'Paid'}
-                      </span>
-                    </div>
-                  </div>
-                ) : (
-                  <div className="py-4 text-center text-slate-400 text-xs italic">
-                    This unit has not been sold yet. It remains in current stock.
-                  </div>
-                )}
-              </div>
-
-              {sale?.invoice_no && onNavigate && (
-                <button
-                  type="button"
-                  onClick={() => {
-                    onClose();
-                    onNavigate({ section: 'sales', tab: 'history', search: sale.invoice_no });
-                  }}
-                  className="mt-3 w-full py-1.5 text-center text-xs font-bold text-indigo-600 bg-indigo-50 hover:bg-indigo-100 rounded-lg transition"
-                >
-                  View Sales Invoice →
-                </button>
-              )}
-            </div>
-
-            {/* Dimension 4: Warranty & Returns */}
-            <div className="bg-white rounded-xl border border-amber-100 shadow-xs p-4 flex flex-col justify-between hover:border-amber-300 transition">
-              <div>
-                <div className="flex items-center justify-between pb-2 mb-3 border-b border-amber-50">
-                  <div className="flex items-center gap-2">
-                    <span className="p-1.5 bg-amber-50 text-amber-600 rounded-lg text-sm">🛡️</span>
-                    <h4 className="text-xs font-black uppercase tracking-wider text-slate-700">
-                      4. Warranty & Returns
-                    </h4>
-                  </div>
-                  {isSold ? (
-                    <span
-                      className={`text-xs font-extrabold px-2.5 py-0.5 rounded-full ${
-                        warranty.is_customer_warranty_valid
-                          ? 'bg-emerald-100 text-emerald-800'
-                          : 'bg-rose-100 text-rose-800'
-                      }`}
-                    >
-                      {warranty.is_customer_warranty_valid ? '✓ Warranty Valid' : '⚠️ Expired'}
-                    </span>
-                  ) : (
-                    <span className="text-xs font-bold text-amber-700 bg-amber-50 px-2 py-0.5 rounded">
-                      {warranty.warranty_months || product.warranty_months || 12} Months Policy
-                    </span>
-                  )}
-                </div>
-
-                <div className="space-y-2 text-xs">
-                  {isSold ? (
-                    <>
-                      <div className="flex justify-between">
-                        <span className="text-slate-500">Customer Expiry:</span>
-                        <span className="font-bold text-slate-800">
-                          {warranty.customer_warranty_expiry || 'N/A'}
-                        </span>
-                      </div>
-                      <div className="flex justify-between items-center">
-                        <span className="text-slate-500">Days Remaining:</span>
-                        <span
-                          className={`font-mono font-extrabold px-2 py-0.5 rounded ${
-                            warranty.is_customer_warranty_valid
-                              ? 'bg-emerald-50 text-emerald-700'
-                              : 'bg-rose-50 text-rose-700'
-                          }`}
-                        >
-                          {warranty.customer_days_remaining ?? 0} days remaining
-                        </span>
-                      </div>
-                      <div className="text-[11px] text-slate-500 italic">
-                        Includes +{warranty.grace_days || 60} days supplier grace allowance.
-                      </div>
-                    </>
-                  ) : (
-                    <div className="text-xs text-slate-600">
-                      {warranty.customer_warranty_info || 'Available in stock. Warranty starts when customer invoice is issued.'}
-                    </div>
-                  )}
-
-                  {/* Claims or Returns list */}
-                  {warranty.claims && warranty.claims.length > 0 && (
-                    <div className="pt-2 border-t border-slate-100">
-                      <span className="text-[11px] font-bold text-slate-600 block mb-1">Service Claims:</span>
-                      {warranty.claims.map((wc, i) => (
-                        <div key={i} className="text-[11px] text-amber-800 bg-amber-50 p-1.5 rounded mb-1">
-                          Claim #{wc.claim_no} ({wc.status}): {wc.issue_description || 'In service'}
-                        </div>
-                      ))}
-                    </div>
-                  )}
-
-                  {warranty.returns && warranty.returns.length > 0 && (
-                    <div className="pt-2 border-t border-slate-100">
-                      <span className="text-[11px] font-bold text-slate-600 block mb-1">Returns / Refunds:</span>
-                      {warranty.returns.map((ret, i) => (
-                        <div key={i} className="text-[11px] text-rose-800 bg-rose-50 p-1.5 rounded mb-1">
-                          Return #{ret.return_no}: {ret.return_qty} pcs ({taka(ret.refund_amount)})
-                        </div>
-                      ))}
-                    </div>
-                  )}
-                </div>
-              </div>
-
-              {onNavigate && (
-                <button
-                  type="button"
-                  onClick={() => {
-                    onClose();
-                    onNavigate({ section: 'warranty', search: serialCode || product.name });
-                  }}
-                  className="mt-3 w-full py-1.5 text-center text-xs font-bold text-amber-700 bg-amber-50 hover:bg-amber-100 rounded-lg transition"
-                >
-                  Open Warranty & RMA Services →
-                </button>
-              )}
-            </div>
-
+            <WarrantyReturnsCard
+              warranty={warranty}
+              product={product}
+              isSold={isSold}
+              serialCode={serialCode}
+              taka={taka}
+              onClose={onClose}
+              onNavigate={onNavigate}
+            />
           </div>
         </div>
 
