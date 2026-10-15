@@ -57,22 +57,22 @@ async function processExchangeSettlement(client, {
             const revisedTotal = Math.max(0, origTotal - returnSubtotal + newSubtotal);
             const newOrigDue = Math.max(0, revisedTotal - origPaid);
             const dueCleared = Math.max(0, origDue - newOrigDue);
+            const newOrigStatus = newOrigDue <= 0 ? 'paid' : 'partial';
 
-            // 1. Update original sale due & payment status
+            // 1. Update original sale due & payment status with explicit separate parameters
             await client.query(
                 `UPDATE sales
-                 SET due_amount = $1,
-                     payment_status = CASE WHEN $1 <= 0 THEN 'paid' ELSE 'partial' END,
-                     updated_at = NOW()
-                 WHERE id = $2`,
-                [newOrigDue, originalSaleId]
+                 SET due_amount = $1::numeric,
+                     payment_status = $2
+                 WHERE id = $3`,
+                [newOrigDue, newOrigStatus, originalSaleId]
             );
 
             // 2. Adjust customer receivable balance if previous due was cleared
             if (dueCleared > 0 && customerId) {
                 await client.query(
                     `UPDATE customers
-                     SET receivable_balance = GREATEST(0, COALESCE(receivable_balance, 0) - $1),
+                     SET receivable_balance = GREATEST(0::numeric, COALESCE(receivable_balance, 0) - $1::numeric),
                          updated_at = NOW()
                      WHERE id = $2`,
                     [dueCleared, customerId]
@@ -107,7 +107,7 @@ async function processExchangeSettlement(client, {
             if (unrefundedCredit > 0 && customerId) {
                 await client.query(
                     `UPDATE customers
-                     SET wallet_balance = COALESCE(wallet_balance, 0) + $1,
+                     SET wallet_balance = COALESCE(wallet_balance, 0) + $1::numeric,
                          updated_at = NOW()
                      WHERE id = $2`,
                     [unrefundedCredit, customerId]
@@ -117,7 +117,10 @@ async function processExchangeSettlement(client, {
             // If extra items exceeded previous balance creating new invoice due
             if (netDifference > 0 && invoiceDue > 0 && customerId) {
                 await client.query(
-                    `UPDATE customers SET receivable_balance = COALESCE(receivable_balance, 0) + $1, updated_at = NOW() WHERE id = $2`,
+                    `UPDATE customers 
+                     SET receivable_balance = COALESCE(receivable_balance, 0) + $1::numeric, 
+                         updated_at = NOW() 
+                     WHERE id = $2`,
                     [invoiceDue, customerId]
                 );
             }
@@ -130,7 +133,10 @@ async function processExchangeSettlement(client, {
     if (netDifference > 0) {
         if (invoiceDue > 0 && customerId) {
             await client.query(
-                `UPDATE customers SET receivable_balance = COALESCE(receivable_balance, 0) + $1, updated_at = NOW() WHERE id = $2`,
+                `UPDATE customers 
+                 SET receivable_balance = COALESCE(receivable_balance, 0) + $1::numeric, 
+                     updated_at = NOW() 
+                 WHERE id = $2`,
                 [invoiceDue, customerId]
             );
         }
@@ -147,13 +153,18 @@ async function processExchangeSettlement(client, {
         }
         const unrefundedCredit = Math.max(0, excessCredit - totalPaid);
         if (unrefundedCredit > 0 && customerId) {
+            const custRes = await client.query('SELECT receivable_balance FROM customers WHERE id = $1 FOR UPDATE', [customerId]);
+            const currentRec = money(custRes.rows[0]?.receivable_balance);
+            const dueToClear = Math.min(currentRec, unrefundedCredit);
+            const extraWallet = unrefundedCredit - dueToClear;
+
             await client.query(
                 `UPDATE customers 
-                 SET receivable_balance = GREATEST(0, COALESCE(receivable_balance, 0) - $1),
-                     wallet_balance = COALESCE(wallet_balance, 0) + CASE WHEN COALESCE(receivable_balance, 0) < $1 THEN $1 - COALESCE(receivable_balance, 0) ELSE 0 END,
+                 SET receivable_balance = GREATEST(0::numeric, COALESCE(receivable_balance, 0) - $1::numeric),
+                     wallet_balance = COALESCE(wallet_balance, 0) + $2::numeric,
                      updated_at = NOW() 
-                 WHERE id = $2`,
-                [unrefundedCredit, customerId]
+                 WHERE id = $3`,
+                [dueToClear, extraWallet, customerId]
             );
         }
     }
