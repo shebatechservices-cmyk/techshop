@@ -1,4 +1,5 @@
 const {
+    money,
     getDrawerAccountId,
     depositToDrawer,
     reverseCashFromDrawer,
@@ -20,9 +21,13 @@ async function generateExchangeInvoiceNumber(client) {
 
 /**
  * Process customer balances, receivables, wallet credits, and cash drawer ledger movements.
+ * Automatically synchronizes previous invoice due amounts when an original sale is linked.
  *
  * @param {import('pg').PoolClient} client
  * @param {Object} params
+ * @param {number|null} [params.originalSaleId]
+ * @param {number} [params.returnSubtotal]
+ * @param {number} [params.newSubtotal]
  * @param {number} params.netDifference
  * @param {number} params.totalPaid
  * @param {number} params.invoiceDue
@@ -31,14 +36,99 @@ async function generateExchangeInvoiceNumber(client) {
  * @returns {Promise<void>}
  */
 async function processExchangeSettlement(client, {
+    originalSaleId = null,
+    returnSubtotal = 0,
+    newSubtotal = 0,
     netDifference,
     totalPaid,
     invoiceDue,
     customerId,
     invoiceNo,
 }) {
+    if (originalSaleId) {
+        const origSaleRes = await client.query('SELECT * FROM sales WHERE id = $1 FOR UPDATE', [originalSaleId]);
+        if (origSaleRes.rows.length) {
+            const origSale = origSaleRes.rows[0];
+            const origTotal = money(origSale.total_amount);
+            const origPaid = money(origSale.paid_amount);
+            const origDue = money(origSale.due_amount);
+
+            // Revised bill for items customer actually keeps or exchanged
+            const revisedTotal = Math.max(0, origTotal - returnSubtotal + newSubtotal);
+            const newOrigDue = Math.max(0, revisedTotal - origPaid);
+            const dueCleared = Math.max(0, origDue - newOrigDue);
+
+            // 1. Update original sale due & payment status
+            await client.query(
+                `UPDATE sales
+                 SET due_amount = $1,
+                     payment_status = CASE WHEN $1 <= 0 THEN 'paid' ELSE 'partial' END,
+                     updated_at = NOW()
+                 WHERE id = $2`,
+                [newOrigDue, originalSaleId]
+            );
+
+            // 2. Adjust customer receivable balance if previous due was cleared
+            if (dueCleared > 0 && customerId) {
+                await client.query(
+                    `UPDATE customers
+                     SET receivable_balance = GREATEST(0, COALESCE(receivable_balance, 0) - $1),
+                         updated_at = NOW()
+                     WHERE id = $2`,
+                    [dueCleared, customerId]
+                );
+            }
+
+            // 3. Check if customer's prior payments exceed the revised bill
+            const netCustomerRefund = Math.max(0, origPaid - revisedTotal);
+
+            if (totalPaid > 0) {
+                if (netCustomerRefund > 0) {
+                    const drawerId = await getDrawerAccountId(client);
+                    await reverseCashFromDrawer(client, {
+                        drawerId,
+                        amount: totalPaid,
+                        reference: invoiceNo,
+                        note: `Exchange refund paid to customer for invoice #${invoiceNo}`
+                    });
+                } else if (netDifference > 0) {
+                    const drawerId = await getDrawerAccountId(client);
+                    await depositToDrawer(client, {
+                        drawerId,
+                        amount: totalPaid,
+                        reference: invoiceNo,
+                        note: `Exchange price difference payment for invoice #${invoiceNo}`
+                    });
+                }
+            }
+
+            // If there is excess refund credit not collected in cash, credit to customer's wallet
+            const unrefundedCredit = Math.max(0, netCustomerRefund - totalPaid);
+            if (unrefundedCredit > 0 && customerId) {
+                await client.query(
+                    `UPDATE customers
+                     SET wallet_balance = COALESCE(wallet_balance, 0) + $1,
+                         updated_at = NOW()
+                     WHERE id = $2`,
+                    [unrefundedCredit, customerId]
+                );
+            }
+
+            // If extra items exceeded previous balance creating new invoice due
+            if (netDifference > 0 && invoiceDue > 0 && customerId) {
+                await client.query(
+                    `UPDATE customers SET receivable_balance = COALESCE(receivable_balance, 0) + $1, updated_at = NOW() WHERE id = $2`,
+                    [invoiceDue, customerId]
+                );
+            }
+
+            return;
+        }
+    }
+
+    // Fallback: If no original sale record is linked
     if (netDifference > 0) {
-        if (invoiceDue > 0) {
+        if (invoiceDue > 0 && customerId) {
             await client.query(
                 `UPDATE customers SET receivable_balance = COALESCE(receivable_balance, 0) + $1, updated_at = NOW() WHERE id = $2`,
                 [invoiceDue, customerId]
@@ -54,14 +144,16 @@ async function processExchangeSettlement(client, {
                 reference: invoiceNo,
                 note: `Exchange refund paid to customer for invoice #${invoiceNo}`
             });
-        } else {
+        }
+        const unrefundedCredit = Math.max(0, excessCredit - totalPaid);
+        if (unrefundedCredit > 0 && customerId) {
             await client.query(
                 `UPDATE customers 
                  SET receivable_balance = GREATEST(0, COALESCE(receivable_balance, 0) - $1),
                      wallet_balance = COALESCE(wallet_balance, 0) + CASE WHEN COALESCE(receivable_balance, 0) < $1 THEN $1 - COALESCE(receivable_balance, 0) ELSE 0 END,
                      updated_at = NOW() 
                  WHERE id = $2`,
-                [excessCredit, customerId]
+                [unrefundedCredit, customerId]
             );
         }
     }

@@ -66,7 +66,16 @@ export default function useSaleExchangeState({
     setPaidAmount,
     paymentMethod,
     setPaymentMethod,
+    origTotal,
+    origPaid,
+    origDue,
+    revisedTotal,
+    dueCleared,
+    revisedRemainingDue,
+    netCustomerRefund,
+    customerOwesExtra,
   } = useExchangeCalculations({
+    originalSale,
     returnItems,
     newItems,
   });
@@ -125,6 +134,14 @@ export default function useSaleExchangeState({
     returnSubtotal,
     newSubtotal,
     netDifference,
+    origTotal,
+    origPaid,
+    origDue,
+    revisedTotal,
+    dueCleared,
+    revisedRemainingDue,
+    netCustomerRefund,
+    customerOwesExtra,
     handleSubmitExchange,
   };
 }

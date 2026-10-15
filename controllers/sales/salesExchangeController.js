@@ -116,6 +116,9 @@ exports.createExchangeSale = async (req, res) => {
 
         // 6. Settle Customer Balances & Cash Drawer
         await processExchangeSettlement(client, {
+            originalSaleId: original_sale_id ? Number(original_sale_id) : null,
+            returnSubtotal,
+            newSubtotal,
             netDifference,
             totalPaid,
             invoiceDue,

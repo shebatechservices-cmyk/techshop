@@ -42,6 +42,14 @@ export default function SaleExchangeModal({
     returnSubtotal,
     newSubtotal,
     netDifference,
+    origTotal,
+    origPaid,
+    origDue,
+    revisedTotal,
+    dueCleared,
+    revisedRemainingDue,
+    netCustomerRefund,
+    customerOwesExtra,
     handleSubmitExchange,
   } = useSaleExchangeState({
     isOpen,
@@ -192,6 +200,15 @@ export default function SaleExchangeModal({
 
               {/* SECTION 3: RECONCILIATION SUMMARY */}
               <ExchangeSettlementSummary
+                originalSale={originalSale}
+                origTotal={origTotal}
+                origPaid={origPaid}
+                origDue={origDue}
+                revisedTotal={revisedTotal}
+                dueCleared={dueCleared}
+                revisedRemainingDue={revisedRemainingDue}
+                netCustomerRefund={netCustomerRefund}
+                customerOwesExtra={customerOwesExtra}
                 returnSubtotal={returnSubtotal}
                 newSubtotal={newSubtotal}
                 netDifference={netDifference}
