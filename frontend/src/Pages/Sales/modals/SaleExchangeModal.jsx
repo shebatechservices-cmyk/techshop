@@ -94,11 +94,11 @@ export default function SaleExchangeModal({
             <span style={{ fontSize: '1.4rem' }}>🔄</span>
             <div>
               <h3 style={{ margin: 0, fontSize: '1.2rem', fontWeight: 700 }}>
-                Sale Product Exchange
+                Sale Product Return & Exchange (পণ্য ফেরত ও বদল)
               </h3>
               <p style={{ margin: 0, fontSize: '0.8rem', color: '#c7d2fe' }}>
                 {originalSale
-                  ? `Exchanging items from Invoice #${originalSale.invoice_no} (${originalSale.customer_name})`
+                  ? `Return, refund, or exchange items from Invoice #${originalSale.invoice_no} (${originalSale.customer_name})`
                   : 'Loading invoice...'}
               </p>
             </div>

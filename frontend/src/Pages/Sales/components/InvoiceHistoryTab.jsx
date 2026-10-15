@@ -290,7 +290,7 @@ export default function InvoiceHistoryTab({
                                   : []),
                                 {
                                   key: 'exchange',
-                                  label: 'Exchange (পণ্য বদল)',
+                                  label: 'Return / Exchange (পণ্য ফেরত ও বদল)',
                                   icon: '🔄',
                                   className: 'text-purple-700 hover:bg-purple-50',
                                   onClick: () => setExchangeSaleId(sale.id),
