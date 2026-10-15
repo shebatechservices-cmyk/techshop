@@ -47,6 +47,12 @@ exports.createExchangeSale = async (req, res) => {
 
         await client.query('BEGIN');
 
+        // Look up customer details for return recording
+        const custRes = await client.query('SELECT name, phone FROM customers WHERE id = $1', [customer_id]);
+        const customer = custRes.rows[0] || {};
+        const customerName = customer.name || 'Customer';
+        const customerPhone = customer.phone || '';
+
         // 1. Process Returned Items: Restock inventory & record return
         let returnSubtotal = 0;
         for (const ret of returned_items) {
@@ -67,29 +73,34 @@ exports.createExchangeSale = async (req, res) => {
                      SET quantity = quantity + $1 
                      WHERE product_id = $2 AND warehouse_id = 1`,
                     [retQty, ret.product_id]
-                ).catch(() => null);
+                );
             }
 
-            // Insert into product_returns
+            // Insert into product_returns with generated return_no
+            const returnNo = 'RET-' + new Date().getFullYear() + '-' + String(Math.floor(100000 + Math.random() * 900000));
             await client.query(
                 `INSERT INTO product_returns (
-                    invoice_no, customer_name, customer_phone, product_id, product_name,
-                    serial_code, return_qty, return_type, refund_amount, condition, return_reason, created_at
-                ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, NOW())`,
+                    return_no, order_source, invoice_no, customer_id, customer_name, customer_phone,
+                    product_id, product_name, serial_code, return_qty, return_type, refund_amount,
+                    condition, return_reason, return_date, created_at
+                ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, NOW(), NOW())`,
                 [
+                    returnNo,
+                    'offline',
                     original_invoice_no || 'EXCHANGE',
-                    ret.customer_name || 'Customer',
-                    ret.customer_phone || '',
+                    customer_id,
+                    customerName,
+                    customerPhone,
                     ret.product_id || null,
                     ret.product_name || ret.name || 'Returned Item',
                     Array.isArray(ret.serials) ? ret.serials.join(', ') : (ret.serial_code || null),
                     retQty,
-                    'Exchange',
+                    new_items.length > 0 ? 'Exchange' : 'Refund',
                     retQty * retPrice,
                     ret.condition || 'Good',
                     ret.reason || notes || 'Exchange item return'
                 ]
-            ).catch(() => null);
+            );
         }
 
         // 2. Process New Items: Validate stock, serials, and deduct stock
@@ -199,13 +210,12 @@ exports.createExchangeSale = async (req, res) => {
 
             const savedItem = await client.query(
                 `INSERT INTO sales_items (
-                    sale_id, product_id, product_name, quantity, unit_price, cost_price,
-                    total_price, warranty_expires_at, warranty_months
-                ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9) RETURNING id`,
+                    sale_id, product_id, quantity, unit_price, cost_price,
+                    line_total, warranty_expire_date, warranty_months
+                ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8) RETURNING id`,
                 [
                     saleId,
                     item.product_id,
-                    fullName,
                     item.quantity,
                     item.unit_price,
                     itemCostPrice,
@@ -236,7 +246,7 @@ exports.createExchangeSale = async (req, res) => {
                  SET quantity = GREATEST(0, quantity - $1)
                  WHERE product_id = $2 AND warehouse_id = 1`,
                 [item.quantity, item.product_id]
-            ).catch(() => null);
+            );
         }
 
         if (netDifference > 0) {
