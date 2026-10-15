@@ -1,20 +1,13 @@
 const pool = require('../../config/db');
-const {
-    money,
-    ensureSalesColumns,
-    formatProductFullName,
-    normalizeSaleItems,
-    validateSerialTracking,
-    validateAvailableStockAndSerials,
-    getDrawerAccountId,
-    depositToDrawer,
-    reverseCashFromDrawer,
-} = require('./salesHelpers');
+const { money, ensureSalesColumns } = require('./salesHelpers');
+const { processReturnedItems } = require('./exchange/exchangeReturnProcessor');
+const { validateReplacementItems, insertReplacementItems } = require('./exchange/exchangeReplacementProcessor');
+const { generateExchangeInvoiceNumber, processExchangeSettlement } = require('./exchange/exchangeSettlementProcessor');
 
-// ==========================================================
-// SALE EXCHANGE
-// ==========================================================
-
+/**
+ * Sales Exchange Controller
+ * Orchestrates product return restocking, replacement item validation and ledger settlement.
+ */
 exports.createExchangeSale = async (req, res) => {
     const client = await pool.connect();
     try {
@@ -47,77 +40,27 @@ exports.createExchangeSale = async (req, res) => {
 
         await client.query('BEGIN');
 
-        // Look up customer details for return recording
+        // Customer details lookup for audit logging
         const custRes = await client.query('SELECT name, phone FROM customers WHERE id = $1', [customer_id]);
         const customer = custRes.rows[0] || {};
         const customerName = customer.name || 'Customer';
         const customerPhone = customer.phone || '';
 
-        // 1. Process Returned Items: Restock inventory & record return
-        let returnSubtotal = 0;
-        for (const ret of returned_items) {
-            const retQty = Math.max(1, Number(ret.quantity || 1));
-            const retPrice = money(ret.unit_price || ret.price);
-            returnSubtotal += (retQty * retPrice);
+        // 1. Process Returned Items: Restock inventory & record return audit rows
+        const { returnSubtotal } = await processReturnedItems(client, {
+            returnedItems: returned_items,
+            customerId: customer_id,
+            customerName,
+            customerPhone,
+            originalInvoiceNo: original_invoice_no,
+            notes,
+            newItemsCount: new_items.length,
+        });
 
-            // If condition is 'Good' or not specified, restock product
-            if (ret.condition !== 'Damaged' && ret.product_id) {
-                await client.query(
-                    `UPDATE products 
-                     SET stock = COALESCE(stock, 0) + $1, updated_at = NOW() 
-                     WHERE id = $2`,
-                    [retQty, ret.product_id]
-                );
-                await client.query(
-                    `UPDATE stock_levels 
-                     SET quantity = quantity + $1 
-                     WHERE product_id = $2 AND warehouse_id = 1`,
-                    [retQty, ret.product_id]
-                );
-            }
+        // 2. Validate Replacement Items: Check serial-tracking & inventory availability
+        const { normalizedItems, calculatedSubtotal } = await validateReplacementItems(client, new_items);
 
-            // Insert into product_returns with generated return_no
-            const returnNo = 'RET-' + new Date().getFullYear() + '-' + String(Math.floor(100000 + Math.random() * 900000));
-            await client.query(
-                `INSERT INTO product_returns (
-                    return_no, order_source, invoice_no, customer_id, customer_name, customer_phone,
-                    product_id, product_name, serial_code, return_qty, return_type, refund_amount,
-                    condition, return_reason, return_date, created_at
-                ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, NOW(), NOW())`,
-                [
-                    returnNo,
-                    'offline',
-                    original_invoice_no || 'EXCHANGE',
-                    customer_id,
-                    customerName,
-                    customerPhone,
-                    ret.product_id || null,
-                    ret.product_name || ret.name || 'Returned Item',
-                    Array.isArray(ret.serials) ? ret.serials.join(', ') : (ret.serial_code || null),
-                    retQty,
-                    new_items.length > 0 ? 'Exchange' : 'Refund',
-                    retQty * retPrice,
-                    ret.condition || 'Good',
-                    ret.reason || notes || 'Exchange item return'
-                ]
-            );
-        }
-
-        // 2. Process New Items: Validate stock, serials, and deduct stock
-        const { normalizedItems, calculatedSubtotal } = normalizeSaleItems(new_items);
-        const missingSerial = await validateSerialTracking(client, normalizedItems);
-        if (missingSerial) {
-            await client.query('ROLLBACK');
-            return res.status(400).json({
-                success: false,
-                message: `"${missingSerial.full_name || missingSerial.name || 'Product'}" is serial-tracked — attach at least one serial number.`
-            });
-        }
-
-        // RULE 1: Strict available stock & serial database verification
-        await validateAvailableStockAndSerials(client, normalizedItems);
-
-        // 3. Financial calculations for Exchange
+        // 3. Compute Financial Totals & Differences
         const newSubtotal = calculatedSubtotal;
         const totalVat = money(vat);
         const totalDiscount = money(discount);
@@ -127,13 +70,11 @@ exports.createExchangeSale = async (req, res) => {
 
         const netDifference = newGrossTotal - returnSubtotal;
         const totalPaid = money(paid_amount);
-
-        const nextValRes = await client.query("SELECT nextval('sales_invoice_no_seq') AS next_val");
-        const seqVal = nextValRes.rows[0].next_val;
-        const invoiceNo = `INV-EXC-${new Date().getFullYear()}${String(new Date().getMonth() + 1).padStart(2, '0')}${String(new Date().getDate()).padStart(2, '0')}-${String(seqVal).padStart(4, '0')}`;
-
         const invoiceDue = Math.max(0, netDifference - totalPaid);
 
+        const invoiceNo = await generateExchangeInvoiceNumber(client);
+
+        // 4. Record Exchange Sale Header
         const saleInsertQuery = `
             INSERT INTO sales (
                 invoice_no, customer_id, total_amount, subtotal, discount, vat, setup_charge, extra_cost,
@@ -170,123 +111,17 @@ exports.createExchangeSale = async (req, res) => {
 
         const saleId = saleResult.rows[0].id;
 
-        for (const item of normalizedItems) {
-            const prodRes = await client.query(
-                `SELECT p.*, b.name as brand_name, m.name as model_name, s.name as series_name
-                 FROM products p
-                 LEFT JOIN brands b ON b.id = p.brand_id
-                 LEFT JOIN models m ON m.id = p.model_id
-                 LEFT JOIN series s ON s.id = p.series_id
-                 WHERE p.id = $1`,
-                [item.product_id]
-            );
-            const catalogProduct = prodRes.rows[0];
-            const fullName = formatProductFullName(catalogProduct) || item.name || 'Product';
-            const warrantyMonths = item.warranty_months !== undefined ? Number(item.warranty_months) : (catalogProduct?.warranty_months || 0);
+        // 5. Insert Replacement Items & Deduct Inventory
+        await insertReplacementItems(client, { saleId, normalizedItems });
 
-            const expireDate = new Date();
-            expireDate.setMonth(expireDate.getMonth() + Number(warrantyMonths || 0));
-
-            let itemCostPrice = Number(item.cost_price || catalogProduct?.purchase_price || 0);
-            if (Array.isArray(item.serials) && item.serials.length > 0 && item.product_id) {
-                const cleanSerials = item.serials.map(s => String(s).trim().toLowerCase()).filter(Boolean);
-                if (cleanSerials.length > 0) {
-                    const serialCostRes = await client.query(
-                        `SELECT COALESCE(poi.final_cost, poi.cost_price) AS batch_cost
-                         FROM purchase_order_serials pos
-                         JOIN purchase_order_items poi ON poi.id = pos.purchase_order_item_id
-                         JOIN purchase_orders po ON po.id = poi.purchase_order_id
-                         WHERE poi.product_id = $1
-                           AND LOWER(TRIM(pos.serial_code)) = ANY($2)
-                           AND po.deleted_at IS NULL`,
-                        [item.product_id, cleanSerials]
-                    );
-                    if (serialCostRes.rows.length > 0) {
-                        const totalBatchCost = serialCostRes.rows.reduce((sum, r) => sum + Number(r.batch_cost || 0), 0);
-                        itemCostPrice = Number((totalBatchCost / serialCostRes.rows.length).toFixed(2));
-                    }
-                }
-            }
-
-            const savedItem = await client.query(
-                `INSERT INTO sales_items (
-                    sale_id, product_id, quantity, unit_price, cost_price,
-                    line_total, warranty_expire_date, warranty_months
-                ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8) RETURNING id`,
-                [
-                    saleId,
-                    item.product_id,
-                    item.quantity,
-                    item.unit_price,
-                    itemCostPrice,
-                    item.line_total,
-                    expireDate,
-                    warrantyMonths,
-                ]
-            );
-
-            if (item.serials && item.serials.length > 0) {
-                for (const serial of item.serials) {
-                    await client.query(
-                        'INSERT INTO sales_item_serials (sales_item_id, serial_code) VALUES ($1, $2)',
-                        [savedItem.rows[0].id, String(serial).trim()]
-                    );
-                }
-            }
-
-            await client.query(
-                `UPDATE products
-                 SET stock = GREATEST(0, COALESCE(stock, 0) - $1),
-                     updated_at = NOW()
-                 WHERE id = $2`,
-                [item.quantity, item.product_id]
-            );
-            await client.query(
-                `UPDATE stock_levels
-                 SET quantity = GREATEST(0, quantity - $1)
-                 WHERE product_id = $2 AND warehouse_id = 1`,
-                [item.quantity, item.product_id]
-            );
-        }
-
-        if (netDifference > 0) {
-            if (invoiceDue > 0) {
-                await client.query(
-                    `UPDATE customers SET receivable_balance = COALESCE(receivable_balance, 0) + $1, updated_at = NOW() WHERE id = $2`,
-                    [invoiceDue, customer_id]
-                );
-            }
-        } else if (netDifference < 0) {
-            const excessCredit = Math.abs(netDifference);
-            if (totalPaid > 0) {
-                const drawerId = await getDrawerAccountId(client);
-                await reverseCashFromDrawer(client, {
-                    drawerId,
-                    amount: totalPaid,
-                    reference: invoiceNo,
-                    note: `Exchange refund paid to customer for invoice #${invoiceNo}`
-                });
-            } else {
-                await client.query(
-                    `UPDATE customers 
-                     SET receivable_balance = GREATEST(0, COALESCE(receivable_balance, 0) - $1),
-                         wallet_balance = COALESCE(wallet_balance, 0) + CASE WHEN COALESCE(receivable_balance, 0) < $1 THEN $1 - COALESCE(receivable_balance, 0) ELSE 0 END,
-                         updated_at = NOW() 
-                     WHERE id = $2`,
-                    [excessCredit, customer_id]
-                );
-            }
-        }
-
-        if (totalPaid > 0 && netDifference > 0) {
-            const drawerId = await getDrawerAccountId(client);
-            await depositToDrawer(client, {
-                drawerId,
-                amount: totalPaid,
-                reference: invoiceNo,
-                note: `Exchange price difference payment for invoice #${invoiceNo}`
-            });
-        }
+        // 6. Settle Customer Balances & Cash Drawer
+        await processExchangeSettlement(client, {
+            netDifference,
+            totalPaid,
+            invoiceDue,
+            customerId: customer_id,
+            invoiceNo,
+        });
 
         await client.query('COMMIT');
 
@@ -305,7 +140,11 @@ exports.createExchangeSale = async (req, res) => {
     } catch (error) {
         await client.query('ROLLBACK').catch(() => null);
         console.error('Create exchange sale error:', error);
-        return res.status(error.status || 500).json({ success: false, message: error.message || 'Failed to process exchange', error: error.message });
+        return res.status(error.status || 500).json({
+            success: false,
+            message: error.message || 'Failed to process exchange',
+            error: error.message,
+        });
     } finally {
         client.release();
     }
