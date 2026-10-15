@@ -142,7 +142,7 @@ export const smartFetch = async (path, options = {}) => {
     },
   };
 
-  const executeFetchWithTimeout = async (url, opts, timeoutMs = 12000) => {
+  const executeFetchWithTimeout = async (url, opts, timeoutMs = 45000) => {
     if (opts.signal) {
       return fetch(url, opts);
     }
@@ -159,7 +159,7 @@ export const smartFetch = async (path, options = {}) => {
   };
   
   try {
-    const res = await executeFetchWithTimeout(primaryUrl, mergedOptions, 12000);
+    const res = await executeFetchWithTimeout(primaryUrl, mergedOptions, 45000);
     return res;
   } catch (err) {
     // If primary was LAN / local and failed (e.g. mobile disconnected from Wi-Fi or outside shop):
@@ -168,7 +168,7 @@ export const smartFetch = async (path, options = {}) => {
       try {
         console.warn(`[smartFetch] Primary endpoint (${primaryUrl}) failed. Auto fallback to Cloud Server (${CLOUD_SERVER_URL})...`);
         const cloudUrl = `${CLOUD_SERVER_URL}${cleanPath}`;
-        const res2 = await executeFetchWithTimeout(cloudUrl, mergedOptions, 15000);
+        const res2 = await executeFetchWithTimeout(cloudUrl, mergedOptions, 45000);
         if (res2) {
           if (typeof window !== 'undefined' && window.localStorage) {
             window.localStorage.setItem('sheba_pos_server_url', CLOUD_SERVER_URL);

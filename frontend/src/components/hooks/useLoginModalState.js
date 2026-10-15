@@ -39,11 +39,29 @@ export function useLoginModalState({ onLoginSuccess }) {
 
   useEffect(() => {
     let isMounted = true;
-    pingServer().then((online) => {
-      if (isMounted) setServerOnline(online);
-    });
+    let timer = null;
+
+    const checkServer = async () => {
+      try {
+        const online = await pingServer();
+        if (!isMounted) return;
+        setServerOnline(online);
+        if (!online) {
+          timer = setTimeout(checkServer, 4000);
+        }
+      } catch {
+        if (isMounted) {
+          setServerOnline(false);
+          timer = setTimeout(checkServer, 4000);
+        }
+      }
+    };
+
+    checkServer();
+
     return () => {
       isMounted = false;
+      if (timer) clearTimeout(timer);
     };
   }, []);
 
