@@ -165,7 +165,41 @@ export default function ExchangeReturnItemsTable({
                 />
               </td>
               <td style={{ padding: '8px 10px', textAlign: 'right' }}>
-                {taka(r.unit_price)}
+                <input
+                  type="number"
+                  step="0.01"
+                  min="0"
+                  disabled={!r.is_selected}
+                  value={r.unit_price}
+                  onChange={(e) => {
+                    const val = Math.max(0, parseFloat(e.target.value) || 0);
+                    setReturnItems((prev) =>
+                      prev.map((it, i) =>
+                        i === idx ? { ...it, unit_price: val } : it
+                      )
+                    );
+                  }}
+                  style={{
+                    width: '85px',
+                    padding: '4px 6px',
+                    borderRadius: '4px',
+                    border: '1px solid #cbd5e1',
+                    textAlign: 'right',
+                    fontSize: '0.85rem',
+                    fontWeight: 600,
+                  }}
+                />
+                {r.discount > 0 && (
+                  <div
+                    style={{
+                      fontSize: '0.70rem',
+                      color: '#dc2626',
+                      marginTop: '2px',
+                    }}
+                  >
+                    মূল: ৳{r.original_unit_price} (-৳{r.discount})
+                  </div>
+                )}
               </td>
               <td style={{ padding: '8px 10px', textAlign: 'center' }}>
                 <select
