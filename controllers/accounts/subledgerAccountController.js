@@ -225,65 +225,60 @@ exports.deleteAccountRecord = async (req, res) => {
         const pAcc = pAccRes.rows[0];
         const pAccId = pAcc ? pAcc.id : null;
 
-        if (!isForce) {
-            // 1. Lock Check: Active balance
-            const bal = Math.abs(parseFloat(acc.current_balance || (pAcc ? pAcc.balance : 0) || 0));
-            if (bal > 0.01) {
+        // 1. Lock Check: Active balance
+        const bal = Math.abs(parseFloat(acc.current_balance || (pAcc ? pAcc.balance : 0) || 0));
+        if (bal > 0.01) {
+            return res.status(400).json({
+                success: false,
+                is_locked: true,
+                message: `Cannot delete account: Account "${acc.account_name}" has an active balance of ৳ ${bal.toFixed(2)}. Please transfer or withdraw the balance first.`
+            });
+        }
+
+        // 2. Lock Check: Transaction history & linked financial records
+        if (pAccId) {
+            const txCheck = await pool.query('SELECT COUNT(*) FROM account_transactions WHERE account_id = $1', [pAccId]);
+            const txCount = parseInt(txCheck.rows[0].count, 10) || 0;
+            if (txCount > 0) {
                 return res.status(400).json({
                     success: false,
                     is_locked: true,
-                    message: `Cannot delete account: Account "${acc.account_name}" has an active balance of ৳ ${bal.toFixed(2)}. Please transfer or withdraw the balance first.`
+                    message: `Cannot delete account: ${txCount} transaction ledger entries are recorded under this account. Financial records cannot be deleted. Deactivate this account instead.`
                 });
             }
 
-            // 2. Lock Check: Transaction history
-            if (pAccId) {
-                const txCheck = await pool.query('SELECT COUNT(*) FROM account_transactions WHERE account_id = $1', [pAccId]);
-                const txCount = parseInt(txCheck.rows[0].count, 10) || 0;
-                if (txCount > 0) {
-                    return res.status(400).json({
-                        success: false,
-                        is_locked: true,
-                        message: `Cannot delete account: ${txCount} transaction ledger entries are recorded under this account. Financial records cannot be deleted.`
-                    });
-                }
+            const salesCheck = await pool.query('SELECT COUNT(*) FROM sales WHERE payment_method_id = $1', [pAccId]).catch(() => ({ rows: [{ count: 0 }] }));
+            const salesCount = parseInt(salesCheck.rows[0].count, 10) || 0;
+            if (salesCount > 0) {
+                return res.status(400).json({
+                    success: false,
+                    is_locked: true,
+                    message: `Cannot delete account: ${salesCount} sales invoices are linked to this payment account. Deactivate this account instead.`
+                });
+            }
 
-                const salesCheck = await pool.query('SELECT COUNT(*) FROM sales WHERE payment_method_id = $1', [pAccId]).catch(() => ({ rows: [{ count: 0 }] }));
-                const salesCount = parseInt(salesCheck.rows[0].count, 10) || 0;
-                if (salesCount > 0) {
-                    return res.status(400).json({
-                        success: false,
-                        is_locked: true,
-                        message: `Cannot delete account: ${salesCount} sales invoices are linked to this payment account.`
-                    });
-                }
+            const poPayCheck = await pool.query('SELECT COUNT(*) FROM purchase_order_payments WHERE account_id = $1', [pAccId]).catch(() => ({ rows: [{ count: 0 }] }));
+            const poCount = parseInt(poPayCheck.rows[0].count, 10) || 0;
+            if (poCount > 0) {
+                return res.status(400).json({
+                    success: false,
+                    is_locked: true,
+                    message: `Cannot delete account: ${poCount} purchase order payments are linked to this account. Deactivate this account instead.`
+                });
+            }
 
-                const poPayCheck = await pool.query('SELECT COUNT(*) FROM purchase_order_payments WHERE account_id = $1', [pAccId]).catch(() => ({ rows: [{ count: 0 }] }));
-                const poCount = parseInt(poPayCheck.rows[0].count, 10) || 0;
-                if (poCount > 0) {
-                    return res.status(400).json({
-                        success: false,
-                        is_locked: true,
-                        message: `Cannot delete account: ${poCount} purchase order payments are linked to this account.`
-                    });
-                }
-
-                const expCheck = await pool.query('SELECT COUNT(*) FROM expenses WHERE account_id = $1', [pAccId]).catch(() => ({ rows: [{ count: 0 }] }));
-                const expCount = parseInt(expCheck.rows[0].count, 10) || 0;
-                if (expCount > 0) {
-                    return res.status(400).json({
-                        success: false,
-                        is_locked: true,
-                        message: `Cannot delete account: ${expCount} expense records are recorded under this account.`
-                    });
-                }
+            const expCheck = await pool.query('SELECT COUNT(*) FROM expenses WHERE account_id = $1', [pAccId]).catch(() => ({ rows: [{ count: 0 }] }));
+            const expCount = parseInt(expCheck.rows[0].count, 10) || 0;
+            if (expCount > 0) {
+                return res.status(400).json({
+                    success: false,
+                    is_locked: true,
+                    message: `Cannot delete account: ${expCount} expense records are recorded under this account. Deactivate this account instead.`
+                });
             }
         }
 
         if (pAccId) {
-            if (isForce) {
-                await pool.query('DELETE FROM account_transactions WHERE account_id = $1', [pAccId]).catch(() => null);
-            }
             await pool.query('DELETE FROM payment_accounts WHERE id = $1', [pAccId]);
         }
 

@@ -41,23 +41,18 @@ export default function useAccountModals({ wallets, loadAccountsData, setError, 
   // Transaction Audit / Details Modal state
   const [selectedTxForDetails, setSelectedTxForDetails] = useState(null);
 
-  // Delete an account (supports force deletion)
+  // Delete an account (Strict Policy: Cannot delete accounts with transaction history)
   const handleDeleteWallet = async (wallet) => {
-    let url = `${API}/accounts/wallets/${wallet.id}`;
     if (!wallet.is_deletable) {
-      if (
-        !window.confirm(
-          `⚠️ Account "${wallet.account_name}" has recorded transactions or balance.\n\nDo you want to FORCE REMOVE this account and its associated records?`
-        )
-      ) {
-        return;
-      }
-      url += '?force=true';
-    } else {
-      if (!window.confirm(`Are you sure you want to delete account "${wallet.account_name}"?`)) return;
+      setError(
+        `🔒 Cannot delete account "${wallet.account_name}": This account has recorded financial transactions or balance. Financial records cannot be deleted. You can deactivate this account instead.`
+      );
+      return;
     }
+    if (!window.confirm(`Are you sure you want to delete unused account "${wallet.account_name}"?`)) return;
+
     try {
-      const res = await fetch(url, { method: 'DELETE' });
+      const res = await fetch(`${API}/accounts/wallets/${wallet.id}`, { method: 'DELETE' });
       const data = await res.json();
       if (!res.ok) {
         setError(data.message || data.error || 'Failed to delete account');

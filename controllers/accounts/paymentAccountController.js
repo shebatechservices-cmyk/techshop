@@ -167,11 +167,11 @@ exports.updateAccount = async (req, res) => {
     }
 };
 
-// Lock Chain: Safe Account Deletion (with Force Delete support)
+// Strict Policy: Immutable Account Deletion Lock
+// Accounts with any financial history (transactions, sales, purchases, expenses) cannot be deleted.
 exports.deleteAccount = async (req, res) => {
     try {
         const id = Number(req.params.id);
-        const isForce = req.query?.force === 'true' || req.body?.force === true;
 
         const accRes = await pool.query('SELECT * FROM payment_accounts WHERE id = $1', [id]);
         if (!accRes.rows.length) {
@@ -179,68 +179,62 @@ exports.deleteAccount = async (req, res) => {
         }
         const acc = accRes.rows[0];
 
-        if (!isForce) {
-            // 1. Lock Chain: Account Transactions
-            const trxCheck = await pool.query('SELECT COUNT(*) FROM account_transactions WHERE account_id = $1', [id]);
-            const txCount = parseInt(trxCheck.rows[0].count, 10) || 0;
-            if (txCount > 0) {
-                return res.status(400).json({
-                    success: false,
-                    is_locked: true,
-                    message: `Cannot delete account: ${txCount} transactions are recorded under this account. Financial records cannot be deleted.`
-                });
-            }
-
-            // 2. Lock Chain: Sales payments
-            const salesCheck = await pool.query('SELECT COUNT(*) FROM sales WHERE payment_method_id = $1', [id]).catch(() => ({ rows: [{ count: 0 }] }));
-            const salesCount = parseInt(salesCheck.rows[0].count, 10) || 0;
-            if (salesCount > 0) {
-                return res.status(400).json({
-                    success: false,
-                    is_locked: true,
-                    message: `Cannot delete account: ${salesCount} sales invoices are linked to this payment method.`
-                });
-            }
-
-            // 3. Lock Chain: Purchase payments
-            const poPayCheck = await pool.query('SELECT COUNT(*) FROM purchase_order_payments WHERE account_id = $1', [id]).catch(() => ({ rows: [{ count: 0 }] }));
-            const poPayCount = parseInt(poPayCheck.rows[0].count, 10) || 0;
-            if (poPayCount > 0) {
-                return res.status(400).json({
-                    success: false,
-                    is_locked: true,
-                    message: `Cannot delete account: ${poPayCount} purchase order payments are linked to this account.`
-                });
-            }
-
-            // 4. Lock Chain: Expense records
-            const expCheck = await pool.query('SELECT COUNT(*) FROM expenses WHERE account_id = $1', [id]).catch(() => ({ rows: [{ count: 0 }] }));
-            const expCount = parseInt(expCheck.rows[0].count, 10) || 0;
-            if (expCount > 0) {
-                return res.status(400).json({
-                    success: false,
-                    is_locked: true,
-                    message: `Cannot delete account: ${expCount} expense entries are recorded under this account.`
-                });
-            }
-
-            // 5. Lock Chain: Non-zero balance
-            const bal = Math.abs(parseFloat(acc.balance || 0));
-            if (bal > 0.01) {
-                return res.status(400).json({
-                    success: false,
-                    is_locked: true,
-                    message: `Cannot delete account: Active balance of ৳ ${acc.balance} must be transferred or withdrawn first.`
-                });
-            }
+        // 1. Lock Chain: Account Transactions (Strict Policy: Cannot delete accounts with ledger history)
+        const trxCheck = await pool.query('SELECT COUNT(*) FROM account_transactions WHERE account_id = $1', [id]);
+        const txCount = parseInt(trxCheck.rows[0].count, 10) || 0;
+        if (txCount > 0) {
+            return res.status(400).json({
+                success: false,
+                is_locked: true,
+                message: `Cannot delete account: ${txCount} transactions are recorded under this account. Financial records cannot be deleted. Deactivate this account instead.`
+            });
         }
 
-        // If force delete or unlocked: Clean up linked records
-        if (isForce) {
-            await pool.query('DELETE FROM account_transactions WHERE account_id = $1', [id]).catch(() => null);
-            await pool.query('DELETE FROM accounts WHERE LOWER(account_name) = LOWER($1)', [acc.name]).catch(() => null);
+        // 2. Lock Chain: Sales payments
+        const salesCheck = await pool.query('SELECT COUNT(*) FROM sales WHERE payment_method_id = $1', [id]).catch(() => ({ rows: [{ count: 0 }] }));
+        const salesCount = parseInt(salesCheck.rows[0].count, 10) || 0;
+        if (salesCount > 0) {
+            return res.status(400).json({
+                success: false,
+                is_locked: true,
+                message: `Cannot delete account: ${salesCount} sales invoices are linked to this payment method. Deactivate this account instead.`
+            });
         }
 
+        // 3. Lock Chain: Purchase payments
+        const poPayCheck = await pool.query('SELECT COUNT(*) FROM purchase_order_payments WHERE account_id = $1', [id]).catch(() => ({ rows: [{ count: 0 }] }));
+        const poPayCount = parseInt(poPayCheck.rows[0].count, 10) || 0;
+        if (poPayCount > 0) {
+            return res.status(400).json({
+                success: false,
+                is_locked: true,
+                message: `Cannot delete account: ${poPayCount} purchase order payments are linked to this account. Deactivate this account instead.`
+            });
+        }
+
+        // 4. Lock Chain: Expense records
+        const expCheck = await pool.query('SELECT COUNT(*) FROM expenses WHERE account_id = $1', [id]).catch(() => ({ rows: [{ count: 0 }] }));
+        const expCount = parseInt(expCheck.rows[0].count, 10) || 0;
+        if (expCount > 0) {
+            return res.status(400).json({
+                success: false,
+                is_locked: true,
+                message: `Cannot delete account: ${expCount} expense entries are recorded under this account. Deactivate this account instead.`
+            });
+        }
+
+        // 5. Lock Chain: Non-zero balance
+        const bal = Math.abs(parseFloat(acc.balance || 0));
+        if (bal > 0.01) {
+            return res.status(400).json({
+                success: false,
+                is_locked: true,
+                message: `Cannot delete account: Active balance of ৳ ${acc.balance} must be transferred or withdrawn first.`
+            });
+        }
+
+        // Account is completely clean with 0 transactions and 0 balance: safe to delete
+        await pool.query('DELETE FROM accounts WHERE LOWER(account_name) = LOWER($1)', [acc.name]).catch(() => null);
         await pool.query('DELETE FROM payment_accounts WHERE id = $1', [id]);
         await pool.query(`
             INSERT INTO trash_records (table_name, record_id, record_title, record_data, deleted_at)

@@ -1,11 +1,13 @@
-import React, { useState, useEffect } from 'react';
-import { smartFetch } from '../../services/api';
+import React, { useState } from 'react';
 import {
   money,
   taka,
   getMethodType,
   getAccountOptions,
 } from './tender/tenderPaymentUtils';
+import { useMultiTenderMethods } from './tender/useMultiTenderMethods';
+import MultiTenderHeader from './tender/MultiTenderHeader';
+import MultiTenderTableThead from './tender/MultiTenderTableThead';
 import TenderTableRow from './tender/TenderTableRow';
 
 export default function MultiTenderPaymentTable({
@@ -26,45 +28,7 @@ export default function MultiTenderPaymentTable({
   remainingPayable = 0,
 }) {
   const [rowErrors, setRowErrors] = useState({});
-  const [dbPaymentMethods, setDbPaymentMethods] = useState(
-    paymentMethodsProp || []
-  );
-
-  useEffect(() => {
-    if (paymentMethodsProp && paymentMethodsProp.length > 0) {
-      setDbPaymentMethods(paymentMethodsProp);
-      return;
-    }
-    const fetchActiveAccounts = async () => {
-      try {
-        const res = await smartFetch('/accounts');
-        const data = await res.json();
-        if (
-          res.ok &&
-          data.success &&
-          Array.isArray(data.data) &&
-          data.data.length > 0
-        ) {
-          setDbPaymentMethods(data.data);
-        }
-      } catch (_) {
-        // Fallback default methods
-      }
-    };
-    fetchActiveAccounts();
-  }, [paymentMethodsProp]);
-
-  // Combined active methods list (always include fallback defaults if empty)
-  const effectivePaymentMethods =
-    dbPaymentMethods.length > 0
-      ? dbPaymentMethods
-      : [
-          { id: 1, name: 'Cash', type: 'cash', is_active: true },
-          { id: 2, name: 'bKash', type: 'mobile_banking', is_active: true },
-          { id: 3, name: 'Nagad', type: 'mobile_banking', is_active: true },
-          { id: 4, name: 'Rocket', type: 'mobile_banking', is_active: true },
-          { id: 5, name: 'Bank Transfer', type: 'bank', is_active: true },
-        ];
+  const { effectivePaymentMethods } = useMultiTenderMethods(paymentMethodsProp);
 
   const allAccounts =
     financialAccounts.length > 0 ? financialAccounts : walletAccounts;
@@ -135,66 +99,15 @@ export default function MultiTenderPaymentTable({
     onCancelTender(index);
   };
 
+  const acceptedCount = tenders.filter((t) => t.isAccepted).length;
+
   return (
     <div style={{ width: '100%', marginTop: '8px' }}>
-      {/* Header bar */}
-      <div
-        style={{
-          display: 'flex',
-          justifyContent: 'space-between',
-          alignItems: 'center',
-          marginBottom: '5px',
-        }}
-      >
-        <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-          <span
-            style={{
-              fontSize: '0.74rem',
-              fontWeight: 800,
-              color: '#1e293b',
-              textTransform: 'uppercase',
-              letterSpacing: '0.03em',
-            }}
-          >
-            💳 Payment Details (Multi-Tender)
-          </span>
-          <span
-            style={{
-              fontSize: '0.68rem',
-              color: '#15803d',
-              background: '#dcfce7',
-              padding: '1px 6px',
-              borderRadius: '10px',
-              fontWeight: 700,
-            }}
-          >
-            {tenders.filter((t) => t.isAccepted).length} of {tenders.length}{' '}
-            Accepted
-          </span>
-        </div>
-
-        <button
-          type="button"
-          onClick={onAddTender}
-          style={{
-            padding: '3px 8px',
-            borderRadius: '4px',
-            border: '1px dashed #0284c7',
-            background: '#f0f9ff',
-            color: '#0284c7',
-            fontWeight: 700,
-            fontSize: '0.72rem',
-            cursor: 'pointer',
-            display: 'inline-flex',
-            alignItems: 'center',
-            gap: '3px',
-            lineHeight: 1.2,
-          }}
-          title="Add another tender payment entry"
-        >
-          <span>＋</span> Add more
-        </button>
-      </div>
+      <MultiTenderHeader
+        acceptedCount={acceptedCount}
+        totalCount={tenders.length}
+        onAddTender={onAddTender}
+      />
 
       {/* Table Container */}
       <div
@@ -214,67 +127,7 @@ export default function MultiTenderPaymentTable({
             textAlign: 'left',
           }}
         >
-          <thead>
-            <tr
-              style={{
-                background: '#f8fafc',
-                borderBottom: '1px solid #e2e8f0',
-                color: '#475569',
-              }}
-            >
-              <th
-                style={{
-                  padding: '5px 6px',
-                  width: '28px',
-                  textAlign: 'center',
-                  fontWeight: 700,
-                }}
-              >
-                #
-              </th>
-              <th
-                style={{ padding: '5px 6px', minWidth: '135px', fontWeight: 700 }}
-              >
-                Payment Method
-              </th>
-              <th
-                style={{ padding: '5px 6px', minWidth: '145px', fontWeight: 700 }}
-              >
-                Account
-              </th>
-              <th
-                style={{
-                  padding: '5px 6px',
-                  width: '120px',
-                  minWidth: '105px',
-                  fontWeight: 700,
-                }}
-              >
-                Ref:/Trans. ID
-              </th>
-              <th
-                style={{
-                  padding: '5px 6px',
-                  width: '115px',
-                  minWidth: '100px',
-                  textAlign: 'right',
-                  fontWeight: 700,
-                }}
-              >
-                Amount (৳)
-              </th>
-              <th
-                style={{
-                  padding: '5px 6px',
-                  width: '70px',
-                  textAlign: 'center',
-                  fontWeight: 700,
-                }}
-              >
-                Action
-              </th>
-            </tr>
-          </thead>
+          <MultiTenderTableThead />
           <tbody>
             {tenders.length === 0 ? (
               <tr>
