@@ -42,7 +42,7 @@ export default function LoginModal({ isOpen, onLoginSuccess, canClose = false, o
             {/* Showcase Headlines & Features (Hidden on extra small devices to save scroll height) */}
             <div className="hidden sm:block mt-8 space-y-4">
               <div className="text-xs font-bold uppercase tracking-wider text-slate-400">
-                স্মার্ট বিজনেস সলিউশন
+                Smart Enterprise Suite
               </div>
               <ul className="space-y-3.5 m-0 p-0 list-none">
                 <li className="flex items-start gap-3">
@@ -52,8 +52,8 @@ export default function LoginModal({ isOpen, onLoginSuccess, canClose = false, o
                     </svg>
                   </div>
                   <div>
-                    <h4 className="text-xs font-bold text-slate-100 m-0">রিয়েল-টাইম POS ও বিলিং</h4>
-                    <p className="text-[11px] text-slate-400 m-0 mt-0.5">দ্রুততম বারকোড স্ক্যানিং ও মাল্টি-টেন্ডার পেমেন্ট মেথড।</p>
+                    <h4 className="text-xs font-bold text-slate-100 m-0">Real-Time POS &amp; Billing</h4>
+                    <p className="text-[11px] text-slate-400 m-0 mt-0.5">High-speed barcode checkout with multi-tender payment processing.</p>
                   </div>
                 </li>
 
@@ -64,8 +64,8 @@ export default function LoginModal({ isOpen, onLoginSuccess, canClose = false, o
                     </svg>
                   </div>
                   <div>
-                    <h4 className="text-xs font-bold text-slate-100 m-0">সিরিয়াল ও ওয়ারেন্টি ট্র্যাকিং</h4>
-                    <p className="text-[11px] text-slate-400 m-0 mt-0.5">প্রতিটি পণ্যের স্বতন্ত্র বারকোড ও মেয়াদ সুরক্ষা।</p>
+                    <h4 className="text-xs font-bold text-slate-100 m-0">Serial &amp; Warranty Tracking</h4>
+                    <p className="text-[11px] text-slate-400 m-0 mt-0.5">Granular item-level serial codes and warranty lifecycle management.</p>
                   </div>
                 </li>
 
@@ -76,8 +76,8 @@ export default function LoginModal({ isOpen, onLoginSuccess, canClose = false, o
                     </svg>
                   </div>
                   <div>
-                    <h4 className="text-xs font-bold text-slate-100 m-0">লেজার ও আর্থিক অ্যানালিটিক্স</h4>
-                    <p className="text-[11px] text-slate-400 m-0 mt-0.5">স্বয়ংক্রিয় কাস্টমার ও সাপ্লায়ার ব্যালেন্স স্টেটমেন্ট।</p>
+                    <h4 className="text-xs font-bold text-slate-100 m-0">Ledgers &amp; Financial Analytics</h4>
+                    <p className="text-[11px] text-slate-400 m-0 mt-0.5">Automated customer, supplier, and expense ledger reconciliations.</p>
                   </div>
                 </li>
               </ul>
@@ -102,7 +102,7 @@ export default function LoginModal({ isOpen, onLoginSuccess, canClose = false, o
             <div className="flex flex-col sm:flex-row lg:flex-col justify-between text-xs text-slate-400 gap-2">
               <div className="flex items-center gap-1.5">
                 <span className="text-emerald-400">📞</span>
-                <span>অফিসিয়াল হেল্পলাইন:</span>
+                <span>Official Hotline:</span>
                 <a href="tel:01722578860" className="text-white hover:text-emerald-400 font-bold tracking-wider">
                   01722578860
                 </a>
@@ -136,12 +136,12 @@ export default function LoginModal({ isOpen, onLoginSuccess, canClose = false, o
               Secure ERP Gateway
             </span>
             <h2 className="text-2xl sm:text-3xl font-extrabold text-slate-900 tracking-tight m-0">
-              {mode === 'login' ? 'সাইন ইন করুন' : 'পাসওয়ার্ড রিকভারি'}
+              {mode === 'login' ? 'Sign In to Your Account' : 'Password Recovery'}
             </h2>
             <p className="text-xs sm:text-sm text-slate-500 font-medium mt-1.5 mb-0">
               {mode === 'login' 
-                ? 'আপনার শপ একাউন্ট এক্সেস করতে ইউজার আইডি ও পাসওয়ার্ড দিন।' 
-                : 'আপনার রেজিস্টার্ড ফোন নম্বর অথবা ইমেইল দিয়ে সাবমিট করুন।'}
+                ? 'Enter your credentials to access your store management workspace.' 
+                : 'Enter your registered phone number or email to receive reset instructions.'}
             </p>
           </div>
 
