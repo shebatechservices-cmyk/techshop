@@ -168,11 +168,14 @@ export function usePurchaseHydration({
     }
 
     if (Array.isArray(po.payments) && po.payments.length > 0) {
-      const loadedTenders = po.payments.map((p) => ({
-        id: `${Date.now()}-${Math.random()}`,
+      const loadedTenders = po.payments.map((p, i) => ({
+        id: p.id || `${Date.now()}-${i}`,
         method: p.payment_method || 'Cash',
+        account_id: p.account_id || null,
+        payment_method_id: p.payment_method_id || null,
         sub_option:
           p.sub_option ||
+          p.account_name ||
           (p.payment_method === 'Bank'
             ? bankAccounts[0] || 'Bank'
             : p.payment_method === 'MFS'

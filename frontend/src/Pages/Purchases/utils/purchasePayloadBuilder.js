@@ -78,12 +78,21 @@ export const buildPurchaseApiPayload = ({
     payments: tenders
       .filter((t) => t.isAccepted && money(t.amount) > 0)
       .map((t) => {
-        let resolvedAccId = t.account_id;
-        if (t.sub_option && accountLabelToId && accountLabelToId(t.sub_option)) {
-          resolvedAccId = accountLabelToId(t.sub_option);
+        let resolvedAccId = t.account_id ? Number(t.account_id) : null;
+        if (!resolvedAccId && t.sub_option && accountLabelToId) {
+          const matchedId = accountLabelToId(t.sub_option);
+          if (matchedId) resolvedAccId = matchedId;
         }
         if (!resolvedAccId && walletAccounts && walletAccounts.length > 0) {
-          resolvedAccId = walletAccounts[0].id;
+          const meth = String(t.method || '').toLowerCase();
+          const matched = walletAccounts.find((a) => {
+            const accType = String(a.account_type || a.type || '').toLowerCase();
+            if (meth === 'bank') return accType === 'bank';
+            if (meth === 'mfs') return accType === 'mfs' || accType === 'mobile_banking';
+            if (meth === 'cash') return accType === 'cash' || accType === 'drawer';
+            return false;
+          });
+          resolvedAccId = matched ? matched.id : walletAccounts[0].id;
         }
         return {
           payment_method: t.method || 'Cash',

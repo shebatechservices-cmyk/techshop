@@ -68,14 +68,15 @@ export function usePurchasePricingAndPayment({
     const m = {};
     (walletAccounts || []).forEach((a) => {
       m[accountLabel(a)] = a;
-      m[a.name] = a;
+      if (a.name) m[a.name] = a;
+      if (a.account_name) m[a.account_name] = a;
       if (a.id) m[String(a.id)] = a;
     });
     return m;
   }, [walletAccounts]);
 
   const accountLabelToId = (label) =>
-    accountByLabel[label] ? Number(accountByLabel[label].id) : 1;
+    label && accountByLabel[label] ? Number(accountByLabel[label].id) : null;
 
   const accountLabelToBalance = (label) => {
     const acc = accountByLabel[label];

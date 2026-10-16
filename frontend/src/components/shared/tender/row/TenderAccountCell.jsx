@@ -100,9 +100,16 @@ export default function TenderAccountCell({
           <select
             value={effectiveSub}
             disabled={isWallet}
-            onChange={(e) =>
-              onUpdateTender(index, { sub_option: e.target.value })
-            }
+            onChange={(e) => {
+              const val = e.target.value;
+              const matched = (allAccounts || []).find(
+                (a) => accountLabel(a) === val || a.name === val || String(a.id) === val
+              );
+              onUpdateTender(index, {
+                sub_option: val,
+                ...(matched ? { account_id: matched.id } : {}),
+              });
+            }}
             style={{
               width: '100%',
               height: '28px',
