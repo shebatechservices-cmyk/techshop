@@ -12,7 +12,7 @@ export default function SearchInputBar({
 }) {
   return (
     <div
-      className={`w-full flex items-center bg-white/90 border border-emerald-200/90 rounded-lg transition-all duration-150 focus-within:bg-white focus-within:border-emerald-500 focus-within:ring-2 focus-within:ring-emerald-500/20 shadow-2xs hover:border-emerald-300 ${
+      className={`w-full flex items-center bg-white border border-emerald-400/90 rounded-lg transition-all duration-150 focus-within:bg-white focus-within:border-white focus-within:ring-2 focus-within:ring-emerald-300 shadow-sm hover:border-emerald-300 ${
         compact ? 'px-3 py-1.5' : 'px-4 py-2'
       }`}
     >
