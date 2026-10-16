@@ -79,7 +79,21 @@ export default function useSaleInvoiceData({
     const salesPerson = invoice.sales_person || invoice.sales_person_name || preparedBy;
 
     // 4. Dynamic Items Array Mapping
-    const rawItems = invoice.items || invoice.sales_items || [];
+    let rawItems = invoice.items || invoice.sales_items || [];
+    if (rawItems.length === 0 && invoice.exchange_details?.returned_items?.length > 0) {
+      rawItems = invoice.exchange_details.returned_items.map((r) => ({
+        ...r,
+        name: `[RETURNED] ${r.name}`,
+        full_name: `[RETURNED] ${r.name}`,
+        unit_price: r.unit_price,
+        quantity: r.quantity,
+        total_price: Number(r.quantity || 1) * Number(r.unit_price || 0),
+        uom: 'Pcs',
+        warranty_months: 0,
+        serials: r.serials || [],
+      }));
+    }
+
     const items = rawItems.map((it) => {
       const unitPrice = parseFloat(it.unit_price ?? it.price ?? it.rate ?? it.selling_price ?? 0);
       const qty = parseFloat(it.quantity ?? it.qty ?? 1);
@@ -124,9 +138,16 @@ export default function useSaleInvoiceData({
     const totalDueAmount = netPayable + previousDue;
     const paidAmount = parseFloat(invoice.paid_amount ?? invoice.total_paid ?? 0);
     const dueAmount = parseFloat(invoice.due_amount ?? (totalDueAmount - paidAmount));
-    const isFullyPaid = dueAmount <= 0.01;
-    const isPartialPaid = paidAmount > 0 && !isFullyPaid;
-    const paymentStatus = isQuotation ? 'QUOTATION' : (isFullyPaid ? 'PAID' : (isPartialPaid ? 'PARTIAL' : 'DUE'));
+    const isRefund =
+      String(invoice.payment_status || '').toLowerCase() === 'refunded' ||
+      Boolean(invoice.exchange_from_invoice_no && netPayable === 0 && paidAmount > 0);
+    const isFullyPaid = dueAmount <= 0.01 && !isRefund;
+    const isPartialPaid = paidAmount > 0 && !isFullyPaid && !isRefund;
+    const paymentStatus = isQuotation
+      ? 'QUOTATION'
+      : isRefund
+      ? 'REFUNDED'
+      : (isFullyPaid ? 'PAID' : (isPartialPaid ? 'PARTIAL' : 'DUE'));
     const narration = invoice.note || invoice.narration || invoice.remarks || '';
 
     const paymentTenders = Array.isArray(invoice.payments) ? invoice.payments : (

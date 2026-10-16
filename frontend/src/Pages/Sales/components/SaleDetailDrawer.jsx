@@ -29,8 +29,24 @@ export default function SaleDetailDrawer({
   const discount = Number(sale?.discount_amount || sale?.discount || 0);
   const subtotal = grandTotal + discount;
 
+  const isRefund =
+    String(sale?.payment_status || '').toLowerCase() === 'refunded' ||
+    Boolean(sale?.exchange_from_invoice_no && grandTotal === 0 && paid > 0);
+
   const getStatusBadge = () => {
     const status = String(sale?.payment_status || '').toUpperCase();
+    if (isRefund) {
+      return {
+        label: 'REFUNDED',
+        bg: 'bg-purple-100 text-purple-800 border-purple-300',
+      };
+    }
+    if (status === 'EXCHANGED') {
+      return {
+        label: 'EXCHANGED',
+        bg: 'bg-indigo-100 text-indigo-800 border-indigo-300',
+      };
+    }
     if (status === 'PAID' || due <= 0) {
       return {
         label: 'PAID',
@@ -258,12 +274,73 @@ export default function SaleDetailDrawer({
                         );
                       })
                     ) : (
-                      <div className="p-4 text-center text-xs text-slate-400">
-                        Item details not available in this view
+                      <div className="p-4 text-center text-xs text-slate-500 italic">
+                        {sale?.exchange_details?.returned_items?.length > 0
+                          ? 'No new replacement items taken. (See Returned Goods below)'
+                          : 'Item details not available in this view'}
                       </div>
                     )}
                   </div>
                 </div>
+
+                {/* Exchange & Return Details Card */}
+                {sale?.exchange_details && (
+                  <div className="bg-purple-50/70 border border-purple-200 rounded-xl p-3.5 space-y-2">
+                    <div className="text-[0.7rem] font-bold text-purple-700 uppercase tracking-wider flex items-center justify-between">
+                      <span>🔄 Exchange &amp; Return Breakdown</span>
+                      {sale.exchange_from_invoice_no && (
+                        <span className="text-[0.68rem] font-mono font-semibold text-purple-800">
+                          Original: #{sale.exchange_from_invoice_no}
+                        </span>
+                      )}
+                    </div>
+
+                    {/* Returned Items List */}
+                    {Array.isArray(sale.exchange_details.returned_items) && sale.exchange_details.returned_items.length > 0 && (
+                      <div className="space-y-1 pt-1">
+                        <div className="text-[0.66rem] font-bold text-purple-900 uppercase">Returned Goods:</div>
+                        <div className="divide-y divide-purple-100 bg-white rounded-lg border border-purple-200 overflow-hidden text-xs">
+                          {sale.exchange_details.returned_items.map((ret, rIdx) => (
+                            <div key={rIdx} className="p-2.5 flex justify-between items-start gap-2">
+                              <div>
+                                <div className="font-bold text-slate-800 text-xs">{ret.name}</div>
+                                <div className="text-[0.68rem] text-slate-500 mt-0.5">
+                                  {ret.quantity} × {taka(ret.unit_price)} {ret.condition ? `• Condition: ${ret.condition}` : ''}
+                                </div>
+                                {Array.isArray(ret.serials) && ret.serials.length > 0 && (
+                                  <div className="text-[0.64rem] text-sky-700 font-mono mt-0.5">
+                                    S/N: {ret.serials.join(', ')}
+                                  </div>
+                                )}
+                              </div>
+                              <div className="font-extrabold text-slate-900 text-xs text-right">
+                                {taka((ret.quantity || 1) * (ret.unit_price || 0))}
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+
+                    {/* Financial Summary for Exchange */}
+                    <div className="pt-2 border-t border-purple-200 space-y-1 text-xs text-purple-950">
+                      <div className="flex justify-between">
+                        <span>Return Value Credit:</span>
+                        <span className="font-bold">{taka(sale.exchange_details.return_subtotal || 0)}</span>
+                      </div>
+                      <div className="flex justify-between">
+                        <span>New Items Subtotal:</span>
+                        <span className="font-bold">{taka(sale.exchange_details.new_subtotal || 0)}</span>
+                      </div>
+                      {paid > 0 && isRefund && (
+                        <div className="flex justify-between text-purple-700 font-extrabold pt-1 border-t border-purple-200">
+                          <span>Refund Paid to Customer:</span>
+                          <span>- {taka(paid)}</span>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                )}
 
                 {/* Financial Breakdown Card */}
                 <div className="bg-slate-50 border border-slate-200 rounded-xl p-3.5 space-y-2">
@@ -289,10 +366,17 @@ export default function SaleDetailDrawer({
                       <span>{taka(grandTotal)}</span>
                     </div>
 
-                    <div className="flex justify-between items-center text-emerald-700">
-                      <span>Paid Amount:</span>
-                      <span className="font-bold">{taka(paid)}</span>
-                    </div>
+                    {isRefund ? (
+                      <div className="flex justify-between items-center text-purple-700 font-semibold">
+                        <span>Refund Paid Out:</span>
+                        <span className="font-bold">- {taka(paid)}</span>
+                      </div>
+                    ) : (
+                      <div className="flex justify-between items-center text-emerald-700">
+                        <span>Paid Amount:</span>
+                        <span className="font-bold">{taka(paid)}</span>
+                      </div>
+                    )}
 
                     <div className="flex justify-between items-center pt-1 border-t border-dashed border-slate-200 font-extrabold">
                       <span className={due > 0 ? 'text-rose-600' : 'text-slate-700'}>

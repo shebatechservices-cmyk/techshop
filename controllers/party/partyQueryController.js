@@ -168,14 +168,20 @@ exports.getPartyProfile = async (req, res) => {
                 ORDER BY id DESC LIMIT 10
             `, [partyId]);
 
-            // Recent ledger transactions
+            // Recent ledger transactions (sales invoices, due collections, refunds, and party movements)
             const txRes = await pool.query(`
                 SELECT t.*, a.name AS account_name
                 FROM account_transactions t
                 LEFT JOIN payment_accounts a ON t.account_id = a.id
-                WHERE t.reference LIKE $1 OR t.note LIKE $1
-                ORDER BY t.id DESC LIMIT 15
-            `, [`%Customer ID: ${partyId}%`]);
+                WHERE (
+                    (t.source_type IN ('customer_bulk_due_collection', 'due_collection', 'wallet_deposit', 'wallet_withdrawal') AND t.source_id = $1::text)
+                    OR t.reference LIKE 'Customer: %(#' || $1::text || ')%'
+                    OR t.reference LIKE '%Customer ID: ' || $1::text || '%'
+                    OR (t.source_type = 'sale_due_collection' AND t.source_id IN (SELECT s.id::text FROM sales s WHERE s.customer_id = $1::int))
+                    OR (t.source_type IN ('pos_sale', 'sale_refund') AND EXISTS (SELECT 1 FROM sales s WHERE s.customer_id = $1::int AND (t.reference = s.invoice_no OR t.source_id = s.invoice_no)))
+                )
+                ORDER BY t.id DESC LIMIT 25
+            `, [partyId]);
 
             // Overall stats
             const statsRes = await pool.query(`
@@ -232,14 +238,19 @@ exports.getPartyProfile = async (req, res) => {
                 ORDER BY id DESC LIMIT 10
             `, [partyId]);
 
-            // Recent ledger transactions
+            // Recent ledger transactions (purchases, payments, and settlements)
             const txRes = await pool.query(`
                 SELECT t.*, a.name AS account_name
                 FROM account_transactions t
                 LEFT JOIN payment_accounts a ON t.account_id = a.id
-                WHERE t.reference LIKE $1 OR t.note LIKE $1
-                ORDER BY t.id DESC LIMIT 15
-            `, [`%Supplier ID: ${partyId}%`]);
+                WHERE (
+                    (t.source_type IN ('supplier_payment', 'wallet_deposit', 'wallet_withdrawal') AND t.source_id = $1::text)
+                    OR t.reference LIKE 'Supplier: %(#' || $1::text || ')%'
+                    OR t.reference LIKE '%Supplier ID: ' || $1::text || '%'
+                    OR (t.source_type IN ('purchase_payment', 'purchase') AND EXISTS (SELECT 1 FROM purchase_orders po WHERE po.supplier_id = $1::int AND (t.reference = po.po_number OR t.source_id = po.po_number OR t.source_id = po.id::text)))
+                )
+                ORDER BY t.id DESC LIMIT 25
+            `, [partyId]);
 
             // Overall stats
             const statsRes = await pool.query(`

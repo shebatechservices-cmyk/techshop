@@ -74,13 +74,24 @@ exports.createExchangeSale = async (req, res) => {
 
         const invoiceNo = await generateExchangeInvoiceNumber(client);
 
+        let paymentStatus = 'paid';
+        if (invoiceDue > 0) {
+            paymentStatus = totalPaid > 0 ? 'partial' : 'due';
+        } else if (newGrossTotal === 0 && returnSubtotal > 0) {
+            paymentStatus = 'refunded';
+        } else if (netDifference < 0) {
+            paymentStatus = 'refunded';
+        } else if (netDifference === 0 && returnSubtotal > 0) {
+            paymentStatus = 'exchanged';
+        }
+
         // 4. Record Exchange Sale Header
         const saleInsertQuery = `
             INSERT INTO sales (
                 invoice_no, customer_id, total_amount, subtotal, discount, vat, setup_charge, extra_cost,
-                paid_amount, due_amount, payment_method_id, payment_details, sales_person, notes,
+                paid_amount, due_amount, payment_status, payment_method_id, payment_details, sales_person, notes,
                 exchange_from_invoice_no, original_sale_id, exchange_details, created_at
-            ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, NOW())
+            ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, NOW())
             RETURNING *;
         `;
 
@@ -95,6 +106,7 @@ exports.createExchangeSale = async (req, res) => {
             totalExtra,
             totalPaid,
             invoiceDue,
+            paymentStatus,
             payment_method_id || 1,
             JSON.stringify(payment_details || []),
             sales_person || null,

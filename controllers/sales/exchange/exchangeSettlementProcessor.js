@@ -4,6 +4,7 @@ const {
     depositToDrawer,
     reverseCashFromDrawer,
 } = require('../salesHelpers');
+const { writeWalletLedger } = require('../../walletController');
 
 /**
  * Generate a sequential invoice number for exchange sales.
@@ -105,6 +106,9 @@ async function processExchangeSettlement(client, {
             // If there is excess refund credit not collected in cash, credit to customer's wallet
             const unrefundedCredit = Math.max(0, netCustomerRefund - totalPaid);
             if (unrefundedCredit > 0 && customerId) {
+                const custWalletRes = await client.query('SELECT wallet_balance, name FROM customers WHERE id = $1', [customerId]);
+                const prevWallet = money(custWalletRes.rows[0]?.wallet_balance || 0);
+                const newWallet = prevWallet + unrefundedCredit;
                 await client.query(
                     `UPDATE customers
                      SET wallet_balance = COALESCE(wallet_balance, 0) + $1::numeric,
@@ -112,6 +116,20 @@ async function processExchangeSettlement(client, {
                      WHERE id = $2`,
                     [unrefundedCredit, customerId]
                 );
+                await writeWalletLedger(client, {
+                    party_type: 'customer',
+                    party_id: Number(customerId),
+                    party_name: custWalletRes.rows[0]?.name || null,
+                    type: 'sale_exchange_refund',
+                    amount: unrefundedCredit,
+                    credit: true,
+                    account_effect: 'none',
+                    cash_drawer_effect: 'none',
+                    reference: invoiceNo,
+                    note: `Exchange credit refunded to wallet for invoice #${invoiceNo}`,
+                    balance_before: prevWallet,
+                    balance_after: newWallet,
+                });
             }
 
             // If extra items exceeded previous balance creating new invoice due

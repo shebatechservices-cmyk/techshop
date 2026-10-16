@@ -38,9 +38,16 @@ export function useSalesFiltering({
         (s.total_amount && String(s.total_amount).includes(q)) ||
         (s.id && String(s.id) === q);
 
+      const isRefund =
+        s.payment_status === 'refunded' ||
+        Boolean(s.exchange_from_invoice_no && money(s.total_amount) === 0 && money(s.paid_amount) > 0);
+
       const matchesStatus =
         invoiceStatusFilter === 'ALL' ||
+        (invoiceStatusFilter === 'REFUNDED' && (s.payment_status === 'refunded' || isRefund)) ||
         (invoiceStatusFilter === 'PAID' &&
+          !isRefund &&
+          s.payment_status !== 'exchanged' &&
           (s.payment_status === 'paid' || money(s.due_amount) <= 0)) ||
         (invoiceStatusFilter === 'PARTIAL' && s.payment_status === 'partial') ||
         (invoiceStatusFilter === 'DUE' &&
@@ -57,21 +64,49 @@ export function useSalesFiltering({
   }, [sales]);
 
   const totalCollectedAmount = useMemo(() => {
-    return sales.reduce((sum, s) => sum + money(s.paid_amount), 0);
+    return sales.reduce((sum, s) => {
+      const isRefund =
+        s.payment_status === 'refunded' ||
+        Boolean(s.exchange_from_invoice_no && money(s.total_amount) === 0 && money(s.paid_amount) > 0);
+      return isRefund ? sum - money(s.paid_amount) : sum + money(s.paid_amount);
+    }, 0);
   }, [sales]);
 
   const totalSalesDue = useMemo(() => {
     return sales.reduce((sum, s) => sum + money(s.due_amount), 0);
   }, [sales]);
 
-  const getPaymentBadgeStyle = (status, due) => {
-    if (money(due) <= 0 || status === 'paid') {
+  const getPaymentBadgeStyle = (status, due, sale = null) => {
+    const s = String(status || '').toLowerCase();
+    const isRefund =
+      s === 'refunded' ||
+      Boolean(sale?.exchange_from_invoice_no && money(sale?.total_amount) === 0 && money(sale?.paid_amount) > 0);
+
+    if (isRefund) {
+      return {
+        className: 'bg-purple-100 text-purple-700 border border-purple-200',
+        label: 'Refunded',
+      };
+    }
+    if (s === 'exchanged') {
+      return {
+        className: 'bg-indigo-100 text-indigo-700 border border-indigo-200',
+        label: 'Exchanged',
+      };
+    }
+    if (s === 'return') {
+      return {
+        className: 'bg-amber-100 text-amber-700 border border-amber-200',
+        label: 'Return',
+      };
+    }
+    if (s === 'paid' || (money(due) <= 0 && s !== 'due' && s !== 'partial')) {
       return {
         className: 'bg-green-100 text-green-700 border border-green-200',
         label: 'Paid',
       };
     }
-    if (status === 'partial' || (money(due) > 0 && status !== 'due')) {
+    if (s === 'partial' || (money(due) > 0 && s !== 'due')) {
       return {
         className: 'bg-amber-100 text-amber-700 border border-amber-200',
         label: 'Partial',

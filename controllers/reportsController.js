@@ -186,8 +186,8 @@ exports.getFinancialAnalytics = async (req, res) => {
         const potentialProfit = Math.max(0, retailVal - costVal);
 
         // H. Current Party Ledgers (Receivables & Payables)
-        const customerDueRes = await pool.query(`SELECT COALESCE(SUM(receivable_balance), 0) AS total_receivable FROM customers;`);
-        const supplierDueRes = await pool.query(`SELECT COALESCE(SUM(payable_balance), 0) AS total_payable FROM suppliers;`);
+        const customerDueRes = await pool.query(`SELECT COALESCE(SUM(receivable_balance), 0) AS total_receivable FROM customers WHERE deleted_at IS NULL;`);
+        const supplierDueRes = await pool.query(`SELECT COALESCE(SUM(payable_balance), 0) AS total_payable FROM suppliers WHERE deleted_at IS NULL;`);
         const walletsRes = await pool.query(`SELECT id, name, balance FROM payment_accounts ORDER BY id ASC;`);
 
         const totalCashInDrawers = walletsRes.rows

@@ -75,7 +75,7 @@ const applySaleTender = async (client, { customerId, invoiceNo, tender, ledgerTy
             sourceType: 'pos_sale',
             sourceId: invoiceNo,
             reference: invoiceNo,
-            note: `Sale revenue received via ${targetAccount.name || tender.payment_mode || 'Cash'} (Invoice #${invoiceNo})`,
+            note: `Sale revenue received via ${targetAccount.name || tender.payment_mode || 'Cash'} (Invoice #${invoiceNo}${customerId ? `, Customer #${customerId}` : ''})`,
             transactionId: tender.transaction_id || tender.ref_no || null,
         });
     }
@@ -114,7 +114,7 @@ const reverseSaleTender = async (client, { customerId, invoiceNo, tender, ledger
             sourceType: 'sale_refund',
             sourceId: invoiceNo,
             reference: invoiceNo,
-            note: `Sale invoice #${invoiceNo} ${reasonNote || 'reversal'} — refunded from ${targetAccount.name}`,
+            note: `Sale invoice #${invoiceNo} ${reasonNote || 'reversal'} — refunded from ${targetAccount.name}${customerId ? ` (Customer #${customerId})` : ''}`,
             transactionId: tender.transaction_id || tender.ref_no || null,
         });
     }

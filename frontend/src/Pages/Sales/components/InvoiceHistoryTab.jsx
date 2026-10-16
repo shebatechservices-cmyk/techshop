@@ -71,6 +71,7 @@ export default function InvoiceHistoryTab({
             <option value="PAID">Paid Only</option>
             <option value="PARTIAL">Partial Only</option>
             <option value="DUE">Due Only</option>
+            <option value="REFUNDED">Refunded / Returns</option>
           </select>
 
           {/* Match Counter Badge */}
@@ -146,7 +147,8 @@ export default function InvoiceHistoryTab({
             </thead>
             <tbody>
               {filteredSales.map((sale) => {
-                const badge = getPaymentBadgeStyle(sale.payment_status, sale.due_amount);
+                const badge = getPaymentBadgeStyle(sale.payment_status, sale.due_amount, sale);
+                const isRefund = badge.label === 'Refunded';
                 return (
                   <tr
                     key={sale.id}
@@ -165,6 +167,11 @@ export default function InvoiceHistoryTab({
                       >
                         {sale.invoice_no || `INV-${sale.id}`}
                       </button>
+                      {sale.exchange_from_invoice_no && (
+                        <div className="text-[0.68rem] font-normal text-slate-400 mt-0.5">
+                          🔄 Exch. from #{sale.exchange_from_invoice_no}
+                        </div>
+                      )}
                     </td>
                     <td className="py-3 px-3.5">
                       {sale.customer_id ? (
@@ -203,9 +210,27 @@ export default function InvoiceHistoryTab({
                     </td>
                     <td className="py-3 px-3.5 font-bold text-slate-900">
                       {taka(sale.total_amount || sale.grand_total)}
+                      {sale.exchange_details?.return_subtotal > 0 && Number(sale.total_amount || 0) === 0 && (
+                        <div className="text-[0.68rem] text-slate-400 font-normal mt-0.5">
+                          Return: {taka(sale.exchange_details.return_subtotal)}
+                        </div>
+                      )}
                     </td>
-                    <td className="py-3 px-3.5 font-semibold text-green-600">
-                      {taka(sale.paid_amount || 0)}
+                    <td className="py-3 px-3.5">
+                      {isRefund ? (
+                        <div>
+                          <span className="font-semibold text-purple-700">
+                            - {taka(sale.paid_amount || 0)}
+                          </span>
+                          <span className="text-[0.65rem] font-bold uppercase text-purple-500 block">
+                            Refund Out
+                          </span>
+                        </div>
+                      ) : (
+                        <span className="font-semibold text-green-600">
+                          {taka(sale.paid_amount || 0)}
+                        </span>
+                      )}
                     </td>
                     <td
                       className={`py-3 px-3.5 font-semibold ${
