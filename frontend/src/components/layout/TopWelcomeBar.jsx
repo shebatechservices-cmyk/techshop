@@ -52,14 +52,14 @@ export default function TopWelcomeBar({
   }, []);
 
   return (
-    <header className="sticky top-0 z-30 w-full h-14 sm:h-16 bg-white border-b border-gray-200 px-2.5 sm:px-6 flex items-center justify-between shadow-xs select-none mb-2 sm:mb-4">
+    <header className="sticky top-0 z-30 w-full h-14 sm:h-16 bg-emerald-50/95 border border-emerald-200/90 rounded-2xl px-2.5 sm:px-6 flex items-center justify-between shadow-xs select-none mb-2 sm:mb-4">
       {/* Left Section: Sidebar Toggle & Quick Global Search */}
       <div className="flex items-center gap-2 sm:gap-4 flex-1 max-w-xl">
         {/* Mobile Hamburger Drawer Trigger */}
         <button
           type="button"
           onClick={onOpenMenu}
-          className="md:hidden p-1.5 rounded-lg text-gray-600 hover:text-gray-900 hover:bg-gray-100 transition-colors focus:outline-none flex-shrink-0"
+          className="md:hidden p-1.5 rounded-lg text-emerald-800 hover:text-emerald-950 hover:bg-emerald-100/70 transition-colors focus:outline-none flex-shrink-0"
           aria-label="Open Navigation Menu"
         >
           <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="2">
@@ -71,7 +71,7 @@ export default function TopWelcomeBar({
         <button
           type="button"
           onClick={onToggleSidebar}
-          className="hidden md:flex items-center justify-center p-2 rounded-lg text-gray-600 hover:text-gray-900 hover:bg-gray-100 transition-colors focus:outline-none"
+          className="hidden md:flex items-center justify-center p-2 rounded-lg text-emerald-800 hover:text-emerald-950 hover:bg-emerald-100/70 transition-colors focus:outline-none"
           title={isSidebarCollapsed ? 'Expand Sidebar' : 'Collapse Sidebar'}
         >
           <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="2">
@@ -94,7 +94,7 @@ export default function TopWelcomeBar({
           <button
             type="button"
             onClick={onQuickSale}
-            className="flex items-center gap-1.5 px-2.5 sm:px-3.5 py-1.5 sm:py-2 bg-green-600 hover:bg-green-700 active:bg-green-800 text-white rounded-lg text-xs font-bold shadow-sm hover:shadow transition-all"
+            className="flex items-center gap-1.5 px-2.5 sm:px-3.5 py-1.5 sm:py-2 bg-emerald-600 hover:bg-emerald-700 active:bg-emerald-800 text-white rounded-lg text-xs font-bold shadow-xs hover:shadow transition-all"
             title="Open POS Terminal / New Sale"
           >
             <svg className="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="2.5">
@@ -111,7 +111,7 @@ export default function TopWelcomeBar({
         <button
           type="button"
           onClick={() => setIsThemeModalOpen(true)}
-          className="flex items-center gap-1.5 px-2.5 py-1.5 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-700 rounded-lg text-xs font-bold transition-colors shadow-xs"
+          className="flex items-center gap-1.5 px-2.5 py-1.5 bg-white/90 border border-emerald-200/90 text-emerald-900 hover:bg-white hover:border-emerald-300 rounded-lg text-xs font-bold transition-colors shadow-2xs"
           title={`Theme: ${currentThemeMeta?.name || 'Indigo'} (Click to change)`}
         >
           <span
@@ -126,10 +126,10 @@ export default function TopWelcomeBar({
           <button
             type="button"
             onClick={() => setShowCalc(!showCalc)}
-            className="p-2 rounded-lg text-gray-600 hover:text-gray-900 hover:bg-gray-100 border border-gray-200 transition-colors flex items-center justify-center"
+            className="p-2 rounded-lg text-emerald-800 hover:text-emerald-950 bg-white/90 hover:bg-white border border-emerald-200/90 hover:border-emerald-300 transition-colors flex items-center justify-center shadow-2xs"
             title="Calculator"
           >
-            <svg className="w-4 h-4 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="2">
+            <svg className="w-4 h-4 text-emerald-700" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="2">
               <rect x="4" y="2" width="16" height="20" rx="2" />
               <line x1="8" y1="6" x2="16" y2="6" />
               <line x1="8" y1="10" x2="8" y2="10.01" />
@@ -153,7 +153,7 @@ export default function TopWelcomeBar({
         <a
           href="/sheba-pos.apk"
           download="sheba-pos.apk"
-          className="hidden md:flex items-center gap-1.5 px-2.5 py-1.5 bg-emerald-50 border border-emerald-200 text-emerald-700 hover:bg-emerald-100 rounded-lg text-xs font-bold transition-colors shadow-xs"
+          className="hidden md:flex items-center gap-1.5 px-2.5 py-1.5 bg-white/90 border border-emerald-200/90 text-emerald-800 hover:bg-white hover:border-emerald-300 rounded-lg text-xs font-bold transition-colors shadow-2xs"
           title="Download Android APK (Direct Install)"
         >
           <span className="text-sm leading-none">🤖</span>

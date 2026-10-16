@@ -21,10 +21,10 @@ export default function LiveClockPill() {
   });
 
   return (
-    <div className="hidden lg:flex items-center gap-2 px-3 py-1.5 bg-gray-50 border border-gray-200 rounded-lg text-xs text-gray-700 font-mono select-none">
-      <span className="text-gray-800 font-semibold">{dateString}</span>
-      <span className="text-gray-300">|</span>
-      <span className="text-sky-700 font-bold">{timeString}</span>
+    <div className="hidden lg:flex items-center gap-2 px-3 py-1.5 bg-white/90 border border-emerald-200/90 rounded-lg text-xs font-mono select-none shadow-2xs">
+      <span className="text-emerald-950 font-semibold">{dateString}</span>
+      <span className="text-emerald-300">|</span>
+      <span className="text-emerald-700 font-bold">{timeString}</span>
     </div>
   );
 }
