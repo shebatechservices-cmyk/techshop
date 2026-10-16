@@ -19,6 +19,7 @@ describe('Strict Account Deletion Lock Policy', () => {
             await pool.query('DELETE FROM account_transactions WHERE account_id = $1', [lockedAccountId]).catch(() => null);
             await pool.query('DELETE FROM payment_accounts WHERE id = $1', [lockedAccountId]).catch(() => null);
         }
+        await pool.query('DELETE FROM account_transactions WHERE account_id IN (SELECT id FROM payment_accounts WHERE name LIKE $1)', ['Test % Acc %']).catch(() => null);
         await pool.query('DELETE FROM payment_accounts WHERE name LIKE $1', ['Test % Acc %']).catch(() => null);
         await pool.query('DELETE FROM accounts WHERE account_name LIKE $1', ['Test % Acc %']).catch(() => null);
     };

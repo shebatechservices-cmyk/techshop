@@ -14,15 +14,23 @@ app.use('/api/brands', createEntityRouter('brands'));
 app.use('/api/series', createEntityRouter('series'));
 
 describe('Master Brand Entity Endpoints', () => {
-    afterAll(async () => {
+    const cleanup = async () => {
         try {
             await pool.query("DELETE FROM product_names WHERE name LIKE 'Item-For-A-%' OR name LIKE 'Test-%'");
-            await pool.query("DELETE FROM brands WHERE name LIKE 'Test-Master-%' OR name LIKE 'Brand-A-%' OR name LIKE 'Brand-B-%' OR name LIKE 'Test-Brand-%'");
-            await pool.query("DELETE FROM trash_records WHERE record_title ~* 'Test-' OR record_title ~* 'Brand-A' OR record_title ~* 'Brand-B' OR record_title ~* 'Item-For-A'");
-            await pool.end();
+            await pool.query("DELETE FROM brands WHERE name LIKE 'Test-Master-%' OR name LIKE 'Brand-A-%' OR name LIKE 'Brand-B-%' OR name LIKE 'Test-Brand-%' OR name LIKE 'Brand-Dup-%' OR name LIKE 'Brand-Series-%'");
+            await pool.query("DELETE FROM trash_records WHERE record_title ~* 'Test-' OR record_title ~* 'Brand-A' OR record_title ~* 'Brand-B' OR record_title ~* 'Item-For-A' OR record_title ~* 'Brand-Dup' OR record_title ~* 'Brand-Series'");
         } catch (e) {
             // ignore
         }
+    };
+
+    beforeAll(async () => {
+        await cleanup();
+    });
+
+    afterAll(async () => {
+        await cleanup();
+        await pool.end().catch(() => null);
     });
 
     const testBrandName = `Test-Brand-${Date.now()}`;

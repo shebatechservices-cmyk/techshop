@@ -12,8 +12,9 @@ describe('Parent Tender in New Account Create & Wallet Sync', () => {
     const updatedAccountName = `Test Tender Account Upd ${testId}`;
 
     const cleanup = async () => {
-        await pool.query('DELETE FROM accounts WHERE account_name LIKE $1', ['Test Tender Account%']).catch(() => null);
+        await pool.query('DELETE FROM account_transactions WHERE account_id IN (SELECT id FROM payment_accounts WHERE name LIKE $1)', ['Test Tender Account%']).catch(() => null);
         await pool.query('DELETE FROM payment_accounts WHERE name LIKE $1', ['Test Tender Account%']).catch(() => null);
+        await pool.query('DELETE FROM accounts WHERE account_name LIKE $1', ['Test Tender Account%']).catch(() => null);
         await pool.query('DELETE FROM tenders WHERE name LIKE $1', ['Test Tender%']).catch(() => null);
         await pool.query('DELETE FROM tenders WHERE name LIKE $1', ['Special MFS%']).catch(() => null);
         await pool.query('DELETE FROM tenders WHERE name LIKE $1', ['Secondary Tender%']).catch(() => null);
