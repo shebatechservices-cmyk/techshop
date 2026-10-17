@@ -14,7 +14,12 @@ exports.createAccount = async (req, res) => {
     try {
         await ensureAccountColumns();
         const accountName = req.body.accountName || req.body.name;
-        const methodType = req.body.methodType || req.body.account_type || 'drawer';
+        const allowed = ['cash', 'drawer', 'bank', 'mobile_banking', 'mfs', 'card', 'wallet', 'other'];
+        let rawType = String(req.body.methodType || req.body.account_type || 'drawer').toLowerCase().trim();
+        if (['bkash', 'nagad', 'rocket', 'upay', 'mobile', 'upi'].includes(rawType)) {
+            rawType = 'mobile_banking';
+        }
+        const methodType = allowed.includes(rawType) ? rawType : 'drawer';
         const { balance = 0, account_number = '', tender_id, tenderId } = req.body;
         if (!accountName || !String(accountName).trim()) {
             return res.status(400).json({ success: false, message: 'Account name is required.' });
@@ -128,10 +133,10 @@ exports.updateAccount = async (req, res) => {
             return res.status(404).json({ success: false, message: 'Account not found' });
         }
 
-        const allowed = ['cash', 'drawer', 'bank', 'mfs', 'card'];
-        let rawType = String(account_type || accRes.rows[0].account_type || 'drawer').toLowerCase();
-        if (['bkash', 'nagad', 'wallet', 'mobile', 'upi'].includes(rawType)) {
-            rawType = 'mfs';
+        const allowed = ['cash', 'drawer', 'bank', 'mobile_banking', 'mfs', 'card', 'wallet', 'other'];
+        let rawType = String(account_type || accRes.rows[0].account_type || 'drawer').toLowerCase().trim();
+        if (['bkash', 'nagad', 'rocket', 'upay', 'mobile', 'upi'].includes(rawType)) {
+            rawType = 'mobile_banking';
         }
         const finalType = allowed.includes(rawType) ? rawType : 'drawer';
 

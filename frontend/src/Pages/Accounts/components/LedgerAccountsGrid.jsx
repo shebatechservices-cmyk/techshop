@@ -42,17 +42,23 @@ export default function LedgerAccountsGrid({
           {wallets.map((wallet) => {
             const isCash = wallet.account_type === 'cash' || wallet.account_type === 'drawer';
             const isBank = wallet.account_type === 'bank';
+            const isMfs = wallet.account_type === 'mfs' || wallet.account_type === 'mobile_banking' || ['bkash', 'nagad', 'rocket', 'upay', 'mobile'].includes(wallet.account_type);
+            const isWallet = wallet.account_type === 'wallet';
             const balNum = Number(wallet.balance || 0);
 
             const iconConfig = isCash
               ? { icon: '💵', bgClass: 'bg-emerald-50 text-emerald-600 border-emerald-200', badgeClass: 'bg-emerald-100 text-emerald-700', typeLabel: 'Cash Drawer' }
               : isBank
               ? { icon: '🏦', bgClass: 'bg-blue-50 text-blue-600 border-blue-200', badgeClass: 'bg-blue-100 text-blue-700', typeLabel: 'Bank Account' }
+              : isMfs
+              ? { icon: '📱', bgClass: 'bg-purple-50 text-purple-600 border-purple-200', badgeClass: 'bg-purple-100 text-purple-700', typeLabel: 'Mobile Banking (MFS)' }
+              : isWallet
+              ? { icon: '👛', bgClass: 'bg-amber-50 text-amber-600 border-amber-200', badgeClass: 'bg-amber-100 text-amber-700', typeLabel: 'Digital Wallet' }
               : {
-                  icon: '📱',
-                  bgClass: 'bg-purple-50 text-purple-600 border-purple-200',
-                  badgeClass: 'bg-purple-100 text-purple-700',
-                  typeLabel: wallet.account_type ? wallet.account_type.toUpperCase() : 'MFS / Wallet',
+                  icon: '🏷️',
+                  bgClass: 'bg-slate-50 text-slate-600 border-slate-200',
+                  badgeClass: 'bg-slate-100 text-slate-700',
+                  typeLabel: wallet.account_type ? wallet.account_type.replace(/_/g, ' ').toUpperCase() : 'Other',
                 };
 
             return (

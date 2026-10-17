@@ -128,4 +128,28 @@ describe('Parent Tender in New Account Create & Wallet Sync', () => {
         const foundAccount = accountsRes.body.data.find((a) => a.id === createdAccountId);
         expect(foundAccount.tender_id).toBe(createdTenderId);
     });
+
+    test('7. Updating wallet classification to mobile_banking persists properly without falling back to drawer', async () => {
+        const walletsRes = await request(app).get('/api/accounts/wallets');
+        const found = walletsRes.body.data.find((w) => w.account_name === updatedAccountName);
+        expect(found).toBeDefined();
+
+        const updateWalletRes = await request(app)
+            .put(`/api/accounts/wallets/${found.id}`)
+            .send({
+                name: updatedAccountName,
+                account_type: 'mobile_banking',
+                account_number: '01711223344',
+                tender_id: createdTenderId2,
+            });
+
+        expect(updateWalletRes.status).toBe(200);
+        expect(updateWalletRes.body.success).toBe(true);
+        expect(updateWalletRes.body.data.account_type).toBe('mobile_banking');
+
+        // Check fetched wallets
+        const checkRes = await request(app).get('/api/accounts/wallets');
+        const updated = checkRes.body.data.find((w) => w.id === found.id);
+        expect(updated.account_type).toBe('mobile_banking');
+    });
 });

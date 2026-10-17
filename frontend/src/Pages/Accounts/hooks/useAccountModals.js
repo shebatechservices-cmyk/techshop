@@ -68,10 +68,12 @@ export default function useAccountModals({ wallets, loadAccountsData, setError, 
 
   // Open edit modal for a wallet / account
   const openEditWallet = (wallet) => {
+    let rawType = (wallet.account_type || 'drawer').toLowerCase();
+    if (rawType === 'mfs') rawType = 'mobile_banking';
     setEditWalletForm({
       id: String(wallet.id),
       name: wallet.account_name || wallet.name || '',
-      account_type: (wallet.account_type || 'drawer').toLowerCase(),
+      account_type: rawType,
       account_number: wallet.account_number || '',
       tender_id: wallet.tender_id ? String(wallet.tender_id) : '',
     });
