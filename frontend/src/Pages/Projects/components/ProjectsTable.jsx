@@ -1,4 +1,5 @@
 import React from 'react';
+import ProjectsTableRow from './table/ProjectsTableRow';
 
 export default function ProjectsTable({
   projects = [],
@@ -40,8 +41,8 @@ export default function ProjectsTable({
         <table className="w-full border-collapse text-left text-xs">
           <thead>
             <tr className="bg-slate-50 border-b border-slate-200 text-slate-600 font-semibold uppercase tracking-wider text-[11px]">
-              <th className="py-3 px-3.5">Project & Source</th>
-              <th className="py-3 px-3.5">Customer & Site</th>
+              <th className="py-3 px-3.5">Project &amp; Source</th>
+              <th className="py-3 px-3.5">Customer &amp; Site</th>
               {!isTechnician && <th className="py-3 px-3.5">Assigned Technician</th>}
               <th className="py-3 px-3.5">Payout Breakdown</th>
               <th className="py-3 px-3.5">{isTechnician ? 'Bill to Collect' : 'Customer Bill'}</th>
@@ -50,307 +51,22 @@ export default function ProjectsTable({
             </tr>
           </thead>
           <tbody className="divide-y divide-slate-100">
-            {projects.map((p) => {
-              const setup = parseFloat(p.setup_fee || p.setup_charge || 0);
-              const conv = parseFloat(p.conveyance || p.conveyance_cost || 0);
-              const meal = parseFloat(p.meal_allowance || 0);
-              const totalTechPayout =
-                setup + conv + meal > 0
-                  ? setup + conv + meal
-                  : parseFloat(p.charges || 0);
-              const customerBill = parseFloat(p.customer_billing_amount || 0);
-
-              const isAssigned =
-                p.technician_status === 'assigned' || p.status === 'assigned';
-              const isAccepted =
-                p.technician_status === 'accepted' ||
-                p.status === 'awaiting_incharge_confirmation';
-              const isRejectionRequested =
-                p.technician_status === 'rejection_requested' ||
-                p.status === 'rejection_requested';
-              const isInProgress =
-                p.technician_status === 'in_progress' ||
-                p.status === 'in_progress';
-              const isCompleted = p.status === 'completed';
-
-              return (
-                <tr key={p.id} className="hover:bg-slate-50/70 transition-colors bg-white">
-                  {/* Project & Source */}
-                  <td className="py-3.5 px-3.5 align-top">
-                    <div className="flex items-center gap-1.5 mb-1 flex-wrap">
-                      <span
-                        className={`px-2 py-0.5 rounded text-[10px] font-extrabold uppercase tracking-wide ${
-                          p.invoice_id
-                            ? 'bg-blue-100 text-blue-800'
-                            : 'bg-amber-100 text-amber-800'
-                        }`}
-                      >
-                        {p.invoice_id ? '📦 New Setup' : '🔧 Service / Repair'}
-                      </span>
-                      <strong className="text-slate-900 font-extrabold">{p.project_code}</strong>
-                    </div>
-                    <div className="font-semibold text-slate-800 text-xs">{p.title}</div>
-                    {p.invoice_no && (
-                      <div className="text-[11px] text-sky-600 mt-0.5">
-                        Invoice: <strong>{p.invoice_no}</strong>
-                      </div>
-                    )}
-                    
-                    {/* Dynamic Services Chips */}
-                    {p.services && Array.isArray(p.services) && p.services.length > 0 ? (
-                      <div className="mt-1 flex flex-wrap gap-1 max-w-xs">
-                        {p.services.map((srv, sIdx) => (
-                          <span
-                            key={sIdx}
-                            className="bg-sky-50 text-sky-800 border border-sky-200 px-1.5 py-0.5 rounded text-[10px] font-medium"
-                          >
-                            ⚡ {srv.service_name} (x{srv.quantity})
-                          </span>
-                        ))}
-                      </div>
-                    ) : (
-                      p.equipment_details &&
-                      Array.isArray(p.equipment_details) &&
-                      p.equipment_details.length > 0 && (
-                        <div className="text-[11px] text-slate-500 mt-1 max-w-xs">
-                          Equipment:{' '}
-                          {p.equipment_details
-                            .map((it) => `${it.product_name} (${it.quantity})`)
-                            .join(', ')}
-                        </div>
-                      )
-                    )}
-                  </td>
-
-                  {/* Customer & Site */}
-                  <td className="py-3.5 px-3.5 align-top">
-                    <strong className="text-slate-900 font-bold block">{p.customer_name}</strong>
-                    {p.site_phone && (
-                      <div className="mt-0.5">
-                        <a
-                          href={`tel:${p.site_phone}`}
-                          className="text-emerald-700 font-semibold text-xs inline-flex items-center gap-1 hover:underline"
-                        >
-                          📞 {p.site_phone}
-                        </a>
-                      </div>
-                    )}
-                    {p.site_address && (
-                      <div className="text-[11px] text-slate-500 mt-0.5 max-w-[200px] leading-tight">
-                        📍 {p.site_address}
-                      </div>
-                    )}
-                  </td>
-
-                  {/* Technician (Hidden for Technician viewing their own jobs) */}
-                  {!isTechnician && (
-                    <td className="py-3.5 px-3.5 align-top">
-                      <div className="flex items-center gap-1.5">
-                        <span>👷</span>
-                        <strong className="text-slate-800 font-bold">{p.technician_name}</strong>
-                      </div>
-                      {p.technician_contact && (
-                        <small className="text-slate-500 text-[11px] block mt-0.5">
-                          {p.technician_contact}
-                        </small>
-                      )}
-                      {p.admin_confirmed && (
-                        <div className="text-[11px] text-emerald-600 mt-1 font-bold">
-                          ✓ In-Charge Confirmed
-                        </div>
-                      )}
-                    </td>
-                  )}
-
-                  {/* Remuneration Breakdown */}
-                  <td className="py-3.5 px-3.5 align-top">
-                    <div className="font-extrabold text-sky-600 text-sm">
-                      ৳ {totalTechPayout.toLocaleString('en-IN')}
-                    </div>
-                    <div className="text-[11px] text-slate-500 mt-0.5 flex flex-col gap-0.5">
-                      <span>Setup Fee: ৳{setup}</span>
-                      <span>Conveyance: ৳{conv}</span>
-                      <span>Meal Allowance: ৳{meal}</span>
-                    </div>
-                  </td>
-
-                  {/* Customer Bill / Cash to Collect */}
-                  <td className="py-3.5 px-3.5 align-top">
-                    <strong className="text-emerald-700 font-extrabold text-sm block">
-                      ৳ {customerBill.toLocaleString('en-IN')}
-                    </strong>
-                    <div className="text-[11px] text-slate-400">
-                      {isTechnician ? 'Collect on Site' : 'Service Charges'}
-                    </div>
-                  </td>
-
-                  {/* Pipeline Status */}
-                  <td className="py-3.5 px-3.5 align-top">
-                    {isCompleted ? (
-                      <span className="bg-emerald-100 text-emerald-800 px-2.5 py-1 rounded-md text-[11px] font-extrabold inline-flex items-center gap-1">
-                        ✓ Completed & Paid
-                      </span>
-                    ) : isRejectionRequested ? (
-                      <span className="bg-rose-100 text-rose-800 border border-rose-300 px-2.5 py-1 rounded-md text-[11px] font-extrabold inline-flex items-center gap-1 animate-pulse">
-                        ⚠️ Rejection Requested
-                      </span>
-                    ) : isInProgress ? (
-                      <span className="bg-blue-100 text-blue-800 px-2.5 py-1 rounded-md text-[11px] font-extrabold inline-flex items-center gap-1">
-                        ⏳ In Progress
-                      </span>
-                    ) : isAccepted ? (
-                      <span className="bg-amber-100 text-amber-800 px-2.5 py-1 rounded-md text-[11px] font-extrabold inline-flex items-center gap-1">
-                        🔵 Tech Accepted
-                      </span>
-                    ) : (
-                      <span className="bg-slate-100 text-slate-700 px-2.5 py-1 rounded-md text-[11px] font-extrabold inline-flex items-center gap-1">
-                        🟡 Awaiting Acceptance
-                      </span>
-                    )}
-
-                    {p.progress_note && (
-                      <div className="text-[11px] text-slate-500 mt-1.5 max-w-[220px] whitespace-pre-line bg-slate-50 p-1.5 rounded border border-slate-100">
-                        {p.progress_note.slice(-80)}...
-                      </div>
-                    )}
-                  </td>
-
-                  {/* Actions */}
-                  <td className="py-3.5 px-3.5 align-top text-right">
-                    <div className="flex flex-col gap-1.5 items-end">
-                      {/* For Admin: If Rejection Requested, show Approval & Decline buttons */}
-                      {!isTechnician && isRejectionRequested && onAdminRespondRejection && (
-                        <div className="flex flex-col gap-1 items-end w-full">
-                          <button
-                            type="button"
-                            onClick={() => onAdminRespondRejection(p.id, true)}
-                            className="px-2.5 py-1 bg-rose-600 hover:bg-rose-700 text-white rounded-md text-[11px] font-bold cursor-pointer whitespace-nowrap shadow-xs transition-colors flex items-center justify-center gap-1"
-                            title="Approve Rejection & Release Technician"
-                          >
-                            <span>✓</span>
-                            <span>Approve Rejection</span>
-                          </button>
-                          <button
-                            type="button"
-                            onClick={() => onAdminRespondRejection(p.id, false)}
-                            className="px-2.5 py-1 bg-slate-100 hover:bg-slate-200 text-slate-700 border border-slate-300 rounded-md text-[11px] font-semibold cursor-pointer whitespace-nowrap transition-colors flex items-center justify-center gap-1"
-                            title="Decline Rejection & Keep Technician Assigned"
-                          >
-                            <span>✕</span>
-                            <span>Decline Request</span>
-                          </button>
-                        </div>
-                      )}
-
-                      {/* Edit Work Order (Allowed before completion, Admin only) */}
-                      {!isTechnician && !isCompleted && onEdit && (
-                        <button
-                          type="button"
-                          onClick={() => onEdit(p)}
-                          className="px-2.5 py-1 bg-sky-50 hover:bg-sky-100 text-sky-800 border border-sky-300 rounded-md text-[11px] font-bold cursor-pointer whitespace-nowrap transition-colors flex items-center gap-1"
-                          title="Edit Work Order, Technician & Services"
-                        >
-                          <span>✏️</span>
-                          <span>Edit Work Order</span>
-                        </button>
-                      )}
-
-                      {/* 1. If assigned: Technician Accept Prompt */}
-                      {isAssigned && (
-                        <button
-                          type="button"
-                          onClick={() => onTechPrompt(p)}
-                          className="px-2.5 py-1 bg-amber-100 text-amber-900 border border-amber-300 hover:bg-amber-200 rounded-md text-[11px] font-bold cursor-pointer whitespace-nowrap transition-colors"
-                        >
-                          📲 Accept Prompt
-                        </button>
-                      )}
-
-                      {/* 2. If accepted: In-charge Confirm Handover (Admin only) */}
-                      {!isTechnician && isAccepted && (
-                        <button
-                          type="button"
-                          onClick={() => onInchargeConfirm(p)}
-                          className="px-2.5 py-1 bg-sky-600 hover:bg-sky-700 text-white rounded-md text-[11px] font-bold cursor-pointer whitespace-nowrap shadow-xs transition-colors"
-                        >
-                          🛡️ In-Charge Confirm
-                        </button>
-                      )}
-
-                      {/* 3. If in progress or accepted: Add Progress Note (Both Tech and Admin) */}
-                      {(isInProgress || isAccepted) && onAddProgress && (
-                        <button
-                          type="button"
-                          onClick={() => onAddProgress(p)}
-                          className="px-2 py-1 bg-slate-100 hover:bg-slate-200 text-slate-700 border border-slate-300 rounded-md text-[11px] font-semibold cursor-pointer transition-colors"
-                        >
-                          📝 Add Note
-                        </button>
-                      )}
-
-                      {/* 4. If technician & accepted/in_progress: Request Rejection */}
-                      {isTechnician && (isAccepted || isInProgress) && (
-                        <button
-                          type="button"
-                          onClick={() => onTechPrompt(p)}
-                          className="px-2.5 py-1 bg-rose-50 text-rose-700 hover:bg-rose-100 border border-rose-300 rounded-md text-[11px] font-bold cursor-pointer whitespace-nowrap transition-colors"
-                          title="Submit Rejection Request to Shop Admin"
-                        >
-                          ⚠️ Request Rejection
-                        </button>
-                      )}
-
-                      {/* 5. Complete & Pay Wallet (Admin only) */}
-                      {!isTechnician && isInProgress && onComplete && (
-                        <button
-                          type="button"
-                          onClick={() => onComplete(p)}
-                          className="px-2.5 py-1 bg-emerald-600 hover:bg-emerald-700 text-white rounded-md text-[11px] font-bold cursor-pointer whitespace-nowrap shadow-xs transition-colors"
-                        >
-                          🏁 Complete & Pay Wallet
-                        </button>
-                      )}
-
-                      {/* 5.5 Reopen & Rollback (Admin only, when completed) */}
-                      {!isTechnician && isCompleted && onReopen && (
-                        <button
-                          type="button"
-                          onClick={() => onReopen(p)}
-                          className="px-2.5 py-1 bg-amber-50 hover:bg-amber-100 text-amber-900 border border-amber-300 rounded-md text-[11px] font-bold cursor-pointer whitespace-nowrap transition-colors flex items-center gap-1 shadow-xs"
-                          title="ভুলবশত সম্পন্ন হওয়া প্রজেক্ট রিভার্স/রিয়োপেন করুন (ওয়ালেট ও ড্রয়ার ব্যালেন্স সমন্বয় হবে)"
-                        >
-                          <span>↩️</span>
-                          <span>Reopen & Rollback</span>
-                        </button>
-                      )}
-
-                      {/* Print Job Card (Both Tech and Admin) */}
-                      <button
-                        type="button"
-                        onClick={() => onPrint(p)}
-                        className="px-2.5 py-1 bg-white hover:bg-slate-50 text-slate-800 border border-slate-300 rounded-md text-[11px] font-semibold cursor-pointer flex items-center gap-1 whitespace-nowrap transition-colors"
-                        title="Print Job Card & Service Slip"
-                      >
-                        <span>🖨️</span>
-                        <span>Print Job Card</span>
-                      </button>
-
-                      {/* Delete (Admin only) */}
-                      {!isTechnician && onDelete && (
-                        <button
-                          type="button"
-                          onClick={() => onDelete(p.id)}
-                          className="text-slate-400 hover:text-rose-600 text-[11px] font-medium cursor-pointer p-0.5 transition-colors"
-                          title="Delete Project"
-                        >
-                          🗑️ Delete
-                        </button>
-                      )}
-                    </div>
-                  </td>
-                </tr>
-              );
-            })}
+            {projects.map((p) => (
+              <ProjectsTableRow
+                key={p.id}
+                project={p}
+                isTechnician={isTechnician}
+                onTechPrompt={onTechPrompt}
+                onInchargeConfirm={onInchargeConfirm}
+                onAddProgress={onAddProgress}
+                onComplete={onComplete}
+                onReopen={onReopen}
+                onEdit={onEdit}
+                onPrint={onPrint}
+                onDelete={onDelete}
+                onAdminRespondRejection={onAdminRespondRejection}
+              />
+            ))}
           </tbody>
         </table>
       </div>
