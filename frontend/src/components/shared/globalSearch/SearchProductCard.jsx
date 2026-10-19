@@ -1,7 +1,8 @@
 import React from 'react';
-
-const money = (val) => Number.parseFloat(val || 0) || 0;
-const taka = (val) => `৳${money(val).toLocaleString('en-BD', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+import CardStockDimension from './product-card/CardStockDimension';
+import CardSalesDimension from './product-card/CardSalesDimension';
+import CardPurchasesDimension from './product-card/CardPurchasesDimension';
+import CardWarrantyDimension from './product-card/CardWarrantyDimension';
 
 export default function SearchProductCard({ item, onSelect, onQuickView }) {
   return (
@@ -58,7 +59,7 @@ export default function SearchProductCard({ item, onSelect, onQuickView }) {
             )}
           </div>
         </div>
-        
+
         <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
           {onQuickView && (
             <button
@@ -105,202 +106,10 @@ export default function SearchProductCard({ item, onSelect, onQuickView }) {
 
       {/* 4 Operational Dimensions Sub-Grid */}
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(210px, 1fr))', gap: '8px', marginTop: '10px' }}>
-        
-        {/* Dimension 1: Inventory and Stock */}
-        <div style={{ background: '#f8fafc', padding: '8px 10px', borderRadius: '6px', border: '1px solid #e2e8f0' }}>
-          <div style={{ fontSize: '0.68rem', fontWeight: 800, color: '#334155', display: 'flex', alignItems: 'center', gap: '4px', marginBottom: '4px' }}>
-            <span>📦</span> 1. INVENTORY & STOCK
-          </div>
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: '0.78rem' }}>
-            <span>Stock: <strong style={{ color: Number(item.stock) > 0 ? '#15803d' : '#ef4444' }}>{item.stock} pcs</strong></span>
-            <span style={{ fontSize: '0.68rem', fontWeight: 700, padding: '1px 5px', borderRadius: '4px', background: Number(item.stock) > 0 ? '#dcfce7' : '#fee2e2', color: Number(item.stock) > 0 ? '#15803d' : '#991b1b' }}>
-              {Number(item.stock) > 0 ? 'In Stock' : 'Out of Stock'}
-            </span>
-          </div>
-          <div style={{ fontSize: '0.74rem', color: '#64748b', marginTop: '2px' }}>
-            Sale: <strong>{taka(item.sale_price)}</strong> | Cost: {taka(item.cost_price)}
-          </div>
-          {item.supplier_warranty_expire_date ? (
-            <div style={{ fontSize: '0.7rem', color: '#0369a1', fontWeight: 700, marginTop: '4px', background: '#e0f2fe', padding: '2px 5px', borderRadius: '4px' }}>
-              🛡️ Supplier Exp (+60d): {new Date(item.supplier_warranty_expire_date).toLocaleDateString()}
-            </div>
-          ) : (
-            <div style={{ fontSize: '0.68rem', color: '#94a3b8', marginTop: '4px' }}>
-              Supplier Warranty: Not assigned
-            </div>
-          )}
-        </div>
-
-        {/* Dimension 2: Sales Invoice (if sold) */}
-        <div style={{ background: '#f8fafc', padding: '8px 10px', borderRadius: '6px', border: '1px solid #e2e8f0' }}>
-          <div style={{ fontSize: '0.68rem', fontWeight: 800, color: '#334155', display: 'flex', alignItems: 'center', gap: '4px', marginBottom: '4px' }}>
-            <span>🛒</span> 2. SALES INVOICES {item.sales_history?.length > 0 ? `(${item.sales_history.length})` : ''}
-          </div>
-          {item.sales_history && item.sales_history.length > 0 ? (
-            item.sales_history.slice(0, 2).map((sh, idx) => (
-              <div key={`sh-${idx}`} style={{ fontSize: '0.73rem', color: '#334155', borderBottom: idx === 0 && item.sales_history.length > 1 ? '1px dashed #cbd5e1' : 'none', paddingBottom: '2px', marginBottom: '2px' }}>
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                  <button
-                    type="button"
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      onSelect({
-                        section: 'sales',
-                        tab: 'history',
-                        search: sh.invoice_no,
-                      });
-                    }}
-                    style={{
-                      background: 'transparent',
-                      border: 'none',
-                      padding: 0,
-                      cursor: 'pointer',
-                      color: '#15803d',
-                      fontWeight: 800,
-                      fontSize: '0.74rem',
-                      textDecoration: 'underline',
-                      textUnderlineOffset: '2px',
-                      display: 'inline-flex',
-                      alignItems: 'center',
-                      gap: '2px',
-                    }}
-                    title={`Click to view Sale Invoice #${sh.invoice_no}`}
-                  >
-                    #{sh.invoice_no} ↗
-                  </button>
-                  <span style={{ color: '#64748b', fontSize: '0.68rem' }}>{sh.sale_date ? new Date(sh.sale_date).toLocaleDateString() : ''}</span>
-                </div>
-                <div style={{ color: '#64748b', fontSize: '0.71rem' }}>
-                  {sh.customer_name} • {sh.quantity} pcs @ {taka(sh.unit_price)}
-                </div>
-              </div>
-            ))
-          ) : (
-            <div style={{ fontSize: '0.71rem', color: item.matched_serial ? '#059669' : '#94a3b8', fontStyle: item.matched_serial ? 'normal' : 'italic', fontWeight: item.matched_serial ? 600 : 400, padding: '4px 0' }}>
-              {item.matched_serial ? '✓ Unit in stock (Never sold)' : 'No sales recorded yet'}
-            </div>
-          )}
-        </div>
-
-        {/* Dimension 3: Purchase Invoice */}
-        <div style={{ background: '#f8fafc', padding: '8px 10px', borderRadius: '6px', border: '1px solid #e2e8f0' }}>
-          <div style={{ fontSize: '0.68rem', fontWeight: 800, color: '#334155', display: 'flex', alignItems: 'center', gap: '4px', marginBottom: '4px' }}>
-            <span>🚚</span> 3. PURCHASE INVOICES {item.purchase_history?.length > 0 ? `(${item.purchase_history.length})` : ''}
-          </div>
-          {item.purchase_history && item.purchase_history.length > 0 ? (
-            item.purchase_history.slice(0, 2).map((ph, idx) => (
-              <div key={`ph-${idx}`} style={{ fontSize: '0.73rem', color: '#334155', borderBottom: idx === 0 && item.purchase_history.length > 1 ? '1px dashed #cbd5e1' : 'none', paddingBottom: '2px', marginBottom: '2px' }}>
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                  <button
-                    type="button"
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      onSelect({
-                        section: 'purchases',
-                        tab: 'history',
-                        search: ph.po_number,
-                      });
-                    }}
-                    style={{
-                      background: 'transparent',
-                      border: 'none',
-                      padding: 0,
-                      cursor: 'pointer',
-                      color: '#0e7490',
-                      fontWeight: 800,
-                      fontSize: '0.74rem',
-                      textDecoration: 'underline',
-                      textUnderlineOffset: '2px',
-                      display: 'inline-flex',
-                      alignItems: 'center',
-                      gap: '2px',
-                    }}
-                    title={`Click to view Purchase Order #${ph.po_number}`}
-                  >
-                    #{ph.po_number} ↗
-                  </button>
-                  <span style={{ color: '#64748b', fontSize: '0.68rem' }}>{ph.purchase_date ? new Date(ph.purchase_date).toLocaleDateString() : ''}</span>
-                </div>
-                <div style={{ color: '#64748b', fontSize: '0.71rem' }}>
-                  {ph.supplier_name} • {ph.quantity} pcs @ {taka(ph.cost_price)}
-                </div>
-                {ph.supplier_warranty_expire_date && (
-                  <div style={{ color: '#0369a1', fontSize: '0.68rem', fontWeight: 600 }}>
-                    Sup Exp: {new Date(ph.supplier_warranty_expire_date).toLocaleDateString()}
-                  </div>
-                )}
-              </div>
-            ))
-          ) : (
-            <div style={{ fontSize: '0.71rem', color: '#94a3b8', fontStyle: 'italic', padding: '4px 0' }}>
-              No purchase records found
-            </div>
-          )}
-        </div>
-
-        {/* Dimension 4: Warranty, Return-Refund */}
-        <div style={{ background: '#f8fafc', padding: '8px 10px', borderRadius: '6px', border: '1px solid #e2e8f0' }}>
-          <div style={{ fontSize: '0.68rem', fontWeight: 800, color: '#334155', display: 'flex', alignItems: 'center', gap: '4px', marginBottom: '4px' }}>
-            <span>🛡️</span> 4. WARRANTY & RETURNS
-          </div>
-          {((item.warranty_claims && item.warranty_claims.length > 0) || (item.returns_refunds && item.returns_refunds.length > 0)) ? (
-            <div>
-              {item.warranty_claims?.slice(0, 1).map((wc, idx) => (
-                <div key={`wc-${idx}`} style={{ fontSize: '0.71rem', color: '#b45309', marginBottom: '2px', display: 'flex', alignItems: 'center', gap: '4px', flexWrap: 'wrap' }}>
-                  <button
-                    type="button"
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      onSelect({ section: 'warranty', search: wc.claim_no });
-                    }}
-                    style={{
-                      background: 'none',
-                      border: 'none',
-                      padding: 0,
-                      cursor: 'pointer',
-                      color: '#b45309',
-                      fontWeight: 800,
-                      textDecoration: 'underline',
-                    }}
-                    title={`Click to view Claim #${wc.claim_no}`}
-                  >
-                    Claim #{wc.claim_no} ↗
-                  </button>
-                  <span>({wc.status}): {wc.issue_description || 'In process'}</span>
-                </div>
-              ))}
-              {item.returns_refunds?.slice(0, 1).map((rr, idx) => (
-                <div key={`rr-${idx}`} style={{ fontSize: '0.71rem', color: '#dc2626', display: 'flex', alignItems: 'center', gap: '4px', flexWrap: 'wrap' }}>
-                  <button
-                    type="button"
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      onSelect({ section: 'warranty', search: rr.return_no });
-                    }}
-                    style={{
-                      background: 'none',
-                      border: 'none',
-                      padding: 0,
-                      cursor: 'pointer',
-                      color: '#dc2626',
-                      fontWeight: 800,
-                      textDecoration: 'underline',
-                    }}
-                    title={`Click to view Return #${rr.return_no}`}
-                  >
-                    Return #{rr.return_no} ↗
-                  </button>
-                  <span>: {rr.return_qty} pcs ({taka(rr.refund_amount)})</span>
-                </div>
-              ))}
-            </div>
-          ) : (
-            <div style={{ fontSize: '0.71rem', color: '#94a3b8', fontStyle: 'italic', padding: '4px 0' }}>
-              No active warranty claims or returns
-            </div>
-          )}
-        </div>
-
+        <CardStockDimension item={item} />
+        <CardSalesDimension item={item} onSelect={onSelect} />
+        <CardPurchasesDimension item={item} onSelect={onSelect} />
+        <CardWarrantyDimension item={item} onSelect={onSelect} />
       </div>
     </div>
   );
