@@ -1,26 +1,9 @@
 import { useState, useEffect } from 'react';
 import API from '../../../services/api';
+import { MODULE_TABS } from './trash/trashConstants';
+import { useTrashActions } from './trash/useTrashActions';
 
-export const MODULE_TABS = [
-  { key: 'all', label: 'All Trashed Data', icon: '🗑️', color: '#0284c7' },
-  { key: 'products', label: 'Products', icon: '📦', color: '#38bdf8' },
-  { key: 'sales', label: 'Sales Invoices', icon: '🧾', color: '#10b981' },
-  { key: 'purchases', label: 'Purchases', icon: '🛒', color: '#f59e0b' },
-  { key: 'customers', label: 'Customers', icon: '👥', color: '#8b5cf6' },
-  { key: 'suppliers', label: 'Suppliers', icon: '🏭', color: '#ec4899' },
-  { key: 'expenses', label: 'Expenses', icon: '💸', color: '#f43f5e' },
-  { key: 'projects', label: 'Projects', icon: '🛠️', color: '#6366f1' },
-  { key: 'ecommerce', label: 'E-Commerce', icon: '🌐', color: '#06b6d4' },
-  { key: 'categories', label: 'Categories', icon: '🏷️', color: '#14b8a6' },
-  { key: 'sub_categories', label: 'Sub-Categories', icon: '📂', color: '#06b6d4' },
-  { key: 'brands', label: 'Brands', icon: '🏷️', color: '#eab308' },
-  { key: 'product_names', label: 'Product Names', icon: '📝', color: '#22c55e' },
-  { key: 'models', label: 'Models', icon: '📐', color: '#a855f7' },
-  { key: 'series', label: 'Series', icon: '🔖', color: '#f97316' },
-  { key: 'quotations', label: 'Quotations', icon: '📑', color: '#a855f7' },
-  { key: 'warranty_claims', label: 'Warranty', icon: '🛡️', color: '#0ea5e9' },
-  { key: 'users', label: 'Staff / Users', icon: '👤', color: '#64748b' },
-];
+export { MODULE_TABS };
 
 export default function useTrashManager() {
   const [selectedModule, setSelectedModule] = useState('all');
@@ -62,7 +45,9 @@ export default function useTrashManager() {
   const loadTrash = async (mod = selectedModule, search = searchQuery) => {
     try {
       setLoading(true);
-      const url = `${API}/trash/all?module=${mod}${search ? `&search=${encodeURIComponent(search)}` : ''}`;
+      const url = `${API}/trash/all?module=${mod}${
+        search ? `&search=${encodeURIComponent(search)}` : ''
+      }`;
       const res = await fetch(url);
       if (res.ok) {
         const data = await res.json();
@@ -92,149 +77,6 @@ export default function useTrashManager() {
     return () => clearTimeout(handler);
   }, [searchQuery]);
 
-  // Restore Single Item
-  const handleRestore = async (item) => {
-    try {
-      setIsProcessing(true);
-      const res = await fetch(`${API}/trash/restore`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ module_name: item.module, id: item.id }),
-      });
-      const data = await res.json();
-      if (res.ok && data.success) {
-        showToast(data.message || 'Item restored successfully!', 'success');
-        notifyDataChanged();
-        loadCounts();
-        loadTrash(selectedModule, searchQuery);
-      } else {
-        showToast(data.message || 'Failed to restore', 'error');
-      }
-    } catch (err) {
-      console.error(err);
-      showToast('Error communicating with server', 'error');
-    } finally {
-      setIsProcessing(false);
-    }
-  };
-
-  // Restore All Items (in current view or all)
-  const handleRestoreAll = async () => {
-    const targetDesc =
-      selectedModule === 'all' ? 'ALL items in the trash' : `all ${selectedModule} items`;
-    if (
-      !window.confirm(
-        `Are you sure you want to restore ${targetDesc}? They will immediately be available in active records.`
-      )
-    ) {
-      return;
-    }
-
-    try {
-      setIsProcessing(true);
-      const res = await fetch(`${API}/trash/restore-all`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ module_name: selectedModule }),
-      });
-      const data = await res.json();
-      if (res.ok && data.success) {
-        showToast(data.message || 'All items restored successfully!', 'success');
-        notifyDataChanged();
-        loadCounts();
-        loadTrash(selectedModule, searchQuery);
-      } else {
-        showToast(data.message || 'Failed to restore all items', 'error');
-      }
-    } catch (err) {
-      console.error(err);
-      showToast('Error communicating with server', 'error');
-    } finally {
-      setIsProcessing(false);
-    }
-  };
-
-  // Permanent Delete Single Item
-  const handlePermanentDelete = async (item) => {
-    const confirmPrompt = window.confirm(
-      `⚠️ PERMANENT DELETE WARNING:
-Are you absolutely sure you want to permanently delete:
-"${item.title}"?
-
-This action CANNOT be undone! The record will be permanently wiped from the database.`
-    );
-    if (!confirmPrompt) return;
-
-    try {
-      setIsProcessing(true);
-      const res = await fetch(`${API}/trash/permanent`, {
-        method: 'DELETE',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ module_name: item.module, id: item.id }),
-      });
-      const data = await res.json();
-      if (res.ok && data.success) {
-        showToast(data.message || 'Item permanently deleted!', 'success');
-        notifyDataChanged();
-        loadCounts();
-        loadTrash(selectedModule, searchQuery);
-      } else {
-        showToast(data.message || 'Failed to delete item', 'error');
-      }
-    } catch (err) {
-      console.error(err);
-      showToast('Error communicating with server', 'error');
-    } finally {
-      setIsProcessing(false);
-    }
-  };
-
-  // Empty Entire Trash
-  const handleEmptyTrash = async () => {
-    const targetDesc =
-      selectedModule === 'all'
-        ? 'the ENTIRE Recycle Bin (all modules)'
-        : `all deleted ${selectedModule}`;
-    const firstCheck = window.confirm(
-      `🚨 CRITICAL ACTION:
-You are about to EMPTY ${targetDesc}!
-
-All deleted items will be permanently destroyed. Are you sure?`
-    );
-    if (!firstCheck) return;
-
-    try {
-      setIsProcessing(true);
-      const res = await fetch(`${API}/trash/empty`, {
-        method: 'DELETE',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ module_name: selectedModule }),
-      });
-      const data = await res.json();
-      if (res.ok && data.success) {
-        showToast(data.message || 'Trash emptied successfully!', 'success');
-        notifyDataChanged();
-        loadCounts();
-        loadTrash(selectedModule, searchQuery);
-      } else {
-        showToast(data.message || 'Failed to empty trash', 'error');
-      }
-    } catch (err) {
-      console.error(err);
-      showToast('Error communicating with server', 'error');
-    } finally {
-      setIsProcessing(false);
-    }
-  };
-
   // Toggle selection
   const handleToggleSelect = (itemKey) => {
     setSelectedIds((prev) =>
@@ -250,62 +92,16 @@ All deleted items will be permanently destroyed. Are you sure?`
     }
   };
 
-  // Batch restore selected
-  const handleBatchRestore = async () => {
-    if (!selectedIds.length) return;
-    setIsProcessing(true);
-    let successCount = 0;
-
-    for (const key of selectedIds) {
-      const [mod, idStr] = key.split('_');
-      try {
-        const res = await fetch(`${API}/trash/restore`, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ module_name: mod, id: parseInt(idStr, 10) }),
-        });
-        if (res.ok) successCount++;
-      } catch (e) {}
-    }
-
-    showToast(`✓ Successfully restored ${successCount} items!`, 'success');
-    setIsProcessing(false);
-    notifyDataChanged();
-    loadCounts();
-    loadTrash(selectedModule, searchQuery);
-  };
-
-  // Batch permanent delete selected
-  const handleBatchDelete = async () => {
-    if (!selectedIds.length) return;
-    if (
-      !window.confirm(
-        `Permanently delete ${selectedIds.length} selected items? This CANNOT be undone!`
-      )
-    )
-      return;
-
-    setIsProcessing(true);
-    let successCount = 0;
-
-    for (const key of selectedIds) {
-      const [mod, idStr] = key.split('_');
-      try {
-        const res = await fetch(`${API}/trash/permanent`, {
-          method: 'DELETE',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ module_name: mod, id: parseInt(idStr, 10) }),
-        });
-        if (res.ok) successCount++;
-      } catch (e) {}
-    }
-
-    showToast(`✓ Permanently deleted ${successCount} items!`, 'success');
-    setIsProcessing(false);
-    notifyDataChanged();
-    loadCounts();
-    loadTrash(selectedModule, searchQuery);
-  };
+  const actions = useTrashActions({
+    selectedModule,
+    searchQuery,
+    selectedIds,
+    setIsProcessing,
+    showToast,
+    notifyDataChanged,
+    loadCounts,
+    loadTrash,
+  });
 
   const totalTrashCount = counts.all || 0;
 
@@ -326,14 +122,9 @@ All deleted items will be permanently destroyed. Are you sure?`
     showToast,
     loadCounts,
     loadTrash,
-    handleRestore,
-    handleRestoreAll,
-    handlePermanentDelete,
-    handleEmptyTrash,
     handleToggleSelect,
     handleSelectAll,
-    handleBatchRestore,
-    handleBatchDelete,
     totalTrashCount,
+    ...actions,
   };
 }

@@ -3,71 +3,13 @@ const express = require('express');
 const cors = require('cors');
 const path = require('path');
 const fs = require('fs');
-const rateLimit = require('express-rate-limit');
-const { requireAuth, getToken, hashSessionToken } = require('./middlewares/authMiddleware');
+
+const { authLimiter, otpLimiter, corsOptions } = require('./config/corsConfig');
+const { checkLicenseKillSwitch } = require('./middlewares/licenseMiddleware');
+const { apiAuthGate } = require('./middlewares/apiAuthGate');
+const { registerApiRoutes } = require('./routes/apiRoutes');
+
 const app = express();
-
-// Rate limiting for authentication endpoints (public, brute-force targets).
-const authLimiter = rateLimit({
-    windowMs: 15 * 60 * 1000,
-    max: 100,
-    skip: (req) => {
-        if (req.method === 'OPTIONS') return true;
-        const ip = req.ip || req.connection?.remoteAddress || '';
-        return ip === '127.0.0.1' || ip === '::1' || ip === '::ffff:127.0.0.1' || req.hostname === 'localhost';
-    },
-    standardHeaders: true,
-    legacyHeaders: false,
-    message: { success: false, message: 'Too many login attempts. Please try again in a few moments.' },
-});
-
-const otpLimiter = rateLimit({
-    windowMs: 60 * 1000,
-    max: 5,
-    skip: (req) => req.method === 'OPTIONS',
-    standardHeaders: true,
-    legacyHeaders: false,
-    message: { success: false, message: 'Too many requests. Please try again in 1 minute.' },
-});
-
-const defaultOrigins = [
-    'http://localhost:5173',
-    'http://localhost:3000',
-    'http://localhost',
-    'https://localhost',
-    'capacitor://localhost',
-    'https://sheba-technology.onrender.com',
-    'https://sdb.shebatechnologybd.com',
-    'https://shebatechnologybd.com',
-];
-const envOrigins = (process.env.CORS_ORIGINS || '')
-    .split(',').map((origin) => origin.trim()).filter(Boolean);
-const allowedOrigins = new Set([...defaultOrigins, ...envOrigins]);
-
-// Strict origin patterns: exact hosts or subdomains of trusted platforms.
-const TRUSTED_ORIGIN_PATTERNS = [
-    /^https:\/\/([a-z0-9-]+\.)?onrender\.com$/,
-    /^https:\/\/([a-z0-9-]+\.)?shebatechnologybd\.com$/,
-    /^capacitor:\/\/localhost$/,
-];
-const isLocalOrPrivateNetworkOrigin = (origin) => {
-    try {
-        if (!origin) return false;
-        if (origin === 'null') return true;
-        const { hostname, protocol } = new URL(origin);
-        if (!['http:', 'https:', 'capacitor:', 'ionic:'].includes(protocol)) return false;
-        if (hostname === 'localhost' || hostname === '127.0.0.1' || hostname === '[::1]' || hostname.endsWith('.localhost')) return true;
-        // Standard IPv4 private ranges:
-        if (/^192\.168\.\d{1,3}\.\d{1,3}$/.test(hostname)) return true;
-        if (/^10\.\d{1,3}\.\d{1,3}\.\d{1,3}$/.test(hostname)) return true;
-        if (/^172\.(1[6-9]|2\d|3[01])\.\d{1,3}\.\d{1,3}$/.test(hostname)) return true;
-        if (/^100\.(6[4-9]|[7-9]\d|1[01]\d|12[0-7])\.\d{1,3}\.\d{1,3}$/.test(hostname)) return true;
-        if (/^169\.254\.\d{1,3}\.\d{1,3}$/.test(hostname)) return true;
-        return false;
-    } catch {
-        return false;
-    }
-};
 
 // Handle Chrome Private Network Access preflights
 app.use((req, res, next) => {
@@ -77,26 +19,12 @@ app.use((req, res, next) => {
     next();
 });
 
-const corsOptions = {
-    origin(origin, callback) {
-        if (!origin) return callback(null, true);
-        if (allowedOrigins.has(origin)) return callback(null, true);
-        if (TRUSTED_ORIGIN_PATTERNS.some((re) => re.test(origin)) || isLocalOrPrivateNetworkOrigin(origin)) {
-            return callback(null, true);
-        }
-        return callback(null, false);
-    },
-    credentials: true,
-    methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
-    allowedHeaders: ['Content-Type', 'Authorization', 'x-session-token', 'X-Requested-With', 'Accept', 'Origin', 'Access-Control-Request-Private-Network'],
-};
-
 app.use(cors(corsOptions));
 app.use(express.json());
 
 app.use((req, res, next) => {
     res.setHeader('X-Frame-Options', 'SAMEORIGIN');
-    res.setHeader('X-Content-Type-Options', 'nosniff');
+    res.setHeader('X-Type-Options', 'nosniff');
     res.setHeader('X-XSS-Protection', '1; mode=block');
     res.setHeader('Referrer-Policy', 'strict-origin-when-cross-origin');
     next();
@@ -130,136 +58,29 @@ const ensureUploadsExist = () => {
 };
 ensureUploadsExist();
 
-app.use('/uploads', express.static(path.join(__dirname, 'uploads'), { setHeaders: (res) => res.setHeader('X-Content-Type-Options', 'nosniff') }));
+app.use('/uploads', express.static(path.join(__dirname, 'uploads'), {
+    setHeaders: (res) => res.setHeader('X-Content-Type-Options', 'nosniff')
+}));
 
 app.get('/api', (req, res) => {
     res.json({ message: 'Sheba Technology API is running', version: '16.9.26' });
 });
 
-const { checkLicenseKillSwitch } = require('./middlewares/licenseMiddleware');
-const publicApiPaths = new Set([
-    '/license',
-    '/api/license',
-    '/security/login',
-    '/api/security/login',
-    '/security/signup',
-    '/api/security/signup',
-    '/security/recovery-request',
-    '/api/security/recovery-request',
-    '/ecommerce/track',
-    '/ecommerce/customer/signup',
-    '/warranty/check',
-    '/devices',
-    '/invoices/temp-share',
-    '/api/invoices/temp-share',
-    '/sales/temp-share',
-    '/api/sales/temp-share',
-    '/settings',
-    '/api/settings',
-    '/expense-categories',
-    '/api/expense-categories',
-]);
-
-// Tighten rate limits on credential-based public endpoints.
+// Tighten rate limits on credential-based public endpoints
 app.use('/api/security/login', authLimiter);
 app.use('/api/security/signup', authLimiter);
 app.use('/api/security/recovery-request', otpLimiter);
 
-// Global License Kill Switch Middleware for API requests
+// Global License Kill Switch & Auth Gate for API requests
 app.use('/api', checkLicenseKillSwitch);
+app.use('/api', apiAuthGate);
 
-app.use('/api', async (req, res, next) => {
-    if (req.method === 'OPTIONS') return next();
-    const rawPath = req.path;
-    const origPath = req.originalUrl ? req.originalUrl.split('?')[0] : '';
-    const isPublic = [...publicApiPaths].some((p) => {
-        const cleanP = p.startsWith('/api') ? p.replace(/^\/api/, '') : p;
-        return (
-            rawPath === cleanP ||
-            rawPath.startsWith(`${cleanP}/`) ||
-            rawPath === p ||
-            rawPath.startsWith(`${p}/`) ||
-            origPath === p ||
-            origPath.startsWith(`${p}/`) ||
-            origPath === `/api${cleanP}` ||
-            origPath.startsWith(`/api${cleanP}/`)
-        );
-    });
-
-    const token = getToken(req);
-    if (token && !req.user) {
-        try {
-            const pool = require('./config/db');
-            const result = await pool.query(`
-                SELECT id, name, email, phone, role_id, role_name, is_active, is_locked, deleted_at
-                FROM users
-                WHERE current_session_token = $1
-                LIMIT 1
-            `, [hashSessionToken(token)]);
-            const user = result.rows[0];
-            if (user && !user.deleted_at && user.is_active && !user.is_locked) {
-                req.user = user;
-                req.sessionToken = token;
-            }
-        } catch (_) {}
-    }
-
-    if (isPublic) return next();
-    return requireAuth(req, res, next);
-});
-
-// Register API routes strictly under /api prefix so they do not conflict with frontend SPA routes
-const registerRoute = (basePath, router) => {
-    app.use(`/api${basePath}`, router);
-};
-
-registerRoute('/license', require('./routes/licenseRoute'));
-registerRoute('/suppliers', require('./routes/supplierRoute'));
-registerRoute('/products', require('./routes/productRoute'));
-registerRoute('/categories', require('./routes/categoryRoute'));
-registerRoute('/master', require('./routes/masterRoute'));
-registerRoute('/purchase', require('./routes/purchaseRoute'));
-registerRoute('/purchases', require('./routes/purchaseRoute'));
-registerRoute('/menu', require('./routes/menuRoute'));
-registerRoute('/images', require('./routes/imageRoute'));
-registerRoute('/sales', require('./routes/salesRoute'));
-registerRoute('/invoices', require('./routes/invoiceRoute'));
-registerRoute('/accounts', require('./routes/accountRoute'));
-registerRoute('/projects', require('./routes/projectRoute'));
-registerRoute('/ecommerce', require('./routes/ecommerceRoute'));
-registerRoute('/security', require('./routes/securityRoute'));
-registerRoute('/roles', require('./routes/roleRoute'));
-registerRoute('/search', require('./routes/searchRoute'));
-registerRoute('/warranty', require('./routes/warrantyRoute'));
-registerRoute('/trash', require('./routes/trashRoute'));
-registerRoute('/settings', require('./routes/settingsRoute'));
-registerRoute('/warehouses', require('./routes/warehouseRoute'));
-registerRoute('/inventory', require('./routes/inventoryRoute'));
-registerRoute('/parties', require('./routes/partyRoute'));
-registerRoute('/wallets', require('./routes/walletRoute'));
-registerRoute('/reports', require('./routes/reportsRoute'));
-registerRoute('/expenses', require('./routes/expenseRoute'));
-registerRoute('/expense-categories', require('./routes/expenseCategoryRoute'));
-registerRoute('/register', require('./routes/registerRoute'));
-registerRoute('/devices', require('./routes/deviceRoute'));
-registerRoute('/staff', require('./routes/staffRoute'));
-registerRoute('/dev', require('./routes/devRoute'));
-registerRoute('/uom', require('./routes/uomRoute'));
-registerRoute('/units-of-measurement', require('./routes/uomRoute'));
-
-const createEntityRouter = require('./routes/entityRouteFactory');
-registerRoute('/brands', createEntityRouter('brands'));
-registerRoute('/models', createEntityRouter('models'));
-registerRoute('/series', createEntityRouter('series'));
-registerRoute('/product-names', createEntityRouter('product_names'));
-registerRoute('/product_names', createEntityRouter('product_names'));
-registerRoute('/sub-categories', createEntityRouter('sub_categories'));
-registerRoute('/sub_categories', createEntityRouter('sub_categories'));
+// Register API routes
+registerApiRoutes(app);
 
 // Serve frontend static assets in production if built
 const distPath = path.join(__dirname, 'frontend/dist');
 if (fs.existsSync(distPath)) {
-    // Explicitly prevent caching of the Service Worker script
     app.get('/sw.js', (req, res) => {
         res.setHeader('Cache-Control', 'no-cache, no-store, must-revalidate');
         res.sendFile(path.join(distPath, 'sw.js'));

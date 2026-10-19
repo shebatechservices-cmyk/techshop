@@ -1,42 +1,22 @@
 import React from 'react';
 import useStorefrontManager from '../hooks/useStorefrontManager';
-import StorefrontView from '../views/StorefrontView';
-import ParcelTrackingView from '../views/ParcelTrackingView';
-import CustomerAccountView from '../views/CustomerAccountView';
 import CartDrawer from '../views/CartDrawer';
+import StorefrontModalHeader from './storefront/StorefrontModalHeader';
+import StorefrontViewContainer from './storefront/StorefrontViewContainer';
 
 export default function CustomerStorefrontModal({ isOpen, onClose, products = [], onOrderPlaced }) {
+  const manager = useStorefrontManager({ products, onOrderPlaced });
+
   const {
-    // Navigation & Views
     activeView,
     setActiveView,
-
-    // Cart State
     cart,
     isCartOpen,
     setIsCartOpen,
-    addToCart,
-    buyNow,
-    updateCartQty,
     cartSubtotal,
-    cartGrandTotal,
-
-    // Customer & Auth State
     customer,
-    authName,
-    setAuthName,
-    authPhone,
-    setAuthPhone,
-    authAddress,
-    setAuthAddress,
-    authEmail,
-    setAuthEmail,
-    authLoading,
-    authMsg,
-    handleAuthSubmit,
-    handleCustomerLogout,
-
-    // Checkout Form State
+    taka,
+    updateCartQty,
     checkoutName,
     setCheckoutName,
     checkoutPhone,
@@ -49,33 +29,12 @@ export default function CustomerStorefrontModal({ isOpen, onClose, products = []
     setCheckoutDeliveryFee,
     checkoutPaymentMethod,
     setCheckoutPaymentMethod,
-    placingOrder,
     checkoutError,
+    placingOrder,
     handleCheckoutSubmit,
-
-    // Tracking State
-    trackQuery,
-    setTrackQuery,
-    trackingOrders,
-    trackingLoading,
-    trackingError,
-    handleTrackSearch,
-
-    // Catalog & Search
-    storeSearch,
-    setStoreSearch,
-    selectedCategory,
-    setSelectedCategory,
-    categories,
-    sortBy,
-    setSortBy,
-    filteredProducts,
-
-    // Utilities & Constants
+    cartGrandTotal,
     COURIER_PRESETS,
-    money,
-    taka,
-  } = useStorefrontManager({ products, onOrderPlaced });
+  } = manager;
 
   if (!isOpen) return null;
 
@@ -110,202 +69,23 @@ export default function CustomerStorefrontModal({ isOpen, onClose, products = []
           fontFamily: 'Inter, system-ui, sans-serif',
         }}
       >
-        {/* Top Public E-Commerce Navigation Bar */}
-        <div
-          style={{
-            background: '#0f172a',
-            color: '#ffffff',
-            padding: '14px 24px',
-            display: 'flex',
-            justifyContent: 'space-between',
-            alignItems: 'center',
-            borderBottom: '1px solid #1e293b',
-          }}
-        >
-          <div style={{ display: 'flex', alignItems: 'center', gap: '14px' }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-              <span style={{ fontSize: '1.4rem' }}>🛒</span>
-              <div>
-                <div style={{ fontWeight: 900, fontSize: '1.15rem', letterSpacing: '-0.02em', color: '#ffffff' }}>
-                  SHEBA ONLINE STORE
-                </div>
-                <div style={{ fontSize: '0.72rem', color: '#94a3b8' }}>
-                  Customer Storefront &amp; Live Parcel Tracking Portal
-                </div>
-              </div>
-            </div>
-
-            {/* Navigation Tabs */}
-            <div style={{ display: 'flex', background: '#1e293b', borderRadius: '8px', padding: '3px', marginLeft: '16px' }}>
-              <button
-                type="button"
-                onClick={() => setActiveView('store')}
-                style={{
-                  padding: '6px 14px',
-                  borderRadius: '6px',
-                  border: 'none',
-                  fontSize: '0.82rem',
-                  fontWeight: 700,
-                  cursor: 'pointer',
-                  background: activeView === 'store' ? '#0d9488' : 'transparent',
-                  color: activeView === 'store' ? '#ffffff' : '#94a3b8',
-                }}
-              >
-                🛍️ Storefront
-              </button>
-              <button
-                type="button"
-                onClick={() => setActiveView('track')}
-                style={{
-                  padding: '6px 14px',
-                  borderRadius: '6px',
-                  border: 'none',
-                  fontSize: '0.82rem',
-                  fontWeight: 700,
-                  cursor: 'pointer',
-                  background: activeView === 'track' ? '#0d9488' : 'transparent',
-                  color: activeView === 'track' ? '#ffffff' : '#94a3b8',
-                }}
-              >
-                📦 Track Parcel
-              </button>
-              <button
-                type="button"
-                onClick={() => setActiveView('account')}
-                style={{
-                  padding: '6px 14px',
-                  borderRadius: '6px',
-                  border: 'none',
-                  fontSize: '0.82rem',
-                  fontWeight: 700,
-                  cursor: 'pointer',
-                  background: activeView === 'account' ? '#0d9488' : 'transparent',
-                  color: activeView === 'account' ? '#ffffff' : '#94a3b8',
-                }}
-              >
-                👤 {customer ? customer.name : 'Sign In'}
-              </button>
-            </div>
-          </div>
-
-          <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-            {/* Cart Button with badge */}
-            <button
-              type="button"
-              onClick={() => setIsCartOpen(!isCartOpen)}
-              style={{
-                position: 'relative',
-                background: cart.length > 0 ? '#0d9488' : '#334155',
-                color: '#ffffff',
-                border: 'none',
-                padding: '8px 14px',
-                borderRadius: '8px',
-                fontWeight: 700,
-                fontSize: '0.85rem',
-                cursor: 'pointer',
-                display: 'flex',
-                alignItems: 'center',
-                gap: '8px',
-              }}
-            >
-              <span>🛒 Cart</span>
-              <span
-                style={{
-                  background: '#ffffff',
-                  color: '#0f172a',
-                  padding: '1px 6px',
-                  borderRadius: '999px',
-                  fontSize: '0.74rem',
-                  fontWeight: 800,
-                }}
-              >
-                {cart.reduce((a, b) => a + b.quantity, 0)}
-              </span>
-              {cart.length > 0 && <span style={{ fontSize: '0.8rem' }}>· {taka(cartSubtotal)}</span>}
-            </button>
-
-            <button
-              type="button"
-              onClick={onClose}
-              style={{
-                background: 'rgba(255,255,255,0.1)',
-                border: 'none',
-                color: '#ffffff',
-                width: '32px',
-                height: '32px',
-                borderRadius: '6px',
-                cursor: 'pointer',
-                fontSize: '1rem',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-              }}
-            >
-              ✕
-            </button>
-          </div>
-        </div>
+        <StorefrontModalHeader
+          activeView={activeView}
+          setActiveView={setActiveView}
+          customer={customer}
+          cart={cart}
+          isCartOpen={isCartOpen}
+          setIsCartOpen={setIsCartOpen}
+          cartSubtotal={cartSubtotal}
+          taka={taka}
+          onClose={onClose}
+        />
 
         {/* View Content Area */}
         <div style={{ flex: 1, display: 'flex', overflow: 'hidden', position: 'relative' }}>
-          {/* Main Panel */}
-          <div style={{ flex: 1, overflowY: 'auto', padding: '20px' }}>
-            {/* VIEW 1: STOREFRONT */}
-            {activeView === 'store' && (
-              <StorefrontView
-                filteredProducts={filteredProducts}
-                storeSearch={storeSearch}
-                setStoreSearch={setStoreSearch}
-                selectedCategory={selectedCategory}
-                setSelectedCategory={setSelectedCategory}
-                categories={categories}
-                sortBy={sortBy}
-                setSortBy={setSortBy}
-                cart={cart}
-                addToCart={addToCart}
-                buyNow={buyNow}
-                updateCartQty={updateCartQty}
-                setActiveView={setActiveView}
-                taka={taka}
-              />
-            )}
-
-            {/* VIEW 2: PARCEL TRACKING */}
-            {activeView === 'track' && (
-              <ParcelTrackingView
-                trackQuery={trackQuery}
-                setTrackQuery={setTrackQuery}
-                handleTrackSearch={handleTrackSearch}
-                trackingLoading={trackingLoading}
-                trackingError={trackingError}
-                trackingOrders={trackingOrders}
-                taka={taka}
-                money={money}
-              />
-            )}
-
-            {/* VIEW 3: CUSTOMER ACCOUNT / SIGN IN */}
-            {activeView === 'account' && (
-              <CustomerAccountView
-                customer={customer}
-                authName={authName}
-                setAuthName={setAuthName}
-                authPhone={authPhone}
-                setAuthPhone={setAuthPhone}
-                authAddress={authAddress}
-                setAuthAddress={setAuthAddress}
-                authEmail={authEmail}
-                setAuthEmail={setAuthEmail}
-                authLoading={authLoading}
-                authMsg={authMsg}
-                handleAuthSubmit={handleAuthSubmit}
-                handleCustomerLogout={handleCustomerLogout}
-                setActiveView={setActiveView}
-                setTrackQuery={setTrackQuery}
-                handleTrackSearch={handleTrackSearch}
-              />
-            )}
-          </div>
+          <StorefrontViewContainer
+            {...manager}
+          />
 
           {/* Slide-out Cart & Checkout Drawer */}
           <CartDrawer
