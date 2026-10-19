@@ -1,0 +1,102 @@
+import React from 'react';
+import PurchaseSummaryAndPayment from '../../components/PurchaseSummaryAndPayment';
+
+export default function PurchaseOrderPaymentSection({ cart, orderToEdit, onClose }) {
+  const {
+    hasExtraCost,
+    setHasExtraCost,
+    extraCost,
+    setExtraCost,
+    extraCostCategory,
+    setExtraCostCategory,
+    extraCostNotes,
+    setExtraCostNotes,
+    reference,
+    setReference,
+    extra,
+    itemsSubtotal,
+    totalLandedCost,
+    netAmount,
+    discount,
+    setDiscount,
+    payableAmount,
+    previousDue,
+    totalPayable,
+    currentDue,
+    handlePayFull,
+    handlePayOrder,
+    handleFullDue,
+    tenders,
+    updateTender,
+    addTenderRow,
+    acceptTender,
+    cancelTender,
+    cashAccounts,
+    bankAccounts,
+    mfsAccounts,
+    walletAccounts,
+    supplierWallet,
+    supplierWalletLabel,
+    error,
+    items,
+    totals,
+    totalCost,
+    paid,
+    remainingDue,
+    estimatedProfit,
+    handleClearForm,
+    savePurchase,
+    saving,
+  } = cart;
+
+  return (
+    <PurchaseSummaryAndPayment
+      hasExtraCost={hasExtraCost}
+      setHasExtraCost={setHasExtraCost}
+      extraCost={extraCost}
+      setExtraCost={setExtraCost}
+      extraCostCategory={extraCostCategory}
+      setExtraCostCategory={setExtraCostCategory}
+      extraCostNotes={extraCostNotes}
+      setExtraCostNotes={setExtraCostNotes}
+      reference={reference}
+      setReference={setReference}
+      extra={extra}
+      itemsSubtotal={itemsSubtotal}
+      totalLandedCost={totalLandedCost}
+      netAmount={netAmount}
+      discount={discount}
+      setDiscount={setDiscount}
+      payableAmount={payableAmount}
+      previousDue={previousDue}
+      totalPayable={totalPayable}
+      currentDue={currentDue}
+      handlePayFull={handlePayFull}
+      handlePayOrder={handlePayOrder}
+      handleFullDue={handleFullDue}
+      tenders={tenders}
+      updateTender={updateTender}
+      addTenderRow={addTenderRow}
+      acceptTender={acceptTender}
+      cancelTender={cancelTender}
+      cashAccounts={cashAccounts}
+      bankAccounts={bankAccounts}
+      mfsAccounts={mfsAccounts}
+      walletAccounts={walletAccounts}
+      supplierWallet={supplierWallet}
+      supplierWalletLabel={supplierWalletLabel}
+      error={error}
+      items={items}
+      totals={totals}
+      totalCost={totalCost}
+      paid={paid}
+      remainingDue={remainingDue}
+      estimatedProfit={estimatedProfit}
+      handleClearForm={handleClearForm}
+      onClose={onClose}
+      savePurchase={savePurchase}
+      saving={saving}
+      orderToEdit={orderToEdit}
+    />
+  );
+}

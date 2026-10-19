@@ -3,16 +3,12 @@ import { createPortal } from 'react-dom';
 import SalePrintModal from './SalePrintModal';
 import AddCustomerModal from './AddCustomerModal';
 import SaleCustomerSidebar from '../components/SaleCustomerSidebar';
-import SaleProductTable from '../components/SaleProductTable';
-import SalePaymentSection from '../components/SalePaymentSection';
 import useNewSale from '../hooks/useNewSale';
 
 import NewSaleModalHeader from './new-sale/NewSaleModalHeader';
-import NewSaleCustomerSelect from './new-sale/NewSaleCustomerSelect';
-import NewSaleProductSearch from './new-sale/NewSaleProductSearch';
+import NewSaleFormBody from './new-sale/NewSaleFormBody';
 import NewSaleFooterActions from './new-sale/NewSaleFooterActions';
 import NewSaleSaveBlockPopup from './new-sale/NewSaleSaveBlockPopup';
-import NewSaleDraftBanner from './new-sale/NewSaleDraftBanner';
 import usePosShortcuts from './new-sale/usePosShortcuts';
 
 export default function NewSaleModal({
@@ -46,126 +42,8 @@ export default function NewSaleModal({
     window.addEventListener('customer_created', handleCustomerCreated);
     return () => window.removeEventListener('customer_created', handleCustomerCreated);
   }, []);
-  const {
-    // States & Refs
-    customerId,
-    setCustomerId,
-    customerSummary,
-    items,
-    expandedId,
-    setExpandedId,
-    searchQuery,
-    setSearchQuery,
-    isSearchOpen,
-    setIsSearchOpen,
-    searchError,
-    setSearchError,
-    barcodeInput,
-    setBarcodeInput,
-    barcodeError,
-    setBarcodeError,
-    discount,
-    setDiscount,
-    setDiscountTouched,
-    vat,
-    setVat,
-    hasSetupCharge,
-    cameraCount,
-    setupRatePerCamera,
-    setupCharge,
-    hasExtraCost,
-    setHasExtraCost,
-    extraCost,
-    setExtraCost,
-    extraCostCategory,
-    setExtraCostCategory,
-    loyaltyPointsToUse,
-    tenders,
-    customerSearch,
-    setCustomerSearch,
-    isCustomerOpen,
-    setIsCustomerOpen,
-    popupMsg,
-    setPopupMsg,
-    salesPerson,
-    setSalesPerson,
-    invoiceDate,
-    setInvoiceDate,
-    destination,
-    setDestination,
-    attention,
-    setAttention,
-    staffList,
-    saving,
-    error,
-    printSale,
-    isPrintOpen,
-    setIsPrintOpen,
-    isPrintPreviewOnly,
-    loadingSummary,
-    recoveredDraft,
-    activeCostCardId,
 
-    // Refs
-    searchContainerRef,
-    searchInputRef,
-    barcodeInputRef,
-    customerSelectRef,
-
-    // Computed / Memos
-    cashAccounts,
-    bankAccounts,
-    mfsAccounts,
-    walletAccounts,
-    filteredProducts,
-    subtotal,
-    totalDiscount,
-    totalSetupCharge,
-    totalExtraCost,
-    netAmount,
-    currentSaleTotal,
-    payableAmount,
-    selectedCustomer,
-    previousDue,
-    totalPayable,
-    customerWalletBalance,
-    customerWalletLabel,
-    paid,
-    currentDue,
-    due,
-    customerTypeRaw,
-    isTechnician,
-    isReseller,
-    isGroupCustomer,
-    groupDiscountAmount,
-    isGroupDiscountActive,
-
-    // Handlers
-    toggleCostCard,
-    handleRestoreDraft,
-    handleDiscardDraft,
-    addProduct,
-    switchItemUnit,
-    updateItem,
-    removeItem,
-    handleScanEnter,
-    handleAddBarcode,
-    handleRemoveBarcode,
-    handleToggleSetupCharge,
-    handleCameraCountChange,
-    handleRateChange,
-    handleDirectSetupChargeChange,
-    handleToggleGroupDiscount,
-    updateTender,
-    addTenderRow,
-    acceptTender,
-    cancelTender,
-    setQuickPaid,
-    handleClearForm,
-    handleOpenPrintPreview,
-    handlePreviewRecentSale,
-    handleSaveSale,
-  } = useNewSale({
+  const saleState = useNewSale({
     isOpen,
     onClose,
     customers: localCustomers,
@@ -176,6 +54,40 @@ export default function NewSaleModal({
     editSale,
     onSaleUpdated,
   });
+
+  const {
+    saving,
+    items,
+    handleSaveSale,
+    isSearchOpen,
+    isCustomerOpen,
+    setIsSearchOpen,
+    setIsCustomerOpen,
+    searchInputRef,
+    customerSelectRef,
+    selectedCustomer,
+    customerTypeRaw,
+    isGroupCustomer,
+    isGroupDiscountActive,
+    previousDue,
+    customerWalletBalance,
+    customerSummary,
+    loadingSummary,
+    handleToggleGroupDiscount,
+    handlePreviewRecentSale,
+    totalPayable,
+    paid,
+    handleClearForm,
+    handleOpenPrintPreview,
+    popupMsg,
+    setPopupMsg,
+    printSale,
+    isPrintOpen,
+    setIsPrintOpen,
+    isPrintPreviewOnly,
+    setCustomerId,
+    setCustomerSearch,
+  } = saleState;
 
   // Auto-Focus toggle state and keyboard shortcuts
   const { autoFocusEnabled, toggleAutoFocus } = usePosShortcuts({
@@ -221,133 +133,13 @@ export default function NewSaleModal({
           />
 
           {/* POS Body */}
-          <div className="p-5 sm:p-6 overflow-y-auto">
-            {/* Crash / Draft Recovery Banner */}
-            <NewSaleDraftBanner
-              recoveredDraft={recoveredDraft}
-              handleRestoreDraft={handleRestoreDraft}
-              handleDiscardDraft={handleDiscardDraft}
-            />
-
-            {error && (
-              <div className="p-3 bg-rose-50 border border-rose-200 text-rose-600 rounded-lg text-sm font-semibold mb-3.5">
-                ⚠️ {error}
-              </div>
-            )}
-
-            {/* Customer Dropdown (searchable) + Quick Add */}
-            <NewSaleCustomerSelect
-              customers={localCustomers}
-              customerId={customerId}
-              setCustomerId={setCustomerId}
-              selectedCustomer={selectedCustomer}
-              customerSearch={customerSearch}
-              setCustomerSearch={setCustomerSearch}
-              isCustomerOpen={isCustomerOpen}
-              setIsCustomerOpen={setIsCustomerOpen}
-              customerSelectRef={customerSelectRef}
-              onOpenAddCustomer={onOpenAddCustomer}
-              setIsAddCustomerOpen={setIsAddCustomerOpen}
-            />
-
-            {/* Product Search Bar + Dropdown */}
-            <NewSaleProductSearch
-              searchContainerRef={searchContainerRef}
-              searchInputRef={searchInputRef}
-              searchQuery={searchQuery}
-              setSearchQuery={setSearchQuery}
-              isSearchOpen={isSearchOpen}
-              setIsSearchOpen={setIsSearchOpen}
-              searchError={searchError}
-              setSearchError={setSearchError}
-              handleScanEnter={handleScanEnter}
-              filteredProducts={filteredProducts}
-              items={items}
-              addProduct={addProduct}
-              autoFocusEnabled={autoFocusEnabled}
-            />
-
-            {/* Top Products Table */}
-            <SaleProductTable
-              items={items}
-              expandedId={expandedId}
-              setExpandedId={setExpandedId}
-              activeCostCardId={activeCostCardId}
-              toggleCostCard={toggleCostCard}
-              updateItem={updateItem}
-              switchItemUnit={switchItemUnit}
-              removeItem={removeItem}
-              handleAddBarcode={handleAddBarcode}
-              handleRemoveBarcode={handleRemoveBarcode}
-              barcodeInput={barcodeInput}
-              setBarcodeInput={setBarcodeInput}
-              barcodeError={barcodeError}
-              setBarcodeError={setBarcodeError}
-              barcodeInputRef={barcodeInputRef}
-              subtotal={subtotal}
-              currentSaleTotal={currentSaleTotal}
-            />
-
-            {/* Two-Column Lower Section: ADDITIONAL DETAILS + PAYMENT */}
-            <SalePaymentSection
-              salesPerson={salesPerson}
-              setSalesPerson={setSalesPerson}
-              staffList={staffList}
-              invoiceDate={invoiceDate}
-              setInvoiceDate={setInvoiceDate}
-              destination={destination}
-              setDestination={setDestination}
-              attention={attention}
-              setAttention={setAttention}
-              paid={paid}
-              due={due}
-              netAmount={netAmount}
-              discount={discount}
-              totalDiscount={totalDiscount}
-              setDiscount={setDiscount}
-              setDiscountTouched={setDiscountTouched}
-              loyaltyPointsToUse={loyaltyPointsToUse}
-              payableAmount={payableAmount}
-              previousDue={previousDue}
-              totalPayable={totalPayable}
-              currentDue={currentDue}
-              vat={vat}
-              setVat={setVat}
-              hasSetupCharge={hasSetupCharge}
-              handleToggleSetupCharge={handleToggleSetupCharge}
-              totalSetupCharge={totalSetupCharge}
-              cameraCount={cameraCount}
-              handleCameraCountChange={handleCameraCountChange}
-              setupRatePerCamera={setupRatePerCamera}
-              handleRateChange={handleRateChange}
-              setupCharge={setupCharge}
-              handleDirectSetupChargeChange={handleDirectSetupChargeChange}
-              hasExtraCost={hasExtraCost}
-              setHasExtraCost={setHasExtraCost}
-              extraCost={extraCost}
-              setExtraCost={setExtraCost}
-              extraCostCategory={extraCostCategory}
-              setExtraCostCategory={setExtraCostCategory}
-              totalExtraCost={totalExtraCost}
-              isTechnician={isTechnician}
-              isReseller={isReseller}
-              isGroupDiscountActive={isGroupDiscountActive}
-              handleToggleGroupDiscount={handleToggleGroupDiscount}
-              groupDiscountAmount={groupDiscountAmount}
-              setQuickPaid={setQuickPaid}
-              tenders={tenders}
-              updateTender={updateTender}
-              addTenderRow={addTenderRow}
-              acceptTender={acceptTender}
-              cancelTender={cancelTender}
-              cashAccounts={cashAccounts}
-              bankAccounts={bankAccounts}
-              mfsAccounts={mfsAccounts}
-              walletAccounts={walletAccounts}
-              customerWalletBalance={customerWalletBalance}
-              customerWalletLabel={customerWalletLabel}
-            />
-          </div>
+          <NewSaleFormBody
+            saleState={saleState}
+            localCustomers={localCustomers}
+            onOpenAddCustomer={onOpenAddCustomer}
+            setIsAddCustomerOpen={setIsAddCustomerOpen}
+            autoFocusEnabled={autoFocusEnabled}
+          />
         </div>
 
         {/* Footer Actions */}

@@ -1,149 +1,29 @@
 import React from 'react';
-import PurchasePrintModal from './PurchasePrintModal';
-import PurchaseLedgerPreviewModal from './PurchaseLedgerPreviewModal';
-import PurchaseComprehensiveProductModal from './PurchaseComprehensiveProductModal';
-import AddSupplierModal from './AddSupplierModal';
 import PurchaseSupplierSidebar from '../components/PurchaseSupplierSidebar';
-import PurchaseCartItemList from '../components/PurchaseCartItemList';
-import PurchaseSummaryAndPayment from '../components/PurchaseSummaryAndPayment';
 import PurchaseOrderHeader from '../components/PurchaseOrderHeader';
-import PurchaseDraftBanner from '../components/PurchaseDraftBanner';
-import SupplierSearchSection from '../components/SupplierSearchSection';
-import ProductSearchSection from '../components/ProductSearchSection';
 import { usePurchaseCart } from '../hooks/usePurchaseCart';
+import PurchaseOrderFormBody from './purchase-order/PurchaseOrderFormBody';
+import PurchaseOrderSubModals from './purchase-order/PurchaseOrderSubModals';
 
 export default function PurchaseOrderModal(props) {
   const {
     isOpen = true,
     orderToEdit = null,
     onClose = () => {},
-    onOpenAddProduct,
-    onOpenAddSupplier,
   } = props;
 
+  const cart = usePurchaseCart(props);
   const {
-    productList,
-    setProductList,
-    suppliers,
-    setSuppliers,
-    accounts,
-    setAccounts,
-    supplierId,
-    setSupplierId,
-    summary,
-    setSummary,
-    query,
-    setQuery,
-    isSearchOpen,
-    setIsSearchOpen,
     items,
-    setItems,
-    expandedId,
-    setExpandedId,
-    barcodeInput,
-    setBarcodeInput,
-    barcodeInputRef,
-    searchInputRef,
-    searchContainerRef,
-    reference,
-    setReference,
-    hasExtraCost,
-    setHasExtraCost,
-    extraCost,
-    setExtraCost,
-    extraCostCategory,
-    setExtraCostCategory,
-    extraCostNotes,
-    setExtraCostNotes,
-    discount,
-    setDiscount,
-    tenders,
-    setTenders,
-    paymentConfirmed,
-    setPaymentConfirmed,
-    barcodeScanErrors,
-    setBarcodeScanErrors,
-    supplierSearch,
-    setSupplierSearch,
-    isSupplierOpen,
-    setIsSupplierOpen,
-    supplierSelectRef,
-    printOrder,
-    setPrintOrder,
-    isPrintOpen,
-    setIsPrintOpen,
-    isPrintPreviewOnly,
-    setIsPrintPreviewOnly,
-    recoveredDraft,
-    setRecoveredDraft,
-    isAddSupplierOpen,
-    setIsAddSupplierOpen,
-    isAddProductOpen,
-    setIsAddProductOpen,
-    previewOrderId,
-    setPreviewOrderId,
-    previewOrderData,
-    setPreviewOrderData,
-    isLedgerPreviewOpen,
-    setIsLedgerPreviewOpen,
-    error,
-    setError,
-    popupMsg,
-    setPopupMsg,
-    saving,
-    setSaving,
-    walletAccounts,
-    setWalletAccounts,
-    cashAccounts,
-    bankAccounts,
-    mfsAccounts,
-    accountByLabel,
-    accountLabelToId,
-    accountLabelToBalance,
-    matches,
-    totals,
-    itemsSubtotal,
-    extra,
-    totalLandedCost,
-    netAmount,
-    payableAmount,
-    totalCost,
-    totalSale,
-    estimatedProfit,
     selectedSupplierObj,
     supplierPayable,
-    previousDue,
-    totalPayable,
-    supplierWallet,
-    supplierWalletLabel,
-    acceptedPaid,
-    paid,
-    currentDue,
-    remainingDue,
-    handleRestoreDraft,
-    handleDiscardDraft,
-    updateItem,
-    handleItemCostChange,
-    handleItemMarginChange,
-    handleItemSaleChange,
-    addProduct,
-    handleAddBarcode,
-    handleRemoveBarcode,
-    handleRemoveItem,
-    handleAddButtonClick,
-    updateTender,
-    removeTender,
-    addTenderRow,
-    acceptTender,
-    cancelTender,
-    handlePayFull,
-    handlePayOrder,
-    handleFullDue,
-    handleClearForm,
-    handleLoadOrderInForm,
+    summary,
     handleOpenRecentPreview,
-    savePurchase,
-  } = usePurchaseCart(props);
+    searchContainerRef,
+    supplierSelectRef,
+    setIsSearchOpen,
+    setIsSupplierOpen,
+  } = cart;
 
   React.useEffect(() => {
     const handleOutsideClick = (e) => {
@@ -159,6 +39,8 @@ export default function PurchaseOrderModal(props) {
       document.removeEventListener('mousedown', handleOutsideClick);
     };
   }, [searchContainerRef, supplierSelectRef, setIsSearchOpen, setIsSupplierOpen]);
+
+  if (!isOpen) return null;
 
   return (
     <>
@@ -183,220 +65,13 @@ export default function PurchaseOrderModal(props) {
             />
 
             {/* Right Column: Main Form */}
-            <main className="flex flex-col gap-4.5 min-w-0">
-              {/* Crash / Draft Recovery Banner */}
-              <PurchaseDraftBanner
-                recoveredDraft={recoveredDraft}
-                handleRestoreDraft={handleRestoreDraft}
-                handleDiscardDraft={handleDiscardDraft}
-              />
-
-              {/* Supplier Selection Row */}
-              <SupplierSearchSection
-                supplierSelectRef={supplierSelectRef}
-                selectedSupplierObj={selectedSupplierObj}
-                supplierSearch={supplierSearch}
-                setSupplierSearch={setSupplierSearch}
-                isSupplierOpen={isSupplierOpen}
-                setIsSupplierOpen={setIsSupplierOpen}
-                suppliers={suppliers}
-                supplierId={supplierId}
-                setSupplierId={setSupplierId}
-                setIsAddSupplierOpen={setIsAddSupplierOpen}
-              />
-
-              {/* Add Product Search & Inline '+' Popup */}
-              <ProductSearchSection
-                searchContainerRef={searchContainerRef}
-                searchInputRef={searchInputRef}
-                query={query}
-                setQuery={setQuery}
-                isSearchOpen={isSearchOpen}
-                setIsSearchOpen={setIsSearchOpen}
-                matches={matches}
-                addProduct={addProduct}
-                items={items}
-                setIsAddProductOpen={setIsAddProductOpen}
-                onClose={onClose}
-                onOpenAddProduct={onOpenAddProduct}
-              />
-
-              {/* Product Items List Component */}
-              <PurchaseCartItemList
-                items={items}
-                expandedId={expandedId}
-                setExpandedId={setExpandedId}
-                barcodeInput={barcodeInput}
-                setBarcodeInput={setBarcodeInput}
-                barcodeInputRef={barcodeInputRef}
-                barcodeScanErrors={barcodeScanErrors}
-                updateItem={updateItem}
-                handleItemCostChange={handleItemCostChange}
-                handleItemMarginChange={handleItemMarginChange}
-                handleAddBarcode={handleAddBarcode}
-                handleRemoveBarcode={handleRemoveBarcode}
-                handleRemoveItem={handleRemoveItem}
-                totalGoodsCost={totals?.cost || 0}
-                extraCostValue={hasExtraCost ? (typeof extra === 'number' ? extra : Number(extraCost || 0)) : 0}
-              />
-
-              {/* Bottom Section: Summary & Payment Component */}
-              <PurchaseSummaryAndPayment
-                hasExtraCost={hasExtraCost}
-                setHasExtraCost={setHasExtraCost}
-                extraCost={extraCost}
-                setExtraCost={setExtraCost}
-                extraCostCategory={extraCostCategory}
-                setExtraCostCategory={setExtraCostCategory}
-                extraCostNotes={extraCostNotes}
-                setExtraCostNotes={setExtraCostNotes}
-                reference={reference}
-                setReference={setReference}
-                extra={extra}
-                itemsSubtotal={itemsSubtotal}
-                totalLandedCost={totalLandedCost}
-                netAmount={netAmount}
-                discount={discount}
-                setDiscount={setDiscount}
-                payableAmount={payableAmount}
-                previousDue={previousDue}
-                totalPayable={totalPayable}
-                currentDue={currentDue}
-                handlePayFull={handlePayFull}
-                handlePayOrder={handlePayOrder}
-                handleFullDue={handleFullDue}
-                tenders={tenders}
-                updateTender={updateTender}
-                addTenderRow={addTenderRow}
-                acceptTender={acceptTender}
-                cancelTender={cancelTender}
-                cashAccounts={cashAccounts}
-                bankAccounts={bankAccounts}
-                mfsAccounts={mfsAccounts}
-                walletAccounts={walletAccounts}
-                supplierWallet={supplierWallet}
-                supplierWalletLabel={supplierWalletLabel}
-                error={error}
-                items={items}
-                totals={totals}
-                totalCost={totalCost}
-                paid={paid}
-                remainingDue={remainingDue}
-                estimatedProfit={estimatedProfit}
-                handleClearForm={handleClearForm}
-                onClose={onClose}
-                savePurchase={savePurchase}
-                saving={saving}
-                orderToEdit={orderToEdit}
-              />
-            </main>
+            <PurchaseOrderFormBody cart={cart} props={props} />
           </div>
         </div>
       </div>
 
-      {/* Inline Quick Add Supplier Modal */}
-      {isAddSupplierOpen && (
-        <AddSupplierModal
-          isOpen={isAddSupplierOpen}
-          onClose={() => setIsAddSupplierOpen(false)}
-          onSupplierCreated={(newSup) => {
-            if (newSup && newSup.id) {
-              setSuppliers((prev) => [newSup, ...prev.filter((s) => s.id !== newSup.id)]);
-              setSupplierId(String(newSup.id));
-              setSupplierSearch('');
-              setIsSupplierOpen(false);
-            }
-            setIsAddSupplierOpen(false);
-          }}
-          onSupplierAdded={(newSup) => {
-            if (newSup && newSup.id) {
-              setSuppliers((prev) => [newSup, ...prev.filter((s) => s.id !== newSup.id)]);
-              setSupplierId(String(newSup.id));
-              setSupplierSearch('');
-              setIsSupplierOpen(false);
-            }
-            setIsAddSupplierOpen(false);
-          }}
-        />
-      )}
-
-      {/* Inline Comprehensive Add Product to Catalog Modal */}
-      {isAddProductOpen && (
-        <PurchaseComprehensiveProductModal
-          isOpen={isAddProductOpen}
-          initialName={query?.trim() || ''}
-          onClose={() => setIsAddProductOpen(false)}
-          onProductCreated={(createdProd) => {
-            if (createdProd && createdProd.id) {
-              setProductList((prev) => [createdProd, ...prev]);
-              addProduct(createdProd);
-              if (setQuery) setQuery('');
-            }
-            setIsAddProductOpen(false);
-          }}
-        />
-      )}
-
-      {/* Recent PO Ledger Preview Modal with Voucher view, Open in Purchase Form, Print, and Share */}
-      {isLedgerPreviewOpen && (
-        <PurchaseLedgerPreviewModal
-          isOpen={isLedgerPreviewOpen}
-          onClose={() => setIsLedgerPreviewOpen(false)}
-          orderId={previewOrderId}
-          purchaseOrderId={previewOrderId}
-          initialOrder={previewOrderData}
-          purchaseOrderData={previewOrderData}
-          onOpenInPurchaseForm={(po) => handleLoadOrderInForm(po)}
-          onLoadInForm={(po) => handleLoadOrderInForm(po)}
-          onOpenPrint={(po) => {
-            setPrintOrder(po);
-            setIsPrintPreviewOnly(true);
-            setIsPrintOpen(true);
-            setIsLedgerPreviewOpen(false);
-          }}
-        />
-      )}
-
-      {/* Print / Voucher Modal */}
-      {isPrintOpen && (
-        <PurchasePrintModal
-          isOpen={isPrintOpen}
-          order={printOrder}
-          supplier={selectedSupplierObj}
-          onClose={() => {
-            setIsPrintOpen(false);
-            if (!isPrintPreviewOnly) {
-              onClose();
-            }
-          }}
-        />
-      )}
-
-      {/* Save-block popup (supplier / payment) */}
-      {popupMsg && (
-        <div
-          className="fixed inset-0 z-[100001] bg-slate-900/55 backdrop-blur-sm flex items-center justify-center p-5"
-          onClick={() => setPopupMsg('')}
-        >
-          <div
-            className="bg-white rounded-2xl p-6 max-w-[420px] w-full shadow-2xl text-center"
-            onClick={(e) => e.stopPropagation()}
-          >
-            <div className="text-3xl mb-1.5">⚠️</div>
-            <div className="font-extrabold text-base text-slate-900 mb-1.5">
-              Unable to Save Purchase
-            </div>
-            <div className="text-sm text-slate-600 mb-4">{popupMsg}</div>
-            <button
-              type="button"
-              onClick={() => setPopupMsg('')}
-              className="py-2 px-6 rounded-lg border-0 bg-slate-900 text-white font-bold text-sm cursor-pointer hover:bg-slate-800 transition-colors"
-            >
-              OK, Understood
-            </button>
-          </div>
-        </div>
-      )}
+      {/* Sub-modals & Popups */}
+      <PurchaseOrderSubModals cart={cart} onClose={onClose} />
     </>
   );
 }
