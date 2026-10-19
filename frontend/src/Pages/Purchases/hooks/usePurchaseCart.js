@@ -1,4 +1,4 @@
-import { useState, useRef } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import { usePurchaseInitialData } from './cart/usePurchaseInitialData';
 import { usePurchaseLandingCosts } from './cart/usePurchaseLandingCosts';
 import { usePurchaseItems } from './cart/usePurchaseItems';
@@ -27,8 +27,6 @@ export function usePurchaseCart(props = {}) {
   const [printOrder, setPrintOrder] = useState(null);
   const [isPrintOpen, setIsPrintOpen] = useState(false);
   const [isPrintPreviewOnly, setIsPrintPreviewOnly] = useState(false);
-
-  // Supplier & Reference Selection State
   const [supplierId, setSupplierId] = useState('');
   const [reference, setReference] = useState('');
   const [supplierSearch, setSupplierSearch] = useState('');
