@@ -1,80 +1,74 @@
-import React from 'react';
-import TableActionDropdown from '../../../components/ui/TableActionDropdown';
+import React, { useState, useEffect } from 'react';
+import PurchaseStatsBar from './history/PurchaseStatsBar';
+import PurchaseTableRow from './history/PurchaseTableRow';
+import PaginationControls from '../../../components/ui/PaginationControls';
+
+const PAGE_SIZE = 20;
 
 export default function PurchaseHistoryTab({
-  orders,
-  filteredOrders,
-  loading,
-  searchQuery,
+  orders = [],
+  filteredOrders = [],
+  loading = false,
+  searchQuery = '',
   setSearchQuery,
   loadAllData,
   setIsOrderModalOpen,
-  openActionOrderId,
-  setOpenActionOrderId,
   handleOpenPrintOrder,
   handleOpenOrderDrawer,
   handleEditOrder,
   handleDeleteOrder,
-  totalPurchasesCost,
-  totalPurchasesPaid,
-  totalPurchasesDue,
+  totalPurchasesCost = 0,
+  totalPurchasesPaid = 0,
+  totalPurchasesDue = 0,
 }) {
+  const [currentPage, setCurrentPage] = useState(1);
+
+  // Reset to page 1 whenever search query changes
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [searchQuery]);
+
+  const totalPages = Math.ceil(filteredOrders.length / PAGE_SIZE) || 1;
+  const safeCurrentPage = Math.min(currentPage, totalPages);
+  const paginatedOrders = filteredOrders.slice(
+    (safeCurrentPage - 1) * PAGE_SIZE,
+    safeCurrentPage * PAGE_SIZE
+  );
+
   return (
     <div>
       {/* Stats Bar */}
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: '10px', marginBottom: '12px' }}>
-        <div style={{ background: '#ffffff', padding: '10px 14px', borderRadius: '8px', border: '1px solid #e2e8f0' }}>
-          <span style={{ fontSize: '0.72rem', color: '#64748b', textTransform: 'uppercase', fontWeight: 700 }}>
-            Total Purchase Cost
-          </span>
-          <h3 style={{ fontSize: '1.25rem', margin: '2px 0 0 0', color: '#0284c7', fontWeight: 800 }}>
-            ৳ {totalPurchasesCost.toLocaleString('en-IN', { minimumFractionDigits: 2 })}
-          </h3>
-        </div>
-        <div style={{ background: '#ffffff', padding: '10px 14px', borderRadius: '8px', border: '1px solid #e2e8f0' }}>
-          <span style={{ fontSize: '0.72rem', color: '#64748b', textTransform: 'uppercase', fontWeight: 700 }}>
-            Total Paid to Suppliers
-          </span>
-          <h3 style={{ fontSize: '1.25rem', margin: '2px 0 0 0', color: '#16a34a', fontWeight: 800 }}>
-            ৳ {totalPurchasesPaid.toLocaleString('en-IN', { minimumFractionDigits: 2 })}
-          </h3>
-        </div>
-        <div style={{ background: '#ffffff', padding: '10px 14px', borderRadius: '8px', border: '1px solid #e2e8f0' }}>
-          <span style={{ fontSize: '0.72rem', color: '#64748b', textTransform: 'uppercase', fontWeight: 700 }}>
-            Outstanding Due
-          </span>
-          <h3 style={{ fontSize: '1.25rem', margin: '2px 0 0 0', color: totalPurchasesDue > 0 ? '#ef4444' : '#64748b', fontWeight: 800 }}>
-            ৳ {totalPurchasesDue.toLocaleString('en-IN', { minimumFractionDigits: 2 })}
-          </h3>
-        </div>
-        <div style={{ background: '#ffffff', padding: '10px 14px', borderRadius: '8px', border: '1px solid #e2e8f0' }}>
-          <span style={{ fontSize: '0.72rem', color: '#64748b', textTransform: 'uppercase', fontWeight: 700 }}>
-            Orders Placed
-          </span>
-          <h3 style={{ fontSize: '1.25rem', margin: '2px 0 0 0', color: '#0f172a', fontWeight: 800 }}>
-            {orders.length}
-          </h3>
-        </div>
-      </div>
+      <PurchaseStatsBar
+        totalPurchasesCost={totalPurchasesCost}
+        totalPurchasesPaid={totalPurchasesPaid}
+        totalPurchasesDue={totalPurchasesDue}
+        ordersCount={orders.length}
+      />
 
-      {/* Search bar */}
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '10px', gap: '8px' }}>
-        <input
-          type="text"
-          value={searchQuery}
-          onChange={(e) => setSearchQuery(e.target.value)}
-          placeholder="Search by PO number, supplier..."
-          style={{
-            maxWidth: '300px',
-            width: '100%',
-            padding: '6px 12px',
-            borderRadius: '6px',
-            border: '1px solid #cbd5e1',
-            fontSize: '0.82rem',
-            outline: 'none',
-            background: '#ffffff',
-          }}
-        />
+      {/* Search & Refresh Toolbar */}
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '10px', gap: '8px', flexWrap: 'wrap' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flex: 1, minWidth: '280px' }}>
+          <input
+            type="text"
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            placeholder="Search by PO number, supplier..."
+            style={{
+              maxWidth: '320px',
+              width: '100%',
+              padding: '7px 12px',
+              borderRadius: '6px',
+              border: '1px solid #cbd5e1',
+              fontSize: '0.82rem',
+              outline: 'none',
+              background: '#ffffff',
+            }}
+          />
+          <span style={{ fontSize: '0.75rem', fontWeight: 600, color: '#0284c7', background: '#f0f9ff', padding: '4px 10px', borderRadius: '12px', border: '1px solid #bae6fd' }}>
+            Showing {filteredOrders.length} of {orders.length} Orders
+          </span>
+        </div>
+
         <button
           onClick={loadAllData}
           style={{
@@ -92,7 +86,7 @@ export default function PurchaseHistoryTab({
         </button>
       </div>
 
-      {/* Table */}
+      {/* Table & Pagination Container */}
       <div style={{ background: '#ffffff', borderRadius: '12px', border: '1px solid #e2e8f0', overflow: 'hidden', boxShadow: '0 1px 3px rgba(0,0,0,0.02)' }}>
         {loading ? (
           <div style={{ padding: '40px', textAlign: 'center', color: '#64748b' }}>Loading purchase history...</div>
@@ -116,142 +110,47 @@ export default function PurchaseHistoryTab({
             </button>
           </div>
         ) : (
-          <div style={{ overflowX: 'auto' }}>
-            <table style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'left', fontSize: '0.9rem' }}>
-              <thead>
-                <tr style={{ background: '#f8fafc', borderBottom: '2px solid #e2e8f0', color: '#64748b' }}>
-                  <th style={{ padding: '12px 16px' }}>PO Number</th>
-                  <th style={{ padding: '12px 16px' }}>Supplier</th>
-                  <th style={{ padding: '12px 16px' }}>Date</th>
-                  <th style={{ padding: '12px 16px' }}>Items / Units</th>
-                  <th style={{ padding: '12px 16px' }}>Total Cost</th>
-                  <th style={{ padding: '12px 16px' }}>Paid</th>
-                  <th style={{ padding: '12px 16px' }}>Due</th>
-                  <th style={{ padding: '12px 16px' }}>Status</th>
-                  <th style={{ padding: '12px 16px', textAlign: 'center' }}>Action</th>
-                </tr>
-              </thead>
-              <tbody>
-                {filteredOrders.map((order) => (
-                  <tr key={order.id} style={{ borderBottom: '1px solid #f1f5f9' }}>
-                    <td style={{ padding: '12px 16px', fontWeight: 700, color: '#0284c7' }}>
-                      <button
-                        type="button"
-                        onClick={() =>
-                          handleOpenOrderDrawer
-                            ? handleOpenOrderDrawer(order)
-                            : handleOpenPrintOrder(order.id)
-                        }
-                        title="Click to view purchase order in sidebar"
-                        style={{
-                          background: 'transparent',
-                          border: 'none',
-                          padding: 0,
-                          font: 'inherit',
-                          fontWeight: 700,
-                          color: '#0284c7',
-                          cursor: 'pointer',
-                          textAlign: 'left',
-                          textDecoration: 'underline',
-                          textUnderlineOffset: '2px',
-                        }}
-                      >
-                        {order.po_number}
-                      </button>
-                    </td>
-                    <td style={{ padding: '12px 16px', color: '#1e293b', fontWeight: 600 }}>
-                      {order.supplier_name || `Supplier #${order.supplier_id}`}
-                    </td>
-                    <td style={{ padding: '12px 16px', color: '#64748b', fontSize: '0.85rem' }}>
-                      {order.created_at ? new Date(order.created_at).toLocaleDateString() : 'N/A'}
-                    </td>
-                    <td style={{ padding: '12px 16px', color: '#475569' }}>
-                      {order.item_count} Items ({order.unit_count} Units)
-                    </td>
-                    <td style={{ padding: '12px 16px', fontWeight: 700, color: '#0f172a' }}>
-                      ৳ {Number(order.total_cost || 0).toLocaleString('en-IN', { minimumFractionDigits: 2 })}
-                    </td>
-                    <td style={{ padding: '12px 16px', color: '#16a34a', fontWeight: 700 }}>
-                      ৳ {Number(order.total_paid || 0).toLocaleString('en-IN', { minimumFractionDigits: 2 })}
-                    </td>
-                    <td style={{ padding: '12px 16px', color: Number(order.total_due) > 0 ? '#ef4444' : '#64748b', fontWeight: 700 }}>
-                      ৳ {Number(order.total_due || 0).toLocaleString('en-IN', { minimumFractionDigits: 2 })}
-                    </td>
-                    <td style={{ padding: '12px 16px' }}>
-                      <span style={{
-                        padding: '4px 10px',
-                        borderRadius: '6px',
-                        fontSize: '0.78rem',
-                        background: '#dcfce7',
-                        color: '#15803d',
-                        fontWeight: 700,
-                        textTransform: 'capitalize',
-                      }}>
-                        {order.status || 'Approved'}
-                      </span>
-                    </td>
-                    <td style={{ padding: '12px 16px', textAlign: 'center' }}>
-                      {(() => {
-                        const hoursOld = order.created_at ? (Date.now() - new Date(order.created_at).getTime()) / (1000 * 60 * 60) : 0;
-                        const isEditable = !order.created_at || hoursOld <= 360; // 15 days
-                        const isDeletable = !order.created_at || hoursOld <= 168; // 7 days
-
-                        return (
-                          <TableActionDropdown
-                            triggerLabel="⋮"
-                            triggerTitle="Purchase Order Actions"
-                            triggerClassName="bg-slate-50 border border-slate-300 rounded px-2.5 py-1 text-sm font-extrabold text-slate-700 hover:bg-slate-100"
-                            items={[
-                              {
-                                key: 'view',
-                                label: 'Quick View',
-                                icon: '👁️',
-                                className: 'text-sky-700 hover:bg-sky-50 font-bold',
-                                onClick: () =>
-                                  handleOpenOrderDrawer
-                                    ? handleOpenOrderDrawer(order)
-                                    : handleOpenPrintOrder(order.id),
-                              },
-                              {
-                                key: 'print',
-                                label: 'Print / Preview',
-                                icon: '🖨️',
-                                className: 'text-slate-700 hover:bg-slate-50',
-                                onClick: () => handleOpenPrintOrder(order.id),
-                              },
-                              {
-                                key: 'edit',
-                                label: 'Edit Order',
-                                icon: '✏️',
-                                disabled: !isEditable,
-                                title: isEditable
-                                  ? 'Edit purchase order (15-day window)'
-                                  : 'Edit window closed — orders only editable within 15 days of creation',
-                                className: isEditable ? 'text-amber-600 hover:bg-amber-50' : 'text-slate-400',
-                                onClick: () => handleEditOrder(order),
-                              },
-                              {
-                                key: 'delete',
-                                label: 'Delete Order',
-                                icon: '🗑️',
-                                danger: true,
-                                disabled: !isDeletable,
-                                title: isDeletable
-                                  ? 'Delete purchase order (7-day window)'
-                                  : 'Deletion window closed — orders only deletable within 7 days of creation',
-                                className: isDeletable ? 'text-rose-600 hover:bg-rose-50' : 'text-slate-400',
-                                onClick: () => handleDeleteOrder(order.id, order),
-                              },
-                            ]}
-                          />
-                        );
-                      })()}
-                    </td>
+          <>
+            <div style={{ overflowX: 'auto' }}>
+              <table style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'left', fontSize: '0.9rem' }}>
+                <thead>
+                  <tr style={{ background: '#f8fafc', borderBottom: '2px solid #e2e8f0', color: '#64748b' }}>
+                    <th style={{ padding: '12px 16px' }}>PO Number</th>
+                    <th style={{ padding: '12px 16px' }}>Supplier</th>
+                    <th style={{ padding: '12px 16px' }}>Date</th>
+                    <th style={{ padding: '12px 16px' }}>Items / Units</th>
+                    <th style={{ padding: '12px 16px' }}>Total Cost</th>
+                    <th style={{ padding: '12px 16px' }}>Paid</th>
+                    <th style={{ padding: '12px 16px' }}>Due</th>
+                    <th style={{ padding: '12px 16px' }}>Status</th>
+                    <th style={{ padding: '12px 16px', textAlign: 'center' }}>Action</th>
                   </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
+                </thead>
+                <tbody>
+                  {paginatedOrders.map((order) => (
+                    <PurchaseTableRow
+                      key={order.id}
+                      order={order}
+                      handleOpenOrderDrawer={handleOpenOrderDrawer}
+                      handleOpenPrintOrder={handleOpenPrintOrder}
+                      handleEditOrder={handleEditOrder}
+                      handleDeleteOrder={handleDeleteOrder}
+                    />
+                  ))}
+                </tbody>
+              </table>
+            </div>
+
+            {/* Pagination Controls */}
+            <PaginationControls
+              currentPage={safeCurrentPage}
+              totalPages={totalPages}
+              pageSize={PAGE_SIZE}
+              totalItems={filteredOrders.length}
+              onPageChange={setCurrentPage}
+              itemName="purchase orders"
+            />
+          </>
         )}
       </div>
     </div>
