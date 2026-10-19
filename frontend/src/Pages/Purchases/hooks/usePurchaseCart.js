@@ -38,9 +38,33 @@ export function usePurchaseCart(props = {}) {
   // 1. Initial Catalog & Financial Data Sub-hook
   const initialData = usePurchaseInitialData({
     initialProducts,
+    initialSuppliers: props.suppliers || [],
+    newlyCreatedSupplier,
     supplierId,
     setError,
   });
+
+  // Auto-select newly created supplier and clear search filter
+  useEffect(() => {
+    if (newlyCreatedSupplier && newlyCreatedSupplier.id) {
+      setSupplierId(String(newlyCreatedSupplier.id));
+      setSupplierSearch('');
+      setIsSupplierOpen(false);
+    }
+  }, [newlyCreatedSupplier]);
+
+  useEffect(() => {
+    const handleSupplierCreated = (e) => {
+      const created = e.detail;
+      if (created && created.id) {
+        setSupplierId(String(created.id));
+        setSupplierSearch('');
+        setIsSupplierOpen(false);
+      }
+    };
+    window.addEventListener('supplier_created', handleSupplierCreated);
+    return () => window.removeEventListener('supplier_created', handleSupplierCreated);
+  }, []);
 
   // 2. Landing / Logistics Extra Costs Sub-hook
   const landingCosts = usePurchaseLandingCosts();

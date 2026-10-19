@@ -35,10 +35,20 @@ export function useSalesData({ showToast }) {
         setQuotationsCount(list.length);
       }
 
-      // Sync customer count for SalesLayout header badges
+      // Sync customer count and modal customers list
       fetch(`${API}/sales/customers`)
         .then((r) => r.json())
-        .then((d) => setCustomersCount(Array.isArray(d) ? d.length : d?.data?.length || 0))
+        .then((d) => {
+          const list = Array.isArray(d) ? d : d?.data || [];
+          setCustomersCount(list.length);
+          setModalCustomers((prev) => {
+            if (!list.length) return prev;
+            const map = new Map();
+            prev.forEach((c) => map.set(c.id, c));
+            list.forEach((c) => map.set(c.id, c));
+            return Array.from(map.values());
+          });
+        })
         .catch(() => {});
 
       if (prodRes && prodRes.ok) {
@@ -68,9 +78,18 @@ export function useSalesData({ showToast }) {
   useEffect(() => {
     loadAllData();
     const refresh = () => loadAllData();
+    const handleCustomerCreated = (e) => {
+      const created = e.detail;
+      if (created && created.id) {
+        setModalCustomers((prev) => [created, ...prev.filter((c) => c.id !== created.id)]);
+        setCustomersCount((c) => c + 1);
+      }
+    };
+    window.addEventListener('customer_created', handleCustomerCreated);
     window.addEventListener('inventory_stock_changed', refresh);
     window.addEventListener('data_changed', refresh);
     return () => {
+      window.removeEventListener('customer_created', handleCustomerCreated);
       window.removeEventListener('inventory_stock_changed', refresh);
       window.removeEventListener('data_changed', refresh);
     };

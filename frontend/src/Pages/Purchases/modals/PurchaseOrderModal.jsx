@@ -299,10 +299,21 @@ export default function PurchaseOrderModal(props) {
         <AddSupplierModal
           isOpen={isAddSupplierOpen}
           onClose={() => setIsAddSupplierOpen(false)}
+          onSupplierCreated={(newSup) => {
+            if (newSup && newSup.id) {
+              setSuppliers((prev) => [newSup, ...prev.filter((s) => s.id !== newSup.id)]);
+              setSupplierId(String(newSup.id));
+              setSupplierSearch('');
+              setIsSupplierOpen(false);
+            }
+            setIsAddSupplierOpen(false);
+          }}
           onSupplierAdded={(newSup) => {
             if (newSup && newSup.id) {
               setSuppliers((prev) => [newSup, ...prev.filter((s) => s.id !== newSup.id)]);
               setSupplierId(String(newSup.id));
+              setSupplierSearch('');
+              setIsSupplierOpen(false);
             }
             setIsAddSupplierOpen(false);
           }}

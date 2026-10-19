@@ -3,7 +3,7 @@ import API from '../../../services/api';
 import BangladeshiPhoneInput from '../../../components/ui/BangladeshiPhoneInput';
 import { isValidBDPhone } from '../../../utils/phoneUtils';
 
-export default function AddSupplierModal({ isOpen, onClose, onSupplierCreated }) {
+export default function AddSupplierModal({ isOpen, onClose, onSupplierCreated, onSupplierAdded }) {
   const [formData, setFormData] = useState({
     name: '',
     contact_person: '',
@@ -69,8 +69,15 @@ export default function AddSupplierModal({ isOpen, onClose, onSupplierCreated })
       };
       setFormData(initialForm);
 
+      const createdObj = data.data || data;
+      window.dispatchEvent(new CustomEvent('supplier_created', { detail: createdObj }));
+      window.dispatchEvent(new CustomEvent('data_changed'));
+
       if (onSupplierCreated) {
-        onSupplierCreated(data.data || data);
+        onSupplierCreated(createdObj);
+      }
+      if (onSupplierAdded) {
+        onSupplierAdded(createdObj);
       }
       onClose();
     } catch (err) {

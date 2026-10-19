@@ -45,12 +45,20 @@ export function usePurchaseData({ showToast }) {
   useEffect(() => {
     loadAllData();
     const refresh = () => loadAllData();
+    const handleSupplierCreated = (e) => {
+      const created = e.detail;
+      if (created && created.id) {
+        setSuppliers((prev) => [created, ...prev.filter((s) => s.id !== created.id)]);
+      }
+    };
+    window.addEventListener('supplier_created', handleSupplierCreated);
     window.addEventListener('inventory_stock_changed', refresh);
     window.addEventListener('data_changed', refresh);
     window.addEventListener('account_balance_changed', refresh);
     window.addEventListener('cash_drawer_changed', refresh);
     window.addEventListener('wallet_balance_changed', refresh);
     return () => {
+      window.removeEventListener('supplier_created', handleSupplierCreated);
       window.removeEventListener('inventory_stock_changed', refresh);
       window.removeEventListener('data_changed', refresh);
       window.removeEventListener('account_balance_changed', refresh);

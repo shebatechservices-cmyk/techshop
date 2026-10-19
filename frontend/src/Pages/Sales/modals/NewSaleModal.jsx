@@ -28,6 +28,24 @@ export default function NewSaleModal({
   onSaleUpdated = null,
 }) {
   const [isAddCustomerOpen, setIsAddCustomerOpen] = useState(false);
+  const [localCustomers, setLocalCustomers] = useState(Array.isArray(customers) ? customers : []);
+
+  useEffect(() => {
+    if (Array.isArray(customers) && customers.length > 0) {
+      setLocalCustomers(customers);
+    }
+  }, [customers]);
+
+  useEffect(() => {
+    const handleCustomerCreated = (e) => {
+      const created = e.detail;
+      if (created && created.id) {
+        setLocalCustomers((prev) => [created, ...prev.filter((c) => c.id !== created.id)]);
+      }
+    };
+    window.addEventListener('customer_created', handleCustomerCreated);
+    return () => window.removeEventListener('customer_created', handleCustomerCreated);
+  }, []);
   const {
     // States & Refs
     customerId,
@@ -150,7 +168,7 @@ export default function NewSaleModal({
   } = useNewSale({
     isOpen,
     onClose,
-    customers,
+    customers: localCustomers,
     products,
     newlyCreatedCustomer,
     onOpenAddCustomer,
@@ -219,7 +237,7 @@ export default function NewSaleModal({
 
             {/* Customer Dropdown (searchable) + Quick Add */}
             <NewSaleCustomerSelect
-              customers={customers}
+              customers={localCustomers}
               customerId={customerId}
               setCustomerId={setCustomerId}
               selectedCustomer={selectedCustomer}
@@ -370,6 +388,7 @@ export default function NewSaleModal({
           onCustomerCreated={(newCust) => {
             setIsAddCustomerOpen(false);
             if (newCust && newCust.id) {
+              setLocalCustomers((prev) => [newCust, ...prev.filter((c) => c.id !== newCust.id)]);
               setCustomerId(String(newCust.id));
               setCustomerSearch('');
               setIsCustomerOpen(false);

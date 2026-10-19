@@ -4,13 +4,41 @@ import { PURCHASE_API } from '../../utils/purchaseCartUtils';
 
 export function usePurchaseInitialData({
   initialProducts = [],
+  initialSuppliers = [],
+  newlyCreatedSupplier = null,
   supplierId = '',
   setError,
 } = {}) {
   const [productList, setProductList] = useState(initialProducts);
-  const [suppliers, setSuppliers] = useState([]);
+  const [suppliers, setSuppliers] = useState(Array.isArray(initialSuppliers) && initialSuppliers.length > 0 ? initialSuppliers : []);
   const [accounts, setAccounts] = useState([]);
   const [summary, setSummary] = useState(null);
+
+  // Sync with external suppliers prop
+  useEffect(() => {
+    if (Array.isArray(initialSuppliers) && initialSuppliers.length > 0) {
+      setSuppliers(initialSuppliers);
+    }
+  }, [initialSuppliers]);
+
+  // Sync with newlyCreatedSupplier prop
+  useEffect(() => {
+    if (newlyCreatedSupplier && newlyCreatedSupplier.id) {
+      setSuppliers((prev) => [newlyCreatedSupplier, ...prev.filter((s) => s.id !== newlyCreatedSupplier.id)]);
+    }
+  }, [newlyCreatedSupplier]);
+
+  // Real-time synchronization when a supplier is created anywhere in the app
+  useEffect(() => {
+    const handleSupplierCreated = (e) => {
+      const created = e.detail;
+      if (created && created.id) {
+        setSuppliers((prev) => [created, ...prev.filter((s) => s.id !== created.id)]);
+      }
+    };
+    window.addEventListener('supplier_created', handleSupplierCreated);
+    return () => window.removeEventListener('supplier_created', handleSupplierCreated);
+  }, []);
 
   // 1. Fetch Master Products catalog on mount
   useEffect(() => {
@@ -44,7 +72,14 @@ export function usePurchaseInitialData({
           .catch(() => []),
       ]);
       const supList = Array.isArray(supplierData) ? supplierData : [];
-      setSuppliers(supList);
+      setSuppliers((prev) => {
+        if (!supList.length) return prev;
+        // Merge fetched suppliers with any newly added supplier
+        const map = new Map();
+        prev.forEach((s) => map.set(s.id, s));
+        supList.forEach((s) => map.set(s.id, s));
+        return Array.from(map.values());
+      });
       setAccounts(Array.isArray(accountData) ? accountData : []);
     };
     load().catch(() => setError && setError('Failed to load purchase data'));

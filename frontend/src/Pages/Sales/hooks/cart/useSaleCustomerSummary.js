@@ -36,8 +36,24 @@ export function useSaleCustomerSummary({ newlyCreatedCustomer }) {
   useEffect(() => {
     if (newlyCreatedCustomer && newlyCreatedCustomer.id) {
       setCustomerId(String(newlyCreatedCustomer.id));
+      setCustomerSearch('');
+      setIsCustomerOpen(false);
     }
   }, [newlyCreatedCustomer]);
+
+  // Real-time synchronization when a customer is created anywhere
+  useEffect(() => {
+    const handleCustomerCreated = (e) => {
+      const created = e.detail;
+      if (created && created.id) {
+        setCustomerId(String(created.id));
+        setCustomerSearch('');
+        setIsCustomerOpen(false);
+      }
+    };
+    window.addEventListener('customer_created', handleCustomerCreated);
+    return () => window.removeEventListener('customer_created', handleCustomerCreated);
+  }, []);
 
   // Fetch customer ledger summary
   useEffect(() => {

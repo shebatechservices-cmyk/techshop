@@ -49,11 +49,34 @@ export default function useSaleQuotation({
     }
   }, [isOpen, customers]);
 
-  const customerList = customers && customers.length > 0 ? customers : localCustomers;
+  // Real-time synchronization when a customer is created
+  useEffect(() => {
+    const handleCustomerCreated = (e) => {
+      const newCust = e.detail;
+      if (newCust && newCust.id) {
+        setLocalCustomers((prev) => [newCust, ...prev.filter((c) => c.id !== newCust.id)]);
+        setCustomerId(String(newCust.id));
+        setCustomerName(newCust.name || '');
+        setCustomerPhone(newCust.phone || '');
+        setCustomerAddress(newCust.address || '');
+      }
+    };
+    window.addEventListener('customer_created', handleCustomerCreated);
+    return () => window.removeEventListener('customer_created', handleCustomerCreated);
+  }, []);
+
+  const customerList = useMemo(() => {
+    const base = customers && customers.length > 0 ? customers : localCustomers;
+    if (newlyCreatedCustomer && !base.some((c) => c.id === newlyCreatedCustomer.id)) {
+      return [newlyCreatedCustomer, ...base];
+    }
+    return base;
+  }, [customers, localCustomers, newlyCreatedCustomer]);
 
   // Auto-select newly created customer
   useEffect(() => {
     if (newlyCreatedCustomer && newlyCreatedCustomer.id) {
+      setLocalCustomers((prev) => [newlyCreatedCustomer, ...prev.filter((c) => c.id !== newlyCreatedCustomer.id)]);
       setCustomerId(String(newlyCreatedCustomer.id));
       setCustomerName(newlyCreatedCustomer.name || '');
       setCustomerPhone(newlyCreatedCustomer.phone || '');

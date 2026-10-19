@@ -1,6 +1,7 @@
-import React from 'react';
+import React, { useState } from 'react';
 import SaleQuotationModal from './modals/SaleQuotationModal';
 import SalePrintModal from './modals/SalePrintModal';
+import AddCustomerModal from './modals/AddCustomerModal';
 import QuotationDataTable from './components/QuotationDataTable';
 import QuotationMetricsCards from './components/QuotationMetricsCards';
 import QuotationSearchToolbar from './components/QuotationSearchToolbar';
@@ -19,6 +20,7 @@ export default function SalesQuotations({
   initialSearch = '',
   onQuotationsLoaded
 }) {
+  const [isAddCustomerModalOpen, setIsAddCustomerModalOpen] = useState(false);
   const {
     quotations,
     loading,
@@ -27,6 +29,7 @@ export default function SalesQuotations({
     quotationStatusFilter,
     setQuotationStatusFilter,
     modalCustomers,
+    setModalCustomers,
     modalProducts,
     newlyCreatedCustomer,
     setNewlyCreatedCustomer,
@@ -126,10 +129,25 @@ export default function SalesQuotations({
           products={modalProducts}
           newlyCreatedCustomer={newlyCreatedCustomer}
           onOpenAddCustomer={() => {
-            window.dispatchEvent(new CustomEvent('sales:open_modal', { detail: 'customer' }));
+            setIsAddCustomerModalOpen(true);
           }}
           onQuotationCreated={handleQuotationCreated}
           editingQuotation={editingQuotation}
+        />
+      )}
+
+      {/* Embedded Add Customer Modal for Quotations */}
+      {isAddCustomerModalOpen && (
+        <AddCustomerModal
+          isOpen={isAddCustomerModalOpen}
+          onClose={() => setIsAddCustomerModalOpen(false)}
+          onCustomerCreated={(newCust) => {
+            setNewlyCreatedCustomer(newCust);
+            if (newCust && newCust.id) {
+              setModalCustomers((prev) => [newCust, ...prev.filter((c) => c.id !== newCust.id)]);
+            }
+            setIsAddCustomerModalOpen(false);
+          }}
         />
       )}
 

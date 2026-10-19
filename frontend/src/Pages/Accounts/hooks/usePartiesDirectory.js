@@ -44,6 +44,15 @@ export default function usePartiesDirectory(activeSubpage) {
   useEffect(() => {
     if (activeSubpage === 'parties') {
       loadPartiesData();
+      const refresh = () => loadPartiesData();
+      window.addEventListener('customer_created', refresh);
+      window.addEventListener('supplier_created', refresh);
+      window.addEventListener('data_changed', refresh);
+      return () => {
+        window.removeEventListener('customer_created', refresh);
+        window.removeEventListener('supplier_created', refresh);
+        window.removeEventListener('data_changed', refresh);
+      };
     }
   }, [activeSubpage, loadPartiesData]);
 

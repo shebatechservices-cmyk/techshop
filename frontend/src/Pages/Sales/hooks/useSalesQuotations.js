@@ -83,6 +83,18 @@ export function useSalesQuotations({
     }
   }, [isQuotationModalOpen]);
 
+  // Real-time synchronization when a customer is created
+  useEffect(() => {
+    const handleCustomerCreated = (e) => {
+      const created = e.detail;
+      if (created && created.id) {
+        setModalCustomers((prev) => [created, ...prev.filter((c) => c.id !== created.id)]);
+      }
+    };
+    window.addEventListener('customer_created', handleCustomerCreated);
+    return () => window.removeEventListener('customer_created', handleCustomerCreated);
+  }, []);
+
   // Global event listener for opening modals (e.g. from SalesLayout header or CustomerList)
   useEffect(() => {
     const handleOpenModal = (e) => {
@@ -236,6 +248,7 @@ export function useSalesQuotations({
     quotationStatusFilter,
     setQuotationStatusFilter,
     modalCustomers,
+    setModalCustomers,
     modalProducts,
     newlyCreatedCustomer,
     setNewlyCreatedCustomer,

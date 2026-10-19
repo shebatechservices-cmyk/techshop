@@ -4,7 +4,7 @@ import API from '../../../services/api';
 import BangladeshiPhoneInput from '../../../components/ui/BangladeshiPhoneInput';
 import { isValidBDPhone } from '../../../utils/phoneUtils';
 
-export default function AddCustomerModal({ isOpen, onClose, onCustomerCreated }) {
+export default function AddCustomerModal({ isOpen, onClose, onCustomerCreated, onCustomerAdded }) {
   const [name, setName] = useState('');
   const [phone, setPhone] = useState('');
   const [email, setEmail] = useState('');
@@ -56,8 +56,15 @@ export default function AddCustomerModal({ isOpen, onClose, onCustomerCreated })
         return;
       }
 
+      const createdCustomer = data.data;
+      window.dispatchEvent(new CustomEvent('customer_created', { detail: createdCustomer }));
+      window.dispatchEvent(new CustomEvent('data_changed'));
+
       if (onCustomerCreated) {
-        onCustomerCreated(data.data);
+        onCustomerCreated(createdCustomer);
+      }
+      if (onCustomerAdded) {
+        onCustomerAdded(createdCustomer);
       }
       onClose();
     } catch (err) {
