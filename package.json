@@ -10,7 +10,9 @@
     "test": "jest --runInBand --forceExit",
     "seed": "node scripts/seedExpenseCategories.js && node scripts/seedAdmin.js",
     "seed:admin": "node scripts/seedAdmin.js",
-    "seed:expense-categories": "node scripts/seedExpenseCategories.js"
+    "seed:expense-categories": "node scripts/seedExpenseCategories.js",
+    "check:lines": "node scripts/check-line-counts.js",
+    "check:lines:strict": "node scripts/check-line-counts.js --strict"
   },
   "engines": {
     "node": "20.x"
