@@ -1,173 +1,12 @@
-import React, { useState, useEffect } from 'react';
-import { smartFetch } from '../../../services/api';
+import React from 'react';
 import ServicePresetAddForm from './presets/ServicePresetAddForm';
-import ServicePresetRow from './presets/ServicePresetRow';
+import ServicePresetsListTable from './presets/ServicePresetsListTable';
+import { useServicePresetsManager } from './presets/useServicePresetsManager';
 
 export default function ManageServicePresetsModal({ isOpen, onClose, onPresetsUpdated }) {
-  const [presets, setPresets] = useState([]);
-  const [loading, setLoading] = useState(false);
-  const [errorMsg, setErrorMsg] = useState('');
-  const [successMsg, setSuccessMsg] = useState('');
-
-  // New Preset Form State
-  const [newName, setNewName] = useState('');
-  const [newRate, setNewRate] = useState('');
-  const [newActive, setNewActive] = useState(true);
-  const [adding, setAdding] = useState(false);
-
-  // Edit Mode State
-  const [editingId, setEditingId] = useState(null);
-  const [editName, setEditName] = useState('');
-  const [editRate, setEditRate] = useState('');
-  const [editActive, setEditActive] = useState(true);
-  const [savingEdit, setSavingEdit] = useState(false);
-
-  // Fetch all presets
-  const fetchPresets = async () => {
-    try {
-      setLoading(true);
-      setErrorMsg('');
-      const res = await smartFetch('/projects/service-presets');
-      if (res.ok) {
-        const json = await res.json();
-        if (json.success && Array.isArray(json.data)) {
-          setPresets(json.data);
-          if (onPresetsUpdated) onPresetsUpdated(json.data);
-        }
-      } else {
-        setErrorMsg('Failed to load service presets');
-      }
-    } catch (err) {
-      console.error('Error fetching presets:', err);
-      setErrorMsg('Server error loading service presets');
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  useEffect(() => {
-    if (isOpen) {
-      fetchPresets();
-      setEditingId(null);
-      setErrorMsg('');
-      setSuccessMsg('');
-    }
-  }, [isOpen]);
+  const manager = useServicePresetsManager({ isOpen, onPresetsUpdated });
 
   if (!isOpen) return null;
-
-  // Handle Add Preset
-  const handleAddPreset = async (e) => {
-    e.preventDefault();
-    if (!newName.trim()) {
-      setErrorMsg('Please enter a service name.');
-      return;
-    }
-
-    try {
-      setAdding(true);
-      setErrorMsg('');
-      setSuccessMsg('');
-
-      const res = await smartFetch('/projects/service-presets', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          name: newName.trim(),
-          default_rate: parseFloat(newRate) || 0,
-          is_active: Boolean(newActive),
-        }),
-      });
-
-      const data = await res.json();
-      if (res.ok && data.success) {
-        setSuccessMsg('Service preset added successfully!');
-        setNewName('');
-        setNewRate('');
-        setNewActive(true);
-        fetchPresets();
-      } else {
-        setErrorMsg(data.message || 'Failed to add preset.');
-      }
-    } catch (err) {
-      console.error('Add preset error:', err);
-      setErrorMsg('Server error adding preset.');
-    } finally {
-      setAdding(false);
-    }
-  };
-
-  const startEdit = (p) => {
-    setEditingId(p.id);
-    setEditName(p.name);
-    setEditRate(p.default_rate);
-    setEditActive(p.is_active);
-    setErrorMsg('');
-    setSuccessMsg('');
-  };
-
-  const cancelEdit = () => {
-    setEditingId(null);
-    setEditName('');
-    setEditRate('');
-  };
-
-  const handleSaveEdit = async (id) => {
-    if (!editName.trim()) {
-      setErrorMsg('Service name cannot be empty.');
-      return;
-    }
-
-    try {
-      setSavingEdit(true);
-      setErrorMsg('');
-      setSuccessMsg('');
-
-      const res = await smartFetch(`/projects/service-presets/${id}`, {
-        method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          name: editName.trim(),
-          default_rate: parseFloat(editRate) || 0,
-          is_active: Boolean(editActive),
-        }),
-      });
-
-      const data = await res.json();
-      if (res.ok && data.success) {
-        setSuccessMsg('Service preset updated!');
-        setEditingId(null);
-        fetchPresets();
-      } else {
-        setErrorMsg(data.message || 'Failed to update preset.');
-      }
-    } catch (err) {
-      console.error('Update preset error:', err);
-      setErrorMsg('Server error updating preset.');
-    } finally {
-      setSavingEdit(false);
-    }
-  };
-
-  const handleDeletePreset = async (id, name) => {
-    if (!window.confirm(`Are you sure you want to delete preset "${name}"?`)) return;
-
-    try {
-      const res = await smartFetch(`/projects/service-presets/${id}`, {
-        method: 'DELETE',
-      });
-      const data = await res.json();
-      if (res.ok && data.success) {
-        setSuccessMsg(`Preset "${name}" removed.`);
-        fetchPresets();
-      } else {
-        setErrorMsg(data.message || 'Failed to delete preset.');
-      }
-    } catch (err) {
-      console.error('Delete preset error:', err);
-      setErrorMsg('Server error deleting preset.');
-    }
-  };
 
   return (
     <div
@@ -189,7 +28,7 @@ export default function ManageServicePresetsModal({ isOpen, onClose, onPresetsUp
           background: '#ffffff',
           borderRadius: '16px',
           width: '100%',
-          maxWidth: '680px',
+          maxWidth: '700px',
           maxHeight: '90vh',
           display: 'flex',
           flexDirection: 'column',
@@ -203,7 +42,7 @@ export default function ManageServicePresetsModal({ isOpen, onClose, onPresetsUp
         <div
           style={{
             padding: '16px 20px',
-            background: 'linear-gradient(135deg, #0284c7 0%, #0369a1 100%)',
+            background: 'linear-gradient(135deg, #0d9488 0%, #0f766e 100%)',
             color: '#ffffff',
             display: 'flex',
             justifyContent: 'space-between',
@@ -214,10 +53,10 @@ export default function ManageServicePresetsModal({ isOpen, onClose, onPresetsUp
             <span style={{ fontSize: '1.25rem' }}>⚙️</span>
             <div>
               <h3 style={{ margin: 0, fontSize: '1.05rem', fontWeight: 800 }}>
-                Manage Service Task Presets
+                Manage Service & Task Presets
               </h3>
-              <p style={{ margin: '2px 0 0', fontSize: '0.78rem', color: '#e0f2fe' }}>
-                Add, edit, or customize quick preset tasks and default remuneration rates.
+              <p style={{ margin: '2px 0 0', fontSize: '0.78rem', color: '#ccfbf1' }}>
+                Preset rates for camera fitting, router config, cable layout, etc.
               </p>
             </div>
           </div>
@@ -238,7 +77,7 @@ export default function ManageServicePresetsModal({ isOpen, onClose, onPresetsUp
 
         {/* MODAL BODY */}
         <div style={{ padding: '18px 20px', overflowY: 'auto', flex: 1 }}>
-          {errorMsg && (
+          {manager.errorMsg && (
             <div
               style={{
                 padding: '8px 12px',
@@ -250,10 +89,11 @@ export default function ManageServicePresetsModal({ isOpen, onClose, onPresetsUp
                 marginBottom: '12px',
               }}
             >
-              ⚠️ {errorMsg}
+              ⚠️ {manager.errorMsg}
             </div>
           )}
-          {successMsg && (
+
+          {manager.successMsg && (
             <div
               style={{
                 padding: '8px 12px',
@@ -265,90 +105,38 @@ export default function ManageServicePresetsModal({ isOpen, onClose, onPresetsUp
                 marginBottom: '12px',
               }}
             >
-              ✓ {successMsg}
+              ✓ {manager.successMsg}
             </div>
           )}
 
           <ServicePresetAddForm
-            newName={newName}
-            setNewName={setNewName}
-            newRate={newRate}
-            setNewRate={setNewRate}
-            newActive={newActive}
-            setNewActive={setNewActive}
-            adding={adding}
-            onAddPreset={handleAddPreset}
+            newName={manager.newName}
+            setNewName={manager.setNewName}
+            newRate={manager.newRate}
+            setNewRate={manager.setNewRate}
+            newActive={manager.newActive}
+            setNewActive={manager.setNewActive}
+            adding={manager.adding}
+            onAddPreset={manager.handleAddPreset}
           />
 
           {/* PRESETS TABLE */}
-          <div
-            style={{
-              background: '#fff',
-              borderRadius: '8px',
-              border: '1px solid #cbd5e1',
-              overflow: 'hidden',
-            }}
-          >
-            <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '0.8rem' }}>
-              <thead>
-                <tr
-                  style={{
-                    background: '#f1f5f9',
-                    borderBottom: '1px solid #cbd5e1',
-                    color: '#475569',
-                    textAlign: 'left',
-                  }}
-                >
-                  <th style={{ padding: '8px 12px', width: '45%' }}>Service Name</th>
-                  <th style={{ padding: '8px 12px', width: '22%' }}>Default Rate (৳)</th>
-                  <th style={{ padding: '8px 12px', width: '15%' }}>Status</th>
-                  <th style={{ padding: '8px 12px', width: '18%', textAlign: 'right' }}>
-                    Actions
-                  </th>
-                </tr>
-              </thead>
-              <tbody>
-                {loading && presets.length === 0 ? (
-                  <tr>
-                    <td
-                      colSpan={4}
-                      style={{ padding: '20px', textAlign: 'center', color: '#64748b' }}
-                    >
-                      Loading presets...
-                    </td>
-                  </tr>
-                ) : presets.length === 0 ? (
-                  <tr>
-                    <td
-                      colSpan={4}
-                      style={{ padding: '20px', textAlign: 'center', color: '#64748b' }}
-                    >
-                      No service presets found. Add your first preset above.
-                    </td>
-                  </tr>
-                ) : (
-                  presets.map((p) => (
-                    <ServicePresetRow
-                      key={p.id}
-                      preset={p}
-                      isEditing={editingId === p.id}
-                      editName={editName}
-                      setEditName={setEditName}
-                      editRate={editRate}
-                      setEditRate={setEditRate}
-                      editActive={editActive}
-                      setEditActive={setEditActive}
-                      savingEdit={savingEdit}
-                      onStartEdit={startEdit}
-                      onCancelEdit={cancelEdit}
-                      onSaveEdit={handleSaveEdit}
-                      onDeletePreset={handleDeletePreset}
-                    />
-                  ))
-                )}
-              </tbody>
-            </table>
-          </div>
+          <ServicePresetsListTable
+            presets={manager.presets}
+            loading={manager.loading}
+            editingId={manager.editingId}
+            editName={manager.editName}
+            setEditName={manager.setEditName}
+            editRate={manager.editRate}
+            setEditRate={manager.setEditRate}
+            editActive={manager.editActive}
+            setEditActive={manager.setEditActive}
+            savingEdit={manager.savingEdit}
+            startEdit={manager.startEdit}
+            cancelEdit={manager.cancelEdit}
+            handleSaveEdit={manager.handleSaveEdit}
+            handleDeletePreset={manager.handleDeletePreset}
+          />
         </div>
 
         {/* MODAL FOOTER */}
