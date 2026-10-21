@@ -9,6 +9,9 @@ export function validateSaleSubmission({
   totalPayable,
   money,
   taka,
+  editSale,
+  totalDiscount = 0,
+  subtotal = 0,
 }) {
   if (!customerId) {
     return {
@@ -66,6 +69,43 @@ export function validateSaleSubmission({
       return {
         isValid: false,
         error: `Please specify a valid unit selling price for "${it.full_name || it.name}"`,
+      };
+    }
+
+    const unitPrice = money(it.unit_price);
+    const costPrice = money(it.cost_price);
+    const qty = Number(it.quantity || 1);
+    const itemDiscount = money(it.discount);
+    const lineTotal = unitPrice * qty - itemDiscount;
+    const lineCost = costPrice * qty;
+
+    if (costPrice > 0 && lineTotal < lineCost) {
+      return {
+        isValid: false,
+        expandedId: it.localId,
+        error: `⚠️ "${it.full_name || it.name}"-এ ডিসকাউন্ট দেয়ার পর বিক্রয়মূল্য (${taka(lineTotal)}) পারচেজ কস্ট (${taka(lineCost)}) এর চেয়ে কম হতে পারবে না।`,
+      };
+    }
+  }
+
+  const totalCogs = items.reduce(
+    (sum, it) => sum + (money(it.cost_price) * Number(it.quantity || 1)),
+    0
+  );
+  const netInvoiceAfterDiscount = money(subtotal) - money(totalDiscount);
+  if (totalCogs > 0 && netInvoiceAfterDiscount < totalCogs) {
+    return {
+      isValid: false,
+      error: `⚠️ মোট ডিসকাউন্ট দেয়ার পর ইনভয়েস বিক্রয়মূল্য (${taka(netInvoiceAfterDiscount)}) মোট পারচেজ কস্ট (${taka(totalCogs)}) এর চেয়ে কম হতে পারবে না।`,
+    };
+  }
+
+  if (editSale && money(editSale.paid_amount) > 0) {
+    const priorPaid = money(editSale.paid_amount);
+    if (money(totalDiscount) > priorPaid) {
+      return {
+        isValid: false,
+        error: `⚠️ মোট ডিসকাউন্টের পরিমাণ (${taka(totalDiscount)}) ইনভয়েসের পরিশোধিত পরিমাণ (${taka(priorPaid)}) এর চেয়ে বেশি হতে পারবে না।`,
       };
     }
   }

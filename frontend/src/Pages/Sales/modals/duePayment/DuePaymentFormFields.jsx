@@ -18,6 +18,9 @@ export default function DuePaymentFormFields({
   setNote,
   taka
 }) {
+  const maxDue = paymentMode === 'single' ? saleDue : customerTotalDue;
+  const isOverDue = Number(amount || 0) > maxDue && maxDue > 0;
+
   return (
     <>
       {/* Due Info Banner */}
@@ -72,14 +75,24 @@ export default function DuePaymentFormFields({
             type="number"
             step="any"
             min="1"
+            max={maxDue > 0 ? maxDue : undefined}
             required
             value={amount}
             onChange={(e) => setAmount(e.target.value)}
             placeholder="0.00"
-            className="w-full pl-10 pr-4 py-2.5 bg-white border border-slate-300 rounded-xl text-sm font-bold text-slate-900 focus:outline-none focus:ring-2 focus:ring-sky-500"
+            className={`w-full pl-10 pr-4 py-2.5 bg-white border rounded-xl text-sm font-bold text-slate-900 focus:outline-none focus:ring-2 ${
+              isOverDue
+                ? 'border-rose-500 focus:ring-rose-500 text-rose-700 bg-rose-50/50'
+                : 'border-slate-300 focus:ring-sky-500'
+            }`}
             style={{ paddingLeft: '2.5rem' }}
           />
         </div>
+        {isOverDue && (
+          <p className="text-[11px] font-bold text-rose-600 mt-1 flex items-center gap-1">
+            ⚠️ পেমেন্টের পরিমাণ বকেয়া (৳ {maxDue.toLocaleString()}) এর চেয়ে বেশি হতে পারবে না।
+          </p>
+        )}
       </div>
 
       {/* Payment Account Selection */}

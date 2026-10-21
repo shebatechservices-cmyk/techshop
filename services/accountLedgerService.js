@@ -63,7 +63,7 @@ const recordAccountTransaction = async (client, opts) => {
         return null;
     }
 
-    await ensureAccountLedgerSchema(client);
+    await ensureAccountLedgerSchema(pool);
 
     // Normalize transaction direction ('credit' for cash-in, 'debit' for cash-out)
     let transactionType = String(rawTxType || '').toLowerCase();

@@ -1,5 +1,5 @@
-const { ensureWalletSchema, writeWalletLedger } = require('../walletController');
-const { recordAccountTransaction } = require('../../services/accountLedgerService');
+const { ensureWalletSchema, writeWalletLedger } = require('../../walletController');
+const { recordAccountTransaction } = require('../../../services/accountLedgerService');
 
 async function processSupplierTransaction(client, { party_id, action_type, account_id, numAmount, note }) {
     const supCheck = await client.query('SELECT id, name, payable_balance FROM suppliers WHERE id = $1', [party_id]);
@@ -9,6 +9,17 @@ async function processSupplierTransaction(client, { party_id, action_type, accou
     const supplier = supCheck.rows[0];
 
     if (action_type === 'due_payment' || action_type === 'due') {
+        const currentDue = Number(supplier.payable_balance || 0);
+        if (currentDue <= 0) {
+            throw { status: 400, message: `সাপ্লায়ার ${supplier.name}-এর কোনো বকেয়া নেই (Zero due).` };
+        }
+        if (numAmount > currentDue) {
+            throw {
+                status: 400,
+                message: `পেমেন্টের পরিমাণ (৳ ${numAmount}) সাপ্লায়ারের মোট বকেয়া (৳ ${currentDue}) এর চেয়ে বেশি হতে পারবে না।`,
+            };
+        }
+
         // Pay supplier due: Outflow from shop account, decreases supplier payable balance
         await client.query('UPDATE suppliers SET payable_balance = payable_balance - $1 WHERE id = $2', [numAmount, party_id]);
         await recordAccountTransaction(client, {
@@ -54,10 +65,10 @@ async function processSupplierTransaction(client, { party_id, action_type, accou
             );
 
             await client.query(
-                `INSERT INTO purchase_order_payments (purchase_order_id, amount, payment_mode, created_at)
-                 VALUES ($1, $2, $3, NOW())`,
-                [po.id, alloc, accName]
-            ).catch(() => {});
+                `INSERT INTO purchase_order_payments (purchase_order_id, payment_method, account_id, amount, created_at)
+                 VALUES ($1, $2, $3, $4, NOW())`,
+                [po.id, accName || 'Cash', account_id, alloc]
+            );
 
             remToAllocate -= alloc;
         }

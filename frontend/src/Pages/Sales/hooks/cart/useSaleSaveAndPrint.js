@@ -86,6 +86,9 @@ export function useSaleSaveAndPrint({
       totalPayable,
       money,
       taka,
+      editSale,
+      totalDiscount,
+      subtotal,
     });
 
     if (!validation.isValid) {

@@ -34,6 +34,38 @@ async function prepareAndValidateItems(client, items) {
     // RULE 1: Strict available stock & serial database verification
     await validateAvailableStockAndSerials(client, normalizedItems);
 
+    // Validate selling price after discount >= purchase cost
+    const productIds = [...new Set(normalizedItems.map((it) => Number(it.product_id)).filter(Boolean))];
+    const pMap = new Map();
+    if (productIds.length > 0) {
+        const pRes = await client.query(
+            'SELECT id, name, COALESCE(purchase_price, 0) AS purchase_price FROM products WHERE id = ANY($1::int[])',
+            [productIds]
+        ).catch(() => ({ rows: [] }));
+        for (const r of pRes.rows) {
+            pMap.set(Number(r.id), { name: r.name, purchase_price: Number(r.purchase_price || 0) });
+        }
+    }
+
+    for (const item of normalizedItems) {
+        const prod = pMap.get(Number(item.product_id));
+        const costPrice = Number(item.cost_price || prod?.purchase_price || 0);
+        const unitPrice = Number(item.unit_price || 0);
+        const qty = Number(item.quantity || 1);
+        const itDiscount = Number(item.discount || 0);
+        const lineTotal = unitPrice * qty - itDiscount;
+        const lineCost = costPrice * qty;
+
+        if (costPrice > 0 && lineTotal < lineCost) {
+            const itemName = item.name || item.product_name || prod?.name || 'Product';
+            const err = new Error(
+                `আইটেম "${itemName}"-এ ডিসকাউন্ট দেয়ার পর বিক্রয়মূল্য (৳ ${lineTotal.toLocaleString()}) পারচেজ কস্ট (৳ ${lineCost.toLocaleString()}) এর চেয়ে কম হতে পারবে না।`
+            );
+            err.status = 400;
+            throw err;
+        }
+    }
+
     return { normalizedItems, calculatedSubtotal };
 }
 

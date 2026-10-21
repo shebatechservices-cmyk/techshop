@@ -4,6 +4,7 @@ import API from '../../../services/api';
 export function usePartyFinancialOps({
   partyType,
   partyId,
+  profileData,
   fetchPartyData,
   onPartyUpdated,
 }) {
@@ -26,6 +27,23 @@ export function usePartyFinancialOps({
     if (!numAmount || numAmount <= 0) {
       setFinError('Please enter a valid positive amount.');
       return;
+    }
+
+    if (finAction === 'due') {
+      const partyDue = partyType === 'customer'
+        ? Number(profileData?.profile?.receivable_balance || 0)
+        : partyType === 'supplier'
+          ? Number(profileData?.profile?.payable_balance || 0)
+          : 0;
+
+      if (partyDue <= 0 && profileData?.profile) {
+        setFinError('কোনো বকেয়া নেই (Zero due).');
+        return;
+      }
+      if (partyDue > 0 && numAmount > partyDue) {
+        setFinError(`পেমেন্টের পরিমাণ বকেয়া (৳ ${partyDue.toLocaleString()}) এর চেয়ে বেশি হতে পারবে না।`);
+        return;
+      }
     }
 
     if (!finForm.account_id) {

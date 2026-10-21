@@ -25,6 +25,16 @@ exports.payDueViaWallet = async (req, res) => {
         }
 
         if (party_type === 'supplier') {
+            const supRes = await client.query('SELECT payable_balance FROM suppliers WHERE id = $1', [party_id]);
+            const supDue = Number(supRes.rows[0]?.payable_balance || 0);
+            if (Number(amount) > supDue) {
+                await client.query('ROLLBACK');
+                return res.status(400).json({
+                    success: false,
+                    message: `Payment amount (৳ ${amount}) cannot exceed supplier's due (৳ ${supDue}).`,
+                });
+            }
+
             await client.query('UPDATE suppliers SET payable_balance = payable_balance - $1 WHERE id = $2', [amount, party_id]);
             await recordAccountTransaction(client, {
                 accountId: account_id,
@@ -72,6 +82,16 @@ exports.payDueViaWallet = async (req, res) => {
             }
 
         } else if (party_type === 'customer') {
+            const custRes = await client.query('SELECT receivable_balance FROM customers WHERE id = $1', [party_id]);
+            const custDue = Number(custRes.rows[0]?.receivable_balance || 0);
+            if (Number(amount) > custDue) {
+                await client.query('ROLLBACK');
+                return res.status(400).json({
+                    success: false,
+                    message: `Payment amount (৳ ${amount}) cannot exceed customer's due (৳ ${custDue}).`,
+                });
+            }
+
             await client.query('UPDATE customers SET receivable_balance = receivable_balance - $1 WHERE id = $2', [amount, party_id]);
             await recordAccountTransaction(client, {
                 accountId: account_id,
@@ -130,7 +150,7 @@ exports.payDueViaWallet = async (req, res) => {
                     `INSERT INTO payments (sale_id, payment_mode, account_name, amount, created_at)
                      VALUES ($1, $2, $3, $4, NOW())`,
                     [s.id, accName, accName, alloc]
-                ).catch(() => {});
+                );
                 remToAllocate -= alloc;
             }
         }

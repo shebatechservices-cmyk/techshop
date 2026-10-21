@@ -83,7 +83,9 @@ export default function SalePrintModal({
         alignItems: 'center',
         justifyContent: 'flex-start',
         overflowY: 'auto',
-        padding: '20px 10px',
+        overflowX: 'auto',
+        padding: '12px 6px',
+        WebkitOverflowScrolling: 'touch',
       }}
     >
       <SalePrintStyles

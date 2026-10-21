@@ -1,160 +1,26 @@
-import React, { useState, useEffect, useRef } from 'react';
-import API, { getAuthHeaders } from '../../../services/api';
+import React, { useState } from 'react';
 import QuickOfferEditModal from './QuickOfferEditModal';
+import { getTickerBadgeStyle } from './tickerHelpers';
+import { useLiveTickerFeed } from './useLiveTickerFeed';
+import TickerControls from './TickerControls';
 
 export default function TopLiveTickerBar({ onNavigate, currentUser }) {
-  const [items, setItems] = useState([]);
-  const [currentIndex, setCurrentIndex] = useState(0);
-  const [isPaused, setIsPaused] = useState(false);
-  const [isCollapsed, setIsCollapsed] = useState(() => {
-    return localStorage.getItem('sheba_top_ticker_collapsed') === 'true';
-  });
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
-  const timerRef = useRef(null);
+  const {
+    items,
+    currentIndex,
+    setIsPaused,
+    isCollapsed,
+    handleToggleCollapse,
+    handlePrev,
+    handleNext,
+    activeItem,
+    hasItems,
+    isAdmin,
+    loadFeed,
+  } = useLiveTickerFeed({ currentUser });
 
-  const roleId = currentUser?.role_id;
-  const role = (currentUser?.role || '').toUpperCase();
-  const isAdmin = roleId === 1 || roleId === 2 || role === 'SUPER ADMIN' || role === 'ADMIN';
-
-  const loadFeed = async () => {
-    try {
-      const params = new URLSearchParams();
-      if (currentUser?.id) params.append('user_id', currentUser.id);
-      if (currentUser?.role || currentUser?.role_name) {
-        params.append('role', currentUser.role || currentUser.role_name);
-      }
-      const qs = params.toString() ? `?${params.toString()}` : '';
-      const res = await fetch(`${API}/settings/notifications${qs}`, {
-        headers: getAuthHeaders(),
-      });
-      if (res.ok) {
-        const json = await res.json();
-        if (json && Array.isArray(json.data) && json.data.length > 0) {
-          // Sort items so Technician Offer, Core Offers & Urgent items are at the front
-          const sorted = [...json.data].sort((a, b) => {
-            const getRank = (item) => {
-              if (item.type === 'offer_technician') return 1;
-              if (item.type === 'offer_customer') return 2;
-              if (item.priority === 'urgent') return 3;
-              if (item.type === 'project') return 4;
-              if (item.type === 'wallet') return 5;
-              if (item.type === 'payout') return 6;
-              if (item.type === 'stock') return 7;
-              if (item.type === 'due') return 8;
-              if (item.type === 'sales') return 9;
-              if (item.type === 'purchase') return 10;
-              return 11;
-            };
-            return getRank(a) - getRank(b);
-          });
-          setItems(sorted);
-        } else {
-          setItems([]);
-        }
-      }
-    } catch (e) {
-      // Quiet fail on network hiccups
-    }
-  };
-
-  useEffect(() => {
-    loadFeed();
-    const interval = setInterval(loadFeed, 30000); // Poll every 30s
-    return () => clearInterval(interval);
-  }, []);
-
-  // Auto-cycle through ticker items every 6 seconds
-  useEffect(() => {
-    if (items.length <= 1 || isPaused || isCollapsed) return;
-    timerRef.current = setInterval(() => {
-      setCurrentIndex((prev) => (prev + 1) % items.length);
-    }, 6000);
-
-    return () => clearInterval(timerRef.current);
-  }, [items.length, isPaused, isCollapsed]);
-
-  const handleToggleCollapse = () => {
-    const next = !isCollapsed;
-    setIsCollapsed(next);
-    localStorage.setItem('sheba_top_ticker_collapsed', String(next));
-  };
-
-  const handlePrev = (e) => {
-    e.stopPropagation();
-    setCurrentIndex((prev) => (prev === 0 ? items.length - 1 : prev - 1));
-  };
-
-  const handleNext = (e) => {
-    e.stopPropagation();
-    setCurrentIndex((prev) => (prev + 1) % items.length);
-  };
-
-  const currentItem = items[currentIndex] || items[0];
-
-  if (!currentItem && !isAdmin) return null;
-
-  // Fallback default message if items are empty
-  const defaultItem = {
-    badgeText: '🔥 লাইভ ফিড',
-    title: 'স্বাগতম সেবা টেকনোলজি ইআরপিতে!',
-    message: 'কাস্টমার ও টেকনিশিয়ানদের জন্য সক্রিয় অফার এবং রিয়েল-টাইম নোটিফিকেশন এখানে প্রদর্শিত হবে।',
-    priority: 'info',
-  };
-
-  const activeItem = currentItem || defaultItem;
-
-  // Dynamic Badge Color
-  const getBadgeStyle = (item) => {
-    if (item.type === 'offer_customer') {
-      return {
-        background: 'linear-gradient(135deg, #f97316 0%, #ea580c 100%)',
-        color: '#ffffff',
-        border: '1px solid #fb923c',
-        boxShadow: '0 0 8px rgba(249, 115, 22, 0.4)',
-      };
-    }
-    if (item.type === 'offer_technician') {
-      return {
-        background: 'linear-gradient(135deg, #8b5cf6 0%, #6d28d9 100%)',
-        color: '#ffffff',
-        border: '1px solid #a78bfa',
-        boxShadow: '0 0 8px rgba(139, 92, 246, 0.4)',
-      };
-    }
-    if (item.priority === 'urgent' || item.type === 'stock') {
-      return {
-        background: '#dc2626',
-        color: '#ffffff',
-        border: '1px solid #ef4444',
-      };
-    }
-    if (item.type === 'sales') {
-      return {
-        background: '#16a34a',
-        color: '#ffffff',
-        border: '1px solid #22c55e',
-      };
-    }
-    if (item.type === 'purchase') {
-      return {
-        background: '#2563eb',
-        color: '#ffffff',
-        border: '1px solid #3b82f6',
-      };
-    }
-    if (item.type === 'due') {
-      return {
-        background: '#e11d48',
-        color: '#ffffff',
-        border: '1px solid #f43f5e',
-      };
-    }
-    return {
-      background: '#0284c7',
-      color: '#ffffff',
-      border: '1px solid #38bdf8',
-    };
-  };
+  if (!hasItems && !isAdmin) return null;
 
   const handleItemClick = () => {
     if (onNavigate && activeItem.targetSection) {
@@ -186,10 +52,9 @@ export default function TopLiveTickerBar({ onNavigate, currentUser }) {
               className="inline-block w-2 h-2 rounded-full bg-emerald-400 animate-ping"
               title="Realtime Live Feed Active"
             />
-
             <span
               style={{
-                ...getBadgeStyle(activeItem),
+                ...getTickerBadgeStyle(activeItem),
                 padding: '2px 8px',
                 borderRadius: '6px',
                 fontSize: '10.5px',
@@ -227,60 +92,17 @@ export default function TopLiveTickerBar({ onNavigate, currentUser }) {
             )}
           </div>
 
-          {/* Right Controls: Manual navigation, Quick Offer Edit, Counter & Minimize */}
-          <div className="flex items-center gap-1 sm:gap-2 flex-shrink-0">
-            {/* Items count indicator */}
-            {items.length > 1 && (
-              <span className="text-[10px] font-mono text-slate-400 hidden sm:inline">
-                {currentIndex + 1}/{items.length}
-              </span>
-            )}
-
-            {/* Prev & Next Arrows */}
-            {items.length > 1 && (
-              <div className="flex items-center gap-0.5 bg-slate-800 rounded border border-slate-700 p-0.5">
-                <button
-                  type="button"
-                  onClick={handlePrev}
-                  className="px-1.5 py-0.5 hover:bg-slate-700 text-slate-300 hover:text-white rounded text-[11px] font-bold cursor-pointer transition-colors"
-                  title="Previous Update"
-                >
-                  ‹
-                </button>
-                <button
-                  type="button"
-                  onClick={handleNext}
-                  className="px-1.5 py-0.5 hover:bg-slate-700 text-slate-300 hover:text-white rounded text-[11px] font-bold cursor-pointer transition-colors"
-                  title="Next Update"
-                >
-                  ›
-                </button>
-              </div>
-            )}
-
-            {/* Admin: Quick Core Offer Edit Button */}
-            {isAdmin && (
-              <button
-                type="button"
-                onClick={() => setIsEditModalOpen(true)}
-                className="px-2 py-0.5 bg-amber-500/20 hover:bg-amber-500/30 text-amber-300 border border-amber-500/40 rounded text-[10.5px] font-bold cursor-pointer transition-colors flex items-center gap-1"
-                title="Edit Customer & Technician Live Offers"
-              >
-                <span>✏️</span>
-                <span className="hidden lg:inline">অফার এডিট</span>
-              </button>
-            )}
-
-            {/* Collapse / Expand Toggle */}
-            <button
-              type="button"
-              onClick={handleToggleCollapse}
-              className="p-1 hover:bg-slate-800 text-slate-400 hover:text-white rounded cursor-pointer transition-colors text-xs"
-              title={isCollapsed ? 'Expand Live Feed' : 'Collapse Live Feed'}
-            >
-              {isCollapsed ? '▼' : '▲'}
-            </button>
-          </div>
+          {/* Right Controls */}
+          <TickerControls
+            itemsLength={items.length}
+            currentIndex={currentIndex}
+            handlePrev={handlePrev}
+            handleNext={handleNext}
+            isAdmin={isAdmin}
+            onOpenEditModal={() => setIsEditModalOpen(true)}
+            isCollapsed={isCollapsed}
+            handleToggleCollapse={handleToggleCollapse}
+          />
         </div>
       </div>
 

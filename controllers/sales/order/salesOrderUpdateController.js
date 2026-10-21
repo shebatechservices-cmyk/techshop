@@ -1,7 +1,7 @@
 const pool = require('../../../config/db');
 const { ensureWalletSchema } = require('../../walletController');
 const { ensureSalesColumns } = require('../salesHelpers');
-const { validateSaleUpdatePolicy } = require('./update/salesUpdateValidation');
+const { validateSaleUpdatePolicy, validateSaleDiscountAndCost } = require('./update/salesUpdateValidation');
 const { syncSaleInventoryAndItems } = require('./update/salesUpdateInventory');
 const { settleSaleFinanceAndTenders } = require('./update/salesUpdateFinance');
 
@@ -77,7 +77,16 @@ const updateSale = async (req, res) => {
             rawSubtotal,
         });
 
-        // 3. Settle finance, loyalty, tenders, and update database
+        // 3. Enforce discount vs paid and purchase cost boundaries
+        await validateSaleDiscountAndCost(client, {
+            sale,
+            itemsList,
+            subtotal,
+            discount: rawDiscount,
+            discountFromLoyalty: loyalty_points_to_use,
+        });
+
+        // 4. Settle finance, loyalty, tenders, and update database
         const { totalAmount, totalPaid, totalDue, paymentStatus } = await settleSaleFinanceAndTenders(client, {
             sale,
             id,

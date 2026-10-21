@@ -1,5 +1,5 @@
-const { ensureWalletSchema, writeWalletLedger } = require('../walletController');
-const { recordAccountTransaction } = require('../../services/accountLedgerService');
+const { ensureWalletSchema, writeWalletLedger } = require('../../walletController');
+const { recordAccountTransaction } = require('../../../services/accountLedgerService');
 
 async function processCustomerTransaction(client, { party_id, action_type, account_id, numAmount, note }) {
     const custCheck = await client.query('SELECT id, name, receivable_balance FROM customers WHERE id = $1', [party_id]);
@@ -9,6 +9,17 @@ async function processCustomerTransaction(client, { party_id, action_type, accou
     const customer = custCheck.rows[0];
 
     if (action_type === 'due_payment' || action_type === 'due' || action_type === 'due_receive') {
+        const currentDue = Number(customer.receivable_balance || 0);
+        if (currentDue <= 0) {
+            throw { status: 400, message: `কাস্টমার ${customer.name}-এর কোনো বকেয়া নেই (Zero due).` };
+        }
+        if (numAmount > currentDue) {
+            throw {
+                status: 400,
+                message: `পেমেন্টের পরিমাণ (৳ ${numAmount}) কাস্টমারের মোট বকেয়া (৳ ${currentDue}) এর চেয়ে বেশি হতে পারবে না।`,
+            };
+        }
+
         // Customer pays due: Inflow to shop account, decreases customer receivable balance
         await client.query('UPDATE customers SET receivable_balance = receivable_balance - $1 WHERE id = $2', [numAmount, party_id]);
         await recordAccountTransaction(client, {
@@ -75,7 +86,7 @@ async function processCustomerTransaction(client, { party_id, action_type, accou
                 `INSERT INTO payments (sale_id, payment_mode, account_name, amount, created_at)
                  VALUES ($1, $2, $3, $4, NOW())`,
                 [s.id, accName, accName, alloc]
-            ).catch(() => {});
+            );
 
             remToAllocate -= alloc;
         }

@@ -22,6 +22,7 @@ export function usePartyProfileManager({
   const finOps = usePartyFinancialOps({
     partyType,
     partyId,
+    profileData,
     fetchPartyData: () => fetchPartyData(),
     onPartyUpdated,
   });

@@ -5,6 +5,7 @@ export default function MobileBottomNav({
   isTechnician,
   onNavigate,
   onOpenDrawer,
+  onOpenActionDrawer,
 }) {
   const navItemClass = (isActive) =>
     `mobile-bottom-nav-item flex-1 flex flex-col items-center justify-center py-1.5 px-1 rounded-xl transition-all duration-150 active:scale-90 select-none ${
@@ -77,14 +78,22 @@ export default function MobileBottomNav({
             <span className="icon text-xl leading-none mb-0.5">🛍️</span>
             <span className="text-[10px] tracking-tight leading-tight">Sales</span>
           </button>
+
+          {/* Central Elevated ⚡ Quick Action Drawer Button */}
           <button
             type="button"
-            className={navItemClass(section === 'purchases')}
-            onClick={() => onNavigate({ section: 'purchases' })}
+            className="flex-1 flex flex-col items-center justify-center -mt-3.5 active:scale-90 transition-all select-none cursor-pointer"
+            onClick={onOpenActionDrawer}
+            title="কুইক অ্যাকশন হাব"
           >
-            <span className="icon text-xl leading-none mb-0.5">📦</span>
-            <span className="text-[10px] tracking-tight leading-tight">Purchase</span>
+            <span className="w-11 h-11 rounded-full bg-gradient-to-tr from-emerald-500 to-teal-600 text-white flex items-center justify-center text-xl shadow-lg shadow-emerald-500/30 border-2 border-white dark:border-slate-900">
+              ⚡
+            </span>
+            <span className="text-[9px] font-extrabold text-emerald-600 dark:text-emerald-400 tracking-tight mt-0.5">
+              অ্যাকশন
+            </span>
           </button>
+
           <button
             type="button"
             className={navItemClass(section === 'inventory')}

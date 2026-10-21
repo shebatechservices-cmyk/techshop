@@ -75,6 +75,71 @@ const validateSaleUpdatePolicy = async (client, sale, id, req) => {
     return { projectRes };
 };
 
+/**
+ * Validates discount boundaries:
+ * 1. Discount must not exceed paid amount when updating an invoice with prior payments.
+ * 2. Selling price after discount must not fall below purchase cost (per item and overall invoice).
+ */
+const validateSaleDiscountAndCost = async (client, { sale, itemsList, subtotal, discount, discountFromLoyalty = 0 }) => {
+    const totalDiscount = Number(discount || 0) + Number(discountFromLoyalty || 0);
+
+    const priorPaid = Number(sale?.paid_amount || 0);
+    if (priorPaid > 0 && totalDiscount > priorPaid) {
+        const err = new Error(
+            `মোট ডিসকাউন্টের পরিমাণ (৳ ${totalDiscount.toLocaleString()}) ইনভয়েসের পরিশোধিত পরিমাণ (৳ ${priorPaid.toLocaleString()}) এর চেয়ে বেশি হতে পারবে না।`
+        );
+        err.status = 400;
+        throw err;
+    }
+
+    if (Array.isArray(itemsList) && itemsList.length > 0) {
+        const productIds = [...new Set(itemsList.map(it => Number(it.product_id)).filter(Boolean))];
+        const pMap = new Map();
+        if (productIds.length > 0) {
+            const pRes = await client.query(
+                'SELECT id, name, COALESCE(purchase_price, 0) AS purchase_price FROM products WHERE id = ANY($1::int[])',
+                [productIds]
+            ).catch(() => ({ rows: [] }));
+            for (const r of pRes.rows) {
+                pMap.set(Number(r.id), { name: r.name, purchase_price: Number(r.purchase_price || 0) });
+            }
+        }
+
+        let totalCogs = 0;
+        for (const item of itemsList) {
+            const prod = pMap.get(Number(item.product_id));
+            const costPrice = Number(item.cost_price || prod?.purchase_price || 0);
+            const unitPrice = Number(item.unit_price || 0);
+            const qty = Number(item.quantity || 1);
+            const itDiscount = Number(item.discount || 0);
+            const lineTotal = unitPrice * qty - itDiscount;
+            const lineCost = costPrice * qty;
+
+            if (costPrice > 0) {
+                totalCogs += lineCost;
+                if (lineTotal < lineCost) {
+                    const itemName = item.name || item.product_name || prod?.name || 'Product';
+                    const err = new Error(
+                        `আইটেম "${itemName}"-এ ডিসকাউন্ট দেয়ার পর বিক্রয়মূল্য (৳ ${lineTotal.toLocaleString()}) পারচেজ কস্ট (৳ ${lineCost.toLocaleString()}) এর চেয়ে কম হতে পারবে না।`
+                    );
+                    err.status = 400;
+                    throw err;
+                }
+            }
+        }
+
+        const netInvoiceAfterDiscount = Number(subtotal || 0) - totalDiscount;
+        if (totalCogs > 0 && netInvoiceAfterDiscount < totalCogs) {
+            const err = new Error(
+                `মোট ডিসকাউন্ট দেয়ার পর ইনভয়েস বিক্রয়মূল্য (৳ ${netInvoiceAfterDiscount.toLocaleString()}) মোট পারচেজ কস্ট (৳ ${totalCogs.toLocaleString()}) এর চেয়ে কম হতে পারবে না।`
+            );
+            err.status = 400;
+            throw err;
+        }
+    }
+};
+
 module.exports = {
     validateSaleUpdatePolicy,
+    validateSaleDiscountAndCost,
 };

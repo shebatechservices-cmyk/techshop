@@ -70,20 +70,20 @@ export function useDuePayment({ isOpen, sale, customer, onClose, onPaymentSucces
 
     if (paymentMode === 'single') {
       if (saleDue <= 0) {
-        setError('This invoice is already fully paid (Zero due).');
+        setError('এই ইনভয়েসের কোনো বকেয়া নেই (Zero due).');
         return;
       }
       if (numAmount > saleDue) {
-        setError(`Amount cannot exceed invoice due (৳ ${saleDue.toLocaleString()}).`);
+        setError(`পেমেন্টের পরিমাণ ইনভয়েসের বকেয়া (৳ ${saleDue.toLocaleString()}) এর চেয়ে বেশি হতে পারবে না।`);
         return;
       }
     } else {
       if (customerTotalDue <= 0) {
-        setError('This customer has no outstanding due.');
+        setError('এই কাস্টমারের কোনো বকেয়া নেই (No outstanding due).');
         return;
       }
       if (numAmount > customerTotalDue) {
-        setError(`Amount cannot exceed customer's total due (৳ ${customerTotalDue.toLocaleString()}).`);
+        setError(`পেমেন্টের পরিমাণ কাস্টমারের মোট বকেয়া (৳ ${customerTotalDue.toLocaleString()}) এর চেয়ে বেশি হতে পারবে না।`);
         return;
       }
     }
