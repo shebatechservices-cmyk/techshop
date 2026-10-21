@@ -1,4 +1,4 @@
-const { recordAccountTransaction } = require('../../services/accountLedgerService');
+const { recordAccountTransaction } = require('../../../services/accountLedgerService');
 
 async function processStaffTransaction(client, { party_id, action_type, account_id, numAmount, note }) {
     const staffCheck = await client.query('SELECT id, name FROM users WHERE id = $1', [party_id]);

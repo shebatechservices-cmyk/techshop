@@ -1,4 +1,4 @@
-const { recordAccountTransaction } = require('../../services/accountLedgerService');
+const { recordAccountTransaction } = require('../../../services/accountLedgerService');
 
 async function processTransferTransaction(client, { party_type, party_id, account_id, to_account_id, numAmount, note }) {
     if (!account_id || !to_account_id) {

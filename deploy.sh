@@ -3,7 +3,7 @@ set -euo pipefail
 cd "$(dirname "$0")"
 
 LIVE_DOMAIN="https://sdb.shebatechnologybd.com"
-RENDER_URL="https://sheba-technology.onrender.com"
+RENDER_URL="https://techshop-hmxl.onrender.com"
 
 echo "== 1/3 Build Frontend =="
 npm run build
