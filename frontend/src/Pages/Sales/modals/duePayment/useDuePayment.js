@@ -1,5 +1,14 @@
-import { useState, useEffect } from 'react';
-import API from '../../../../services/api';
+import { useState, useEffect, useCallback } from 'react';
+import { smartFetch } from '../../../../services/api';
+
+const getCachedAccounts = () => {
+  try {
+    const raw = sessionStorage.getItem('sheba_cached_payment_accounts');
+    return raw ? JSON.parse(raw) : [];
+  } catch {
+    return [];
+  }
+};
 
 export function useDuePayment({ isOpen, sale, customer, onClose, onPaymentSuccess }) {
   const [paymentMode, setPaymentMode] = useState('single');
@@ -7,11 +16,12 @@ export function useDuePayment({ isOpen, sale, customer, onClose, onPaymentSucces
   const [accountId, setAccountId] = useState('');
   const [note, setNote] = useState('');
   const [referenceNo, setReferenceNo] = useState('');
-  const [accounts, setAccounts] = useState([]);
+  const [accounts, setAccounts] = useState(getCachedAccounts);
   const [loadingAccounts, setLoadingAccounts] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState('');
 
+  const saleId = sale?.id;
   const saleDue = Number(sale?.due_amount || 0);
   const customerTotalDue = Number(
     customer?.receivable_balance ?? sale?.customer_receivable_balance ?? 0
@@ -19,34 +29,54 @@ export function useDuePayment({ isOpen, sale, customer, onClose, onPaymentSucces
   const customerId = customer?.id || sale?.customer_id;
   const customerName = customer?.name || sale?.customer_name || 'Customer';
 
+  const fetchAccounts = useCallback(async () => {
+    setLoadingAccounts(true);
+    try {
+      let res = await smartFetch('/accounts/wallets').catch(() => null);
+      if (!res || !res.ok) {
+        res = await smartFetch('/accounts').catch(() => null);
+      }
+      if (res && res.ok) {
+        const json = await res.json().catch(() => null);
+        const list = Array.isArray(json) ? json : json?.data || [];
+        if (list.length > 0) {
+          setAccounts(list);
+          try {
+            sessionStorage.setItem('sheba_cached_payment_accounts', JSON.stringify(list));
+          } catch {}
+          const defaultAcc =
+            list.find((a) => (a.account_type || '').toLowerCase() === 'drawer') ||
+            list[0];
+          setAccountId((prev) => (prev ? prev : String(defaultAcc.id)));
+        }
+      }
+    } catch (err) {
+      console.error('Failed to load accounts:', err);
+    } finally {
+      setLoadingAccounts(false);
+    }
+  }, []);
+
   useEffect(() => {
-    if (isOpen) {
+    if (isOpen && saleId) {
       setError('');
       setNote('');
       setReferenceNo('');
       setPaymentMode('single');
       setAmount(saleDue > 0 ? String(saleDue) : '');
 
-      setLoadingAccounts(true);
-      fetch(`${API}/accounts/wallets`)
-        .then((res) => (res.ok ? res.json() : null))
-        .then((json) => {
-          const list = Array.isArray(json) ? json : json?.data || [];
-          setAccounts(list);
-          if (list.length > 0) {
-            const defaultAcc =
-              list.find((a) => (a.account_type || '').toLowerCase() === 'drawer') ||
-              list[0];
-            setAccountId(String(defaultAcc.id));
-          }
-        })
-        .catch((err) => {
-          console.error('Failed to load accounts:', err);
-          setError('Failed to load payment accounts list.');
-        })
-        .finally(() => setLoadingAccounts(false));
+      const initialAccounts = accounts.length > 0 ? accounts : getCachedAccounts();
+      if (initialAccounts.length > 0) {
+        setAccounts(initialAccounts);
+        const defaultAcc =
+          initialAccounts.find((a) => (a.account_type || '').toLowerCase() === 'drawer') ||
+          initialAccounts[0];
+        setAccountId(String(defaultAcc.id));
+      }
+
+      fetchAccounts();
     }
-  }, [isOpen, sale, saleDue]);
+  }, [isOpen, saleId, fetchAccounts]);
 
   const handleModeChange = (mode) => {
     setPaymentMode(mode);
@@ -95,30 +125,24 @@ export function useDuePayment({ isOpen, sale, customer, onClose, onPaymentSucces
 
     try {
       setSubmitting(true);
-      let url = '';
-      let payload = {
+      const endpoint = paymentMode === 'single'
+        ? `/sales/${sale?.id}/payments`
+        : `/sales/customers/${customerId}/bulk-due-payment`;
+
+      const payload = {
         amount: numAmount,
         account_id: Number(accountId),
         note: note.trim() || undefined,
         reference_no: referenceNo.trim() || undefined,
       };
 
-      if (paymentMode === 'single') {
-        url = `${API}/sales/${sale?.id}/payments`;
-      } else {
-        if (!customerId) {
-          throw new Error('Customer ID is required for bulk due settlement.');
-        }
-        url = `${API}/sales/customers/${customerId}/bulk-due-payment`;
-      }
-
-      const res = await fetch(url, {
+      const res = await smartFetch(endpoint, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(payload),
       });
 
-      const data = await res.json();
+      const data = await res.json().catch(() => ({}));
       if (!res.ok || !data.success) {
         throw new Error(data.message || 'Payment transaction failed.');
       }
@@ -158,3 +182,4 @@ export function useDuePayment({ isOpen, sale, customer, onClose, onPaymentSucces
     handleSubmit,
   };
 }
+
