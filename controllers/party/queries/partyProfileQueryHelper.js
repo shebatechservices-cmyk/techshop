@@ -1,4 +1,5 @@
 const pool = require('../../../config/db');
+const { getCustomerSmartMetrics, getSupplierSmartMetrics, getStaffSmartMetrics } = require('./partySmartAnalyticsHelper');
 
 async function getCustomerProfile(partyId) {
     const custRes = await pool.query('SELECT * FROM customers WHERE id = $1', [partyId]);
@@ -44,6 +45,7 @@ async function getCustomerProfile(partyId) {
     `, [partyId]);
 
     const activityCount = parseInt(statsRes.rows[0].total_invoices) + quotesRes.rows.length + txRes.rows.length;
+    const smart = await getCustomerSmartMetrics(partyId, statsRes.rows[0]);
 
     return {
         party_type: 'customer',
@@ -60,6 +62,7 @@ async function getCustomerProfile(partyId) {
             activity_count: activityCount
         },
         stats: statsRes.rows[0],
+        smart,
         sales: salesRes.rows,
         quotations: quotesRes.rows,
         transactions: txRes.rows
@@ -109,6 +112,7 @@ async function getSupplierProfile(partyId) {
     `, [partyId]);
 
     const activityCount = parseInt(statsRes.rows[0].total_pos) + quotesRes.rows.length + txRes.rows.length;
+    const smart = await getSupplierSmartMetrics(partyId, statsRes.rows[0]);
 
     return {
         party_type: 'supplier',
@@ -124,6 +128,7 @@ async function getSupplierProfile(partyId) {
             activity_count: activityCount
         },
         stats: statsRes.rows[0],
+        smart,
         purchase_orders: poRes.rows,
         quotations: quotesRes.rows,
         transactions: txRes.rows
@@ -155,6 +160,8 @@ async function getStaffProfile(partyId) {
         WHERE sales_person = $1
     `, [staff.name]);
 
+    const smart = await getStaffSmartMetrics(partyId, staff.name);
+
     return {
         party_type: 'staff',
         profile: {
@@ -170,6 +177,7 @@ async function getStaffProfile(partyId) {
             activity_count: parseInt(statsRes.rows[0].total_sales)
         },
         stats: statsRes.rows[0],
+        smart,
         sales: salesRes.rows
     };
 }
