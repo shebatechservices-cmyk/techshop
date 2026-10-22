@@ -2,12 +2,21 @@ require('dotenv').config();
 
 const { Pool } = require('pg');
 
-const poolConfig = process.env.DATABASE_URL
+let dbUrl = process.env.DATABASE_URL || '';
+if (dbUrl) {
+    // Strip channel_binding (node-postgres hangs with SCRAM channel_binding on Neon)
+    dbUrl = dbUrl.replace(/([?&])channel_binding=[^&]+(&|$)/, '$1').replace(/[?&]$/, '');
+}
+
+const poolConfig = dbUrl
     ? {
-        connectionString: process.env.DATABASE_URL,
-        ssl: (process.env.DATABASE_URL.includes('localhost') || process.env.DATABASE_URL.includes('127.0.0.1'))
+        connectionString: dbUrl,
+        ssl: (dbUrl.includes('localhost') || dbUrl.includes('127.0.0.1'))
             ? false
-            : { rejectUnauthorized: false }
+            : { rejectUnauthorized: false },
+        connectionTimeoutMillis: 10000,
+        idleTimeoutMillis: 30000,
+        max: 20,
       }
     : {
         user: process.env.DB_USER || 'postgres',
@@ -15,6 +24,9 @@ const poolConfig = process.env.DATABASE_URL
         database: process.env.DB_NAME || 'product_catalog',
         password: process.env.DB_PASSWORD,
         port: Number(process.env.DB_PORT || 5432),
+        connectionTimeoutMillis: 10000,
+        idleTimeoutMillis: 30000,
+        max: 20,
       };
 
 const pool = new Pool(poolConfig);

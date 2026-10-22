@@ -154,15 +154,20 @@ export const smartFetch = async (path, options = {}) => {
       }
     } else {
       // Primary was Cloud and failed: fall back to Local LAN Server
-      try {
-        console.warn(`[smartFetch] Cloud endpoint (${primaryUrl}) failed. Auto fallback to Local LAN Server (${LOCAL_LAN_SERVER_URL})...`);
-        const lanUrl = `${LOCAL_LAN_SERVER_URL}${cleanPath}`;
-        const res2 = await executeFetchWithTimeout(lanUrl, mergedOptions, 8000);
-        if (res2) {
-          return wrapResponseSafeJson(res2);
+      // Guard: Browsers block Mixed Content (HTTPS page cannot request HTTP LAN resource).
+      // Only attempt HTTP LAN fallback if running in Native App (Capacitor) or loaded over HTTP.
+      const isHttps = typeof window !== 'undefined' && window.location?.protocol === 'https:';
+      if (!isHttps || isNativeApp()) {
+        try {
+          console.warn(`[smartFetch] Cloud endpoint (${primaryUrl}) failed. Auto fallback to Local LAN Server (${LOCAL_LAN_SERVER_URL})...`);
+          const lanUrl = `${LOCAL_LAN_SERVER_URL}${cleanPath}`;
+          const res2 = await executeFetchWithTimeout(lanUrl, mergedOptions, 8000);
+          if (res2) {
+            return wrapResponseSafeJson(res2);
+          }
+        } catch {
+          // Local LAN fallback failed
         }
-      } catch {
-        // Local LAN fallback failed
       }
     }
 
