@@ -1,11 +1,7 @@
 import React from 'react';
 import { usePartyProfileManager } from '../hooks/usePartyProfileManager';
 import PartyProfileHeader from '../shared/party/PartyProfileHeader';
-import PartyOverviewTab from '../shared/party/PartyOverviewTab';
-import PartyFinancialTab from '../shared/party/PartyFinancialTab';
-import PartyWalletTab from '../shared/party/PartyWalletTab';
-import PartyEditTab from '../shared/party/PartyEditTab';
-import PartyActivityTab from '../shared/party/PartyActivityTab';
+import PartyTabContent from '../shared/party/PartyTabContent';
 
 export default function PartyProfileModal({
   isOpen,
@@ -29,47 +25,19 @@ export default function PartyProfileModal({
   const {
     activeTab,
     setActiveTab,
-    loading,
     profileData,
-    wallets,
-    error,
     setError,
-    successMsg,
     setSuccessMsg,
-    editForm,
-    setEditForm,
-    editLoading,
-    finAction,
-    setFinAction,
-    finForm,
-    setFinForm,
-    finLoading,
-    finError,
     setFinError,
-    finSuccess,
     setFinSuccess,
     walletData,
-    walletAction,
-    setWalletAction,
-    walletForm,
-    setWalletForm,
-    walletLoading,
-    walletError,
-    setWalletError,
-    walletSuccess,
-    setWalletSuccess,
-    deleteLoading,
-    deleteError,
-    handleEditSubmit,
-    handleFinSubmit,
-    handleWalletSubmit,
-    handleDeleteParty,
-    walletNeedsAccount,
   } = manager;
 
   const profile = profileData?.profile || {};
   const balance = parseFloat(profile.balance || 0);
-  const walletBalance = parseFloat(walletData?.party?.wallet_balance || profile.wallet_balance || 0);
+  const walletBalance = parseFloat(
+    walletData?.party?.wallet_balance || profile.wallet_balance || 0
+  );
 
   const typeBadgeColors = {
     customer: { bg: 'bg-sky-100', text: 'text-sky-800', label: 'Customer' },
@@ -80,10 +48,21 @@ export default function PartyProfileModal({
   const tabs = [
     { id: 'overview', label: '📊 Overview & Ledger' },
     { id: 'financial', label: '💳 Financial Actions' },
-    { id: 'wallet', label: `👛 Wallet (৳ ${walletBalance.toLocaleString('en-BD', { minimumFractionDigits: 2 })})` },
+    {
+      id: 'wallet',
+      label: `👛 Wallet (৳ ${walletBalance.toLocaleString('en-BD', { minimumFractionDigits: 2 })})`,
+    },
     { id: 'edit', label: '✏️ Edit Profile' },
-    { id: 'activity', label: '🛡️ Activity & Delete' },
+    ...(partyType === 'staff' ? [{ id: 'activity', label: '🛡️ Activity & Delete' }] : []),
   ];
+
+  const handleTabClick = (tabId) => {
+    setActiveTab(tabId);
+    setError('');
+    setSuccessMsg('');
+    setFinError('');
+    setFinSuccess('');
+  };
 
   return (
     <div
@@ -107,13 +86,7 @@ export default function PartyProfileModal({
           {tabs.map((tab) => (
             <button
               key={tab.id}
-              onClick={() => {
-                setActiveTab(tab.id);
-                setError('');
-                setSuccessMsg('');
-                setFinError('');
-                setFinSuccess('');
-              }}
+              onClick={() => handleTabClick(tab.id)}
               className={`py-3 px-4 font-semibold text-xs whitespace-nowrap border-b-2 transition-colors ${
                 activeTab === tab.id
                   ? 'border-sky-600 text-sky-600'
@@ -127,82 +100,12 @@ export default function PartyProfileModal({
 
         {/* MODAL BODY */}
         <div className="p-5 sm:p-6 overflow-y-auto flex-1 bg-white">
-          {loading ? (
-            <div className="text-center py-10 text-slate-500 text-xs">
-              <div className="text-base font-semibold mb-1">⏳ Loading profile details...</div>
-              <small>Querying database for party ledgers and audit records</small>
-            </div>
-          ) : (
-            <>
-              {activeTab === 'overview' && (
-                <PartyOverviewTab
-                  profileData={profileData}
-                  partyType={partyType}
-                />
-              )}
-
-              {activeTab === 'financial' && (
-                <PartyFinancialTab
-                  partyType={partyType}
-                  finAction={finAction}
-                  setFinAction={setFinAction}
-                  finForm={finForm}
-                  setFinForm={setFinForm}
-                  finLoading={finLoading}
-                  finError={finError}
-                  setFinError={setFinError}
-                  finSuccess={finSuccess}
-                  setFinSuccess={setFinSuccess}
-                  balance={balance}
-                  wallets={wallets}
-                  handleFinSubmit={handleFinSubmit}
-                />
-              )}
-
-              {activeTab === 'wallet' && (
-                <PartyWalletTab
-                  partyType={partyType}
-                  walletBalance={walletBalance}
-                  balance={balance}
-                  walletAction={walletAction}
-                  setWalletAction={setWalletAction}
-                  walletForm={walletForm}
-                  setWalletForm={setWalletForm}
-                  walletLoading={walletLoading}
-                  walletError={walletError}
-                  setWalletError={setWalletError}
-                  walletSuccess={walletSuccess}
-                  setWalletSuccess={setWalletSuccess}
-                  wallets={wallets}
-                  walletData={walletData}
-                  walletNeedsAccount={walletNeedsAccount}
-                  handleWalletSubmit={handleWalletSubmit}
-                />
-              )}
-
-              {activeTab === 'edit' && (
-                <PartyEditTab
-                  partyType={partyType}
-                  editForm={editForm}
-                  setEditForm={setEditForm}
-                  editLoading={editLoading}
-                  error={error}
-                  successMsg={successMsg}
-                  handleEditSubmit={handleEditSubmit}
-                />
-              )}
-
-              {activeTab === 'activity' && (
-                <PartyActivityTab
-                  profileData={profileData}
-                  balance={balance}
-                  deleteError={deleteError}
-                  deleteLoading={deleteLoading}
-                  handleDeleteParty={handleDeleteParty}
-                />
-              )}
-            </>
-          )}
+          <PartyTabContent
+            manager={manager}
+            partyType={partyType}
+            balance={balance}
+            walletBalance={walletBalance}
+          />
         </div>
 
         {/* MODAL FOOTER */}

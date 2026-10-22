@@ -33,45 +33,45 @@ export default function PartyOverviewTab({ profileData, partyType }) {
       )}
 
       {/* 2. SUMMARY METRIC CARDS */}
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-5">
-        <div className="bg-slate-50 border border-slate-200 rounded-xl p-3.5">
-          <span className="text-[11px] text-slate-500 uppercase font-bold tracking-wider">Total Records</span>
-          <div className="text-xl font-extrabold text-slate-900 mt-1">
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-2.5 mb-3.5">
+        <div className="bg-slate-50 border border-slate-200 rounded-xl p-2.5">
+          <span className="text-[10px] text-slate-500 uppercase font-bold tracking-wider">Total Records</span>
+          <div className="text-lg font-extrabold text-slate-900 mt-0.5">
             {stats.total_invoices || stats.total_pos || stats.total_sales || 0}
           </div>
-          <small className="text-slate-400 text-xs">
+          <small className="text-slate-400 text-[11px]">
             {partyType === 'customer' ? 'Sales Invoices' : partyType === 'supplier' ? 'Purchase POs' : 'Created Orders'}
           </small>
         </div>
 
-        <div className="bg-slate-50 border border-slate-200 rounded-xl p-3.5">
-          <span className="text-[11px] text-slate-500 uppercase font-bold tracking-wider">Lifetime Volume</span>
-          <div className="text-xl font-extrabold text-sky-600 mt-1">
+        <div className="bg-slate-50 border border-slate-200 rounded-xl p-2.5">
+          <span className="text-[10px] text-slate-500 uppercase font-bold tracking-wider">Lifetime Volume</span>
+          <div className="text-lg font-extrabold text-sky-600 mt-0.5">
             ৳ {Number(stats.lifetime_purchases || stats.lifetime_orders || stats.total_sales_volume || 0).toLocaleString('en-BD')}
           </div>
-          <small className="text-slate-400 text-xs">Cumulative Turnover</small>
+          <small className="text-slate-400 text-[11px]">Cumulative Turnover</small>
         </div>
 
-        <div className="bg-slate-50 border border-slate-200 rounded-xl p-3.5">
-          <span className="text-[11px] text-slate-500 uppercase font-bold tracking-wider">Lifetime Paid</span>
-          <div className="text-xl font-extrabold text-emerald-600 mt-1">
+        <div className="bg-slate-50 border border-slate-200 rounded-xl p-2.5">
+          <span className="text-[10px] text-slate-500 uppercase font-bold tracking-wider">Lifetime Paid</span>
+          <div className="text-lg font-extrabold text-emerald-600 mt-0.5">
             ৳ {Number(stats.lifetime_paid || 0).toLocaleString('en-BD')}
           </div>
-          <small className="text-slate-400 text-xs">Cleared Payments</small>
+          <small className="text-slate-400 text-[11px]">Cleared Payments</small>
         </div>
 
-        <div className={`border rounded-xl p-3.5 ${balance > 0 ? 'bg-rose-50 border-rose-200' : 'bg-emerald-50 border-emerald-200'}`}>
-          <span className={`text-[11px] uppercase font-bold tracking-wider ${balance > 0 ? 'text-rose-700' : 'text-emerald-700'}`}>
+        <div className={`border rounded-xl p-2.5 ${balance > 0 ? 'bg-rose-50 border-rose-200' : 'bg-emerald-50 border-emerald-200'}`}>
+          <span className={`text-[10px] uppercase font-bold tracking-wider ${balance > 0 ? 'text-rose-700' : 'text-emerald-700'}`}>
             {partyType === 'customer'
               ? (balance > 0 ? 'Outstanding Due' : balance < 0 ? 'Advance Credit' : 'Balance')
               : partyType === 'supplier'
               ? (balance > 0 ? 'Payable Due' : balance < 0 ? 'Advance Given' : 'Balance')
               : 'Balance'}
           </span>
-          <div className={`text-xl font-extrabold mt-1 ${balance > 0 ? 'text-rose-700' : 'text-emerald-700'}`}>
+          <div className={`text-lg font-extrabold mt-0.5 ${balance > 0 ? 'text-rose-700' : 'text-emerald-700'}`}>
             ৳ {balance.toLocaleString('en-BD', { minimumFractionDigits: 2 })}
           </div>
-          <small className={`text-xs ${balance > 0 ? 'text-rose-600' : 'text-emerald-600'}`}>
+          <small className={`text-[11px] ${balance > 0 ? 'text-rose-600' : 'text-emerald-600'}`}>
             {balance > 0 ? 'Pending Settlement' : balance < 0 ? (partyType === 'customer' ? 'Advance credit' : 'Advance given') : 'All Cleared'}
           </small>
         </div>

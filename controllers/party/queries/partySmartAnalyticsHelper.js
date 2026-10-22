@@ -3,14 +3,15 @@ const pool = require('../../../config/db');
 async function getCustomerSmartMetrics(partyId, stats) {
     try {
         const topProductsRes = await pool.query(`
-            SELECT p.id, p.name, 
+            SELECT p.name, 
+                   MAX(p.id) AS id,
                    COALESCE(SUM(si.quantity), 0)::int AS total_qty, 
                    COALESCE(SUM(si.line_total), 0)::numeric(14,2) AS total_spent
             FROM sales_items si
             JOIN sales s ON si.sale_id = s.id
             JOIN products p ON si.product_id = p.id
             WHERE s.customer_id = $1 AND s.deleted_at IS NULL
-            GROUP BY p.id, p.name
+            GROUP BY p.name
             ORDER BY total_qty DESC LIMIT 4
         `, [partyId]);
 
@@ -77,24 +78,27 @@ async function getCustomerSmartMetrics(partyId, stats) {
 async function getSupplierSmartMetrics(partyId, stats) {
     try {
         const topProductsRes = await pool.query(`
-            SELECT p.id, p.name, p.stock, COALESCE(p.min_stock, 5) AS min_stock,
+            SELECT p.name,
+                   MAX(p.id) AS id,
+                   SUM(p.stock) AS stock,
+                   COALESCE(MAX(p.min_stock), 5) AS min_stock,
                    COALESCE(SUM(poi.quantity), 0)::int AS total_qty_supplied,
                    ROUND(AVG(poi.cost_price), 2) AS avg_cost_price
             FROM purchase_order_items poi
             JOIN purchase_orders po ON poi.purchase_order_id = po.id
             JOIN products p ON poi.product_id = p.id
             WHERE po.supplier_id = $1
-            GROUP BY p.id, p.name, p.stock, p.min_stock
+            GROUP BY p.name
             ORDER BY total_qty_supplied DESC LIMIT 4
         `, [partyId]);
 
         const lowStockRes = await pool.query(`
-            SELECT DISTINCT ON (p.id) p.id, p.name, p.stock, COALESCE(p.min_stock, 5) AS min_stock, p.purchase_price
+            SELECT DISTINCT ON (p.name) p.id, p.name, p.stock, COALESCE(p.min_stock, 5) AS min_stock, p.purchase_price
             FROM purchase_order_items poi
             JOIN purchase_orders po ON poi.purchase_order_id = po.id
             JOIN products p ON poi.product_id = p.id
             WHERE po.supplier_id = $1 AND p.deleted_at IS NULL AND p.stock <= COALESCE(p.min_stock, 5)
-            ORDER BY p.id, p.stock ASC LIMIT 5
+            ORDER BY p.name, p.stock ASC LIMIT 5
         `, [partyId]);
 
         const totalPos = parseInt(stats?.total_pos || 0, 10);
