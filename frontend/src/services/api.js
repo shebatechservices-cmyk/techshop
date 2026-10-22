@@ -1,78 +1,23 @@
-import { Capacitor } from '@capacitor/core';
+import API_BASE, {
+  CLOUD_SERVER_URL,
+  LOCAL_LAN_SERVER_URL,
+  isNativeApp,
+  getApiBase,
+  getCurrentServerUrl,
+  setCustomServerUrl,
+} from './apiConfig';
 
-export const CLOUD_SERVER_URL = 'https://sdb.shebatechnologybd.com/api';
-export const LOCAL_LAN_SERVER_URL = 'http://192.168.1.23:3000/api';
-
-export const isNativeApp = () => {
-  if (typeof window === 'undefined') return false;
-  try {
-    if (Capacitor && typeof Capacitor.isNativePlatform === 'function' && Capacitor.isNativePlatform()) {
-      return true;
-    }
-  } catch {
-    // ignore
-  }
-  if (Boolean(window.androidBridge) || Boolean(window.Capacitor)) {
-    return true;
-  }
-  if (window.location) {
-    if (window.location.protocol === 'capacitor:' || window.location.protocol === 'ionic:') {
-      return true;
-    }
-    // Inside Capacitor Android/iOS WebView, hostname is localhost and port is empty
-    if (window.location.hostname === 'localhost' && !window.location.port) {
-      return true;
-    }
-  }
-  return false;
+export {
+  CLOUD_SERVER_URL,
+  LOCAL_LAN_SERVER_URL,
+  isNativeApp,
+  getApiBase,
+  getCurrentServerUrl,
+  setCustomServerUrl,
+  API_BASE,
 };
 
-const getApiBase = () => {
-  let base = '';
 
-  // 0. Custom Server URL from localStorage (allows Android app to connect to LAN IP or live domain)
-  if (typeof window !== 'undefined' && window.localStorage) {
-    const savedServer = window.localStorage.getItem('sheba_pos_server_url');
-    if (savedServer) {
-      base = String(savedServer).trim();
-    }
-  }
-
-  // 1. Explicit VITE_API_URL from environment
-  if (!base && import.meta.env && import.meta.env.VITE_API_URL) {
-    base = String(import.meta.env.VITE_API_URL).trim();
-  }
-
-  // 2. Native Capacitor / Android Detection: Always default to live cloud production server
-  if (!base && isNativeApp()) {
-    return CLOUD_SERVER_URL;
-  }
-
-  // 3. Web browser environment
-  if (!base && typeof window !== 'undefined' && window.location) {
-    const { protocol, hostname, port } = window.location;
-    // Local Vite dev server ports -> connect directly to local backend port 3000
-    if (['5173', '5174', '5175', '5176'].includes(port) || (port && port !== '3000' && (hostname === 'localhost' || hostname === '127.0.0.1'))) {
-      return `${protocol}//${hostname}:3000/api`;
-    }
-    // Production web hosts (Vercel, Render, or custom domains) fallback to relative /api
-    return '/api';
-  } else if (!base) {
-    base = '/api';
-  }
-
-  // Remove trailing slashes
-  base = base.replace(/\/+$/, '');
-
-  // Ensure base ends with /api
-  if (!base.endsWith('/api')) {
-    base = `${base}/api`;
-  }
-
-  return base;
-};
-
-const API_BASE = getApiBase();
 
 // Helper to pre-warm Render server in background (wakes up free tier from sleep)
 export const pingServer = async () => {
@@ -128,6 +73,35 @@ export const getAuthHeaders = () => {
   return headers;
 };
 
+export const wrapResponseSafeJson = (response) => {
+  if (!response || typeof response.json !== 'function') return response;
+  const originalJson = response.json.bind(response);
+  response.json = async () => {
+    const contentType = response.headers?.get?.('content-type') || '';
+    if (contentType.includes('text/html')) {
+      return {
+        success: false,
+        error: `Server responded with HTML (${response.status}) instead of JSON`,
+        isHtml: true,
+        status: response.status,
+      };
+    }
+    try {
+      return await originalJson();
+    } catch (parseErr) {
+      if (String(parseErr?.message || '').includes('Unexpected token')) {
+        return {
+          success: false,
+          error: 'Invalid JSON response from server',
+          status: response.status,
+        };
+      }
+      throw parseErr;
+    }
+  };
+  return response;
+};
+
 // Resilient fetch helper that handles mobile data, local fallback & proxy fallbacks with automatic auth headers
 export const smartFetch = async (path, options = {}) => {
   const cleanPath = path.startsWith('/') ? path : `/${path}`;
@@ -137,6 +111,7 @@ export const smartFetch = async (path, options = {}) => {
   const mergedOptions = {
     ...options,
     headers: {
+      Accept: 'application/json',
       ...authHeaders,
       ...(options.headers || {}),
     },
@@ -160,10 +135,9 @@ export const smartFetch = async (path, options = {}) => {
   
   try {
     const res = await executeFetchWithTimeout(primaryUrl, mergedOptions, 45000);
-    return res;
+    return wrapResponseSafeJson(res);
   } catch (err) {
-    // If primary was LAN / local and failed (e.g. mobile disconnected from Wi-Fi or outside shop):
-    // Fall back to Cloud Server
+    // If primary was LAN / local and failed: fall back to Cloud Server
     if (!primaryUrl.includes('shebatechnologybd.com')) {
       try {
         console.warn(`[smartFetch] Primary endpoint (${primaryUrl}) failed. Auto fallback to Cloud Server (${CLOUD_SERVER_URL})...`);
@@ -173,20 +147,19 @@ export const smartFetch = async (path, options = {}) => {
           if (typeof window !== 'undefined' && window.localStorage) {
             window.localStorage.setItem('sheba_pos_server_url', CLOUD_SERVER_URL);
           }
-          return res2;
+          return wrapResponseSafeJson(res2);
         }
       } catch {
-        // Cloud fallback also failed, continue
+        // Cloud fallback failed
       }
     } else {
-      // Primary was Cloud and failed (e.g. Render sleeping, no external internet, shop Wi-Fi local mode):
-      // Fall back to Local LAN Server
+      // Primary was Cloud and failed: fall back to Local LAN Server
       try {
         console.warn(`[smartFetch] Cloud endpoint (${primaryUrl}) failed. Auto fallback to Local LAN Server (${LOCAL_LAN_SERVER_URL})...`);
         const lanUrl = `${LOCAL_LAN_SERVER_URL}${cleanPath}`;
         const res2 = await executeFetchWithTimeout(lanUrl, mergedOptions, 8000);
         if (res2) {
-          return res2;
+          return wrapResponseSafeJson(res2);
         }
       } catch {
         // Local LAN fallback failed
@@ -198,27 +171,12 @@ export const smartFetch = async (path, options = {}) => {
       try {
         const fallbackUrl = `/api${cleanPath}`;
         const res2 = await executeFetchWithTimeout(fallbackUrl, mergedOptions, 10000);
-        return res2;
+        return wrapResponseSafeJson(res2);
       } catch {
         throw err;
       }
     }
     throw err;
-  }
-};
-
-export const getCurrentServerUrl = () => API_BASE;
-
-export const setCustomServerUrl = (url) => {
-  if (typeof window !== 'undefined' && window.localStorage) {
-    if (!url) {
-      window.localStorage.removeItem('sheba_pos_server_url');
-    } else {
-      let clean = String(url).trim().replace(/\/+$/, '');
-      if (!clean.endsWith('/api')) clean = `${clean}/api`;
-      window.localStorage.setItem('sheba_pos_server_url', clean);
-    }
-    window.location.reload();
   }
 };
 

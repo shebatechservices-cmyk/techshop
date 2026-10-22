@@ -24,7 +24,9 @@ window.addEventListener(
     if (
       msg.includes("reading 'startTime'") ||
       msg.includes('reportAllChanges') ||
-      msg.includes('PerformanceObserver')
+      msg.includes('PerformanceObserver') ||
+      msg.includes("Unexpected token '<'") ||
+      msg.includes('is not valid JSON')
     ) {
       event.preventDefault();
       event.stopImmediatePropagation();
@@ -54,7 +56,9 @@ window.addEventListener(
     if (
       msg.includes("reading 'startTime'") ||
       msg.includes('reportAllChanges') ||
-      msg.includes('PerformanceObserver')
+      msg.includes('PerformanceObserver') ||
+      msg.includes("Unexpected token '<'") ||
+      msg.includes('is not valid JSON')
     ) {
       event.preventDefault();
       event.stopImmediatePropagation();
@@ -78,18 +82,27 @@ window.addEventListener(
   true
 );
 
-// Add the authenticated session to every API call made by the existing views.
-// This keeps individual screens from having to duplicate token plumbing.
+// Add the authenticated session and safe response handling to every API call.
 const browserFetch = window.fetch.bind(window);
 window.fetch = async (input, init = {}) => {
   const urlStr = typeof input === 'string' ? input : (input?.url || '');
   const token = localStorage.getItem('sheba_auth_token') || sessionStorage.getItem('sheba_auth_token');
-  const isApiCall = urlStr.startsWith('/api') || urlStr.includes('/api') || urlStr.includes(window.location.host + '/api') || urlStr.includes('localhost:3000/api') || urlStr.includes('sheba-technology.onrender.com/api') || urlStr.includes('shebatechnologybd.com/api');
-  if (!token || !isApiCall || /\/security\/(login|signup|recovery-request)(?:$|[/?])/.test(urlStr)) {
-    return browserFetch(input, init);
-  }
+  const isApiCall =
+    urlStr.startsWith('/api') ||
+    urlStr.includes('/api') ||
+    urlStr.includes(window.location.host + '/api') ||
+    urlStr.includes('localhost:3000/api') ||
+    urlStr.includes('sheba-technology.onrender.com/api') ||
+    urlStr.includes('shebatechnologybd.com/api');
+
   const headers = new Headers(init.headers || (typeof input !== 'string' ? input.headers : undefined));
-  if (!headers.has('Authorization')) headers.set('Authorization', `Bearer ${token}`);
+  if (isApiCall) {
+    if (!headers.has('Accept')) headers.set('Accept', 'application/json');
+    if (token && !headers.has('Authorization') && !/\/security\/(login|signup|recovery-request)(?:$|[/?])/.test(urlStr)) {
+      headers.set('Authorization', `Bearer ${token}`);
+    }
+  }
+
   const response = await browserFetch(input, { ...init, headers });
   if (response.status === 401 && isApiCall && !urlStr.includes('/security/login')) {
     localStorage.removeItem('sheba_auth_user');
@@ -98,6 +111,36 @@ window.fetch = async (input, init = {}) => {
     sessionStorage.removeItem('sheba_auth_token');
     window.dispatchEvent(new CustomEvent('sheba:session_expired'));
   }
+
+  // Intercept response.json() to prevent "Unexpected token '<', '<!DOCTYPE '... is not valid JSON"
+  // whenever server returns HTML (Render cold start 502/503, proxy 404, or SPA fallback)
+  if (isApiCall && response && typeof response.json === 'function') {
+    const origJson = response.json.bind(response);
+    response.json = async () => {
+      const contentType = response.headers?.get?.('content-type') || '';
+      if (contentType.includes('text/html')) {
+        return {
+          success: false,
+          error: `Server responded with HTML (${response.status}) instead of JSON`,
+          isHtml: true,
+          status: response.status,
+        };
+      }
+      try {
+        return await origJson();
+      } catch (parseErr) {
+        if (String(parseErr?.message || '').includes('Unexpected token')) {
+          return {
+            success: false,
+            error: 'Invalid JSON response from server',
+            status: response.status,
+          };
+        }
+        throw parseErr;
+      }
+    };
+  }
+
   return response;
 };
 

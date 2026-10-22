@@ -34,6 +34,21 @@ describe('React SPA Catch-All & Strict API Prefix Routing', () => {
 
         // Catch-all route to serve the React SPA index.html for all non-API navigation requests
         app.use((req, res, next) => {
+            const wantsJson =
+                req.headers.accept?.includes('application/json') ||
+                req.headers['x-requested-with'] === 'XMLHttpRequest' ||
+                Boolean(req.headers.authorization) ||
+                req.path.startsWith('/api') ||
+                req.originalUrl.startsWith('/api');
+
+            if (wantsJson) {
+                return res.status(404).json({
+                    success: false,
+                    error: 'API endpoint not found',
+                    path: req.originalUrl
+                });
+            }
+
             if (req.method === 'GET') {
                 const indexPath = path.join(__dirname, '../frontend/dist/index.html');
                 if (fs.existsSync(indexPath)) {
@@ -70,6 +85,14 @@ describe('React SPA Catch-All & Strict API Prefix Routing', () => {
 
     test('4. GET /api/non-existent-route returns JSON 404, never HTML', async () => {
         const res = await request(app).get('/api/non-existent-route');
+        expect(res.status).toBe(404);
+        expect(res.headers['content-type']).toMatch(/application\/json/);
+        expect(res.body.success).toBe(false);
+        expect(res.body.error).toBe('API endpoint not found');
+    });
+
+    test('5. GET /products with Accept: application/json returns JSON 404, never HTML', async () => {
+        const res = await request(app).get('/products').set('Accept', 'application/json');
         expect(res.status).toBe(404);
         expect(res.headers['content-type']).toMatch(/application\/json/);
         expect(res.body.success).toBe(false);

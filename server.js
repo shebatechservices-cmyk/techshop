@@ -117,6 +117,22 @@ app.use(['/api', '/uploads'], (req, res) => {
 
 // Catch-all route to serve the React SPA index.html for all non-API GET requests
 app.use((req, res, next) => {
+    // If request explicitly expects JSON, is an XHR call, or has auth token, NEVER return index.html!
+    const wantsJson =
+        req.headers.accept?.includes('application/json') ||
+        req.headers['x-requested-with'] === 'XMLHttpRequest' ||
+        Boolean(req.headers.authorization) ||
+        req.path.startsWith('/api') ||
+        req.originalUrl.startsWith('/api');
+
+    if (wantsJson) {
+        return res.status(404).json({
+            success: false,
+            error: 'API endpoint not found',
+            path: req.originalUrl
+        });
+    }
+
     if (req.method === 'GET') {
         const indexPath = path.join(__dirname, 'frontend/dist/index.html');
         if (fs.existsSync(indexPath)) {
