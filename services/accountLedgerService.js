@@ -24,6 +24,11 @@ const ensureAccountLedgerSchema = async (dbClient = pool) => {
     }
 };
 
+// Initialize schema columns safely once at startup (skip in test environment to avoid open pool handles)
+if (process.env.NODE_ENV !== 'test') {
+    ensureAccountLedgerSchema(pool).catch(() => {});
+}
+
 /**
  * Atomically records an immutable ledger entry in `account_transactions` and
  * updates the running balance in `payment_accounts` (and mirrors `accounts` table).
@@ -62,8 +67,6 @@ const recordAccountTransaction = async (client, opts) => {
     if (!accountId || amount <= 0) {
         return null;
     }
-// Run schema initialization once on module load asynchronously in background
-ensureAccountLedgerSchema(pool).catch(() => {});
 
     // Normalize transaction direction ('credit' for cash-in, 'debit' for cash-out)
     let transactionType = String(rawTxType || '').toLowerCase();

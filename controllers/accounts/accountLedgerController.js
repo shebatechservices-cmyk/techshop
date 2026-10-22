@@ -89,7 +89,6 @@ exports.reverseTransaction = async (req, res) => {
         const { reason, note, transaction_id } = req.body;
 
         await client.query('BEGIN');
-        await ensureAccountLedgerSchema(client);
 
         const oldTxRes = await client.query('SELECT * FROM account_transactions WHERE id = $1', [id]);
         if (oldTxRes.rows.length === 0) {
