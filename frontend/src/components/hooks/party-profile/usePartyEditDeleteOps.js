@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import API from '../../../services/api';
+import { smartFetch } from '../../../services/api';
 
 export function usePartyEditDeleteOps({
   partyType,
@@ -34,7 +34,7 @@ export function usePartyEditDeleteOps({
       setError('');
       setSuccessMsg('');
 
-      const res = await fetch(`${API}/parties/${partyType}/${partyId}`, {
+      const res = await smartFetch(`/parties/${partyType}/${partyId}`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(editForm),
@@ -66,7 +66,7 @@ export function usePartyEditDeleteOps({
       setDeleteLoading(true);
       setDeleteError('');
 
-      const res = await fetch(`${API}/parties/${partyType}/${partyId}`, {
+      const res = await smartFetch(`/parties/${partyType}/${partyId}`, {
         method: 'DELETE',
       });
 

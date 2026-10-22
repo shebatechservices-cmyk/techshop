@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import API from '../../services/api';
+import { smartFetch } from '../../services/api';
 import { usePartyFinancialOps } from './party-profile/usePartyFinancialOps';
 import { usePartyWalletOps } from './party-profile/usePartyWalletOps';
 import { usePartyEditDeleteOps } from './party-profile/usePartyEditDeleteOps';
@@ -52,9 +52,9 @@ export function usePartyProfileManager({
       setError('');
 
       const [partyRes, walletsRes, walletLedgerRes] = await Promise.all([
-        fetch(`${API}/parties/${partyType}/${partyId}`),
-        fetch(`${API}/accounts/wallets`),
-        fetch(`${API}/wallets/${partyType}/${partyId}`),
+        smartFetch(`/parties/${partyType}/${partyId}`),
+        smartFetch('/accounts/wallets'),
+        smartFetch(`/wallets/${partyType}/${partyId}`),
       ]);
 
       if (!partyRes.ok) {

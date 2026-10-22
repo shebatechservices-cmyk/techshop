@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import API from '../../../services/api';
+import { smartFetch } from '../../../services/api';
 
 export function usePartyWalletOps({
   partyType,
@@ -37,7 +37,7 @@ export function usePartyWalletOps({
     }
     try {
       setWalletLoading(true);
-      const res = await fetch(`${API}/wallets/transaction`, {
+      const res = await smartFetch('/wallets/transaction', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({

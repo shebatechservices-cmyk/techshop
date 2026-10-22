@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import API from '../../../services/api';
+import { smartFetch } from '../../../services/api';
 
 export function usePartyFinancialOps({
   partyType,
@@ -30,17 +30,20 @@ export function usePartyFinancialOps({
     }
 
     if (finAction === 'due') {
-      const partyDue = partyType === 'customer'
-        ? Number(profileData?.profile?.receivable_balance || 0)
-        : partyType === 'supplier'
-          ? Number(profileData?.profile?.payable_balance || 0)
-          : 0;
+      const prof = profileData?.profile || {};
+      const partyDue = Number(
+        prof.balance !== undefined
+          ? prof.balance
+          : partyType === 'customer'
+          ? (prof.receivable_balance || 0)
+          : (prof.payable_balance || 0)
+      );
 
       if (partyDue <= 0 && profileData?.profile) {
         setFinError('কোনো বকেয়া নেই (Zero due).');
         return;
       }
-      if (partyDue > 0 && numAmount > partyDue) {
+      if (partyDue > 0 && numAmount > partyDue + 0.05) {
         setFinError(`পেমেন্টের পরিমাণ বকেয়া (৳ ${partyDue.toLocaleString()}) এর চেয়ে বেশি হতে পারবে না।`);
         return;
       }
@@ -64,7 +67,7 @@ export function usePartyFinancialOps({
         actionTypeToSend = 'salary_payment';
       }
 
-      const res = await fetch(`${API}/parties/transaction`, {
+      const res = await smartFetch('/parties/transaction', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({

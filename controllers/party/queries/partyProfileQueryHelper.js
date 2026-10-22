@@ -57,6 +57,7 @@ async function getCustomerProfile(partyId) {
             address: customer.address,
             customer_type: customer.customer_type || 'Retail',
             balance: parseFloat(customer.receivable_balance || 0),
+            receivable_balance: parseFloat(customer.receivable_balance || 0),
             loyalty_points: parseInt(customer.loyalty_points || 0),
             created_at: customer.created_at,
             activity_count: activityCount
@@ -124,6 +125,7 @@ async function getSupplierProfile(partyId) {
             address: supplier.address,
             contact_person: supplier.contact_person || 'Vendor',
             balance: parseFloat(supplier.payable_balance || 0),
+            payable_balance: parseFloat(supplier.payable_balance || 0),
             created_at: supplier.created_at,
             activity_count: activityCount
         },
