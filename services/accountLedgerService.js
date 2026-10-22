@@ -62,8 +62,8 @@ const recordAccountTransaction = async (client, opts) => {
     if (!accountId || amount <= 0) {
         return null;
     }
-
-    await ensureAccountLedgerSchema(pool);
+// Run schema initialization once on module load asynchronously in background
+ensureAccountLedgerSchema(pool).catch(() => {});
 
     // Normalize transaction direction ('credit' for cash-in, 'debit' for cash-out)
     let transactionType = String(rawTxType || '').toLowerCase();
