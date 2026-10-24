@@ -1,11 +1,14 @@
 import { useState, useEffect } from 'react';
 import { smartFetch, pingServer } from '../../services/api';
+import { useStaffSignupState } from './useStaffSignupState';
+import { usePasswordRecoveryState } from './usePasswordRecoveryState';
+import { useTwoFactorLoginState } from './useTwoFactorLoginState';
 
 export function useLoginModalState({ onLoginSuccess }) {
-  // Modes: 'login' | 'staff_signup' | 'forgot_password'
+  // Modes: 'login' | 'staff_signup' | 'forgot_password' | 'two_factor'
   const [mode, setMode] = useState('login');
 
-  // Login State
+  // Core Login State
   const [identifier, setIdentifier] = useState('');
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
@@ -15,23 +18,12 @@ export function useLoginModalState({ onLoginSuccess }) {
   const [successMsg, setSuccessMsg] = useState('');
   const [serverOnline, setServerOnline] = useState(null);
 
-  // Staff Sign Up State
-  const [staffName, setStaffName] = useState('');
-  const [staffIdentifier, setStaffIdentifier] = useState('');
-  const [staffPassword, setStaffPassword] = useState('');
-  const [staffRole, setStaffRole] = useState('Sales Executive');
-  const [staffLoading, setStaffLoading] = useState(false);
-  const [staffError, setStaffError] = useState('');
-  const [staffSuccess, setStaffSuccess] = useState('');
+  // Sub-Hooks
+  const staffState = useStaffSignupState();
+  const recoveryState = usePasswordRecoveryState();
+  const twoFactorState = useTwoFactorLoginState({ onLoginSuccess, rememberMe });
 
-  // Password Recovery State
-  const [recoveryId, setRecoveryId] = useState('');
-  const [recoveryRole, setRecoveryRole] = useState('staff');
-  const [recoveryLoading, setRecoveryLoading] = useState(false);
-  const [recoverySuccess, setRecoverySuccess] = useState('');
-  const [recoveryError, setRecoveryError] = useState('');
-
-  // Password Combination Indicator
+  // Password Combination Indicators
   const hasLetter = /[a-zA-Z]/.test(password);
   const hasNumber = /[0-9]/.test(password);
   const hasSpecial = /[^a-zA-Z0-9]/.test(password);
@@ -46,9 +38,7 @@ export function useLoginModalState({ onLoginSuccess }) {
         const online = await pingServer();
         if (!isMounted) return;
         setServerOnline(online);
-        if (!online) {
-          timer = setTimeout(checkServer, 4000);
-        }
+        if (!online) timer = setTimeout(checkServer, 4000);
       } catch {
         if (isMounted) {
           setServerOnline(false);
@@ -58,7 +48,6 @@ export function useLoginModalState({ onLoginSuccess }) {
     };
 
     checkServer();
-
     return () => {
       isMounted = false;
       if (timer) clearTimeout(timer);
@@ -70,18 +59,8 @@ export function useLoginModalState({ onLoginSuccess }) {
     setErrorMsg('');
     setSuccessMsg('');
 
-    let rawId = identifier;
-    let rawPass = password;
-
-    if (typeof customId === 'string' && customId.trim()) {
-      rawId = customId;
-    }
-    if (typeof customPass === 'string' && customPass.trim()) {
-      rawPass = customPass;
-    }
-
-    const targetId = String(rawId ?? '').trim();
-    const targetPass = String(rawPass ?? '').trim();
+    const targetId = String((typeof customId === 'string' && customId.trim() ? customId : identifier) ?? '').trim();
+    const targetPass = String((typeof customPass === 'string' && customPass.trim() ? customPass : password) ?? '').trim();
 
     if (!targetId || !targetPass) {
       setErrorMsg('Please enter both your phone/email and password.');
@@ -122,6 +101,14 @@ export function useLoginModalState({ onLoginSuccess }) {
         data = null;
       }
 
+      // Check if New Device 2FA is required
+      if (res.ok && data && data.requires_2fa) {
+        twoFactorState.startTwoFactor(data);
+        setMode('two_factor');
+        return;
+      }
+
+      // Direct Login Success
       if (res.ok && data && data.success && data.token) {
         setSuccessMsg('✓ Login successful! Redirecting to dashboard...');
         const userObj = data.user;
@@ -143,99 +130,15 @@ export function useLoginModalState({ onLoginSuccess }) {
       setErrorMsg((data && data.message) || 'Invalid username/phone or incorrect password.');
     } catch (err) {
       console.error('Login error:', err);
-      setErrorMsg(
-        'Unable to connect to the server. If waking from idle, please try again in a few seconds.'
-      );
+      setErrorMsg('Unable to connect to the server. Please check your network.');
     } finally {
       setLoading(false);
     }
   };
 
-  // Staff Sign-up Submission
-  const handleStaffSignup = async (e) => {
-    if (e && e.preventDefault) e.preventDefault();
-    setStaffError('');
-    setStaffSuccess('');
-
-    const name = String(staffName || '').trim();
-    const identifierVal = String(staffIdentifier || '').trim();
-    const pass = String(staffPassword || '').trim();
-
-    if (!name || !identifierVal || !pass) {
-      setStaffError('Please fill in all required fields.');
-      return;
-    }
-
-    if (pass.length < 6) {
-      setStaffError('Password must be at least 6 characters.');
-      return;
-    }
-
-    try {
-      setStaffLoading(true);
-      const res = await smartFetch('/security/signup', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          name,
-          identifier: identifierVal,
-          password: pass,
-          user_type: 'staff',
-          staff_role: staffRole,
-        }),
-      });
-
-      const data = await res.json();
-      if (res.ok && data.success) {
-        setStaffSuccess('✓ Staff registration successful! You can log in once the administrator approves your account.');
-        setStaffName('');
-        setStaffIdentifier('');
-        setStaffPassword('');
-      } else {
-        setStaffError(data.message || 'Unable to complete registration.');
-      }
-    } catch (err) {
-      setStaffError('Unable to connect to the server.');
-    } finally {
-      setStaffLoading(false);
-    }
-  };
-
-  // Password Recovery Submission
-  const handleRecovery = async (e) => {
-    if (e && e.preventDefault) e.preventDefault();
-    setRecoveryError('');
-    setRecoverySuccess('');
-
-    const targetRecId = String(recoveryId || '').trim();
-    if (!targetRecId) {
-      setRecoveryError('Please enter your registered phone number or email.');
-      return;
-    }
-
-    try {
-      setRecoveryLoading(true);
-      const res = await smartFetch('/security/recovery-request', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          identifier: targetRecId,
-          user_type: recoveryRole,
-          reason: 'Forgot password reset request',
-        }),
-      });
-
-      const data = await res.json();
-      if (res.ok && data.success) {
-        setRecoverySuccess(data.message || 'Password reset request sent successfully.');
-      } else {
-        setRecoveryError(data.message || 'Failed to send recovery request.');
-      }
-    } catch (err) {
-      setRecoveryError('Unable to connect to the server.');
-    } finally {
-      setRecoveryLoading(false);
-    }
+  const handleCancel2Fa = () => {
+    twoFactorState.cancelTwoFactor();
+    setMode('login');
   };
 
   return {
@@ -253,29 +156,20 @@ export function useLoginModalState({ onLoginSuccess }) {
     errorMsg,
     setErrorMsg,
     successMsg,
-    setSuccessMsg,
     serverOnline,
-    staffName,
-    setStaffName,
-    staffIdentifier,
-    setStaffIdentifier,
-    staffPassword,
-    setStaffPassword,
-    staffRole,
-    setStaffRole,
-    staffLoading,
-    staffError,
-    staffSuccess,
-    recoveryId,
-    setRecoveryId,
-    recoveryRole,
-    setRecoveryRole,
-    recoveryLoading,
-    recoverySuccess,
-    recoveryError,
     strengthScore,
     executeLogin,
-    handleStaffSignup,
-    handleRecovery,
+
+    // Staff Signup
+    ...staffState,
+
+    // Password Recovery
+    ...recoveryState,
+
+    // 2FA State
+    ...twoFactorState,
+    handleCancel2Fa,
   };
 }
+
+export default useLoginModalState;

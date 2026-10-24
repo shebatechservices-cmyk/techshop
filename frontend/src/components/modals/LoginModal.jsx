@@ -2,6 +2,7 @@ import React from 'react';
 import { useLoginModalState } from '../hooks/useLoginModalState';
 import LoginForm from '../shared/auth/LoginForm';
 import ForgotPasswordForm from '../shared/auth/ForgotPasswordForm';
+import Login2FaForm from '../shared/auth/Login2FaForm';
 
 export default function LoginModal({ isOpen, onLoginSuccess, canClose = false, onClose, onOpenDevConsole }) {
   const modalState = useLoginModalState({ onLoginSuccess });
@@ -136,11 +137,13 @@ export default function LoginModal({ isOpen, onLoginSuccess, canClose = false, o
               Secure ERP Gateway
             </span>
             <h2 className="text-2xl sm:text-3xl font-extrabold text-slate-900 tracking-tight m-0">
-              {mode === 'login' ? 'Sign In to Your Account' : 'Password Recovery'}
+              {mode === 'login' ? 'Sign In to Your Account' : mode === 'two_factor' ? 'Two-Step Verification' : 'Password Recovery'}
             </h2>
             <p className="text-xs sm:text-sm text-slate-500 font-medium mt-1.5 mb-0">
               {mode === 'login' 
                 ? 'Enter your credentials to access your store management workspace.' 
+                : mode === 'two_factor'
+                ? 'Hardware authorization required for your protection.'
                 : 'Enter your registered phone number or email to receive reset instructions.'}
             </p>
           </div>
@@ -151,6 +154,19 @@ export default function LoginModal({ isOpen, onLoginSuccess, canClose = false, o
               <LoginForm
                 {...modalState}
                 onOpenDevConsole={onOpenDevConsole}
+              />
+            )}
+
+            {mode === 'two_factor' && (
+              <Login2FaForm
+                maskedEmail={modalState.maskedEmail}
+                otpCode={modalState.otpCode}
+                setOtpCode={modalState.setOtpCode}
+                verifyingOtp={modalState.verifyingOtp}
+                verifyError={modalState.verifyError}
+                approvalNotice={modalState.approvalNotice}
+                onVerify={modalState.handleVerifyOtp}
+                onCancel={modalState.handleCancel2Fa}
               />
             )}
 

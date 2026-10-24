@@ -14,14 +14,17 @@ const deviceController = require('./security/deviceController');
 const firewallController = require('./security/firewallController');
 const recoveryController = require('./security/recoveryController');
 const auditLogController = require('./security/auditLogController');
+const twoFactorController = require('./security/twoFactorController');
 
 module.exports = {
-    // Auth
+    // Auth & 2FA
     login: authController.login,
     signup: authController.signup,
     logout: authController.logout,
     verifySession: authController.verifySession,
     getCurrentUser: authController.getCurrentUser,
+    verifyDeviceOtp: twoFactorController.verifyDeviceOtp,
+    checkDeviceApproval: twoFactorController.checkDeviceApproval,
 
     // Devices
     getDevices: deviceController.getDevices,

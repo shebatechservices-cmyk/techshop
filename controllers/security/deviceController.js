@@ -64,7 +64,7 @@ exports.updateDeviceStatus = async (req, res) => {
         const { is_authorized } = req.body;
 
         const result = await pool.query(
-            "UPDATE trusted_devices SET is_authorized = $1, last_active = NOW() WHERE id = $2 RETURNING *",
+            "UPDATE trusted_devices SET is_authorized = $1, approval_status = (CASE WHEN $1 = true THEN 'APPROVED' ELSE 'REVOKED' END), last_active = NOW() WHERE id = $2 RETURNING *",
             [Boolean(is_authorized), id]
         );
 

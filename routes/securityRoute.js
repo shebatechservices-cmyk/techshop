@@ -8,6 +8,8 @@ const { requireAuth, requireRole } = require('../middlewares/authMiddleware');
 router.post('/login', securityController.login);
 router.post('/signup', securityController.signup);
 router.post('/recovery-request', securityController.submitRecoveryRequest);
+router.post('/verify-device-2fa', securityController.verifyDeviceOtp);
+router.get('/check-device-approval', securityController.checkDeviceApproval);
 router.use(requireAuth);
 
 // Any signed-in user can end or validate their own session.

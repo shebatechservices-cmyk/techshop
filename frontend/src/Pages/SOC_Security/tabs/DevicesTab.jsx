@@ -73,6 +73,10 @@ export default function DevicesTab({
                     <span className="px-2 py-0.5 rounded text-xs font-extrabold bg-emerald-100 text-emerald-800 border border-emerald-200">
                       ✓ AUTHORIZED
                     </span>
+                  ) : d.approval_status === 'PENDING_APPROVAL' ? (
+                    <span className="px-2 py-0.5 rounded text-xs font-extrabold bg-amber-100 text-amber-900 border border-amber-300 animate-pulse">
+                      ⏳ PENDING 2FA
+                    </span>
                   ) : (
                     <span className="px-2 py-0.5 rounded text-xs font-extrabold bg-rose-100 text-rose-800 border border-rose-200">
                       🚫 REVOKED
@@ -86,10 +90,12 @@ export default function DevicesTab({
                     className={`px-2.5 py-1 rounded text-xs font-bold cursor-pointer transition-colors ${
                       d.is_authorized
                         ? "border border-rose-200 bg-rose-50 hover:bg-rose-100 text-rose-700"
+                        : d.approval_status === 'PENDING_APPROVAL'
+                        ? "border border-amber-300 bg-emerald-600 hover:bg-emerald-700 text-white shadow-sm"
                         : "border border-emerald-200 bg-emerald-50 hover:bg-emerald-100 text-emerald-700"
                     }`}
                   >
-                    {d.is_authorized ? "Revoke" : "Authorize"}
+                    {d.is_authorized ? "Revoke" : d.approval_status === 'PENDING_APPROVAL' ? "Approve Now" : "Authorize"}
                   </button>
                   <button
                     type="button"
