@@ -74,6 +74,7 @@ export const DEFAULT_ROLES = [
   {
     id: 1,
     name: 'Super Admin',
+    icon: '👑',
     description: 'Complete unrestricted control across all modules, accounts, and security settings.',
     permissions: [
       'create_sale', 'edit_sale', 'delete_invoice', 'peek_cost_margin', 'approve_discount', 'print_sale_invoice',
@@ -85,7 +86,8 @@ export const DEFAULT_ROLES = [
   },
   {
     id: 2,
-    name: 'Branch Manager',
+    name: 'Admin',
+    icon: '🛡️',
     description: 'Store operations, staff supervision, sales approvals, stock adjustments, and accounts oversight.',
     permissions: [
       'create_sale', 'edit_sale', 'peek_cost_margin', 'approve_discount', 'print_sale_invoice',
@@ -95,28 +97,34 @@ export const DEFAULT_ROLES = [
     ],
   },
   {
+    id: 6,
+    name: 'Cashier',
+    icon: '💵',
+    description: 'Cash drawer balancing, billing, customer due collection, expense tracking, and day-close.',
+    permissions: [
+      'create_sale', 'print_sale_invoice', 'view_accounts', 'collect_payment', 'transfer_funds', 'record_expense', 'close_cash_drawer',
+    ],
+  },
+  {
     id: 3,
-    name: 'Sales Executive',
+    name: 'Salesman',
+    icon: '🏷️',
     description: 'Counter POS billing, quotations, customer handling, and printing receipts. No cost peek.',
     permissions: ['create_sale', 'print_sale_invoice', 'view_inventory', 'view_projects', 'collect_payment'],
   },
   {
+    id: 5,
+    name: 'Staff',
+    icon: '💼',
+    description: 'General store floor operations, stock lookup, and customer service assistance.',
+    permissions: ['view_inventory', 'create_sale', 'print_sale_invoice', 'view_projects'],
+  },
+  {
     id: 4,
-    name: 'Field Technician',
+    name: 'Technician',
+    icon: '🔧',
     description: 'Mobile technician app access, project task completion, warranty inspections, and Tech Wallet.',
     permissions: ['view_projects', 'update_project_status', 'manage_offline_warranty'],
-  },
-  {
-    id: 5,
-    name: 'Inventory Officer',
-    description: 'Warehouse goods receipt, serial/barcode generation, purchases, supplier catalog management.',
-    permissions: ['view_inventory', 'add_product', 'edit_product', 'adjust_stock', 'manage_purchases'],
-  },
-  {
-    id: 6,
-    name: 'Accountant',
-    description: 'Cash drawer balancing, bank reconciliations, vendor payments, expense tracking, and day-close.',
-    permissions: ['view_accounts', 'collect_payment', 'transfer_funds', 'record_expense', 'close_cash_drawer', 'print_sale_invoice'],
   },
 ];
 
