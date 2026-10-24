@@ -55,6 +55,11 @@ async function ensureSecurityTables() {
             ALTER TABLE users ADD COLUMN IF NOT EXISTS session_last_active TIMESTAMP DEFAULT NOW();
             ALTER TABLE users ADD COLUMN IF NOT EXISTS browser_fingerprint VARCHAR(255);
             ALTER TABLE users ADD COLUMN IF NOT EXISTS approval_status VARCHAR(50) DEFAULT 'approved';
+            ALTER TABLE shop_settings ADD COLUMN IF NOT EXISTS smtp_host VARCHAR(150) DEFAULT 'smtp.gmail.com';
+            ALTER TABLE shop_settings ADD COLUMN IF NOT EXISTS smtp_port INT DEFAULT 465;
+            ALTER TABLE shop_settings ADD COLUMN IF NOT EXISTS smtp_user VARCHAR(150);
+            ALTER TABLE shop_settings ADD COLUMN IF NOT EXISTS smtp_pass VARCHAR(150);
+            ALTER TABLE shop_settings ADD COLUMN IF NOT EXISTS smtp_from VARCHAR(150);
 
             -- Password Reset Requests
             CREATE TABLE IF NOT EXISTS password_reset_requests (
