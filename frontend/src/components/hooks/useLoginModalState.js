@@ -156,6 +156,7 @@ export function useLoginModalState({ onLoginSuccess }) {
     errorMsg,
     setErrorMsg,
     successMsg,
+    setSuccessMsg,
     serverOnline,
     strengthScore,
     executeLogin,

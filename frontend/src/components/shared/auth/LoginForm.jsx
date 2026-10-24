@@ -63,9 +63,9 @@ export default function LoginForm({
         setShowPassword={setShowPassword}
         strengthScore={strengthScore}
         onForgotPassword={() => {
-          setMode('forgot_password');
-          setErrorMsg('');
-          setSuccessMsg('');
+          if (typeof setMode === 'function') setMode('forgot_password');
+          if (typeof setErrorMsg === 'function') setErrorMsg('');
+          if (typeof setSuccessMsg === 'function') setSuccessMsg('');
         }}
       />
 
