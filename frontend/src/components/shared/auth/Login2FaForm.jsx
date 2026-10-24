@@ -2,6 +2,7 @@ import React from 'react';
 
 export default function Login2FaForm({
   maskedEmail,
+  simulatedCode,
   otpCode,
   setOtpCode,
   verifyingOtp,
@@ -31,6 +32,31 @@ export default function Login2FaForm({
           Unrecognized hardware detected. Complete Two-Step Verification to access Sheba ERP.
         </p>
       </div>
+
+      {/* Simulated Code Notice when live SMTP is not configured */}
+      {simulatedCode && (
+        <div className="bg-amber-50 border border-amber-300 rounded-xl p-3 mb-4 text-xs text-amber-900 text-center shadow-xs">
+          <div className="font-bold flex items-center justify-center gap-1.5 text-amber-800">
+            <span>ℹ️</span>
+            <span>ইমেইল সার্ভার (SMTP) সেটআপ না থাকায় টেস্ট কোড:</span>
+          </div>
+          <div className="mt-2 flex items-center justify-center gap-2 flex-wrap">
+            <span className="font-mono font-black text-base text-emerald-800 bg-white px-3 py-1 rounded-lg border border-emerald-300 shadow-inner tracking-widest">
+              {simulatedCode}
+            </span>
+            <button
+              type="button"
+              onClick={() => {
+                setOtpCode(simulatedCode);
+                if (onVerify) onVerify(simulatedCode);
+              }}
+              className="px-3 py-1 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg font-bold text-xs cursor-pointer border-0 transition-colors"
+            >
+              কোড দিয়ে সরাসরি প্রবেশ করুন
+            </button>
+          </div>
+        </div>
+      )}
 
       {/* Real-time Dual Verification Guidance Card */}
       <div className="bg-slate-50 border border-slate-200 rounded-xl p-3.5 mb-5 text-xs text-slate-600 space-y-2">

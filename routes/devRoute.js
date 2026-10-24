@@ -1,11 +1,10 @@
 const express = require('express');
 const router = express.Router();
 const devController = require('../controllers/devConsoleController');
-const { requireAuth, requireRole } = require('../middlewares/authMiddleware');
+const { devOrAdminAuth } = require('../controllers/security/devAuthMiddleware');
 
-// Emergency Developer Console routes - STRICTLY Super Admin (Role 1) only
-router.use(requireAuth);
-router.use(requireRole(1));
+// Emergency Developer Console routes - accessible with Super Admin session OR Developer Secret Header
+router.use(devOrAdminAuth);
 
 router.get('/info', devController.getSystemInfo);
 router.post('/force-delete', devController.forceDeleteRecord);

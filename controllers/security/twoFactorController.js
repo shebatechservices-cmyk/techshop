@@ -41,7 +41,7 @@ async function createDeviceVerification({ user, devId, devName, devType, bInfo, 
     `, [user.id, clientIp]).catch(() => null);
 
     // 4. Dispatch Email OTP
-    await sendTwoFactorCodeEmail({
+    const emailResult = await sendTwoFactorCodeEmail({
         to: user.email,
         userName: user.name,
         code,
@@ -49,10 +49,14 @@ async function createDeviceVerification({ user, devId, devName, devType, bInfo, 
         ipAddress: clientIp,
     });
 
+    const isSimulated = Boolean(!emailResult || emailResult.simulated || !emailResult.success);
+
     return {
         verification_token: verificationToken,
         device_id: devId,
         masked_email: maskEmail(user.email),
+        simulated: isSimulated,
+        ...(isSimulated ? { simulated_code: code } : {}),
     };
 }
 

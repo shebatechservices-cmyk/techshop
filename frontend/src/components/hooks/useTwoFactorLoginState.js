@@ -10,13 +10,15 @@ export function useTwoFactorLoginState({ onLoginSuccess, rememberMe }) {
   const [verifyingOtp, setVerifyingOtp] = useState(false);
   const [verifyError, setVerifyError] = useState('');
   const [approvalNotice, setApprovalNotice] = useState('');
+  const [simulatedCode, setSimulatedCode] = useState('');
 
   const startTwoFactor = (data) => {
     setTwoFactorActive(true);
     setTwoFactorToken(data.verification_token || '');
     setTwoFactorDevId(data.device_id || '');
     setMaskedEmail(data.masked_email || 'your registered email');
-    setOtpCode('');
+    setSimulatedCode(data.simulated_code || '');
+    setOtpCode(data.simulated_code || '');
     setVerifyError('');
     setApprovalNotice('');
   };
@@ -25,6 +27,7 @@ export function useTwoFactorLoginState({ onLoginSuccess, rememberMe }) {
     setTwoFactorActive(false);
     setTwoFactorToken('');
     setTwoFactorDevId('');
+    setSimulatedCode('');
     setOtpCode('');
     setVerifyError('');
   };
@@ -101,6 +104,7 @@ export function useTwoFactorLoginState({ onLoginSuccess, rememberMe }) {
     twoFactorToken,
     twoFactorDevId,
     maskedEmail,
+    simulatedCode,
     otpCode,
     setOtpCode,
     verifyingOtp,

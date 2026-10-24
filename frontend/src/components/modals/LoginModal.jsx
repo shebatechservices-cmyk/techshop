@@ -160,6 +160,7 @@ export default function LoginModal({ isOpen, onLoginSuccess, canClose = false, o
             {mode === 'two_factor' && (
               <Login2FaForm
                 maskedEmail={modalState.maskedEmail}
+                simulatedCode={modalState.simulatedCode}
                 otpCode={modalState.otpCode}
                 setOtpCode={modalState.setOtpCode}
                 verifyingOtp={modalState.verifyingOtp}
