@@ -113,7 +113,7 @@ export default function PartyProfileModal({
       onClick={onClose}
     >
       <div
-        className="bg-white rounded-2xl w-full max-w-2xl max-h-[84vh] flex flex-col shadow-2xl overflow-hidden border border-slate-200 animate-fadeIn"
+        className="bg-white rounded-2xl w-full max-w-2xl min-h-[500px] max-h-[85vh] flex flex-col shadow-2xl overflow-hidden border border-slate-200 animate-fadeIn"
         onClick={(e) => e.stopPropagation()}
       >
         <PartyProfileHeader
@@ -124,8 +124,8 @@ export default function PartyProfileModal({
           onClose={onClose}
         />
 
-        {/* TAB NAVIGATION: Compact Segmented Pill Bar */}
-        <div className="bg-slate-100/90 border-b border-slate-200/90 px-3 py-1.5 flex items-center gap-1.5 overflow-x-auto">
+        {/* TAB NAVIGATION: Equal-Width Segmented Pill Bar */}
+        <div className="bg-slate-100/90 border-b border-slate-200/90 p-1.5 flex items-center gap-1.5">
           {tabs.map((tab) => {
             const isActive = activeTab === tab.id;
             return (
@@ -133,7 +133,7 @@ export default function PartyProfileModal({
                 key={tab.id}
                 type="button"
                 onClick={() => handleTabClick(tab.id)}
-                className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-lg font-bold text-xs whitespace-nowrap transition-all duration-150 cursor-pointer ${
+                className={`flex-1 inline-flex items-center justify-center gap-1.5 py-1.5 px-2 rounded-lg font-bold text-xs whitespace-nowrap transition-all duration-150 cursor-pointer ${
                   isActive
                     ? 'bg-white text-sky-700 shadow-xs border border-slate-200/90 ring-1 ring-slate-900/5'
                     : 'text-slate-600 hover:text-slate-900 hover:bg-white/60 border border-transparent'
@@ -145,7 +145,7 @@ export default function PartyProfileModal({
                 <span>{tab.label}</span>
                 {tab.badge && (
                   <span
-                    className={`ml-0.5 px-1.5 py-0.2 rounded-full text-[10px] font-extrabold ${
+                    className={`ml-1 px-1.5 py-0.2 rounded-full text-[10px] font-extrabold ${
                       tab.badgeHighlight
                         ? 'bg-purple-100 text-purple-700'
                         : 'bg-slate-200 text-slate-600'
