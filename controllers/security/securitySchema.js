@@ -20,6 +20,8 @@ async function ensureSecurityTables() {
                 created_at TIMESTAMP DEFAULT NOW()
             );
 
+            ALTER TABLE trusted_devices ADD COLUMN IF NOT EXISTS approval_status VARCHAR(30) DEFAULT 'APPROVED';
+
             -- IP Rules Table (Firewall Whitelist & Blacklist)
             CREATE TABLE IF NOT EXISTS ip_rules (
                 id SERIAL PRIMARY KEY,
