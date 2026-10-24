@@ -39,17 +39,29 @@ async function prepareAndValidateItems(client, items) {
     const pMap = new Map();
     if (productIds.length > 0) {
         const pRes = await client.query(
-            'SELECT id, name, COALESCE(purchase_price, 0) AS purchase_price FROM products WHERE id = ANY($1::int[])',
+            'SELECT id, name, COALESCE(purchase_price, 0) AS purchase_price, conversion_rate, unit_name, sub_unit_name FROM products WHERE id = ANY($1::int[])',
             [productIds]
         ).catch(() => ({ rows: [] }));
         for (const r of pRes.rows) {
-            pMap.set(Number(r.id), { name: r.name, purchase_price: Number(r.purchase_price || 0) });
+            pMap.set(Number(r.id), {
+                name: r.name,
+                purchase_price: Number(r.purchase_price || 0),
+                conversion_rate: Number(r.conversion_rate || 1),
+                unit_name: r.unit_name,
+                sub_unit_name: r.sub_unit_name,
+            });
         }
     }
 
     for (const item of normalizedItems) {
         const prod = pMap.get(Number(item.product_id));
-        const costPrice = Number(item.cost_price || prod?.purchase_price || 0);
+        let costPrice = Number(item.cost_price || prod?.purchase_price || 0);
+        const convRate = Number(item.conversion_rate || prod?.conversion_rate || 1);
+        const isSubUnit = item.unit_type === 'sub_unit' || (prod?.sub_unit_name && item.unit_name === prod?.sub_unit_name);
+        if (convRate > 1 && (isSubUnit || costPrice > Number(item.unit_price || 0) * 2)) {
+            costPrice = Number((costPrice / convRate).toFixed(2));
+        }
+
         const unitPrice = Number(item.unit_price || 0);
         const qty = Number(item.quantity || 1);
         const itDiscount = Number(item.discount || 0);

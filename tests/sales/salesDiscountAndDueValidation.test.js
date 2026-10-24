@@ -9,7 +9,10 @@ describe('Sales Discount & Due Overpayment Validations', () => {
             query: jest.fn().mockImplementation((text, params) => {
                 if (/FROM products WHERE id/i.test(text)) {
                     return Promise.resolve({
-                        rows: [{ id: 101, name: 'SSD 512GB', purchase_price: 3000 }],
+                        rows: [
+                            { id: 101, name: 'SSD 512GB', purchase_price: 3000 },
+                            { id: 27, name: 'GZAPD CATEGORY 6 CABLE', purchase_price: 4200, conversion_rate: 305, unit_name: 'Roll', sub_unit_name: 'Meter' },
+                        ],
                     });
                 }
                 return Promise.resolve({ rows: [] });
@@ -54,6 +57,29 @@ describe('Sales Discount & Due Overpayment Validations', () => {
                     itemsList,
                     subtotal: 4000,
                     discount: 500,
+                })
+            ).resolves.not.toThrow();
+        });
+
+        test('allows sub-unit sale when unit cost is converted from base unit conversion rate', async () => {
+            const sale = { id: 1, paid_amount: 1075, due_amount: 0 };
+            // 43 meters at 25 taka = 1075 taka. Roll purchase cost is 4200 (13.77/m).
+            const itemsList = [{
+                product_id: 27,
+                unit_price: 25,
+                quantity: 43,
+                discount: 0,
+                cost_price: 4200,
+                unit_type: 'sub_unit',
+                conversion_rate: 305,
+            }];
+
+            await expect(
+                validateSaleDiscountAndCost(mockClient, {
+                    sale,
+                    itemsList,
+                    subtotal: 1075,
+                    discount: 0,
                 })
             ).resolves.not.toThrow();
         });

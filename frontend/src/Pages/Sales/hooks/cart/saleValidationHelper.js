@@ -73,7 +73,12 @@ export function validateSaleSubmission({
     }
 
     const unitPrice = money(it.unit_price);
-    const costPrice = money(it.cost_price);
+    let costPrice = money(it.cost_price);
+    const convRate = Number(it.conversion_rate || 1);
+    const isSubUnit = it.unit_type === 'sub_unit' || (it.sub_unit_name && it.unit_name === it.sub_unit_name);
+    if (convRate > 1 && (isSubUnit || costPrice > unitPrice * 2)) {
+      costPrice = money(costPrice / convRate);
+    }
     const qty = Number(it.quantity || 1);
     const itemDiscount = money(it.discount);
     const lineTotal = unitPrice * qty - itemDiscount;
@@ -89,7 +94,15 @@ export function validateSaleSubmission({
   }
 
   const totalCogs = items.reduce(
-    (sum, it) => sum + (money(it.cost_price) * Number(it.quantity || 1)),
+    (sum, it) => {
+      let itemCost = money(it.cost_price);
+      const convRate = Number(it.conversion_rate || 1);
+      const isSubUnit = it.unit_type === 'sub_unit' || (it.sub_unit_name && it.unit_name === it.sub_unit_name);
+      if (convRate > 1 && (isSubUnit || itemCost > money(it.unit_price) * 2)) {
+        itemCost = money(itemCost / convRate);
+      }
+      return sum + (itemCost * Number(it.quantity || 1));
+    },
     0
   );
   const netInvoiceAfterDiscount = money(subtotal) - money(totalDiscount);
