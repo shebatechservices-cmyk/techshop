@@ -1,5 +1,5 @@
 import { useState, useEffect, useMemo } from "react";
-import API_BASE from "../../../../services/api";
+import API_BASE, { getAuthHeaders } from "../../../../services/api";
 import { sortAlphabetically } from "../attributeUtils";
 
 const API = `${API_BASE}/master`;
@@ -20,7 +20,12 @@ export function useAttributeCascading() {
   const [selectedSeries, setSelectedSeries] = useState("");
 
   const fetchJson = async (url) => {
-    const res = await fetch(url);
+    const res = await fetch(url, {
+      headers: {
+        Accept: "application/json",
+        ...getAuthHeaders(),
+      },
+    });
     if (!res.ok) throw new Error("Request failed");
     return res.json();
   };

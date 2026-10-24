@@ -24,11 +24,30 @@ const publicApiPaths = new Set([
     '/api/expense-categories',
 ]);
 
-const apiAuthGate = async (req, res, next) => {
-    if (req.method === 'OPTIONS') return next();
-    const rawPath = req.path;
-    const origPath = req.originalUrl ? req.originalUrl.split('?')[0] : '';
-    const isPublic = [...publicApiPaths].some((p) => {
+const publicGetPaths = new Set([
+    '/master',
+    '/products',
+    '/categories',
+    '/sub-categories',
+    '/sub_categories',
+    '/brands',
+    '/models',
+    '/series',
+    '/product-names',
+    '/product_names',
+    '/uom',
+    '/units-of-measurement',
+    '/search',
+    '/ecommerce',
+    '/warranty',
+]);
+
+const publicPostPaths = new Set([
+    '/ecommerce/orders',
+]);
+
+const matchesPrefix = (pathSet, rawPath, origPath) => {
+    return [...pathSet].some((p) => {
         const cleanP = p.startsWith('/api') ? p.replace(/^\/api/, '') : p;
         return (
             rawPath === cleanP ||
@@ -41,6 +60,16 @@ const apiAuthGate = async (req, res, next) => {
             origPath.startsWith(`/api${cleanP}/`)
         );
     });
+};
+
+const apiAuthGate = async (req, res, next) => {
+    if (req.method === 'OPTIONS') return next();
+    const rawPath = req.path;
+    const origPath = req.originalUrl ? req.originalUrl.split('?')[0] : '';
+    const isPublic =
+        matchesPrefix(publicApiPaths, rawPath, origPath) ||
+        (req.method === 'GET' && matchesPrefix(publicGetPaths, rawPath, origPath)) ||
+        (req.method === 'POST' && matchesPrefix(publicPostPaths, rawPath, origPath));
 
     const token = getToken(req);
     if (token && !req.user) {
@@ -65,5 +94,7 @@ const apiAuthGate = async (req, res, next) => {
 
 module.exports = {
     publicApiPaths,
+    publicGetPaths,
+    publicPostPaths,
     apiAuthGate,
 };

@@ -19,25 +19,25 @@ export default function PartyRecentActivityTable({ partyType, sales = [], purcha
             <table className="w-full text-xs text-left">
               <thead>
                 <tr className="bg-slate-50 border-b border-slate-200 text-slate-500 font-semibold">
-                  <th className="p-2.5">Invoice #</th>
-                  <th className="p-2.5">Date</th>
-                  <th className="p-2.5 text-right">Total</th>
-                  <th className="p-2.5 text-right">Paid</th>
-                  <th className="p-2.5 text-right">Due</th>
-                  <th className="p-2.5 text-center">Status</th>
+                  <th className="p-2 px-2.5">Invoice #</th>
+                  <th className="p-2 px-2.5">Date</th>
+                  <th className="p-2 px-2.5 text-right">Total</th>
+                  <th className="p-2 px-2.5 text-right">Paid</th>
+                  <th className="p-2 px-2.5 text-right">Due</th>
+                  <th className="p-2 px-2.5 text-center">Status</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-100 font-medium text-slate-700">
                 {sales.map((s) => (
                   <tr key={s.id} className="hover:bg-slate-50/70">
-                    <td className="p-2.5 font-bold text-sky-600">{s.invoice_no}</td>
-                    <td className="p-2.5 text-slate-500">{new Date(s.created_at).toLocaleDateString()}</td>
-                    <td className="p-2.5 text-right font-semibold">৳ {Number(s.total_amount).toLocaleString()}</td>
-                    <td className="p-2.5 text-right text-emerald-600">৳ {Number(s.paid_amount).toLocaleString()}</td>
-                    <td className={`p-2.5 text-right font-bold ${Number(s.due_amount) > 0 ? 'text-rose-600' : 'text-slate-500'}`}>
+                    <td className="p-2 px-2.5 font-bold text-sky-600">{s.invoice_no}</td>
+                    <td className="p-2 px-2.5 text-slate-500">{new Date(s.created_at).toLocaleDateString()}</td>
+                    <td className="p-2 px-2.5 text-right font-semibold">৳ {Number(s.total_amount).toLocaleString()}</td>
+                    <td className="p-2 px-2.5 text-right text-emerald-600">৳ {Number(s.paid_amount).toLocaleString()}</td>
+                    <td className={`p-2 px-2.5 text-right font-bold ${Number(s.due_amount) > 0 ? 'text-rose-600' : 'text-slate-500'}`}>
                       ৳ {Number(s.due_amount).toLocaleString()}
                     </td>
-                    <td className="p-2.5 text-center">
+                    <td className="p-2 px-2.5 text-center">
                       <span className={`text-[10px] px-2 py-0.5 rounded-full font-bold uppercase ${s.payment_status === 'paid' ? 'bg-emerald-100 text-emerald-800' : 'bg-rose-100 text-rose-800'}`}>
                         {s.payment_status}
                       </span>

@@ -1,4 +1,5 @@
 import React from 'react';
+import PartyFinancialGuidance from './financial/PartyFinancialGuidance';
 
 export default function PartyFinancialTab({
   partyType,
@@ -91,27 +92,7 @@ export default function PartyFinancialTab({
       </div>
 
       {/* Informational Guidance Banner */}
-      <div
-        className={`p-3 rounded-xl mb-4 text-xs leading-relaxed border ${
-          partyType === 'supplier'
-            ? 'bg-emerald-50 border-emerald-200 text-emerald-800'
-            : partyType === 'customer'
-            ? 'bg-sky-50 border-sky-200 text-sky-800'
-            : 'bg-purple-50 border-purple-200 text-purple-800'
-        }`}
-      >
-        {partyType === 'supplier' && (
-          '💡 Direct payout to supplier from your selected shop account (Cash Drawer / Bank / MFS) which will reduce their Payable Due balance.'
-        )}
-        {partyType === 'customer' && (
-          finAction === 'due'
-            ? '💡 Received due payment will deposit into your selected shop account (Cash / Bank / MFS) and reduce the customer’s Receivable Due balance.'
-            : '💡 Customer refund or return payout will be deducted from your selected shop account.'
-        )}
-        {partyType === 'staff' && (
-          '💡 Staff salary, commission, or conveyance advance payment will be deducted as an expense from your selected shop account.'
-        )}
-      </div>
+      <PartyFinancialGuidance partyType={partyType} finAction={finAction} />
 
       {finError && (
         <div className="p-3 bg-rose-50 border border-rose-200 text-rose-700 rounded-xl mb-3.5 text-xs font-medium">

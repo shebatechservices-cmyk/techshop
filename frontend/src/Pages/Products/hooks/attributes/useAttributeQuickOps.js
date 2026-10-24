@@ -1,5 +1,5 @@
 import { useState } from "react";
-import API_BASE from "../../../../services/api";
+import API_BASE, { getAuthHeaders } from "../../../../services/api";
 import {
   buildQuickAddConfig,
   buildQuickAddPayload,
@@ -139,7 +139,7 @@ export function useAttributeQuickOps({ cascading, onEntityCreated }) {
     try {
       const res = await fetch(`${API}/${quickEdit.entity}/${quickEdit.id}`, {
         method: "PUT",
-        headers: { "Content-Type": "application/json" },
+        headers: { "Content-Type": "application/json", ...getAuthHeaders() },
         body: JSON.stringify({ name: val }),
       });
       const data = await res.json();
@@ -157,7 +157,10 @@ export function useAttributeQuickOps({ cascading, onEntityCreated }) {
     if (!id) return;
     if (!window.confirm("Are you sure you want to delete this item?")) return;
     try {
-      const res = await fetch(`${API}/${entity}/${id}`, { method: "DELETE" });
+      const res = await fetch(`${API}/${entity}/${id}`, {
+        method: "DELETE",
+        headers: getAuthHeaders(),
+      });
       if (!res.ok) {
         const data = await res.json().catch(() => ({}));
         throw new Error(data.message || data.error || "Delete failed");

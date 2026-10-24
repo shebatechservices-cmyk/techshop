@@ -1,4 +1,4 @@
-import API_BASE from "../../../services/api";
+import API_BASE, { getAuthHeaders } from "../../../services/api";
 import {
   validateProductForm,
   checkDuplicateProduct,
@@ -90,11 +90,15 @@ export default function useProductSubmit({
           featureImageFile,
           galleryImageFiles,
         });
-        res = await fetch(url, { method, body: formData });
+        res = await fetch(url, {
+          method,
+          headers: getAuthHeaders(),
+          body: formData,
+        });
       } else {
         res = await fetch(url, {
           method,
-          headers: { "Content-Type": "application/json" },
+          headers: { "Content-Type": "application/json", ...getAuthHeaders() },
           body: JSON.stringify(payload),
         });
       }
@@ -123,6 +127,7 @@ export default function useProductSubmit({
         galleryImageFiles.forEach((file) => imageData.append("images", file));
         await fetch(`${API.replace("/master", "")}/images/products/${targetId}`, {
           method: "POST",
+          headers: getAuthHeaders(),
           body: imageData,
         }).catch(() => {});
       }

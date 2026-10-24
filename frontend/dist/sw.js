@@ -1,4 +1,4 @@
-const CACHE_NAME = 'sheba-pos-cache-v4';
+const CACHE_NAME = 'sheba-pos-cache-v5';
 const STATIC_ASSETS = [
   '/',
   '/index.html',

@@ -1,5 +1,5 @@
 import { useState } from "react";
-import API_BASE from "../../../../services/api";
+import API_BASE, { getAuthHeaders } from "../../../../services/api";
 import { getMergedArray, sortAlphabetically } from "../attributeUtils";
 
 const API = `${API_BASE}/master`;
@@ -47,7 +47,7 @@ export function useAttributeInlineAdd({ cascading }) {
   const persistMasterItem = async (entity, payload) => {
     const res = await fetch(`${API}/${entity}`, {
       method: "POST",
-      headers: { "Content-Type": "application/json" },
+      headers: { "Content-Type": "application/json", ...getAuthHeaders() },
       body: JSON.stringify(payload),
     });
     const result = await res.json();

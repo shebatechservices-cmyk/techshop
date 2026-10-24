@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import API from '../../../services/api';
+import API, { getAuthHeaders } from '../../../services/api';
 
 export function useUomManager({ isOpen, onUomUpdated }) {
   const [uoms, setUoms] = useState([]);
@@ -26,7 +26,7 @@ export function useUomManager({ isOpen, onUomUpdated }) {
     try {
       setLoading(true);
       setErrorMsg('');
-      const res = await fetch(`${API}/uom`);
+      const res = await fetch(`${API}/uom`, { headers: getAuthHeaders() });
       if (res.ok) {
         const json = await res.json();
         if (json.success && Array.isArray(json.data)) {
@@ -68,7 +68,7 @@ export function useUomManager({ isOpen, onUomUpdated }) {
 
       const res = await fetch(`${API}/uom`, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 'Content-Type': 'application/json', ...getAuthHeaders() },
         body: JSON.stringify({
           name: newName.trim(),
           code: newCode.trim().toUpperCase() || null,
@@ -96,7 +96,6 @@ export function useUomManager({ isOpen, onUomUpdated }) {
     }
   };
 
-  // Start Edit
   const startEdit = (u) => {
     setEditingId(u.id);
     setEditName(u.name);
@@ -113,7 +112,6 @@ export function useUomManager({ isOpen, onUomUpdated }) {
     setEditCode('');
   };
 
-  // Handle Save Edit
   const handleSaveEdit = async (id) => {
     if (!editName.trim()) {
       setErrorMsg('Unit name cannot be empty.');
@@ -127,7 +125,7 @@ export function useUomManager({ isOpen, onUomUpdated }) {
 
       const res = await fetch(`${API}/uom/${id}`, {
         method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 'Content-Type': 'application/json', ...getAuthHeaders() },
         body: JSON.stringify({
           name: editName.trim(),
           code: editCode.trim().toUpperCase() || null,
@@ -152,13 +150,13 @@ export function useUomManager({ isOpen, onUomUpdated }) {
     }
   };
 
-  // Handle Delete UOM
   const handleDeleteUom = async (id, name) => {
     if (!window.confirm(`Are you sure you want to delete unit "${name}"?`)) return;
 
     try {
       const res = await fetch(`${API}/uom/${id}`, {
-        method: 'DELETE'
+        method: 'DELETE',
+        headers: getAuthHeaders(),
       });
       const data = await res.json();
       if (res.ok && data.success) {
@@ -174,38 +172,10 @@ export function useUomManager({ isOpen, onUomUpdated }) {
   };
 
   return {
-    uoms,
-    loading,
-    errorMsg,
-    setErrorMsg,
-    successMsg,
-    setSuccessMsg,
-    newName,
-    setNewName,
-    newCode,
-    setNewCode,
-    newFractional,
-    setNewFractional,
-    newActive,
-    setNewActive,
-    adding,
-    editingId,
-    setEditingId,
-    editName,
-    setEditName,
-    editCode,
-    setEditCode,
-    editFractional,
-    setEditFractional,
-    editActive,
-    setEditActive,
-    savingEdit,
-    fetchUoms,
-    handleAddUom,
-    startEdit,
-    cancelEdit,
-    handleSaveEdit,
-    handleDeleteUom
+    uoms, loading, errorMsg, setErrorMsg, successMsg, setSuccessMsg,
+    newName, setNewName, newCode, setNewCode, newFractional, setNewFractional, newActive, setNewActive, adding,
+    editingId, setEditingId, editName, setEditName, editCode, setEditCode, editFractional, setEditFractional,
+    editActive, setEditActive, savingEdit, fetchUoms, handleAddUom, startEdit, cancelEdit, handleSaveEdit, handleDeleteUom,
   };
 }
 

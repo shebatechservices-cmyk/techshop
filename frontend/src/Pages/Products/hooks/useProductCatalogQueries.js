@@ -1,5 +1,8 @@
 import { useState, useMemo, useEffect } from "react";
-import API_BASE from "../../../services/api";
+import API_BASE, { getAuthHeaders } from "../../../services/api";
+import { generateDummyProducts } from "./dummyProductsData";
+
+import { getProductLabel, matchesProductFilter } from "./productFilterUtils";
 
 const API = `${API_BASE}/master`;
 
@@ -23,7 +26,12 @@ export default function useProductCatalogQueries({
   }, [productFilterQuery, categoryFilter, statusFilter]);
 
   const fetchJson = async (url) => {
-    const res = await fetch(url);
+    const res = await fetch(url, {
+      headers: {
+        Accept: "application/json",
+        ...getAuthHeaders(),
+      },
+    });
     if (!res.ok) throw new Error("Request failed");
     return res.json();
   };
@@ -39,11 +47,7 @@ export default function useProductCatalogQueries({
     }
   };
 
-  const productLabel = (product) =>
-    [product.brand_name, product.name, product.model_name, product.series_name]
-      .filter(Boolean)
-      .filter((value, index, values) => values.indexOf(value) === index)
-      .join(" ");
+  const productLabel = getProductLabel;
 
   const categoriesList = useMemo(() => {
     const set = new Set();
@@ -63,44 +67,13 @@ export default function useProductCatalogQueries({
   };
 
   const filteredProducts = useMemo(() => {
-    return products.filter((p) => {
-      // 1. Status Filter
-      if (statusFilter === "active" && p.status !== "active") return false;
-      if (statusFilter === "inactive" && p.status === "active") return false;
-      if (statusFilter === "low_stock" && !(Number(p.stock) <= Number(p.min_stock))) return false;
-
-      // 2. Category Filter
-      if (categoryFilter && categoryFilter !== "ALL" && (p.category_name || "") !== categoryFilter) {
-        return false;
-      }
-
-      // 3. Search Query Filter
-      if (!productFilterQuery.trim()) return true;
-      const q = productFilterQuery.trim().toLowerCase();
-      const label = productLabel(p).toLowerCase();
-      const name = (p.name || p.product_name || "").toLowerCase();
-      const brand = (p.brand_name || p.brand || "").toLowerCase();
-      const model = (p.model_name || p.model || "").toLowerCase();
-      const series = (p.series_name || p.series || "").toLowerCase();
-      const sku = (p.sku || "").toLowerCase();
-      const barcode = (p.barcode || "").toLowerCase();
-      const cat = (p.category_name || "").toLowerCase();
-      const sub = (p.sub_category_name || "").toLowerCase();
-      const desc = (p.description || "").toLowerCase();
-
-      return (
-        label.includes(q) ||
-        name.includes(q) ||
-        brand.includes(q) ||
-        model.includes(q) ||
-        series.includes(q) ||
-        sku.includes(q) ||
-        barcode.includes(q) ||
-        cat.includes(q) ||
-        sub.includes(q) ||
-        desc.includes(q)
-      );
-    });
+    return products.filter((p) =>
+      matchesProductFilter(p, {
+        query: productFilterQuery,
+        status: statusFilter,
+        category: categoryFilter,
+      })
+    );
   }, [products, productFilterQuery, statusFilter, categoryFilter]);
 
   const totalProductPages = Math.max(1, Math.ceil(filteredProducts.length / productsPerPage));
@@ -126,7 +99,10 @@ export default function useProductCatalogQueries({
   const deleteProduct = async (id) => {
     if (!window.confirm("Are you sure you want to delete this product?")) return;
     try {
-      const res = await fetch(`${API}/products/${id}`, { method: "DELETE" });
+      const res = await fetch(`${API}/products/${id}`, {
+        method: "DELETE",
+        headers: getAuthHeaders(),
+      });
       if (!res.ok) throw new Error("Failed to delete product");
       setProducts((current) => current.filter((item) => item.id !== id));
       setSelectedProductIds((current) => current.filter((item) => item !== id));
@@ -141,7 +117,7 @@ export default function useProductCatalogQueries({
     try {
       const res = await fetch(`${API}/products/${product.id}`, {
         method: "PUT",
-        headers: { "Content-Type": "application/json" },
+        headers: { "Content-Type": "application/json", ...getAuthHeaders() },
         body: JSON.stringify({ status: nextStatus }),
       });
       const data = await res.json();
@@ -158,59 +134,11 @@ export default function useProductCatalogQueries({
 
   const loadDummyProducts = async () => {
     try {
-      const rand = Math.floor(1000 + Math.random() * 9000);
-      const sampleItems = [
-        {
-          name: "2MP Full HD Bullet Outdoor Camera",
-          sku: `CAM-HIK-2MP-${rand}`,
-          stock: 25,
-          min_stock: 5,
-          status: "active",
-          condition: "New",
-          description: "Hikvision 2MP High Performance Bullet Camera with night vision.",
-        },
-        {
-          name: "Archer C6 Gigabit Wireless Router",
-          sku: `RTR-TPL-C6-${rand}`,
-          stock: 14,
-          min_stock: 3,
-          status: "active",
-          condition: "New",
-          description: "TP-Link Dual Band Gigabit WiFi Router.",
-        },
-        {
-          name: "4 Channel Full HD DVR Recorder",
-          sku: `DVR-HIK-4CH-${rand}`,
-          stock: 8,
-          min_stock: 2,
-          status: "active",
-          condition: "New",
-          description: "Hikvision 4 Channel HD Real-time Recording DVR.",
-        },
-        {
-          name: "2TB SkyHawk Surveillance Hard Disk",
-          sku: `HDD-SEA-2TB-${rand}`,
-          stock: 12,
-          min_stock: 4,
-          status: "active",
-          condition: "New",
-          description: "Seagate SkyHawk Surveillance Internal Hard Drive.",
-        },
-        {
-          name: "16 Port Fast Ethernet Desktop Switch",
-          sku: `SW-DLK-16P-${rand}`,
-          stock: 6,
-          min_stock: 2,
-          status: "active",
-          condition: "New",
-          description: "D-Link 16-Port Fast Ethernet Unmanaged Network Switch.",
-        },
-      ];
-
+      const sampleItems = generateDummyProducts();
       for (const item of sampleItems) {
         await fetch(`${API}/products`, {
           method: "POST",
-          headers: { "Content-Type": "application/json" },
+          headers: { "Content-Type": "application/json", ...getAuthHeaders() },
           body: JSON.stringify(item),
         });
       }
