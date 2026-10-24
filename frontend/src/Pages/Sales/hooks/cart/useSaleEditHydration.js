@@ -1,12 +1,11 @@
 import { useEffect, useRef } from 'react';
 import { EXTRA_COST_CATEGORIES } from '../../../Purchases/hooks/usePurchaseCart';
-import {
-  fullCatalogName,
-  isProductSerialTracked,
-  isProductWarrantyRequired,
-} from '../../../../utils/productUtils';
 import { money } from '../useSalePricingAndCharges';
 import { newTender } from '../useSaleTendersState';
+import {
+  distributeLegacyDiscounts,
+  mapRawSaleItemsToCart,
+} from './saleHydrationHelpers';
 
 /**
  * Edit Mode Invoice Hydration Sub-hook
@@ -64,80 +63,20 @@ export function useSaleEditHydration({
     setPopupMsg('');
     setCustomerId(String(editSale.customer_id || ''));
     setError('');
-      const rawSaleItems = editSale.items || [];
-      const totalItemDiscount = rawSaleItems.reduce((acc, it) => acc + money(it.discount), 0);
-      const loyaltyUsed = Number(editSale.loyalty_points_used || 0);
-      const invoiceDiscount = Math.max(0, money(editSale.discount) - loyaltyUsed);
+    const rawSaleItems = editSale.items || [];
+    const totalItemDiscount = rawSaleItems.reduce((acc, it) => acc + money(it.discount), 0);
+    const loyaltyUsed = Number(editSale.loyalty_points_used || 0);
+    const invoiceDiscount = Math.max(0, money(editSale.discount) - loyaltyUsed);
 
-      // If legacy invoice has no item-level discounts but had an overall invoice discount, distribute it
-      let distributedLegacyDiscounts = [];
-      if (totalItemDiscount === 0 && invoiceDiscount > 0 && rawSaleItems.length > 0) {
-        const rawSubtotal = rawSaleItems.reduce(
-          (acc, it) => acc + Number(it.quantity || 1) * Number(it.unit_price || 0),
-          0
-        );
-        let remaining = invoiceDiscount;
-        distributedLegacyDiscounts = rawSaleItems.map((it, idx) => {
-          if (idx === rawSaleItems.length - 1) {
-            return remaining;
-          }
-          const itemSub = Number(it.quantity || 1) * Number(it.unit_price || 0);
-          const share = rawSubtotal > 0 ? Math.round((itemSub / rawSubtotal) * invoiceDiscount) : 0;
-          const assigned = Math.min(remaining, share);
-          remaining = Math.max(0, remaining - assigned);
-          return assigned;
-        });
-      }
+    const distributedLegacyDiscounts =
+      totalItemDiscount === 0 && invoiceDiscount > 0
+        ? distributeLegacyDiscounts(rawSaleItems, invoiceDiscount)
+        : [];
 
-      setItems(
-        rawSaleItems.map((it, idx) => {
-          const prodInList = (products || []).find((p) => p.id === it.product_id);
-          const fullName = fullCatalogName(prodInList || it);
-          const isTracked =
-            isProductSerialTracked(prodInList) || isProductSerialTracked(it);
-          const isWarrantyReq =
-            isProductWarrantyRequired(prodInList) ||
-            isProductWarrantyRequired(it);
-          const serialsList = Array.isArray(it.serials) ? it.serials : [];
-          const itemDisc = money(it.discount) > 0
-            ? money(it.discount)
-            : (distributedLegacyDiscounts[idx] || 0);
-
-          return {
-            localId: `${Date.now()}-${idx}`,
-            product_id: it.product_id,
-            name: fullName,
-            full_name: fullName,
-            brand_name: it.brand_name || (prodInList && prodInList.brand_name) || '',
-            stock: prodInList ? Number(prodInList.stock || 0) : 0,
-            quantity: isTracked ? serialsList.length : Number(it.quantity || 1),
-            unit_price: money(it.unit_price),
-            cost_price: money(it.cost_price),
-            discount: money(itemDisc),
-            warranty_months:
-              it.warranty_months !== undefined && it.warranty_months !== null
-                ? Number(it.warranty_months)
-                : prodInList
-                ? Number(prodInList.warranty_months || 0)
-                : 0,
-            serials: serialsList,
-            is_serial_tracked: isTracked,
-            is_warranty_required: isWarrantyReq,
-            unit_type: it.unit_type || 'base_unit',
-            unit_name: it.unit_name || prodInList?.unit_name || 'Pcs',
-            base_unit_name: prodInList?.unit_name || 'Pcs',
-            sub_unit_name: prodInList?.sub_unit_name || null,
-            conversion_rate: Number(prodInList?.conversion_rate || it.conversion_rate || 1),
-            sub_unit_selling_price: prodInList?.sub_unit_selling_price ? Number(prodInList.sub_unit_selling_price) : null,
-            sub_unit_barcode: prodInList?.sub_unit_barcode || null,
-            base_unit_price: prodInList ? Number(prodInList.selling_price || prodInList.sale_price || it.unit_price) : Number(it.unit_price),
-            base_unit_cost: prodInList ? Number(prodInList.purchase_price || it.cost_price) : Number(it.cost_price),
-          };
-        })
-      );
-      setDiscount(money(editSale.discount) - loyaltyUsed);
-      setDiscountTouched(false);
-      setVat(money(editSale.vat));
+    setItems(mapRawSaleItemsToCart(rawSaleItems, products, distributedLegacyDiscounts));
+    setDiscount(money(editSale.discount) - loyaltyUsed);
+    setDiscountTouched(false);
+    setVat(money(editSale.vat));
       setLoyaltyPointsToUse(loyaltyUsed);
       setHasSetupCharge(money(editSale.setup_charge) > 0);
       setSetupCharge(money(editSale.setup_charge));
