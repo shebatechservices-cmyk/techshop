@@ -1,4 +1,4 @@
-const CACHE_NAME = 'sheba-pos-cache-v5';
+const CACHE_NAME = 'sheba-pos-cache-v6';
 const STATIC_ASSETS = [
   '/',
   '/index.html',
@@ -84,25 +84,20 @@ self.addEventListener('fetch', (event) => {
     return;
   }
 
-  // 3. Static assets (JS, CSS, images, fonts): Stale-While-Revalidate
-  // CRITICAL: Must NEVER resolve to undefined inside event.respondWith!
+  // 3. Static assets (JS, CSS, images, fonts): Network First with Cache Fallback
+  // Ensures fresh updates are applied immediately while preserving offline support
   event.respondWith(
-    caches.match(event.request).then((cachedResponse) => {
-      const networkFetch = fetch(event.request)
-        .then((networkResponse) => {
-          if (networkResponse && networkResponse.status === 200) {
-            const clone = networkResponse.clone();
-            caches.open(CACHE_NAME).then((cache) => cache.put(event.request, clone));
-          }
-          return networkResponse;
-        })
-        .catch(() => {
-          // If network fetch fails, fallback to cachedResponse if available,
-          // otherwise return a valid Response so event.respondWith never rejects with TypeError: Failed to convert value to 'Response'
-          return cachedResponse || new Response('', { status: 504, statusText: 'Gateway Timeout' });
-        });
-
-      return cachedResponse || networkFetch;
-    })
+    fetch(event.request)
+      .then((networkResponse) => {
+        if (networkResponse && networkResponse.status === 200) {
+          const clone = networkResponse.clone();
+          caches.open(CACHE_NAME).then((cache) => cache.put(event.request, clone));
+        }
+        return networkResponse;
+      })
+      .catch(async () => {
+        const cached = await caches.match(event.request);
+        return cached || new Response('', { status: 504, statusText: 'Gateway Timeout' });
+      })
   );
 });

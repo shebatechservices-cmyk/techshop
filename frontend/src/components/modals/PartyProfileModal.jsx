@@ -113,7 +113,7 @@ export default function PartyProfileModal({
       onClick={onClose}
     >
       <div
-        className="bg-white rounded-2xl w-full max-w-3xl max-h-[88vh] flex flex-col shadow-2xl overflow-hidden border border-slate-200 animate-fadeIn"
+        className="bg-white rounded-2xl w-full max-w-2xl max-h-[84vh] flex flex-col shadow-2xl overflow-hidden border border-slate-200 animate-fadeIn"
         onClick={(e) => e.stopPropagation()}
       >
         <PartyProfileHeader
