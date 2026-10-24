@@ -24,8 +24,10 @@ export default function MobilePocketAppShell({
   showLoginModal,
   setShowLoginModal,
   handleLoginSuccess,
-  toggleDevMode,
   showDevConsole,
+  showDevGate,
+  handleGateUnlocked,
+  closeDevGate,
   exitDevModeToUserMode,
   handleGlobalNavigate,
   handleLogout,
@@ -84,8 +86,10 @@ export default function MobilePocketAppShell({
         setShowLoginModal={setShowLoginModal}
         currentUser={currentUser}
         handleLoginSuccess={handleLoginSuccess}
-        toggleDevMode={toggleDevMode}
         showDevConsole={showDevConsole}
+        showDevGate={showDevGate}
+        handleGateUnlocked={handleGateUnlocked}
+        closeDevGate={closeDevGate}
         exitDevModeToUserMode={exitDevModeToUserMode}
         isRegisterModalOpen={isRegisterModalOpen}
         setIsRegisterModalOpen={setIsRegisterModalOpen}

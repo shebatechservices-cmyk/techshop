@@ -22,7 +22,8 @@ export default function App() {
     globalNav, setGlobalNav, isMobileDrawerOpen, setIsMobileDrawerOpen,
     isPurchaseOpen, setIsPurchaseOpen, isRegisterModalOpen, setIsRegisterModalOpen,
     shopInfo, currentUser, showLoginModal, setShowLoginModal,
-    showDevConsole, isDevMode, exitDevModeToUserMode, toggleDevMode,
+    showDevConsole, showDevGate, handleGateUnlocked, closeDevGate,
+    isDevMode, exitDevModeToUserMode, toggleDevMode,
     deviceBlocked, setDeviceBlocked, currentDeviceId, checkDeviceAccess,
     handleLoginSuccess, handleLogout, handleGlobalNavigate,
   } = globalState;
@@ -62,8 +63,10 @@ export default function App() {
     return (
       <AuthGateScreens
         showDevConsole={showDevConsole}
+        showDevGate={showDevGate}
+        handleGateUnlocked={handleGateUnlocked}
+        closeDevGate={closeDevGate}
         handleLoginSuccess={handleLoginSuccess}
-        toggleDevMode={toggleDevMode}
         exitDevModeToUserMode={exitDevModeToUserMode}
       />
     );

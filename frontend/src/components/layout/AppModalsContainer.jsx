@@ -3,6 +3,7 @@ import PurchaseOrderModal from '../../Pages/Purchases/modals/PurchaseOrderModal'
 import DeviceLimitModal from '../modals/DeviceLimitModal';
 import LoginModal from '../modals/LoginModal';
 import DeveloperConsoleModal from '../modals/DeveloperConsoleModal';
+import DevGateModal from '../modals/dev/DevGateModal';
 import RegisterClosingModal from '../modals/RegisterClosingModal';
 import PwaInstallPrompt from '../shared/PwaInstallPrompt';
 
@@ -17,8 +18,10 @@ export default function AppModalsContainer({
   setShowLoginModal,
   currentUser,
   handleLoginSuccess,
-  toggleDevMode,
   showDevConsole,
+  showDevGate,
+  handleGateUnlocked,
+  closeDevGate,
   exitDevModeToUserMode,
   isRegisterModalOpen,
   setIsRegisterModalOpen,
@@ -55,7 +58,13 @@ export default function AppModalsContainer({
         onLoginSuccess={handleLoginSuccess}
         canClose={!!currentUser}
         onClose={() => setShowLoginModal(false)}
-        onOpenDevConsole={toggleDevMode}
+      />
+
+      {/* Developer Password Gate Modal */}
+      <DevGateModal
+        isOpen={showDevGate}
+        onClose={closeDevGate}
+        onUnlocked={handleGateUnlocked}
       />
 
       {/* Super Admin & Developer Console Modal */}

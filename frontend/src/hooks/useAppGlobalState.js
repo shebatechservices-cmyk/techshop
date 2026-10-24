@@ -68,6 +68,10 @@ export default function useAppGlobalState() {
     // 5. Developer Mode
     showDevConsole: devMode.showDevConsole,
     setShowDevConsole: devMode.setShowDevConsole,
+    showDevGate: devMode.showDevGate,
+    setShowDevGate: devMode.setShowDevGate,
+    handleGateUnlocked: devMode.handleGateUnlocked,
+    closeDevGate: devMode.closeDevGate,
     isDevMode: devMode.isDevMode,
     setIsDevMode: devMode.setIsDevMode,
     exitDevModeToUserMode: devMode.exitDevModeToUserMode,

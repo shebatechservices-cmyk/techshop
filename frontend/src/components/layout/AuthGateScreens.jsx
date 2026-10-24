@@ -1,11 +1,14 @@
 import React from 'react';
 import LoginModal from '../modals/LoginModal';
 import DeveloperConsoleModal from '../modals/DeveloperConsoleModal';
+import DevGateModal from '../modals/dev/DevGateModal';
 
 export default function AuthGateScreens({
   showDevConsole,
+  showDevGate,
+  handleGateUnlocked,
+  closeDevGate,
   handleLoginSuccess,
-  toggleDevMode,
   exitDevModeToUserMode,
 }) {
   return (
@@ -14,7 +17,11 @@ export default function AuthGateScreens({
         isOpen={true}
         canClose={false}
         onLoginSuccess={handleLoginSuccess}
-        onOpenDevConsole={toggleDevMode}
+      />
+      <DevGateModal
+        isOpen={showDevGate}
+        onClose={closeDevGate}
+        onUnlocked={handleGateUnlocked}
       />
       <DeveloperConsoleModal
         isOpen={showDevConsole}

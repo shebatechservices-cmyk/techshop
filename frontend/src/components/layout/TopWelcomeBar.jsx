@@ -1,7 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import GlobalSearchBar from '../shared/GlobalSearchBar';
 import RealtimeNotificationCenter from '../shared/RealtimeNotificationCenter';
-import DeveloperConsoleModal from '../modals/DeveloperConsoleModal';
 import Calculator from '../shared/Calculator';
 import usePwaInstall from '../../hooks/usePwaInstall';
 import LiveClockPill from './topbar/LiveClockPill';
@@ -175,34 +174,15 @@ export default function TopWelcomeBar({
           </button>
         )}
 
-        {/* Developer Console Shortcut (Admin/Dev only, never for Technicians) */}
-        {!isTechnician && isDevMode && (
-          <button
-            type="button"
-            onClick={() => {
-              if (onOpenDevConsole) onOpenDevConsole();
-              else setShowDevConsole(true);
-            }}
-            className="hidden sm:flex items-center gap-1.5 px-2.5 py-1.5 bg-rose-500/30 border border-rose-400/60 text-rose-100 hover:bg-rose-500/50 rounded-lg text-xs font-bold transition-colors shadow-xs"
-            title="Developer Console (Ctrl + Shift + D)"
-          >
-            <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="2">
-              <path strokeLinecap="round" strokeLinejoin="round" d="M10 20l4-16m4 4l4 4-4 4M6 16l-4-4 4-4" />
-            </svg>
-            <span>Dev</span>
-          </button>
-        )}
-
         {/* User Profile Avatar & Dropdown Component */}
         <TopBarUserMenu
           currentUser={currentUser}
           userName={userName}
           branchName={branchName}
           isTechnician={isTechnician}
-          isDevMode={isDevMode}
+          isDevMode={false}
           onOpenRegisterModal={onOpenRegisterModal}
           onNavigate={onNavigate}
-          onOpenDevConsole={onOpenDevConsole ? onOpenDevConsole : () => setShowDevConsole(true)}
           onLogout={onLogout}
           canInstall={canInstall}
           installApp={installApp}
@@ -214,16 +194,6 @@ export default function TopWelcomeBar({
         isOpen={isThemeModalOpen}
         onClose={() => setIsThemeModalOpen(false)}
       />
-
-      {/* Developer Console Modal Fallback */}
-      {!onOpenDevConsole && (
-        <DeveloperConsoleModal
-          isOpen={showDevConsole}
-          onClose={() => setShowDevConsole(false)}
-          onSwitchToUserMode={onSwitchToUserMode}
-          onDeveloperLogin={onDeveloperLogin}
-        />
-      )}
     </header>
   );
 }

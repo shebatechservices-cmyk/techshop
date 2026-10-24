@@ -128,21 +128,7 @@ export default function TopBarUserMenu({
               </>
             )}
 
-            {!isTechnician && isDevMode && (
-              <button
-                type="button"
-                onClick={() => {
-                  setShowUserMenu(false);
-                  if (onOpenDevConsole) onOpenDevConsole();
-                }}
-                className="w-full px-3.5 py-2 flex items-center gap-2.5 text-rose-700 hover:bg-rose-50 text-left font-medium transition-colors"
-              >
-                <svg className="w-4 h-4 text-rose-600" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="2">
-                  <path strokeLinecap="round" strokeLinejoin="round" d="M10 20l4-16m4 4l4 4-4 4M6 16l-4-4 4-4" />
-                </svg>
-                <span>Developer Console</span>
-              </button>
-            )}
+
 
             {canInstall && (
               <button
