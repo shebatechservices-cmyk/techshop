@@ -74,7 +74,7 @@ async function verifyDeviceOtp(req, res) {
 
         const vRes = await pool.query(`
             SELECT v.*, u.id as user_id, u.name, u.email, u.phone, u.role_id, u.is_active, u.is_locked,
-                   r.name as role_name, r.title as role_title, td.is_authorized as admin_approved
+                   r.name as role_name, r.name as role_title, td.is_authorized as admin_approved
             FROM device_verification_codes v
             JOIN users u ON v.user_id = u.id
             LEFT JOIN roles r ON u.role_id = r.id
@@ -143,7 +143,7 @@ async function checkDeviceApproval(req, res) {
 
         const vRes = await pool.query(`
             SELECT v.id, td.is_authorized, u.id as user_id, u.name, u.email, u.phone, u.role_id,
-                   r.name as role_name, r.title as role_title
+                   r.name as role_name, r.name as role_title
             FROM device_verification_codes v
             JOIN users u ON v.user_id = u.id
             LEFT JOIN roles r ON u.role_id = r.id
