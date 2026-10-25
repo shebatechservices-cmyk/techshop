@@ -47,12 +47,20 @@ export default function MobileExperienceContainer({
       setActiveModal('stock');
     } else if (actionId === 'scanner') {
       setActiveModal('scanner');
+    } else if (actionId === 'purchase') {
+      if (typeof onOpenPurchase === 'function') onOpenPurchase();
+    } else if (actionId === 'projects') {
+      if (typeof onNavigate === 'function') onNavigate({ section: 'projects' });
+    } else if (actionId === 'accounts') {
+      if (typeof onNavigate === 'function') onNavigate({ section: 'accounts' });
+    } else if (actionId === 'staff') {
+      if (typeof onNavigate === 'function') onNavigate({ section: 'staff' });
+    } else if (actionId === 'settings') {
+      if (typeof onNavigate === 'function') onNavigate({ section: 'settings' });
     } else if (actionId === 'expense') {
       if (typeof onNavigate === 'function') onNavigate({ section: 'expenses' });
     } else if (actionId === 'register') {
       if (typeof onOpenRegister === 'function') onOpenRegister();
-    } else if (actionId === 'purchase') {
-      if (typeof onOpenPurchase === 'function') onOpenPurchase();
     }
   };
 
@@ -106,7 +114,7 @@ export default function MobileExperienceContainer({
         title="বারকোড স্ক্যানার"
       />
 
-      {/* 5. Mobile Thermal Receipt Print Preview */}
+      {/* 5. Mobile Thermal Receipt Print Preview & Share */}
       {quickPrintSale && (
         <SalePrintModal
           isOpen={Boolean(quickPrintSale)}
