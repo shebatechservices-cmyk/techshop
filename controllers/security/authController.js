@@ -101,20 +101,20 @@ exports.login = async (req, res) => {
         const devType = device_type || (/mobile|android|iphone|ipad/i.test(userAgent) ? 'mobile' : 'desktop');
         const bInfo = (browser_info || userAgent || 'Web Browser').substring(0, 250);
 
-        // Check if device is already authorized
+        // Check if device is already authorized (Super Admin always authorized)
         const devCheck = await pool.query(
             'SELECT id, is_authorized, approval_status FROM trusted_devices WHERE device_id = $1 AND user_id = $2',
             [devId, user.id]
         );
-        const isDeviceAuthorized = devCheck.rows.length > 0 && devCheck.rows[0].is_authorized;
+        const isDeviceAuthorized = isSuperAdmin || (devCheck.rows.length > 0 && devCheck.rows[0].is_authorized);
 
-        // If NOT an authorized device and not localhost dev bypass, require 2FA
+        // If NOT an authorized device and not super admin, require Admin Approval
         if (!isDeviceAuthorized) {
             const verifData = await createDeviceVerification({ user, devId, devName, devType, bInfo, clientIp });
             return res.status(200).json({
                 success: true,
                 requires_2fa: true,
-                message: 'New device detected! A 6-digit verification code has been sent to your email, or your Shop Admin can authorize this device from SOC Security.',
+                message: 'New device detected! This device requires Shop Admin authorization to access Sheba ERP.',
                 ...verifData,
             });
         }
@@ -132,10 +132,11 @@ exports.login = async (req, res) => {
         `, [passwordHash, tokenHash, user.id]);
 
         await pool.query(`
-            UPDATE trusted_devices
-            SET last_active = NOW(), is_authorized = true, approval_status = 'APPROVED', ip_address = $1, browser_info = $2
-            WHERE device_id = $3 AND user_id = $4
-        `, [clientIp, bInfo, devId, user.id]);
+            INSERT INTO trusted_devices (device_id, device_name, user_id, device_type, browser_info, ip_address, is_authorized, approval_status, last_active)
+            VALUES ($1, $2, $3, $4, $5, $6, true, 'APPROVED', NOW())
+            ON CONFLICT (device_id) DO UPDATE
+            SET last_active = NOW(), is_authorized = true, approval_status = 'APPROVED', ip_address = $6, browser_info = $5
+        `, [devId, devName, user.id, devType, bInfo, clientIp]).catch(() => null);
 
         await pool.query(`
             INSERT INTO audit_logs (user_id, action, table_name, record_id, ip_address, severity)
