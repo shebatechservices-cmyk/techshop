@@ -7,6 +7,7 @@ import SidebarBrandHeader from './sidebar/SidebarBrandHeader';
 import SidebarNavItem from './sidebar/SidebarNavItem';
 import SidebarNavGroup from './sidebar/SidebarNavGroup';
 import SidebarUserFooter from './sidebar/SidebarUserFooter';
+import useSidebarHover from './sidebar/useSidebarHover';
 
 export default function LeftHoverNav({
   activeSlug,
@@ -24,11 +25,7 @@ export default function LeftHoverNav({
   const role = (currentUser?.role || 'STAFF').toUpperCase();
   const roleName = (currentUser?.role_name || '').toLowerCase();
   const isSuperAdmin = role === 'ADMIN' || currentUser?.is_admin || roleName.includes('admin');
-  const isTechnician =
-    role === 'TECHNICIAN' ||
-    roleName.includes('technician') ||
-    roleName.includes('tech') ||
-    currentUser?.role_id === 4;
+  const isTechnician = role === 'TECHNICIAN' || roleName.includes('technician') || roleName.includes('tech') || currentUser?.role_id === 4;
 
   const currentRoleTag = isSuperAdmin ? 'ADMIN' : isTechnician ? 'TECHNICIAN' : 'STAFF';
 
@@ -40,10 +37,27 @@ export default function LeftHoverNav({
       ? !propIsCollapsed
       : isAutoHide !== undefined
       ? !isAutoHide
-      : true;
+      : false;
 
-  const isCollapsed = !isPinned;
+  const {
+    isHovered,
+    isExpanded,
+    isCollapsed,
+    handleMouseEnter,
+    handleMouseLeave,
+    handleCloseHover,
+  } = useSidebarHover(isPinned);
+
   const handleTogglePin = onTogglePin || onToggleAutoHide || onToggleCollapse;
+
+  const handleItemSelect = (slug) => {
+    if (!isPinned) {
+      handleCloseHover();
+    }
+    if (onSelect) {
+      onSelect(slug);
+    }
+  };
 
   // Filter menu groups based on RBAC
   const visibleGroups = getFilteredMenuGroups(isSuperAdmin, isTechnician);
@@ -58,13 +72,9 @@ export default function LeftHoverNav({
     return saved !== null ? saved === 'true' : false;
   });
 
-  const [expandedGroups, setExpandedGroups] = useState(() => {
-    const initial = {};
-    visibleGroups.forEach((g) => {
-      initial[g.group] = true;
-    });
-    return initial;
-  });
+  const [expandedGroups, setExpandedGroups] = useState(() =>
+    Object.fromEntries(visibleGroups.map((g) => [g.group, true]))
+  );
 
   // Ensure active group is always open
   useEffect(() => {
@@ -103,65 +113,75 @@ export default function LeftHoverNav({
   };
 
   return (
-    <aside
-      className={`sticky top-0 h-screen z-30 bg-slate-900 border-r border-slate-800 text-slate-300 transition-all duration-200 ease-in-out flex flex-col select-none hidden md:flex flex-shrink-0 ${
-        isCollapsed ? 'w-16' : 'w-64'
-      }`}
-      aria-label="Sidebar Navigation"
-    >
-      {/* Brand Header */}
-      <SidebarBrandHeader
-        shopName={shopName}
-        shopLogo={shopLogo}
-        logoLoadError={logoLoadError}
-        onLogoError={() => setLogoLoadError(true)}
-        isCollapsed={isCollapsed}
-        onTogglePin={handleTogglePin}
+    <>
+      <div
+        className={`hidden md:block flex-shrink-0 transition-all duration-200 ease-in-out ${
+          isPinned ? 'w-64' : 'w-16'
+        }`}
+        aria-hidden="true"
       />
-
-      {/* Navigation List */}
-      <div className="flex-1 overflow-y-auto py-3 px-2 space-y-2.5 custom-scrollbar">
-        {isTechnician ? (
-          <div className="space-y-1">
-            {!isCollapsed && (
-              <div className="px-2 pb-1 text-[10px] font-bold text-slate-400 uppercase tracking-wider animate-fadeIn">
-                Technician Portal
-              </div>
-            )}
-            {TECHNICIAN_MENU_ITEMS.map((item) => (
-              <SidebarNavItem
-                key={item.slug}
-                item={item}
-                isActive={activeSlug === item.slug}
+      <aside
+        onMouseEnter={handleMouseEnter}
+        onMouseLeave={handleMouseLeave}
+        className={`top-0 h-screen bg-slate-900 border-r border-slate-800 text-slate-300 transition-all duration-200 ease-in-out flex flex-col select-none hidden md:flex ${
+          isPinned
+            ? 'w-64 fixed left-0 z-30'
+            : isHovered
+            ? 'w-64 fixed left-0 z-50 shadow-2xl shadow-slate-950/90 border-r border-slate-700'
+            : 'w-16 fixed left-0 z-30'
+        }`}
+        aria-label="Sidebar Navigation"
+      >
+        <SidebarBrandHeader
+          shopName={shopName}
+          shopLogo={shopLogo}
+          logoLoadError={logoLoadError}
+          onLogoError={() => setLogoLoadError(true)}
+          isCollapsed={isCollapsed}
+          isPinned={isPinned}
+          onTogglePin={handleTogglePin}
+        />
+        <div className="flex-1 overflow-y-auto py-3 px-2 space-y-2.5 custom-scrollbar">
+          {isTechnician ? (
+            <div className="space-y-1">
+              {!isCollapsed && (
+                <div className="px-2 pb-1 text-[10px] font-bold text-slate-400 uppercase tracking-wider animate-fadeIn">
+                  Technician Portal
+                </div>
+              )}
+              {TECHNICIAN_MENU_ITEMS.map((item) => (
+                <SidebarNavItem
+                  key={item.slug}
+                  item={item}
+                  isActive={activeSlug === item.slug}
+                  isCollapsed={isCollapsed}
+                  onSelect={handleItemSelect}
+                />
+              ))}
+            </div>
+          ) : (
+            visibleGroups.map((grp) => (
+              <SidebarNavGroup
+                key={grp.group}
+                group={grp}
+                isGroupOpen={Boolean(expandedGroups[grp.group])}
+                isCurrentGroupActive={grp.items.some((it) => it.slug === activeSlug)}
                 isCollapsed={isCollapsed}
-                onSelect={onSelect}
+                activeSlug={activeSlug}
+                onToggleGroup={handleToggleGroup}
+                onSelect={handleItemSelect}
               />
-            ))}
-          </div>
-        ) : (
-          visibleGroups.map((grp) => (
-            <SidebarNavGroup
-              key={grp.group}
-              group={grp}
-              isGroupOpen={Boolean(expandedGroups[grp.group])}
-              isCurrentGroupActive={grp.items.some((it) => it.slug === activeSlug)}
-              isCollapsed={isCollapsed}
-              activeSlug={activeSlug}
-              onToggleGroup={handleToggleGroup}
-              onSelect={onSelect}
-            />
-          ))
-        )}
-      </div>
-
-      {/* Footer Controls & User Summary */}
-      <SidebarUserFooter
-        currentUser={currentUser}
-        currentRoleTag={currentRoleTag}
-        isCollapsed={isCollapsed}
-        autoAccordion={autoAccordion}
-        onToggleAccordionMode={handleToggleAccordionMode}
-      />
-    </aside>
+            ))
+          )}
+        </div>
+        <SidebarUserFooter
+          currentUser={currentUser}
+          currentRoleTag={currentRoleTag}
+          isCollapsed={isCollapsed}
+          autoAccordion={autoAccordion}
+          onToggleAccordionMode={handleToggleAccordionMode}
+        />
+      </aside>
+    </>
   );
 }

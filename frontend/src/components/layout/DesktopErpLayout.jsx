@@ -26,14 +26,15 @@ export default function DesktopErpLayout({
   const { openModal, openDrawer } = mobileActions;
 
   const [isSidebarPinned, setIsSidebarPinned] = useState(() => {
-    const saved = localStorage.getItem('sheba_sidebar_pinned');
-    return saved !== null ? saved === 'true' : true;
+    const saved = localStorage.getItem('sheba_sidebar_pinned_v2');
+    if (saved !== null) return saved === 'true';
+    return false;
   });
 
   const togglePin = () => {
     setIsSidebarPinned((prev) => {
       const next = !prev;
-      localStorage.setItem('sheba_sidebar_pinned', String(next));
+      localStorage.setItem('sheba_sidebar_pinned_v2', String(next));
       return next;
     });
   };

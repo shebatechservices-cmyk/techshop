@@ -6,6 +6,7 @@ export default function SidebarBrandHeader({
   logoLoadError,
   onLogoError,
   isCollapsed,
+  isPinned,
   onTogglePin,
 }) {
   return (
@@ -55,10 +56,18 @@ export default function SidebarBrandHeader({
           <button
             type="button"
             onClick={onTogglePin}
-            className="p-1.5 rounded-lg text-xs transition-colors bg-brand/20 text-brand border border-brand/30 hover:bg-brand/30"
-            title="Collapse Sidebar to Icon Rail"
+            className={`p-1.5 rounded-lg text-xs transition-colors border ${
+              isPinned
+                ? 'bg-emerald-500/20 text-emerald-400 border-emerald-500/40 hover:bg-emerald-500/30'
+                : 'bg-slate-800 text-slate-300 border-slate-700 hover:text-white hover:bg-slate-700'
+            }`}
+            title={
+              isPinned
+                ? 'সাইডবার পিন করা আছে (অটো-হাইড করতে ক্লিক করুন)'
+                : 'অটো-হাইড মোড সক্রিয় (পিন করতে ক্লিক করুন)'
+            }
           >
-            <span className="text-xs">◀</span>
+            <span className="text-xs">{isPinned ? '📌' : '🔓'}</span>
           </button>
         </div>
       )}
