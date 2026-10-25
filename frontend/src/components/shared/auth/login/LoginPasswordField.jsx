@@ -5,29 +5,13 @@ export default function LoginPasswordField({
   setPassword,
   showPassword,
   setShowPassword,
-  strengthScore,
-  onForgotPassword,
 }) {
   return (
     <div className="mb-4">
-      <div className="flex justify-between items-center mb-1.5">
-        <label htmlFor="login-password" className="text-xs font-bold text-slate-700">
-          Password
-        </label>
-        <button
-          type="button"
-          onClick={onForgotPassword}
-          className="text-xs font-semibold text-emerald-600 hover:text-emerald-700 hover:underline transition-colors cursor-pointer"
-        >
-          Forgot Password?
-        </button>
-      </div>
+      <label htmlFor="login-password" className="block text-xs font-semibold text-slate-700 mb-1.5">
+        Password:
+      </label>
       <div className="relative flex items-center">
-        <span className="absolute left-3.5 text-slate-400 pointer-events-none flex items-center justify-center">
-          <svg className="w-4 h-4 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="2">
-            <path strokeLinecap="round" strokeLinejoin="round" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
-          </svg>
-        </span>
         <input
           type={showPassword ? 'text' : 'password'}
           id="login-password"
@@ -37,12 +21,12 @@ export default function LoginPasswordField({
           onChange={(e) => setPassword(e.target.value)}
           placeholder="••••••••"
           required
-          className="w-full pl-10 pr-11 py-2.5 bg-slate-50/70 hover:bg-white focus:bg-white border border-slate-300 focus:border-emerald-600 focus:ring-4 focus:ring-emerald-500/10 rounded-xl text-sm text-slate-800 placeholder-slate-400 transition-all outline-none font-medium tracking-wide"
+          className="w-full pl-3.5 pr-10 py-2.5 bg-white border border-slate-300 focus:border-emerald-600 focus:ring-2 focus:ring-emerald-500/20 rounded-lg text-sm text-slate-800 placeholder-slate-400 transition-all outline-none tracking-wide"
         />
         <button
           type="button"
           onClick={() => setShowPassword(!showPassword)}
-          className="absolute right-2 px-2.5 py-1.5 text-slate-400 hover:text-slate-600 focus:outline-none rounded-lg transition-colors cursor-pointer"
+          className="absolute right-2.5 px-1 py-1 text-slate-400 hover:text-slate-600 focus:outline-none transition-colors cursor-pointer"
           title={showPassword ? 'Hide password' : 'Show password'}
           aria-label={showPassword ? 'Hide password' : 'Show password'}
         >
@@ -58,20 +42,6 @@ export default function LoginPasswordField({
           )}
         </button>
       </div>
-
-      {password.length > 0 && (
-        <div className="flex items-center gap-2 mt-2 px-0.5">
-          <div className="flex gap-1 flex-1">
-            <div className={`h-1 flex-1 rounded-full transition-all ${strengthScore >= 1 ? 'bg-rose-500' : 'bg-slate-200'}`} />
-            <div className={`h-1 flex-1 rounded-full transition-all ${strengthScore >= 2 ? 'bg-amber-500' : 'bg-slate-200'}`} />
-            <div className={`h-1 flex-1 rounded-full transition-all ${strengthScore >= 3 ? 'bg-emerald-500' : 'bg-slate-200'}`} />
-            <div className={`h-1 flex-1 rounded-full transition-all ${strengthScore >= 4 ? 'bg-emerald-600' : 'bg-slate-200'}`} />
-          </div>
-          <span className={`text-[11px] font-semibold ${strengthScore >= 3 ? 'text-emerald-600' : 'text-slate-500'}`}>
-            {strengthScore >= 3 ? '✓ Strong' : 'Standard'}
-          </span>
-        </div>
-      )}
     </div>
   );
 }
