@@ -96,6 +96,22 @@ export default function SalePrintStyles({
           margin: 0;
         }
       }
+      @media screen and (max-width: 640px) {
+        .print-modal-backdrop {
+          padding: 6px 4px !important;
+        }
+        #sale-print-area {
+          min-height: auto !important;
+          padding: 8px 6px !important;
+          border-radius: 8px !important;
+          font-size: 10.5px !important;
+          width: 100% !important;
+          max-width: 100% !important;
+        }
+        .invoice-page-border {
+          padding: 6px 8px !important;
+        }
+      }
     `}</style>
   );
 }

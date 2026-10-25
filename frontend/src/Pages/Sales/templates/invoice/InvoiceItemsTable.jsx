@@ -6,17 +6,19 @@ export default function InvoiceItemsTable({
   isChalan = false,
 }) {
   return (
-    <table
-      style={{
-        width: '100%',
-        borderCollapse: 'collapse',
-        border: '1px solid #475569',
-        marginBottom: '6px',
-        fontSize: '0.72rem',
-        position: 'relative',
-        zIndex: 1,
-      }}
-    >
+    <div style={{ width: '100%', overflowX: 'auto', WebkitOverflowScrolling: 'touch' }}>
+      <table
+        style={{
+          width: '100%',
+          minWidth: '420px',
+          borderCollapse: 'collapse',
+          border: '1px solid #475569',
+          marginBottom: '6px',
+          fontSize: '0.72rem',
+          position: 'relative',
+          zIndex: 1,
+        }}
+      >
       <thead>
         <tr style={{ background: '#f1f5f9', borderBottom: '1px solid #475569' }}>
           <th style={{ border: '1px solid #475569', padding: '3px 4px', textAlign: 'center', width: '28px', color: '#0f172a', fontSize: '0.68rem', fontWeight: 800 }}>SL</th>
@@ -69,5 +71,6 @@ export default function InvoiceItemsTable({
         ))}
       </tbody>
     </table>
+    </div>
   );
 }
