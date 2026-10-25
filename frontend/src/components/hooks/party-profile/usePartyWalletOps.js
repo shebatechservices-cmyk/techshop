@@ -35,6 +35,11 @@ export function usePartyWalletOps({
       setWalletError('Please select a shop account (Cash / Bank / MFS).');
       return;
     }
+    const trimmedRef = (walletForm.reference || '').trim();
+    if (!trimmedRef) {
+      setWalletError('রেফারেন্স আবশ্যক! টাকা দেওয়ার কারণ বা রেফারেন্স উল্লেখ করুন (যেমন: মনিটর বাবদ বা হাওলাত বাবদ)।');
+      return;
+    }
     try {
       setWalletLoading(true);
       const res = await smartFetch('/wallets/transaction', {
@@ -46,14 +51,14 @@ export function usePartyWalletOps({
           action: walletAction,
           account_id: needsAccount ? Number(walletForm.account_id) : null,
           amount: numAmount,
-          note: walletForm.note.trim() || `${walletAction.toUpperCase()} via Wallet`,
-          reference: walletForm.reference.trim() || null,
+          note: walletForm.note.trim() || `${walletAction.toUpperCase()} via Wallet (${trimmedRef})`,
+          reference: trimmedRef,
         }),
       });
       const data = await res.json();
       if (!res.ok) throw new Error(data.message || 'Wallet transaction failed');
       setWalletSuccess(data.message || 'Wallet transaction completed successfully!');
-      setWalletForm((prev) => ({ ...prev, note: '', reference: '' }));
+      setWalletForm((prev) => ({ ...prev, amount: '', note: '', reference: '' }));
       if (fetchPartyData) await fetchPartyData();
       if (onPartyUpdated) onPartyUpdated();
     } catch (err) {

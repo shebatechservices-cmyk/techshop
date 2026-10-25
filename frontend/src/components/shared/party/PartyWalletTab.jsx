@@ -3,6 +3,24 @@ import PartyWalletSummaryCards from './wallet/PartyWalletSummaryCards';
 import PartyWalletLedgerTable from './wallet/PartyWalletLedgerTable';
 import PartyWalletGuidance from './wallet/PartyWalletGuidance';
 
+const ACTION_OPTIONS = {
+  customer: [
+    { id: 'deposit', label: '📥 Deposit into Wallet' },
+    { id: 'withdraw', label: '📤 Withdraw / Refund' },
+    { id: 'due_payment', label: '💵 Pay Due From Wallet' },
+  ],
+  supplier: [
+    { id: 'deposit', label: '📥 Deposit Into Wallet' },
+    { id: 'withdraw', label: '📤 Cash Back / Refund' },
+    { id: 'due_payment', label: '💵 Pay Due From Wallet' },
+  ],
+  staff: [
+    { id: 'salary', label: '💼 Salary Credit' },
+    { id: 'bonus', label: '🎁 Bonus Credit' },
+    { id: 'withdraw', label: '📤 Withdraw' },
+  ],
+};
+
 export default function PartyWalletTab({
   partyType,
   walletBalance,
@@ -22,6 +40,7 @@ export default function PartyWalletTab({
   handleWalletSubmit,
 }) {
   const walletTransactions = walletData?.transactions || [];
+  const actions = ACTION_OPTIONS[partyType] || ACTION_OPTIONS.customer;
 
   return (
     <div>
@@ -36,57 +55,7 @@ export default function PartyWalletTab({
       <div className="mb-3.5">
         <h4 className="text-xs font-bold text-slate-800 uppercase tracking-wider mb-2">🪙 Wallet Operations</h4>
         <div className="flex flex-wrap gap-2">
-          {partyType === 'customer' && [
-            { id: 'deposit', label: '📥 Deposit into Wallet' },
-            { id: 'withdraw', label: '📤 Withdraw / Refund' },
-            { id: 'due_payment', label: '💵 Pay Due From Wallet' },
-          ].map((act) => (
-            <button
-              key={act.id}
-              type="button"
-              onClick={() => {
-                setWalletAction(act.id);
-                setWalletError('');
-                setWalletSuccess('');
-                setWalletForm((prev) => ({ ...prev, amount: '', note: '', reference: '' }));
-              }}
-              className={`py-2 px-3.5 rounded-xl font-bold text-xs transition-all border ${
-                walletAction === act.id
-                  ? 'border-purple-600 bg-purple-50 text-purple-800 ring-2 ring-purple-100'
-                  : 'border-slate-300 bg-white text-slate-600 hover:bg-slate-50'
-              }`}
-            >
-              {act.label}
-            </button>
-          ))}
-          {partyType === 'supplier' && [
-            { id: 'deposit', label: '📥 Deposit Into Wallet' },
-            { id: 'withdraw', label: '📤 Cash Back / Refund' },
-            { id: 'due_payment', label: '💵 Pay Due From Wallet' },
-          ].map((act) => (
-            <button
-              key={act.id}
-              type="button"
-              onClick={() => {
-                setWalletAction(act.id);
-                setWalletError('');
-                setWalletSuccess('');
-                setWalletForm((prev) => ({ ...prev, amount: '', note: '', reference: '' }));
-              }}
-              className={`py-2 px-3.5 rounded-xl font-bold text-xs transition-all border ${
-                walletAction === act.id
-                  ? 'border-emerald-600 bg-emerald-50 text-emerald-800 ring-2 ring-emerald-100'
-                  : 'border-slate-300 bg-white text-slate-600 hover:bg-slate-50'
-              }`}
-            >
-              {act.label}
-            </button>
-          ))}
-          {partyType === 'staff' && [
-            { id: 'salary', label: '💼 Salary Credit' },
-            { id: 'bonus', label: '🎁 Bonus Credit' },
-            { id: 'withdraw', label: '📤 Withdraw' },
-          ].map((act) => (
+          {actions.map((act) => (
             <button
               key={act.id}
               type="button"
@@ -161,17 +130,20 @@ export default function PartyWalletTab({
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-3.5 mb-4">
           <div>
-            <label className="block text-xs font-semibold text-slate-700 mb-1">Reference / Voucher #</label>
+            <label className="block text-xs font-semibold text-slate-700 mb-1">
+              Reference / Purpose (রেফারেন্স / কারণ) *
+            </label>
             <input
               type="text"
-              placeholder="e.g. DEP-2026-001"
+              required
+              placeholder="যেমন: মনিটর বাবদ / হাওলাত বাবদ / ভাউচার নং"
               value={walletForm.reference}
               onChange={(e) => setWalletForm({ ...walletForm, reference: e.target.value })}
-              className="w-full px-3 py-2 rounded-xl border border-slate-300 text-xs text-slate-800 outline-none focus:border-purple-500 focus:ring-2 focus:ring-purple-100 transition-all"
+              className="w-full px-3 py-2 rounded-xl border border-slate-300 text-xs text-slate-800 outline-none focus:border-purple-500 focus:ring-2 focus:ring-purple-100 transition-all font-medium"
             />
           </div>
           <div>
-            <label className="block text-xs font-semibold text-slate-700 mb-1">Note</label>
+            <label className="block text-xs font-semibold text-slate-700 mb-1">Note (মন্তব্য)</label>
             <input
               type="text"
               placeholder="e.g. Monthly credit deposit"
@@ -185,7 +157,7 @@ export default function PartyWalletTab({
         <button
           type="submit"
           disabled={walletLoading}
-          className="py-2.5 px-5 bg-purple-700 hover:bg-purple-800 text-white rounded-xl font-bold text-xs shadow-md transition-all disabled:opacity-50"
+          className="py-2.5 px-5 bg-purple-700 hover:bg-purple-800 text-white rounded-xl font-bold text-xs shadow-md transition-all disabled:opacity-50 cursor-pointer"
         >
           {walletLoading ? 'Processing Wallet Transaction...' : `🪙 Confirm ${walletAction.toUpperCase()} (${walletForm.amount ? `৳ ${Number(walletForm.amount).toLocaleString()}` : ''})`}
         </button>
