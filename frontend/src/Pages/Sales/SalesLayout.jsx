@@ -1,10 +1,5 @@
 import React from 'react';
 
-/**
- * SalesLayout
- * Layout component for Sales & Customers header, tab navigation pills, and quick action buttons.
- * Converted entirely to Tailwind CSS utilities.
- */
 export default function SalesLayout({
   activeTab = 'history',
   setActiveTab = () => {},
@@ -22,7 +17,6 @@ export default function SalesLayout({
   onNewCustomer,
   children
 }) {
-
   const handleNewSale = () => {
     if (onNewSale) {
       onNewSale();
@@ -47,56 +41,41 @@ export default function SalesLayout({
     }
   };
 
-  // Format count badges
-  const saleBadgeText = hasSaleFilter
-    ? `${filteredSalesCount}/${salesCount}`
-    : salesCount;
-
-  const quotationBadgeText = hasQuotationFilter
-    ? `${filteredQuotationsCount}/${quotationsCount}`
-    : quotationsCount;
-
-  const customerBadgeText = hasCustomerFilter
-    ? `${filteredCustomersCount}/${customersCount}`
-    : customersCount;
+  const saleBadgeText = hasSaleFilter ? `${filteredSalesCount}/${salesCount}` : salesCount;
+  const quotationBadgeText = hasQuotationFilter ? `${filteredQuotationsCount}/${quotationsCount}` : quotationsCount;
+  const customerBadgeText = hasCustomerFilter ? `${filteredCustomersCount}/${customersCount}` : customersCount;
 
   return (
-    <div className="w-full">
-      {/* Unified Compact Header & Tab Bar (Single Row) */}
-      <div className="flex flex-wrap items-center justify-between gap-2.5 pb-2 mb-3 border-b border-slate-200">
+    <div className="w-full max-w-full min-w-0 overflow-x-hidden">
+      {/* Unified Compact Header & Tab Bar */}
+      <div className="flex flex-wrap items-center justify-between gap-2 pb-2 mb-2.5 border-b border-slate-200">
         {/* Left: Compact Title */}
-        <div className="flex items-center gap-2">
-          <span className="text-xl">🏷️</span>
+        <div className="flex items-center gap-1.5">
+          <span className="text-lg">🏷️</span>
           <div>
-            <h2 className="text-[1.2rem] font-extrabold text-slate-900 m-0 leading-tight">
-              Sales & Customers
+            <h2 className="text-sm sm:text-base font-extrabold text-slate-900 m-0 leading-tight">
+              Sales &amp; Customers
             </h2>
-            <span className="text-slate-500 text-[0.74rem]">
+            <span className="text-slate-500 text-[10px] sm:text-xs block">
               POS sales, quotations, and receivables
             </span>
           </div>
         </div>
 
         {/* Center: Integrated Tab Navigation Pills */}
-        <div className="flex items-center gap-1 bg-slate-100 p-[3px] rounded-lg">
+        <div className="flex items-center gap-1 bg-slate-100 p-0.5 rounded-lg text-xs">
           {/* Tab 1: Sales / Invoices */}
           <button
             type="button"
             onClick={() => setActiveTab('history')}
-            className={`flex items-center gap-1.5 px-3 py-1.5 rounded-md text-[0.82rem] transition-all cursor-pointer border-0 ${
+            className={`flex items-center gap-1 px-2.5 py-1 rounded-md text-[11px] sm:text-xs transition-all cursor-pointer border-0 ${
               activeTab === 'history'
-                ? 'bg-white text-emerald-600 font-bold shadow-sm'
-                : 'bg-transparent text-slate-500 font-semibold hover:text-slate-800'
+                ? 'bg-white text-emerald-600 font-bold shadow-xs'
+                : 'bg-transparent text-slate-500 font-medium hover:text-slate-800'
             }`}
           >
             <span>Invoices</span>
-            <span
-              className={`px-1.5 py-0.5 rounded-full text-[0.72rem] font-bold ${
-                activeTab === 'history'
-                  ? 'bg-emerald-100 text-emerald-600'
-                  : 'bg-slate-200 text-slate-500'
-              }`}
-            >
+            <span className="px-1.5 py-0.2 rounded-full text-[10px] font-bold bg-emerald-100 text-emerald-700">
               {saleBadgeText}
             </span>
           </button>
@@ -105,20 +84,14 @@ export default function SalesLayout({
           <button
             type="button"
             onClick={() => setActiveTab('quotations')}
-            className={`flex items-center gap-1.5 px-3 py-1.5 rounded-md text-[0.82rem] transition-all cursor-pointer border-0 ${
+            className={`flex items-center gap-1 px-2.5 py-1 rounded-md text-[11px] sm:text-xs transition-all cursor-pointer border-0 ${
               activeTab === 'quotations'
-                ? 'bg-white text-indigo-600 font-bold shadow-sm'
-                : 'bg-transparent text-slate-500 font-semibold hover:text-slate-800'
+                ? 'bg-white text-indigo-600 font-bold shadow-xs'
+                : 'bg-transparent text-slate-500 font-medium hover:text-slate-800'
             }`}
           >
-            <span>Quotations</span>
-            <span
-              className={`px-1.5 py-0.5 rounded-full text-[0.72rem] font-bold ${
-                activeTab === 'quotations'
-                  ? 'bg-indigo-100 text-indigo-600'
-                  : 'bg-slate-200 text-slate-500'
-              }`}
-            >
+            <span>Quotes</span>
+            <span className="px-1.5 py-0.2 rounded-full text-[10px] font-bold bg-indigo-100 text-indigo-700">
               {quotationBadgeText}
             </span>
           </button>
@@ -127,31 +100,25 @@ export default function SalesLayout({
           <button
             type="button"
             onClick={() => setActiveTab('customers')}
-            className={`flex items-center gap-1.5 px-3 py-1.5 rounded-md text-[0.82rem] transition-all cursor-pointer border-0 ${
+            className={`flex items-center gap-1 px-2.5 py-1 rounded-md text-[11px] sm:text-xs transition-all cursor-pointer border-0 ${
               activeTab === 'customers'
-                ? 'bg-white text-sky-600 font-bold shadow-sm'
-                : 'bg-transparent text-slate-500 font-semibold hover:text-slate-800'
+                ? 'bg-white text-sky-600 font-bold shadow-xs'
+                : 'bg-transparent text-slate-500 font-medium hover:text-slate-800'
             }`}
           >
-            <span>Customers</span>
-            <span
-              className={`px-1.5 py-0.5 rounded-full text-[0.72rem] font-bold ${
-                activeTab === 'customers'
-                  ? 'bg-sky-100 text-sky-600'
-                  : 'bg-slate-200 text-slate-500'
-              }`}
-            >
+            <span>Clients</span>
+            <span className="px-1.5 py-0.2 rounded-full text-[10px] font-bold bg-sky-100 text-sky-700">
               {customerBadgeText}
             </span>
           </button>
         </div>
 
-        {/* Right: 3 Compact Action Buttons */}
-        <div className="flex items-center gap-1.5">
+        {/* Right: Compact Action Buttons */}
+        <div className="flex items-center gap-1.5 flex-wrap">
           <button
             type="button"
             onClick={handleNewSale}
-            className="flex items-center gap-1 bg-emerald-600 hover:bg-emerald-700 text-white px-3 py-1.5 rounded-[7px] font-bold text-[0.82rem] cursor-pointer shadow-sm shadow-emerald-600/20 transition-colors border-0"
+            className="flex items-center gap-1 bg-emerald-600 hover:bg-emerald-500 text-white px-2.5 py-1 rounded-lg font-bold text-[11px] sm:text-xs cursor-pointer shadow-xs border-0 active:scale-95 transition-all"
             title="Create new sale invoice"
           >
             <span>+</span> <span>New Sale</span>
@@ -160,7 +127,7 @@ export default function SalesLayout({
           <button
             type="button"
             onClick={handleNewQuotation}
-            className="flex items-center gap-1 bg-indigo-600 hover:bg-indigo-700 text-white px-3 py-1.5 rounded-[7px] font-bold text-[0.82rem] cursor-pointer shadow-sm shadow-indigo-600/20 transition-colors border-0"
+            className="flex items-center gap-1 bg-indigo-600 hover:bg-indigo-500 text-white px-2.5 py-1 rounded-lg font-bold text-[11px] sm:text-xs cursor-pointer shadow-xs border-0 active:scale-95 transition-all"
             title="Generate quotation"
           >
             <span>+</span> <span>Quotation</span>
@@ -169,7 +136,7 @@ export default function SalesLayout({
           <button
             type="button"
             onClick={handleNewCustomer}
-            className="flex items-center gap-1 bg-white hover:bg-sky-50 text-sky-600 border border-sky-600 px-2.5 py-[5px] rounded-[7px] font-bold text-[0.82rem] cursor-pointer transition-colors"
+            className="flex items-center gap-1 bg-white hover:bg-sky-50 text-sky-600 border border-sky-400 px-2 py-1 rounded-lg font-bold text-[11px] sm:text-xs cursor-pointer active:scale-95 transition-all"
             title="Add new customer"
           >
             <span>+</span> <span>Customer</span>

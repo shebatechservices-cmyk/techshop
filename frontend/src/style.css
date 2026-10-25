@@ -337,8 +337,21 @@ table tr:hover td {
     font-size: 0.9rem;
   }
 
-  /* Add safe area bottom padding for mobile content so it doesn't get covered by the bottom bar */
+  /* Mobile 100% viewport fit and overflow defense */
+  html, body, #root {
+    width: 100%;
+    max-width: 100vw;
+    overflow-x: hidden;
+  }
+
+  /* Add safe area bottom padding and width constrain for mobile content */
   .page-shell {
-    padding-bottom: 80px !important;
+    width: 100% !important;
+    max-width: 100vw !important;
+    overflow-x: hidden !important;
+    padding-left: 0.5rem !important;
+    padding-right: 0.5rem !important;
+    padding-bottom: 85px !important;
   }
 }
+

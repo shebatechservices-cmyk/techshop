@@ -30,8 +30,8 @@ export default function InventoryTable({
   isTechnician = false,
 }) {
   return (
-    <div className="bg-white rounded-xl border border-slate-300 overflow-visible min-h-[280px] shadow-sm">
-      <div className="overflow-x-auto min-h-[260px]">
+    <div className="bg-white rounded-xl border border-slate-300 overflow-hidden w-full max-w-full min-h-[280px] shadow-sm">
+      <div className="overflow-x-auto w-full max-w-full min-h-[260px]">
         <table className="w-full border-collapse text-left text-xs">
           <thead>
             <tr className="bg-slate-50 border-b-2 border-slate-200 text-slate-600 text-[0.72rem] uppercase tracking-wider">
