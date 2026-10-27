@@ -1,7 +1,6 @@
 import React from 'react';
-import { Link } from 'react-router-dom';
 
-export default function SecurityTabNav({ currentTab, logs, users, roles, devices, ipRules }) {
+export default function SecurityTabNav({ currentTab, onTabChange, logs = [], users = [], roles = [], devices = [], ipRules = [] }) {
   const tabs = [
     { key: 'audit', label: '🛡️ SIEM Audit Trail', count: logs.length },
     { key: 'staff', label: '👥 Staff & Technician Logins', count: users.length },
@@ -15,13 +14,14 @@ export default function SecurityTabNav({ currentTab, logs, users, roles, devices
       {tabs.map((tab) => {
         const isActive = currentTab === tab.key;
         return (
-          <Link
+          <button
+            type="button"
             key={tab.key}
-            to={`/${tab.key}`}
-            className={`no-underline px-4.5 py-2.5 font-bold text-sm cursor-pointer flex items-center gap-2 -mb-px transition-colors border-0 bg-transparent border-b-2 ${
+            onClick={() => onTabChange && onTabChange(tab.key)}
+            className={`px-4.5 py-2.5 font-bold text-sm cursor-pointer flex items-center gap-2 -mb-px transition-colors border-0 bg-transparent border-b-2 ${
               isActive
-                ? 'text-rose-600 border-rose-600'
-                : 'text-slate-500 hover:text-slate-800 border-transparent'
+                ? 'text-rose-600 border-rose-600 font-extrabold'
+                : 'text-slate-500 hover:text-slate-800 border-transparent font-medium'
             }`}
           >
             <span>{tab.label}</span>
@@ -32,7 +32,7 @@ export default function SecurityTabNav({ currentTab, logs, users, roles, devices
             >
               {tab.count}
             </span>
-          </Link>
+          </button>
         );
       })}
     </div>

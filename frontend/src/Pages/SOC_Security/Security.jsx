@@ -1,5 +1,4 @@
-import React from 'react';
-import { useLocation } from 'react-router-dom';
+import React, { useState } from 'react';
 import useSecurityManager from './hooks/useSecurityManager';
 import SecurityHeader from './components/SecurityHeader';
 import SecurityKpiCards from './components/SecurityKpiCards';
@@ -8,20 +7,36 @@ import SecurityModals from './components/SecurityModals';
 import SecurityRoutes from './components/SecurityRoutes';
 
 export default function Security() {
-  const location = useLocation();
-  const pathname = location.pathname;
-
-  const getActiveKey = () => {
-    if (pathname.endsWith('/staff') || pathname.includes('/staff')) return 'staff';
-    if (pathname.endsWith('/roles') || pathname.includes('/roles')) return 'roles';
-    if (pathname.endsWith('/devices') || pathname.includes('/devices')) return 'devices';
-    if (pathname.endsWith('/firewall') || pathname.includes('/firewall')) return 'firewall';
+  const [currentTab, setCurrentTab] = useState(() => {
+    if (typeof window !== 'undefined') {
+      const searchParams = new URLSearchParams(window.location.search);
+      const tabParam = searchParams.get('tab');
+      if (['audit', 'staff', 'roles', 'devices', 'firewall'].includes(tabParam)) {
+        return tabParam;
+      }
+      const hash = window.location.hash.replace(/^#/, '');
+      if (['audit', 'staff', 'roles', 'devices', 'firewall'].includes(hash)) {
+        return hash;
+      }
+    }
     return 'audit';
-  };
-  const currentTab = getActiveKey();
+  });
 
   const sec = useSecurityManager();
-  const { overview, logs, users, roles, devices, ipRules, error, successMsg, loadAllData, setIsAddStaffOpen, setIsAddDeviceOpen, setIsAddIpOpen } = sec;
+  const {
+    overview,
+    logs,
+    users,
+    roles,
+    devices,
+    ipRules,
+    error,
+    successMsg,
+    loadAllData,
+    setIsAddStaffOpen,
+    setIsAddDeviceOpen,
+    setIsAddIpOpen,
+  } = sec;
 
   return (
     <div className="p-6 bg-slate-50 min-h-screen font-sans">
@@ -47,6 +62,7 @@ export default function Security() {
 
       <SecurityTabNav
         currentTab={currentTab}
+        onTabChange={setCurrentTab}
         logs={logs}
         users={users}
         roles={roles}
@@ -54,8 +70,8 @@ export default function Security() {
         ipRules={ipRules}
       />
 
-      {/* Routes for 5 Tabs */}
-      <SecurityRoutes {...sec} />
+      {/* Render Active Tab */}
+      <SecurityRoutes currentTab={currentTab} {...sec} />
 
       {/* Security Dialogs and Modals */}
       <SecurityModals {...sec} />

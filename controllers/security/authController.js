@@ -5,6 +5,7 @@ const { ensureSecurityTables } = require('./securitySchema');
 const { isIpLocked, recordFailedAttempt, resetIpAttempts } = require('./ipLockoutService');
 const { createDeviceVerification } = require('./twoFactorController');
 const { signup } = require('./signupController');
+const { checkFirewallRule, validateUserAccessConstraints, normalizeLoginPhone } = require('./authValidationHelper');
 
 exports.signup = signup;
 
@@ -14,7 +15,15 @@ exports.login = async (req, res) => {
         const headers = req.headers || {};
         const clientIp = headers['x-forwarded-for']?.split(',')[0]?.trim() || req.socket?.remoteAddress || req.ip || '127.0.0.1';
 
-        // 1. IP Lockout Check
+        // 1. IP Firewall & Lockout Checks
+        const fwCheck = await checkFirewallRule(clientIp);
+        if (fwCheck.blocked) {
+            return res.status(403).json({
+                success: false,
+                message: 'Access blocked by Sheba SOC Firewall. This IP address is blacklisted.'
+            });
+        }
+
         const ipLockStatus = isIpLocked(clientIp);
         if (ipLockStatus.isLocked) {
             return res.status(429).json({
@@ -31,14 +40,7 @@ exports.login = async (req, res) => {
             return res.status(400).json({ success: false, message: 'Please enter your phone number or email and password.' });
         }
 
-        const cleanEmail = rawIdentifier.toLowerCase();
-        const digitsOnly = rawIdentifier.replace(/[^0-9]/g, '');
-        let cleanPhone = rawIdentifier;
-        if (digitsOnly.length === 11 && digitsOnly.startsWith('01')) {
-            cleanPhone = digitsOnly;
-        } else if (digitsOnly.length === 13 && digitsOnly.startsWith('8801')) {
-            cleanPhone = '0' + digitsOnly.slice(3);
-        }
+        const { cleanEmail, cleanPhone } = normalizeLoginPhone(rawIdentifier);
 
         // 2. User Lookup
         const userQuery = `
@@ -68,7 +70,13 @@ exports.login = async (req, res) => {
             return res.status(403).json({ success: false, message: 'Account locked due to excessive failed attempts. Contact administrator.' });
         }
 
-        // 3. Password Verification
+        // 3. Allowed Network IP & Bound Hardware Device Checks
+        const accessCheck = await validateUserAccessConstraints(user, clientIp, device_id, isSuperAdmin);
+        if (!accessCheck.allowed) {
+            return res.status(accessCheck.status || 403).json({ success: false, message: accessCheck.message });
+        }
+
+        // 4. Password Verification
         const isMatch = await verifyPassword(pass, user.password_hash);
         if (!isMatch) {
             const ipLock = recordFailedAttempt(clientIp);
@@ -91,24 +99,21 @@ exports.login = async (req, res) => {
             });
         }
 
-        // Password matches -> Clear IP failed attempts
         resetIpAttempts(clientIp);
 
-        // 4. Device Identification & 2FA Check
+        // 5. Device Identification & 2FA Check
         const userAgent = headers['user-agent'] || '';
         const devId = (device_id || `DEV-${user.id}-${clientIp.replace(/[^a-zA-Z0-9]/g, '')}`).substring(0, 99);
         const devName = (device_name || (userAgent ? userAgent.substring(0, 100) : 'Browser Device')).substring(0, 149);
         const devType = device_type || (/mobile|android|iphone|ipad/i.test(userAgent) ? 'mobile' : 'desktop');
         const bInfo = (browser_info || userAgent || 'Web Browser').substring(0, 250);
 
-        // Check if device is already authorized (Super Admin always authorized)
         const devCheck = await pool.query(
             'SELECT id, is_authorized, approval_status FROM trusted_devices WHERE device_id = $1 AND user_id = $2',
             [devId, user.id]
         );
         const isDeviceAuthorized = isSuperAdmin || (devCheck.rows.length > 0 && devCheck.rows[0].is_authorized);
 
-        // If NOT an authorized device and not super admin, require Admin Approval
         if (!isDeviceAuthorized) {
             const verifData = await createDeviceVerification({ user, devId, devName, devType, bInfo, clientIp });
             return res.status(200).json({
@@ -119,7 +124,7 @@ exports.login = async (req, res) => {
             });
         }
 
-        // 5. Authorized Device -> Issue Session Token
+        // 6. Authorized Device -> Issue Session Token
         const token = createSessionToken();
         const tokenHash = hashSessionToken(token);
         const passwordHash = isPasswordHash(user.password_hash) ? user.password_hash : await hashPassword(pass);

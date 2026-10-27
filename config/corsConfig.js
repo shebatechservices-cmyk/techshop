@@ -42,6 +42,7 @@ const allowedOrigins = new Set([...defaultOrigins, ...envOrigins]);
 const TRUSTED_ORIGIN_PATTERNS = [
     /^https:\/\/([a-z0-9-]+\.)?onrender\.com$/,
     /^https:\/\/([a-z0-9-]+\.)?shebatechnologybd\.com$/,
+    /^https:\/\/([a-z0-9-]+\.)?trycloudflare\.com$/,
     /^capacitor:\/\/localhost$/,
 ];
 

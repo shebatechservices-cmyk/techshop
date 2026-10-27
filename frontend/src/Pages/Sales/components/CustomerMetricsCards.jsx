@@ -13,7 +13,7 @@ export default function CustomerMetricsCards({
     <div className="grid grid-cols-1 sm:grid-cols-3 gap-2.5">
       <div className="bg-white p-3 sm:px-3.5 sm:py-2.5 rounded-xl border border-slate-200 shadow-sm">
         <span className="text-[0.72rem] text-slate-500 font-semibold uppercase tracking-wider block">
-          Total Registered Customers
+          Total Registered Clients
         </span>
         <h3 className="text-xl font-extrabold text-sky-600 mt-1">
           {customersCount}
