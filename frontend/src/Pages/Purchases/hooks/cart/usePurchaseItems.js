@@ -16,6 +16,7 @@ export function usePurchaseItems({
 }) {
   const [items, setItems] = useState([]);
   const [expandedId, setExpandedId] = useState(null);
+  const [newlyAddedId, setNewlyAddedId] = useState(null);
   const [query, setQuery] = useState('');
   const [isSearchOpen, setIsSearchOpen] = useState(false);
 
@@ -128,6 +129,7 @@ export function usePurchaseItems({
 
       const item = newLineItem(product);
       setExpandedId(item.localId);
+      setNewlyAddedId(item.localId);
       setQuery('');
       setIsSearchOpen(false);
       if (setError) setError('');
@@ -145,8 +147,16 @@ export function usePurchaseItems({
     });
   }, [barcodeInputRef, searchInputRef, setError, setPopupMsg]);
 
+  const handleSetExpandedId = useCallback((id) => {
+    setExpandedId(id);
+    if (!id || (newlyAddedId && id !== newlyAddedId)) {
+      setNewlyAddedId(null);
+    }
+  }, [newlyAddedId]);
+
   const handleRemoveItem = useCallback((localId) => {
     setItems((current) => current.filter((item) => item.localId !== localId));
+    setNewlyAddedId((prev) => (prev === localId ? null : prev));
     if (setBarcodeScanErrors) {
       setBarcodeScanErrors((prev) => {
         const next = { ...prev };
@@ -169,7 +179,9 @@ export function usePurchaseItems({
     items,
     setItems,
     expandedId,
-    setExpandedId,
+    setExpandedId: handleSetExpandedId,
+    newlyAddedId,
+    setNewlyAddedId,
     query,
     setQuery,
     isSearchOpen,

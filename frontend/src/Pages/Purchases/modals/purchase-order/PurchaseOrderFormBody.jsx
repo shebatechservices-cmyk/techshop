@@ -23,6 +23,7 @@ export default function PurchaseOrderFormBody({ cart, props }) {
     items,
     expandedId,
     setExpandedId,
+    newlyAddedId,
     barcodeInput,
     setBarcodeInput,
     barcodeInputRef,
@@ -98,6 +99,7 @@ export default function PurchaseOrderFormBody({ cart, props }) {
         items={items}
         expandedId={expandedId}
         setExpandedId={setExpandedId}
+        newlyAddedId={newlyAddedId}
         barcodeInput={barcodeInput}
         setBarcodeInput={setBarcodeInput}
         barcodeInputRef={barcodeInputRef}
