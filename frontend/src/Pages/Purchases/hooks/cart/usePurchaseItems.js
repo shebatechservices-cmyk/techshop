@@ -141,7 +141,7 @@ export function usePurchaseItems({
         }
       }, 150);
 
-      return [item, ...current];
+      return [...current, item];
     });
   }, [barcodeInputRef, searchInputRef, setError, setPopupMsg]);
 

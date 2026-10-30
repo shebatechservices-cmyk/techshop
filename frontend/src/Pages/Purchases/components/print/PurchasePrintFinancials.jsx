@@ -119,10 +119,17 @@ export default function PurchasePrintFinancials({
           <strong>{taka(itemsCost)}</strong>
         </div>
 
+        {Number(order.discount || 0) > 0 && (
+          <div style={{ display: 'flex', justifyContent: 'space-between', padding: '2px 0', color: '#dc2626' }}>
+            <span>Discount:</span>
+            <strong>- {taka(order.discount)}</strong>
+          </div>
+        )}
+
         {extraCost > 0 && (
-          <div style={{ display: 'flex', justifyContent: 'space-between', padding: '2px 0', color: '#475569' }}>
-            <span>Freight / Extra Cost:</span>
-            <strong>{taka(extraCost)}</strong>
+          <div style={{ display: 'flex', justifyContent: 'space-between', padding: '2px 0', color: '#d97706' }}>
+            <span>Freight / Logistics (Expense):</span>
+            <span style={{ fontWeight: 600, fontSize: '0.74rem' }}>+{taka(extraCost)} (Separate Expense)</span>
           </div>
         )}
 

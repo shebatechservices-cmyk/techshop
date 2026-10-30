@@ -83,7 +83,8 @@ export default function PurchasePrintModal({
 
   const itemsCost = items.reduce((sum, it) => sum + (Number(it.cost_price || 0) * Number(it.quantity || 0)), 0);
   const extraCost = Number(order.extra_cost || 0);
-  const currentTotal = itemsCost + extraCost;
+  const discount = Number(order.discount || 0);
+  const currentTotal = order.total_cost !== undefined ? Number(order.total_cost) : Math.max(0, itemsCost - discount);
   const previousDue = Number(order.previous_due !== undefined ? order.previous_due : (supplier?.payable_balance || 0));
   const totalPayable = previousDue + currentTotal;
   const totalPaid = Number(order.total_paid || payments.reduce((sum, p) => sum + Number(p.amount || 0), 0));
